@@ -11,7 +11,10 @@ export default function DashboardPage() {
     const router = useRouter();
 
     useEffect(() => {
-        checkAuth();
+        // Only check auth if we're not already authenticated
+        if (!isAuthenticated) {
+            checkAuth();
+        }
     }, []);
 
     useEffect(() => {
