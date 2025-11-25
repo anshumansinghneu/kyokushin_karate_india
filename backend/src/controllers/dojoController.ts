@@ -10,15 +10,7 @@ export const getAllDojos = catchAsync(async (req: Request, res: Response, next: 
     if (state) where.state = state;
 
     const dojos = await prisma.dojo.findMany({
-        where,
-        include: {
-            instructors: {
-                select: {
-                    id: true,
-                    name: true
-                }
-            }
-        }
+        where
     });
 
     res.status(200).json({
