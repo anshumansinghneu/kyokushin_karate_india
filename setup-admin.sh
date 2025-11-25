@@ -23,17 +23,14 @@ read -p "State (optional): " ADMIN_STATE
 echo ""
 echo "============================================"
 
-# Generate a random setup key
-SETUP_KEY="kki-admin-setup-$(date +%s)-$(openssl rand -hex 8)"
+# Use the fixed setup key that's already in Render
+SETUP_KEY="kki-admin-setup-1764083376-da6dee8dd39dc24a"
 
 echo ""
-echo "Generated Setup Key: $SETUP_KEY"
+echo "Using Setup Key: $SETUP_KEY"
+echo "(This key should already be in your Render environment variables)"
 echo ""
-echo "IMPORTANT: You need to add this to your Render environment variables:"
-echo "  Variable name: ADMIN_SETUP_KEY"
-echo "  Value: $SETUP_KEY"
-echo ""
-read -p "Have you added ADMIN_SETUP_KEY to Render? (yes/no): " CONFIRM
+read -p "Is this key already in Render as ADMIN_SETUP_KEY? (yes/no): " CONFIRM
 
 if [ "$CONFIRM" != "yes" ]; then
     echo "Please add the environment variable first, then run this script again."

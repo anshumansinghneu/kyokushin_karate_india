@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Trash2, CheckCircle, XCircle, MoreVertical, Shield, User, Users, Edit2, Save, X, Pencil, Mail, Calendar } from "lucide-react";
+import { Search, Trash2, CheckCircle, XCircle, MoreVertical, Shield, User, Users, Edit2, Save, X, Pencil, Mail, Calendar, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,21 @@ export default function UserManagementTable() {
         dojoId: "",
         currentBeltRank: "White",
         membershipStatus: "PENDING"
+    });
+
+    // Create User Modal State
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [createFormData, setCreateFormData] = useState({
+        name: "",
+        email: "",
+        password: "",
+        role: "STUDENT",
+        phone: "",
+        dojoId: "",
+        currentBeltRank: "White",
+        membershipStatus: "ACTIVE",
+        city: "",
+        state: ""
     });
 
     const fetchUsers = async () => {
@@ -120,9 +135,37 @@ export default function UserManagementTable() {
             await api.patch(`/users/${editingUser.id}`, editFormData);
             setIsEditModalOpen(false);
             fetchUsers();
+            showToast("User updated successfully!", "success");
         } catch (error) {
             console.error("Failed to update user", error);
             showToast("Failed to update user.", "error");
+        }
+    };
+
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try {
+            await api.post("/users", createFormData);
+            setIsCreateModalOpen(false);
+            setCreateFormData({
+                name: "",
+                email: "",
+                password: "",
+                role: "STUDENT",
+                phone: "",
+                dojoId: "",
+                currentBeltRank: "White",
+                membershipStatus: "ACTIVE",
+                city: "",
+                state: ""
+            });
+            fetchUsers();
+            showToast("User created successfully!", "success");
+        } catch (error: any) {
+            console.error("Failed to create user", error);
+            const message = error.response?.data?.message || "Failed to create user";
+            showToast(message, "error");
         }
     };
 
@@ -163,19 +206,28 @@ export default function UserManagementTable() {
                 )}
             </AnimatePresence>
 
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary" />
                     User Management
                 </h3>
-                <div className="relative w-full md:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <Input
-                        placeholder="Search users..."
-                        className="pl-10 input-glass"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <Input
+                            placeholder="Search users..."
+                            className="pl-10 input-glass"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <Button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="bg-primary hover:bg-primary-dark text-white font-bold flex items-center gap-2 whitespace-nowrap"
+                    >
+                        <UserPlus className="w-4 h-4" />
+                        Create User
+                    </Button>
                 </div>
             </div>
 
@@ -365,6 +417,163 @@ export default function UserManagementTable() {
                                     <Button type="button" variant="ghost" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
                                     <Button type="submit" className="bg-primary hover:bg-primary-dark text-white">
                                         <Save className="w-4 h-4 mr-2" /> Save Changes
+                                    </Button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Create User Modal */}
+            <AnimatePresence>
+                {isCreateModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 20 }}
+                            className="bg-zinc-900 border border-white/10 rounded-xl p-6 w-full max-w-2xl shadow-2xl my-8"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <UserPlus className="w-5 h-5 text-primary" />
+                                    Create New User
+                                </h3>
+                                <Button variant="ghost" className="h-8 w-8 p-0" onClick={() => setIsCreateModalOpen(false)}>
+                                    <X className="w-5 h-5" />
+                                </Button>
+                            </div>
+
+                            <form onSubmit={handleCreateUser} className="space-y-4">
+                                {/* Email and Password */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Email *</Label>
+                                        <Input
+                                            type="email"
+                                            value={createFormData.email}
+                                            onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
+                                            className="bg-black/50 border-white/10"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Password * (min 8 chars)</Label>
+                                        <Input
+                                            type="password"
+                                            value={createFormData.password}
+                                            onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
+                                            className="bg-black/50 border-white/10"
+                                            required
+                                            minLength={8}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Name */}
+                                <div className="space-y-2">
+                                    <Label>Full Name *</Label>
+                                    <Input
+                                        value={createFormData.name}
+                                        onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
+                                        className="bg-black/50 border-white/10"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Role and Dojo */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Role *</Label>
+                                        <select
+                                            value={createFormData.role}
+                                            onChange={(e) => setCreateFormData({ ...createFormData, role: e.target.value })}
+                                            className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                            required
+                                        >
+                                            <option value="STUDENT">Student</option>
+                                            <option value="INSTRUCTOR">Instructor</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Dojo</Label>
+                                        <select
+                                            value={createFormData.dojoId}
+                                            onChange={(e) => setCreateFormData({ ...createFormData, dojoId: e.target.value })}
+                                            className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                        >
+                                            <option value="">No Dojo</option>
+                                            {dojos.map((dojo: any) => (
+                                                <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Belt Rank and Status (for Students) */}
+                                {createFormData.role === "STUDENT" && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Belt Rank</Label>
+                                            <select
+                                                value={createFormData.currentBeltRank}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, currentBeltRank: e.target.value })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                            >
+                                                {["White", "Orange", "Blue", "Yellow", "Green", "Brown", "Black"].map(belt => (
+                                                    <option key={belt} value={belt}>{belt}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Membership Status</Label>
+                                            <select
+                                                value={createFormData.membershipStatus}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, membershipStatus: e.target.value })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                            >
+                                                <option value="ACTIVE">Active</option>
+                                                <option value="PENDING">Pending</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Phone, City, State */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Phone</Label>
+                                        <Input
+                                            type="tel"
+                                            value={createFormData.phone}
+                                            onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
+                                            className="bg-black/50 border-white/10"
+                                            placeholder="+91-1234567890"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>City</Label>
+                                        <Input
+                                            value={createFormData.city}
+                                            onChange={(e) => setCreateFormData({ ...createFormData, city: e.target.value })}
+                                            className="bg-black/50 border-white/10"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>State</Label>
+                                        <Input
+                                            value={createFormData.state}
+                                            onChange={(e) => setCreateFormData({ ...createFormData, state: e.target.value })}
+                                            className="bg-black/50 border-white/10"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 flex justify-end gap-2">
+                                    <Button type="button" variant="ghost" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
+                                    <Button type="submit" className="bg-primary hover:bg-primary-dark text-white">
+                                        <UserPlus className="w-4 h-4 mr-2" /> Create User
                                     </Button>
                                 </div>
                             </form>

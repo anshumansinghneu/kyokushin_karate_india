@@ -240,7 +240,96 @@ export const deleteUser = catchAsync(async (req: Request, res: Response, next: N
     });
 });
 
+export const createUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { name, email, password, role, phone, dojoId, currentBeltRank, membershipStatus, city, state } = req.body;
+
+    // Validation
+    if (!name || !email || !password || !role) {
+        return next(new AppError('Please provide name, email, password, and role', 400));
+    }
+
+    if (password.length < 8) {
+        return next(new AppError('Password must be at least 8 characters long', 400));
+    }
+
+    if (!['STUDENT', 'INSTRUCTOR'].includes(role)) {
+        return next(new AppError('Role must be either STUDENT or INSTRUCTOR', 400));
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+        where: { email }
+    });
+
+    if (existingUser) {
+        return next(new AppError('User with this email already exists', 400));
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Prepare user data based on role
+    const userData: any = {
+        name,
+        email,
+        passwordHash: hashedPassword,
+        role,
+        phone: phone || null,
+        city: city || null,
+        state: state || null,
+        country: 'India',
+        dojoId: dojoId || null,
+    };
+
+    // Role-specific defaults
+    if (role === 'STUDENT') {
+        // Generate membership number if dojo is assigned
+        let membershipNumber = null;
+        if (dojoId) {
+            membershipNumber = await generateMembershipNumber(dojoId);
+        }
+
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + 1);
+
+        userData.membershipNumber = membershipNumber;
+        userData.membershipStatus = membershipStatus || 'ACTIVE';
+        userData.membershipStartDate = startDate;
+        userData.membershipEndDate = endDate;
+        userData.currentBeltRank = currentBeltRank || 'White';
+        userData.isInstructorApproved = true; // Auto-approved
+        // @ts-ignore
+        userData.approvedBy = req.user.id;
+        userData.approvedAt = new Date();
+    } else if (role === 'INSTRUCTOR') {
+        userData.isInstructorApproved = true;
+        userData.instructorApprovedAt = new Date();
+        userData.membershipStatus = 'ACTIVE';
+        // @ts-ignore
+        userData.approvedBy = req.user.id;
+        userData.approvedAt = new Date();
+    }
+
+    // Create user
+    const newUser = await prisma.user.create({
+        data: userData,
+        include: {
+            dojo: true
+        }
+    });
+
+    res.status(201).json({
+        status: 'success',
+        message: `${role} created successfully`,
+        data: {
+            user: newUser
+        }
+    });
+});
+
 export const inviteUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+
     const { name, email, phone } = req.body;
 
     const existingUser = await prisma.user.findUnique({
