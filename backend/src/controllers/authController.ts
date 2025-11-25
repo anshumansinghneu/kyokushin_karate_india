@@ -40,7 +40,7 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Use transaction to create user and initial belt history
-    const newUser = await prisma.$transaction(async (tx) => {
+    const userId = await prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
             data: {
                 email,
@@ -76,7 +76,22 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
             },
         });
 
-        return user;
+        return user.id;
+    });
+
+    // Fetch user with relations
+    const newUser = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+            dojo: {
+                select: {
+                    id: true,
+                    name: true,
+                    city: true,
+                    state: true,
+                }
+            }
+        }
     });
 
     createSendToken(newUser, 201, res);
@@ -91,6 +106,16 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
 
     const user = await prisma.user.findUnique({
         where: { email },
+        include: {
+            dojo: {
+                select: {
+                    id: true,
+                    name: true,
+                    city: true,
+                    state: true,
+                }
+            }
+        }
     });
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
