@@ -134,14 +134,25 @@ export default function UserManagementTable() {
         console.log("Updating user:", editingUser.id, "with data:", editFormData);
 
         try {
-            const res = await api.patch(`/users/${editingUser.id}`, editFormData);
+            const updateData = {
+                name: editFormData.name,
+                email: editFormData.email,
+                role: editFormData.role,
+                dojoId: editFormData.dojoId || null,
+                currentBeltRank: editFormData.currentBeltRank,
+                membershipStatus: editFormData.membershipStatus
+            };
+            
+            const res = await api.patch(`/users/${editingUser.id}`, updateData);
             console.log("Update user response:", res);
             setIsEditModalOpen(false);
+            setEditingUser(null);
             fetchUsers();
             showToast("User updated successfully!", "success");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to update user", error);
-            showToast("Failed to update user.", "error");
+            const errorMessage = error.response?.data?.message || error.message || "Failed to update user.";
+            showToast(errorMessage, "error");
         }
     };
 

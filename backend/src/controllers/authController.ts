@@ -39,24 +39,41 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const newUser = await prisma.user.create({
-        data: {
-            email,
-            passwordHash: hashedPassword,
-            name,
-            phone,
-            dateOfBirth: dob ? new Date(dob) : undefined,
-            height,
-            weight,
-            city,
-            state,
-            country,
-            dojoId,
-            primaryInstructorId: instructorId,
-            role: 'STUDENT',
-            membershipStatus: 'PENDING',
-            currentBeltRank,
-        },
+    // Use transaction to create user and initial belt history
+    const newUser = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+            data: {
+                email,
+                passwordHash: hashedPassword,
+                name,
+                phone,
+                dateOfBirth: dob ? new Date(dob) : undefined,
+                height,
+                weight,
+                city,
+                state,
+                country,
+                dojoId,
+                primaryInstructorId: instructorId,
+                role: 'STUDENT',
+                membershipStatus: 'PENDING',
+                currentBeltRank: currentBeltRank || 'White',
+            },
+        });
+
+        // Create initial belt history record
+        await tx.beltHistory.create({
+            data: {
+                studentId: user.id,
+                oldBelt: null,
+                newBelt: currentBeltRank || 'White',
+                promotedBy: instructorId || null,
+                notes: 'Initial registration',
+                promotionDate: new Date(),
+            },
+        });
+
+        return user;
     });
 
     createSendToken(newUser, 201, res);

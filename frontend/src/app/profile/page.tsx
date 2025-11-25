@@ -7,18 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Camera, Edit2, Save, Shield } from "lucide-react";
 import Link from "next/link";
-
-// Mock data for belt history (replace with API call later)
-const mockBeltHistory = [
-    { belt: "White", date: "2023-01-15", promoter: "Sensei John" },
-    { belt: "Orange", date: "2023-06-20", promoter: "Sensei John" },
-    { belt: "Blue", date: "2023-12-10", promoter: "Shihan Mike" },
-];
+import api from "@/lib/api";
 
 export default function ProfilePage() {
     const { user, updateProfile } = useAuthStore();
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [beltHistory, setBeltHistory] = useState<any[]>([]);
     const [formData, setFormData] = useState({
         name: user?.name || "",
         email: user?.email || "",
@@ -40,6 +35,20 @@ export default function ProfilePage() {
                 weight: user.weight?.toString() || "",
             });
         }
+    }, [user]);
+
+    // Fetch belt history
+    useEffect(() => {
+        const fetchBeltHistory = async () => {
+            if (!user?.id) return;
+            try {
+                const res = await api.get(`/belts/history/${user.id}`);
+                setBeltHistory(res.data.data.beltHistory || []);
+            } catch (error) {
+                console.error("Failed to fetch belt history", error);
+            }
+        };
+        fetchBeltHistory();
     }, [user]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,16 +109,16 @@ export default function ProfilePage() {
                             </div>
 
                             <h2 className="text-2xl font-bold text-white mb-1">{formData.name}</h2>
-                            <p className="text-primary font-bold tracking-wider uppercase text-sm mb-6">Blue Belt</p>
+                            <p className="text-primary font-bold tracking-wider uppercase text-sm mb-6">{user?.currentBeltRank || "White"} Belt</p>
 
                             <div className="w-full grid grid-cols-2 gap-4 text-sm border-t border-white/10 pt-6">
                                 <div>
                                     <p className="text-gray-500 uppercase text-xs font-bold">Membership ID</p>
-                                    <p className="text-white font-mono">KKI-2024-MUM-001</p>
+                                    <p className="text-white font-mono">{user?.membershipNumber || "PENDING"}</p>
                                 </div>
                                 <div>
                                     <p className="text-gray-500 uppercase text-xs font-bold">Dojo</p>
-                                    <p className="text-white">Mumbai HQ</p>
+                                    <p className="text-white">{user?.dojo?.name || "Not Assigned"}</p>
                                 </div>
                             </div>
                         </div>
@@ -219,24 +228,32 @@ export default function ProfilePage() {
                             </h3>
 
                             <div className="space-y-4">
-                                {mockBeltHistory.map((record, index) => (
-                                    <div key={index} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xs border-2 shadow-lg
-                                            ${record.belt === 'White' ? 'bg-white text-black border-gray-300' : ''}
-                                            ${record.belt === 'Orange' ? 'bg-orange-500 text-white border-orange-600' : ''}
-                                            ${record.belt === 'Blue' ? 'bg-blue-500 text-white border-blue-600' : ''}
-                                        `}>
-                                            {record.belt[0]}
+                                {beltHistory.length > 0 ? (
+                                    beltHistory.map((record, index) => (
+                                        <div key={index} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xs border-2 shadow-lg
+                                                ${record.newBelt === 'White' ? 'bg-white text-black border-gray-300' : ''}
+                                                ${record.newBelt === 'Orange' ? 'bg-orange-500 text-white border-orange-600' : ''}
+                                                ${record.newBelt === 'Blue' ? 'bg-blue-500 text-white border-blue-600' : ''}
+                                                ${record.newBelt === 'Yellow' ? 'bg-yellow-500 text-white border-yellow-600' : ''}
+                                                ${record.newBelt === 'Green' ? 'bg-green-500 text-white border-green-600' : ''}
+                                                ${record.newBelt === 'Brown' ? 'bg-amber-700 text-white border-amber-800' : ''}
+                                                ${record.newBelt === 'Black' ? 'bg-black text-white border-gray-600' : ''}
+                                            `}>
+                                                {record.newBelt?.[0] || 'W'}
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-white">{record.newBelt} Belt Promotion</h4>
+                                                <p className="text-sm text-gray-400">Promoted by {record.promotedBy?.name || 'Sensei'}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-mono text-primary">{new Date(record.promotionDate).toLocaleDateString()}</p>
+                                            </div>
                                         </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-bold text-white">{record.belt} Belt Promotion</h4>
-                                            <p className="text-sm text-gray-400">Promoted by {record.promoter}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-sm font-mono text-primary">{record.date}</p>
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))
+                                ) : (
+                                    <p className="text-gray-500 text-center py-8">No belt promotions yet</p>
+                                )}
                             </div>
                         </motion.div>
                     </div>

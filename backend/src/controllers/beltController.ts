@@ -37,6 +37,26 @@ export const promoteStudent = catchAsync(async (req: Request, res: Response, nex
         return next(new AppError('Not authorized to promote students', 403));
     }
 
+    // Check 6-month constraint: Student must wait 6 months since last promotion
+    const lastPromotion = await prisma.beltHistory.findFirst({
+        where: { studentId },
+        orderBy: { promotionDate: 'desc' }
+    });
+
+    if (lastPromotion) {
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+        if (new Date(lastPromotion.promotionDate) > sixMonthsAgo) {
+            const nextEligibleDate = new Date(lastPromotion.promotionDate);
+            nextEligibleDate.setMonth(nextEligibleDate.getMonth() + 6);
+            return next(new AppError(
+                `Student must wait 6 months between belt promotions. Next eligible date: ${nextEligibleDate.toLocaleDateString()}`, 
+                400
+            ));
+        }
+    }
+
     const oldBelt = student.currentBeltRank;
 
     // Transaction to update user and create history record

@@ -211,11 +211,18 @@ export const updateMe = catchAsync(async (req: Request, res: Response, next: Nex
     }
 
     // 2) Filtered out unwanted fields names that are not allowed to be updated
-    // For now, allow updating phone, city, address, bio/description, and profilePhotoUrl
-    const allowedFields = ['phone', 'city', 'address', 'description', 'profilePhotoUrl'];
+    // For now, allow updating phone, city, address, bio/description, profilePhotoUrl, height, and weight
+    const allowedFields = ['phone', 'city', 'address', 'description', 'profilePhotoUrl', 'height', 'weight'];
     const filteredBody: any = {};
     Object.keys(req.body).forEach(el => {
-        if (allowedFields.includes(el)) filteredBody[el] = req.body[el];
+        if (allowedFields.includes(el)) {
+            // Convert height and weight to numbers
+            if (el === 'height' || el === 'weight') {
+                filteredBody[el] = req.body[el] ? parseFloat(req.body[el]) : null;
+            } else {
+                filteredBody[el] = req.body[el];
+            }
+        }
     });
 
     // 3) Update user document
