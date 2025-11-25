@@ -41,27 +41,31 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
 
     // Use transaction to create user and initial belt history
     const userId = await prisma.$transaction(async (tx) => {
+        const userData: any = {
+            email,
+            passwordHash: hashedPassword,
+            name,
+            phone,
+            dateOfBirth: dob ? new Date(dob) : undefined,
+            height: height ? parseFloat(height) : undefined,
+            weight: weight ? parseFloat(weight) : undefined,
+            city,
+            state,
+            country: country || 'India',
+            dojoId,
+            primaryInstructorId: instructorId,
+            role: 'STUDENT',
+            membershipStatus: 'PENDING',
+            currentBeltRank: currentBeltRank || 'White',
+        };
+
+        // Add new fields only if they exist in schema (backward compatible)
+        if (countryCode !== undefined) userData.countryCode = countryCode || '+91';
+        if (fatherName !== undefined) userData.fatherName = fatherName;
+        if (fatherPhone !== undefined) userData.fatherPhone = fatherPhone;
+
         const user = await tx.user.create({
-            data: {
-                email,
-                passwordHash: hashedPassword,
-                name,
-                phone,
-                countryCode: countryCode || '+91',
-                dateOfBirth: dob ? new Date(dob) : undefined,
-                height: height ? parseFloat(height) : undefined,
-                weight: weight ? parseFloat(weight) : undefined,
-                city,
-                state,
-                country: country || 'India',
-                dojoId,
-                primaryInstructorId: instructorId,
-                role: 'STUDENT',
-                membershipStatus: 'PENDING',
-                currentBeltRank: currentBeltRank || 'White',
-                fatherName,
-                fatherPhone,
-            },
+            data: userData,
         });
 
         // Create initial belt history record
