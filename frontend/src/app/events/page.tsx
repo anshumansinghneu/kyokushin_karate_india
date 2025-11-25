@@ -1,0 +1,143 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Calendar, MapPin, ArrowRight, Clock, Search, Filter } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import api from "@/lib/api";
+import KarateLoader from "@/components/KarateLoader";
+
+export default function EventsPage() {
+    const [events, setEvents] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [filter, setFilter] = useState<"ALL" | "TOURNAMENT" | "CAMP">("ALL");
+
+    useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                const response = await api.get('/events');
+                setEvents(response.data.data.events);
+            } catch (error) {
+                console.error("Failed to fetch events", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchEvents();
+    }, []);
+
+    const filteredEvents = events.filter(event => filter === "ALL" || event.type === filter);
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return {
+            day: date.getDate(),
+            month: date.toLocaleString('default', { month: 'short' }).toUpperCase(),
+            full: date.toLocaleDateString()
+        };
+    };
+
+    return (
+        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
+            {/* Background Elements */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black" />
+
+            <div className="container mx-auto px-4 py-12 relative z-10">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-6">
+                    <div>
+                        <motion.h1
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-5xl md:text-7xl font-black tracking-tighter mb-2"
+                        >
+                            UPCOMING <span className="text-transparent stroke-text" style={{ WebkitTextStroke: '2px #3b82f6' }}>EVENTS</span>
+                        </motion.h1>
+                        <p className="text-gray-400 text-lg">Compete, Train, Evolve.</p>
+                    </div>
+
+                    {/* Filter Tabs */}
+                    <div className="flex p-1 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
+                        {["ALL", "TOURNAMENT", "CAMP"].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setFilter(tab as any)}
+                                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 ${filter === tab
+                                    ? "bg-primary text-white shadow-lg"
+                                    : "text-gray-400 hover:text-white"
+                                    }`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Loading State */}
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center py-20 gap-4 h-[50vh]">
+                        <KarateLoader />
+                    </div>
+                ) : (
+                    /* Events Grid */
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {filteredEvents.map((event, index) => {
+                            const dateObj = formatDate(event.startDate);
+                            return (
+                                <motion.div
+                                    key={event.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="group relative h-[300px] rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-primary/50 transition-colors"
+                                >
+                                    {/* Background Image */}
+                                    <div className="absolute inset-0 bg-gray-900">
+                                        {/* Placeholder for image */}
+                                        <div className={`w-full h-full opacity-50 bg-gradient-to-br ${event.type === 'TOURNAMENT' ? 'from-red-900 to-black' : 'from-green-900 to-black'}`} />
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="absolute inset-0 p-8 flex flex-col justify-between">
+                                        <div className="flex justify-between items-start">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${event.type === 'TOURNAMENT'
+                                                ? 'bg-red-500/20 text-red-400 border-red-500/20'
+                                                : 'bg-green-500/20 text-green-400 border-green-500/20'
+                                                }`}>
+                                                {event.type}
+                                            </span>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-2xl font-black text-white">{dateObj.day}</span>
+                                                <span className="text-sm font-bold text-gray-400 uppercase">{dateObj.month}</span>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-3xl font-bold text-white mb-2 group-hover:text-primary transition-colors">{event.name}</h3>
+                                            <div className="flex items-center gap-4 text-gray-400 text-sm mb-6">
+                                                <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {event.location}</span>
+                                                <span className="w-1 h-1 rounded-full bg-gray-600" />
+                                                <span className="text-white font-bold">₹{event.memberFee}</span>
+                                            </div>
+
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-bold text-primary uppercase tracking-wider">{event.status}</span>
+                                                <Link href={`/events/${event.id}`}>
+                                                    <Button className="rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur-md group-hover:bg-primary group-hover:border-primary transition-all">
+                                                        View Details <ArrowRight className="w-4 h-4 ml-2" />
+                                                    </Button>
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
