@@ -184,9 +184,9 @@ export default function UserManagementTable() {
                     <thead>
                         <tr className="text-xs font-bold text-gray-500 uppercase border-b border-white/10">
                             <th className="py-3 px-4">User</th>
-                            <th className="py-3 px-4">Role</th>
-                            <th className="py-3 px-4">Dojo</th>
-                            <th className="py-3 px-4">Belt</th>
+                            <th className="py-3 px-4 hidden md:table-cell">Role</th>
+                            <th className="py-3 px-4 hidden lg:table-cell">Dojo</th>
+                            <th className="py-3 px-4 hidden sm:table-cell">Belt</th>
                             <th className="py-3 px-4">Status</th>
                             <th className="py-3 px-4 text-right">Actions</th>
                         </tr>
@@ -212,7 +212,7 @@ export default function UserManagementTable() {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-3 px-4">
+                                    <td className="py-3 px-4 hidden md:table-cell">
                                         <span className={`text-xs font-bold px-2 py-1 rounded-full border ${user.role === 'ADMIN' ? 'border-red-500/50 text-red-400' :
                                             user.role === 'INSTRUCTOR' ? 'border-blue-500/50 text-blue-400' :
                                                 'border-gray-500/50 text-gray-400'
@@ -220,10 +220,10 @@ export default function UserManagementTable() {
                                             {user.role}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4">
+                                    <td className="py-3 px-4 hidden lg:table-cell">
                                         {user.dojo?.name || <span className="text-gray-600 italic">None</span>}
                                     </td>
-                                    <td className="py-3 px-4">
+                                    <td className="py-3 px-4 hidden sm:table-cell">
                                         {user.currentBeltRank}
                                     </td>
                                     <td className="py-3 px-4">

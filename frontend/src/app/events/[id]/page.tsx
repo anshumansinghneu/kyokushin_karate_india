@@ -92,7 +92,7 @@ export default function EventDetailPage() {
                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black" />
                 </div>
 
-                <div className="absolute inset-0 container mx-auto px-4 flex flex-col justify-end pb-12 z-10">
+                <div className="absolute inset-0 container mx-auto px-6 md:px-4 flex flex-col justify-end pb-12 z-10">
                     <Link href="/events" className="text-gray-400 hover:text-white flex items-center gap-2 mb-6 transition-colors w-fit">
                         <ArrowLeft className="w-4 h-4" /> Back to Events
                     </Link>
@@ -104,8 +104,8 @@ export default function EventDetailPage() {
                         <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm font-bold uppercase tracking-wider border border-red-500/20 mb-4 inline-block">
                             {event.type}
                         </span>
-                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4">{event.name}</h1>
-                        <div className="flex flex-wrap gap-6 text-lg text-gray-300 mb-8">
+                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 leading-tight">{event.name}</h1>
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:gap-6 text-base sm:text-lg text-gray-300 mb-8">
                             <span className="flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" /> {new Date(event.startDate).toLocaleDateString()}</span>
                             <span className="flex items-center gap-2"><Clock className="w-5 h-5 text-primary" /> {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             <span className="flex items-center gap-2"><MapPin className="w-5 h-5 text-primary" /> {event.location || event.dojo?.city || 'TBD'}</span>

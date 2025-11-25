@@ -207,29 +207,29 @@ export default function StudentDashboard({ user }: { user: any }) {
                                 <div className="absolute inset-0 bg-gradient-to-r from-red-900/80 to-black/80 z-10" />
                                 <div className="absolute inset-0 bg-[url('/training-bg.png')] bg-cover bg-center opacity-50 group-hover:scale-105 transition-transform duration-700" />
 
-                                <div className="relative z-20 p-8 md:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-                                    <div>
+                                <div className="relative z-20 p-6 md:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-8">
+                                    <div className="w-full md:w-auto">
                                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500 text-white text-xs font-bold uppercase tracking-wider mb-4">
                                             <Clock className="w-3 h-3" /> Next Event
                                         </div>
-                                        <h3 className="text-3xl md:text-4xl font-black text-white mb-2 leading-tight">{nextEvent.name}</h3>
-                                        <div className="flex items-center gap-4 text-gray-300 text-sm font-medium">
+                                        <h3 className="text-2xl md:text-4xl font-black text-white mb-2 leading-tight">{nextEvent.name}</h3>
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-300 text-sm font-medium">
                                             <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(nextEvent.startDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                             <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {nextEvent.location}</span>
                                         </div>
                                     </div>
 
-                                    <div className="flex gap-3">
-                                        <div className="bg-black/40 backdrop-blur-md rounded-xl p-3 text-center min-w-[70px] border border-white/10">
-                                            <span className="block text-3xl font-black text-white">{timeLeft.days}</span>
+                                    <div className="flex gap-2 sm:gap-3 w-full md:w-auto justify-between md:justify-start">
+                                        <div className="bg-black/40 backdrop-blur-md rounded-xl p-2 sm:p-3 text-center flex-1 md:flex-none md:min-w-[70px] border border-white/10">
+                                            <span className="block text-2xl sm:text-3xl font-black text-white">{timeLeft.days}</span>
                                             <span className="text-[10px] uppercase text-gray-400 font-bold">Days</span>
                                         </div>
-                                        <div className="bg-black/40 backdrop-blur-md rounded-xl p-3 text-center min-w-[70px] border border-white/10">
-                                            <span className="block text-3xl font-black text-white">{timeLeft.hours}</span>
+                                        <div className="bg-black/40 backdrop-blur-md rounded-xl p-2 sm:p-3 text-center flex-1 md:flex-none md:min-w-[70px] border border-white/10">
+                                            <span className="block text-2xl sm:text-3xl font-black text-white">{timeLeft.hours}</span>
                                             <span className="text-[10px] uppercase text-gray-400 font-bold">Hrs</span>
                                         </div>
-                                        <div className="bg-black/40 backdrop-blur-md rounded-xl p-3 text-center min-w-[70px] border border-white/10">
-                                            <span className="block text-3xl font-black text-white">{timeLeft.minutes}</span>
+                                        <div className="bg-black/40 backdrop-blur-md rounded-xl p-2 sm:p-3 text-center flex-1 md:flex-none md:min-w-[70px] border border-white/10">
+                                            <span className="block text-2xl sm:text-3xl font-black text-white">{timeLeft.minutes}</span>
                                             <span className="text-[10px] uppercase text-gray-400 font-bold">Mins</span>
                                         </div>
                                     </div>

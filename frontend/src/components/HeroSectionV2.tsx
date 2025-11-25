@@ -39,7 +39,7 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
     return (
         <section
             ref={containerRef}
-            className="relative h-screen w-full overflow-hidden flex items-center justify-center bg-black cursor-default perspective-2000"
+            className="relative h-screen w-full overflow-hidden flex items-center justify-center bg-black cursor-default perspective-2000 gpu-accelerate"
             onMouseMove={onMouseMove}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -47,11 +47,11 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
             {/* Background Layers */}
             <motion.div
                 style={{ opacity: heroOpacity, scale: heroScale }}
-                className="absolute inset-0 z-0 bg-black"
+                className="absolute inset-0 z-0 bg-black will-change-transform will-change-opacity"
             >
                 {/* Base Dark Layer with Gradient - Pulses Red in Beast Mode */}
                 <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-black to-zinc-950 z-0"
+                    className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-black to-zinc-950 z-0 gpu-accelerate"
                     animate={{
                         background: isHovered
                             ? "linear-gradient(to bottom, #1a0505, #000000, #1a0505)"
@@ -158,39 +158,39 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
 
             {/* Main Content with 3D Tilt */}
             <motion.div
-                className="relative z-30 container mx-auto px-4 text-center flex flex-col items-center justify-center h-full transform-style-3d"
+                className="relative z-30 container mx-auto px-4 text-center flex flex-col items-center justify-center h-full transform-style-3d will-change-transform gpu-accelerate"
                 style={{ rotateX, rotateY }}
             >
                 <motion.div
                     initial={{ opacity: 0, z: -100 }}
                     animate={{ opacity: 1, z: 0 }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="relative"
+                    className="relative w-full"
                 >
                     {/* Top Label */}
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 1, delay: 0.5 }}
-                        className="flex items-center justify-center gap-4 mb-8"
+                        className="flex items-center justify-center gap-2 md:gap-4 mb-4 md:mb-8"
                     >
-                        <div className="h-[1px] w-12 bg-red-600/50" />
-                        <span className="text-sm md:text-base font-bold text-red-500 uppercase tracking-[0.4em] drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
+                        <div className="h-[1px] w-8 md:w-12 bg-red-600/50" />
+                        <span className="text-xs md:text-base font-bold text-red-500 uppercase tracking-[0.2em] md:tracking-[0.4em] drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
                             The Ultimate Truth
                         </span>
-                        <div className="h-[1px] w-12 bg-red-600/50" />
+                        <div className="h-[1px] w-8 md:w-12 bg-red-600/50" />
                     </motion.div>
 
                     {/* Main Headline */}
                     <motion.h1
-                        className="text-6xl md:text-8xl lg:text-[11rem] font-black tracking-tighter leading-[0.85] mb-10 select-none relative z-20"
+                        className="text-fluid-h1 font-black tracking-tighter leading-[0.9] mb-6 md:mb-10 select-none relative z-20 will-change-transform gpu-accelerate"
                         style={{ x: titleX, y: titleY }}
                     >
-                        <span className="block text-white mix-blend-overlay opacity-90">FORGE YOUR</span>
+                        <span className="block text-white mix-blend-overlay opacity-90 text-2xl md:text-4xl lg:text-6xl mb-2">FORGE YOUR</span>
                         <span className="block relative group cursor-default mt-2">
                             {/* Japanese Watermark - Glows on Hover */}
                             <motion.span
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[12rem] text-red-600/5 font-serif whitespace-nowrap pointer-events-none z-0 select-none hidden lg:block"
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] text-red-600/5 font-serif whitespace-nowrap pointer-events-none z-0 select-none hidden lg:block"
                                 animate={{
                                     opacity: isHovered ? 0.2 : 0.05,
                                     scale: isHovered ? 1.05 : 1,
@@ -208,7 +208,7 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
 
                             {/* Main Text with Gradient - Pulses on Hover */}
                             <motion.span
-                                className="relative text-transparent bg-clip-text bg-gradient-to-b from-white via-gray-200 to-gray-600 z-20 block"
+                                className="relative text-transparent bg-clip-text bg-gradient-to-b from-white via-gray-200 to-gray-600 z-20 block text-[15vw] md:text-[11rem] leading-none"
                                 animate={{
                                     backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                                     scale: isHovered ? [1, 1.02, 1] : 1,
@@ -224,7 +224,7 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
 
                             {/* Glitch Effect Layers - Active on Hover */}
                             <motion.span
-                                className="absolute inset-0 text-red-600 mix-blend-screen translate-x-[2px] z-20"
+                                className="absolute inset-0 text-red-600 mix-blend-screen translate-x-[2px] z-20 text-[15vw] md:text-[11rem] leading-none"
                                 animate={{ opacity: isHovered ? [0, 0.8, 0] : 0 }}
                                 transition={{ duration: 0.1, repeat: Infinity, repeatDelay: Math.random() * 0.5 }}
                                 aria-hidden="true"
@@ -232,7 +232,7 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
                                 SPIRIT
                             </motion.span>
                             <motion.span
-                                className="absolute inset-0 text-blue-600 mix-blend-screen translate-x-[-2px] z-20"
+                                className="absolute inset-0 text-blue-600 mix-blend-screen translate-x-[-2px] z-20 text-[15vw] md:text-[11rem] leading-none"
                                 animate={{ opacity: isHovered ? [0, 0.8, 0] : 0 }}
                                 transition={{ duration: 0.1, repeat: Infinity, repeatDelay: Math.random() * 0.5 + 0.1 }}
                                 aria-hidden="true"
@@ -242,7 +242,7 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
 
                             {/* Dynamic Glow Behind - Intensifies */}
                             <motion.div
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-red-600/20 blur-[100px] -z-10 rounded-full"
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-red-600/20 blur-[50px] md:blur-[100px] -z-10 rounded-full"
                                 animate={{
                                     opacity: isHovered ? [0.3, 0.6, 0.3] : [0.1, 0.3, 0.1],
                                     scale: isHovered ? [1, 1.2, 1] : [0.9, 1.1, 0.9]
@@ -257,9 +257,9 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 1.2, duration: 1 }}
-                        className="relative max-w-2xl mx-auto mb-16"
+                        className="relative max-w-2xl mx-auto mb-10 md:mb-16 px-4"
                     >
-                        <p className="text-lg md:text-xl text-gray-300 font-light leading-relaxed text-shadow-sm">
+                        <p className="text-base md:text-xl text-gray-300 font-light leading-relaxed text-shadow-sm">
                             <span className="text-red-500 font-bold">Kyokushin</span> is not just a martial art. It is a way of life.
                             Discipline, respect, and the relentless pursuit of strength.
                         </p>
@@ -270,19 +270,19 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
                         initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 1.4, duration: 0.8 }}
-                        className="flex flex-col md:flex-row items-center justify-center gap-6"
+                        className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 w-full px-4"
                     >
-                        <Link href="/register">
-                            <Button className="group relative h-16 px-10 rounded-none bg-red-600 text-white text-lg font-bold tracking-widest overflow-hidden transition-all hover:bg-red-700 hover:shadow-[0_0_40px_rgba(220,38,38,0.5)] clip-path-slant">
-                                <span className="relative z-10 flex items-center gap-2">
+                        <Link href="/register" className="w-full md:w-auto">
+                            <Button className="w-full md:w-auto group relative h-14 md:h-16 px-8 md:px-10 rounded-none bg-red-600 text-white text-base md:text-lg font-bold tracking-widest overflow-hidden transition-all hover:bg-red-700 hover:shadow-[0_0_40px_rgba(220,38,38,0.5)] clip-path-slant">
+                                <span className="relative z-10 flex items-center justify-center gap-2">
                                     JOIN THE DOJO <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </span>
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
                             </Button>
                         </Link>
-                        <Link href="/dojos">
-                            <Button variant="outline" className="group h-16 px-10 rounded-none border-white/30 text-white text-lg font-bold tracking-widest hover:bg-white/10 hover:border-white transition-all backdrop-blur-sm clip-path-slant">
-                                <span className="flex items-center gap-2">
+                        <Link href="/dojos" className="w-full md:w-auto">
+                            <Button variant="outline" className="w-full md:w-auto group h-14 md:h-16 px-8 md:px-10 rounded-none border-white/30 text-white text-base md:text-lg font-bold tracking-widest hover:bg-white/10 hover:border-white transition-all backdrop-blur-sm clip-path-slant">
+                                <span className="flex items-center justify-center gap-2">
                                     FIND A DOJO <MapPinIcon className="w-5 h-5 group-hover:text-red-500 transition-colors" />
                                 </span>
                             </Button>

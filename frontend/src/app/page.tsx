@@ -33,19 +33,37 @@ export default function Home() {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const [eventsRes, contentRes, blogsRes, mediaRes] = await Promise.all([
-          api.get('/events'),
-          api.get('/content'),
-          api.get('/posts?type=BLOG'),
-          api.get('/posts?type=MEDIA_MENTION')
-        ]);
-        setFeaturedEvents(eventsRes.data.data.events.slice(0, 5));
-        setContent(contentRes.data.data.content);
-        setLatestBlogs(blogsRes.data.data.posts.slice(0, 3));
-        setMediaMentions(mediaRes.data.data.posts.slice(0, 3));
-      } catch (error) {
-        console.error("Failed to fetch data", error);
+      const results = await Promise.allSettled([
+        api.get('/events'),
+        api.get('/content'),
+        api.get('/posts?type=BLOG'),
+        api.get('/posts?type=MEDIA_MENTION')
+      ]);
+
+      const [eventsRes, contentRes, blogsRes, mediaRes] = results;
+
+      if (eventsRes.status === 'fulfilled') {
+        setFeaturedEvents(eventsRes.value.data.data.events.slice(0, 5));
+      } else {
+        console.error("Failed to fetch events", eventsRes.reason);
+      }
+
+      if (contentRes.status === 'fulfilled') {
+        setContent(contentRes.value.data.data.content);
+      } else {
+        console.error("Failed to fetch content", contentRes.reason);
+      }
+
+      if (blogsRes.status === 'fulfilled') {
+        setLatestBlogs(blogsRes.value.data.data.posts.slice(0, 3));
+      } else {
+        console.error("Failed to fetch blogs", blogsRes.reason);
+      }
+
+      if (mediaRes.status === 'fulfilled') {
+        setMediaMentions(mediaRes.value.data.data.posts.slice(0, 3));
+      } else {
+        console.error("Failed to fetch media mentions", mediaRes.reason);
       }
     };
     fetchData();
@@ -55,7 +73,7 @@ export default function Home() {
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 1.1]);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white overflow-x-hidden">
+    <div ref={containerRef} className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white overflow-x-hidden relative">
       <AnimatePresence mode="wait">
         {showSplash && (
           <SplashScreen key="splash" onFinish={() => setShowSplash(false)} />

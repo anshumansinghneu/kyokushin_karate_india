@@ -240,7 +240,7 @@ export default function DojoManager() {
                                         className="bg-black/50 border-white/10"
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label>Code</Label>
                                         <Input
@@ -281,7 +281,7 @@ export default function DojoManager() {
                                         className="bg-black/50 border-white/10"
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label>Email</Label>
                                         <Input
