@@ -27,7 +27,7 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
 };
 
 export const register = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password, name, phone, countryCode, dob, height, weight, city, state, country, dojoId, instructorId, currentBeltRank, fatherName, fatherPhone } = req.body;
+    const { email, password, name, phone, dob, height, weight, city, state, country, dojoId, instructorId, currentBeltRank } = req.body;
 
     const existingUser = await prisma.user.findUnique({
         where: { email },
@@ -41,31 +41,24 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
 
     // Use transaction to create user and initial belt history
     const userId = await prisma.$transaction(async (tx) => {
-        const userData: any = {
-            email,
-            passwordHash: hashedPassword,
-            name,
-            phone,
-            dateOfBirth: dob ? new Date(dob) : undefined,
-            height: height ? parseFloat(height) : undefined,
-            weight: weight ? parseFloat(weight) : undefined,
-            city,
-            state,
-            country: country || 'India',
-            dojoId,
-            primaryInstructorId: instructorId,
-            role: 'STUDENT',
-            membershipStatus: 'PENDING',
-            currentBeltRank: currentBeltRank || 'White',
-        };
-
-        // Add new fields only if they exist in schema (backward compatible)
-        if (countryCode !== undefined) userData.countryCode = countryCode || '+91';
-        if (fatherName !== undefined) userData.fatherName = fatherName;
-        if (fatherPhone !== undefined) userData.fatherPhone = fatherPhone;
-
         const user = await tx.user.create({
-            data: userData,
+            data: {
+                email,
+                passwordHash: hashedPassword,
+                name,
+                phone,
+                dateOfBirth: dob ? new Date(dob) : undefined,
+                height: height ? parseFloat(height) : undefined,
+                weight: weight ? parseFloat(height) : undefined,
+                city,
+                state,
+                country: country || 'India',
+                dojoId,
+                primaryInstructorId: instructorId,
+                role: 'STUDENT',
+                membershipStatus: 'PENDING',
+                currentBeltRank: currentBeltRank || 'White',
+            },
         });
 
         // Create initial belt history record
