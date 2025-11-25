@@ -31,8 +31,6 @@ interface Dojo {
     city: string;
     state: string;
     address: string;
-    contactEmail: string;
-    contactPhone: string;
     instructors: Instructor[];
     gallery: any[];
     events: Event[];
@@ -184,7 +182,7 @@ export default function DojoDetailPage() {
                         </motion.div>
                     )}
 
-                    {/* AREA C: Contact Info */}
+                    {/* AREA C: Location Info */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -193,11 +191,11 @@ export default function DojoDetailPage() {
                         className="md:col-span-1 lg:col-span-1 bg-red-900/20 border border-red-500/20 rounded-3xl p-6 flex flex-col justify-center"
                     >
                         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-red-500" /> Contact
+                            <MapPin className="w-4 h-4 text-red-500" /> Location
                         </h3>
                         <div className="space-y-3 text-sm">
-                            {dojo.contactPhone && <p className="text-gray-300">{dojo.contactPhone}</p>}
-                            {dojo.contactEmail && <p className="text-gray-300 break-all">{dojo.contactEmail}</p>}
+                            <p className="text-gray-300">{dojo.city}, {dojo.state}</p>
+                            {dojo.address && <p className="text-gray-300 break-all">{dojo.address}</p>}
                         </div>
                     </motion.div>
 

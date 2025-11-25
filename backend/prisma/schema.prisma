@@ -84,13 +84,18 @@ model User {
   // Personal Info
   name                  String
   phone                 String?
+  countryCode           String?          @default("+91")
   dateOfBirth           DateTime?
   height                Float?           // cm
   weight                Float?           // kg
   city                  String?
   state                 String?
-  country               String?
+  country               String?          @default("India")
   profilePhotoUrl       String?
+  
+  // Guardian Info
+  fatherName            String?
+  fatherPhone           String?
   
   // Membership (STUDENT only)
   membershipNumber      String?          @unique  // Format: KKI-YYYY-CITY-#####

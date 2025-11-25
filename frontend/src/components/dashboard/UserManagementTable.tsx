@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
 import { useToast } from '@/contexts/ToastContext';
 import Portal from "@/components/ui/portal";
+import { INDIAN_STATES, CITIES, COUNTRY_CODES, BELT_RANKS } from "@/lib/constants";
 
 export default function UserManagementTable() {
     const { showToast } = useToast();
@@ -37,12 +38,17 @@ export default function UserManagementTable() {
         email: "",
         password: "",
         role: "STUDENT",
+        countryCode: "+91",
         phone: "",
         dojoId: "",
         currentBeltRank: "White",
         membershipStatus: "ACTIVE",
         city: "",
-        state: ""
+        state: "",
+        height: "",
+        weight: "",
+        fatherName: "",
+        fatherPhone: ""
     });
 
     const fetchUsers = async () => {
@@ -169,12 +175,17 @@ export default function UserManagementTable() {
                 email: "",
                 password: "",
                 role: "STUDENT",
+                countryCode: "+91",
                 phone: "",
                 dojoId: "",
                 currentBeltRank: "White",
                 membershipStatus: "ACTIVE",
                 city: "",
-                state: ""
+                state: "",
+                height: "",
+                weight: "",
+                fatherName: "",
+                fatherPhone: ""
             });
             fetchUsers();
             showToast("User created successfully!", "success");
@@ -574,33 +585,125 @@ export default function UserManagementTable() {
                                         </div>
                                     )}
 
-                                    {/* Phone, City, State */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Phone</Label>
+                                    {/* Phone with Country Code */}
+                                    <div className="space-y-2">
+                                        <Label>Phone Number *</Label>
+                                        <div className="flex gap-2">
+                                            <select
+                                                value={createFormData.countryCode}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, countryCode: e.target.value })}
+                                                className="w-24 bg-black/50 border border-white/10 rounded-md h-10 px-2 text-white"
+                                                required
+                                            >
+                                                {COUNTRY_CODES.map((country) => (
+                                                    <option key={country.code} value={country.code}>
+                                                        {country.flag} {country.code}
+                                                    </option>
+                                                ))}
+                                            </select>
                                             <Input
                                                 type="tel"
                                                 value={createFormData.phone}
                                                 onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                                placeholder="+91-1234567890"
+                                                className="bg-black/50 border-white/10 flex-1"
+                                                placeholder="9876543210"
+                                                required
+                                                pattern="[0-9]{10}"
                                             />
                                         </div>
+                                    </div>
+
+                                    {/* State and City Dropdowns */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label>City</Label>
-                                            <Input
+                                            <Label>State *</Label>
+                                            <select
+                                                value={createFormData.state}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, state: e.target.value, city: "" })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                                required
+                                            >
+                                                <option value="">Select State</option>
+                                                {INDIAN_STATES.map((state) => (
+                                                    <option key={state} value={state}>{state}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>City *</Label>
+                                            <select
                                                 value={createFormData.city}
                                                 onChange={(e) => setCreateFormData({ ...createFormData, city: e.target.value })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                                required
+                                                disabled={!createFormData.state}
+                                            >
+                                                <option value="">Select City</option>
+                                                {createFormData.state && CITIES[createFormData.state]?.map((city) => (
+                                                    <option key={city} value={city}>{city}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Height and Weight */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Height (cm) *</Label>
+                                            <Input
+                                                type="number"
+                                                value={createFormData.height}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, height: e.target.value })}
                                                 className="bg-black/50 border-white/10"
+                                                placeholder="170"
+                                                required
+                                                min="50"
+                                                max="250"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>State</Label>
+                                            <Label>Weight (kg) *</Label>
                                             <Input
-                                                value={createFormData.state}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, state: e.target.value })}
+                                                type="number"
+                                                value={createFormData.weight}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, weight: e.target.value })}
                                                 className="bg-black/50 border-white/10"
+                                                placeholder="65"
+                                                required
+                                                min="20"
+                                                max="200"
                                             />
+                                        </div>
+                                    </div>
+
+                                    {/* Father's Details */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Father's Name *</Label>
+                                            <Input
+                                                value={createFormData.fatherName}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, fatherName: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                                placeholder="Father's Full Name"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Father's Phone *</Label>
+                                            <div className="flex gap-2">
+                                                <span className="flex items-center px-3 bg-black/50 border border-white/10 rounded-md text-white text-sm">
+                                                    {createFormData.countryCode}
+                                                </span>
+                                                <Input
+                                                    type="tel"
+                                                    value={createFormData.fatherPhone}
+                                                    onChange={(e) => setCreateFormData({ ...createFormData, fatherPhone: e.target.value })}
+                                                    className="bg-black/50 border-white/10 flex-1"
+                                                    placeholder="9876543210"
+                                                    required
+                                                    pattern="[0-9]{10}"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 

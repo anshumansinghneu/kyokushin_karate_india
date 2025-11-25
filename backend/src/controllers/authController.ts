@@ -27,7 +27,7 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
 };
 
 export const register = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password, name, phone, dob, height, weight, city, state, country, dojoId, instructorId, currentBeltRank } = req.body;
+    const { email, password, name, phone, countryCode, dob, height, weight, city, state, country, dojoId, instructorId, currentBeltRank, fatherName, fatherPhone } = req.body;
 
     const existingUser = await prisma.user.findUnique({
         where: { email },
@@ -47,17 +47,20 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
                 passwordHash: hashedPassword,
                 name,
                 phone,
+                countryCode: countryCode || '+91',
                 dateOfBirth: dob ? new Date(dob) : undefined,
-                height,
-                weight,
+                height: height ? parseFloat(height) : undefined,
+                weight: weight ? parseFloat(weight) : undefined,
                 city,
                 state,
-                country,
+                country: country || 'India',
                 dojoId,
                 primaryInstructorId: instructorId,
                 role: 'STUDENT',
                 membershipStatus: 'PENDING',
                 currentBeltRank: currentBeltRank || 'White',
+                fatherName,
+                fatherPhone,
             },
         });
 

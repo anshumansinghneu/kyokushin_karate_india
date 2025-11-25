@@ -253,7 +253,7 @@ export const deleteUser = catchAsync(async (req: Request, res: Response, next: N
 });
 
 export const createUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { name, email, password, role, phone, dojoId, currentBeltRank, membershipStatus, city, state } = req.body;
+    const { name, email, password, role, phone, countryCode, dojoId, currentBeltRank, membershipStatus, city, state, height, weight, fatherName, fatherPhone } = req.body;
 
     // Validation
     if (!name || !email || !password || !role) {
@@ -287,10 +287,15 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         passwordHash: hashedPassword,
         role,
         phone: phone || null,
+        countryCode: countryCode || '+91',
         city: city || null,
         state: state || null,
         country: 'India',
         dojoId: dojoId || null,
+        height: height ? parseFloat(height) : null,
+        weight: weight ? parseFloat(weight) : null,
+        fatherName: fatherName || null,
+        fatherPhone: fatherPhone || null,
     };
 
     // Role-specific defaults
