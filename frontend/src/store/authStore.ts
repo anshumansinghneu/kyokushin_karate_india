@@ -8,15 +8,26 @@ interface User {
     email: string;
     role: 'ADMIN' | 'INSTRUCTOR' | 'STUDENT';
     dojoId?: string;
+    dojo?: {
+        id: string;
+        name: string;
+        city: string;
+        state: string;
+    };
     phone?: string;
+    countryCode?: string;
     city?: string;
+    state?: string;
     address?: string;
     description?: string;
     profilePhotoUrl?: string;
     currentBeltRank?: string;
     height?: number;
     weight?: number;
+    membershipNumber?: string;
     membershipStatus?: 'ACTIVE' | 'PENDING' | 'EXPIRED' | 'SUSPENDED';
+    fatherName?: string;
+    fatherPhone?: string;
     registrations?: any[];
     tournamentResults?: any[];
 }
