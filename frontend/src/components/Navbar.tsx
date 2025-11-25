@@ -33,6 +33,24 @@ export default function Navbar() {
         setIsOpen(false);
     }, [pathname]);
 
+    // Prevent body scroll when mobile menu is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+        } else {
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        };
+    }, [isOpen]);
+
     const navLinks = [
         { name: "Dojos", href: "/dojos" },
         { name: "Events", href: "/events" },
@@ -130,50 +148,58 @@ export default function Navbar() {
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
+                            initial={{ opacity: 0, x: "100%" }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: "100%" }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="fixed inset-0 bg-black/95 backdrop-blur-xl z-40 flex flex-col items-center justify-center gap-8 md:hidden overflow-y-auto py-20 gpu-accelerate will-change-transform will-change-opacity"
+                            className="fixed inset-0 top-0 left-0 right-0 bottom-0 bg-gradient-to-b from-black via-black to-zinc-900 z-40 flex flex-col items-center justify-start gap-6 md:hidden overflow-y-auto pt-24 pb-8 px-6 safe-area-inset"
+                            style={{ touchAction: 'pan-y' }}
                         >
-                            {navLinks.map((link) => (
-                                <Link
+                            {navLinks.map((link, index) => (
+                                <motion.div
                                     key={link.name}
-                                    href={link.href}
-                                    className="text-2xl font-bold uppercase tracking-widest text-white hover:text-primary flex items-center gap-3"
+                                    initial={{ opacity: 0, x: 50 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="w-full"
                                 >
-                                    {link.name}
-                                    {link.icon && <img src={link.icon} alt="Flag" className="h-6 w-auto rounded-sm" />}
-                                </Link>
+                                    <Link
+                                        href={link.href}
+                                        className="flex items-center justify-between text-xl font-bold uppercase tracking-wider text-white hover:text-primary active:text-primary transition-colors py-3 px-4 rounded-lg hover:bg-white/5 active:bg-white/10"
+                                    >
+                                        <span>{link.name}</span>
+                                        {link.icon && <img src={link.icon} alt="Flag" className="h-5 w-auto rounded-sm" />}
+                                    </Link>
+                                </motion.div>
                             ))}
 
                             {isAuthenticated ? (
-                                <>
-                                    <Link href="/dashboard" className="text-2xl font-bold uppercase tracking-widest text-white hover:text-primary">
+                                <div className="w-full space-y-2 mt-4 border-t border-white/10 pt-6">
+                                    <Link href="/dashboard" className="block text-lg font-bold uppercase tracking-wider text-white hover:text-primary py-3 px-4 rounded-lg hover:bg-white/5 transition-colors">
                                         Dashboard
                                     </Link>
                                     {(user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR') && (
-                                        <Link href="/management" className="text-2xl font-bold uppercase tracking-widest text-white hover:text-primary">
+                                        <Link href="/management" className="block text-lg font-bold uppercase tracking-wider text-white hover:text-primary py-3 px-4 rounded-lg hover:bg-white/5 transition-colors">
                                             Management
                                         </Link>
                                     )}
-                                    <Link href="/profile" className="text-2xl font-bold uppercase tracking-widest text-white hover:text-primary">
+                                    <Link href="/profile" className="block text-lg font-bold uppercase tracking-wider text-white hover:text-primary py-3 px-4 rounded-lg hover:bg-white/5 transition-colors">
                                         Profile
                                     </Link>
                                     <button
                                         onClick={logout}
-                                        className="text-xl font-bold uppercase tracking-widest text-red-500 hover:text-red-400 flex items-center gap-2 mt-4"
+                                        className="w-full text-left text-lg font-bold uppercase tracking-wider text-red-500 hover:text-red-400 py-3 px-4 rounded-lg hover:bg-red-500/10 transition-colors flex items-center gap-3 mt-4"
                                     >
                                         <LogOut className="w-5 h-5" /> Logout
                                     </button>
-                                </>
+                                </div>
                             ) : (
-                                <div className="flex flex-col gap-4 mt-8 w-full px-10">
+                                <div className="flex flex-col gap-3 mt-8 w-full border-t border-white/10 pt-6">
                                     <Link href="/login" className="w-full">
-                                        <Button variant="outline" className="text-white border-white/20 w-full text-xl py-6 rounded-xl hover:bg-white/10">Login</Button>
+                                        <Button variant="outline" className="text-white border-white/20 w-full text-lg py-6 rounded-xl hover:bg-white/10 active:scale-95 transition-transform">Login</Button>
                                     </Link>
                                     <Link href="/register" className="w-full">
-                                        <Button className="bg-primary text-white text-xl w-full py-6 rounded-xl hover:bg-primary-dark">Join Now</Button>
+                                        <Button className="bg-primary text-white text-lg w-full py-6 rounded-xl hover:bg-primary-dark active:scale-95 transition-transform">Join Now</Button>
                                     </Link>
                                 </div>
                             )}
