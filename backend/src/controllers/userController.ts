@@ -375,7 +375,7 @@ export const inviteUser = catchAsync(async (req: Request, res: Response, next: N
     });
 
     // Send Email Notification (Invite)
-    // Re-using Registration Email or creating a specific Invite one. 
+    // Re-using Registration Email or creating a specific Invite one.
     // For now, let's use sendRegistrationEmail as a placeholder or create a new one.
     // Let's use sendRegistrationEmail for simplicity as it welcomes them.
     await sendRegistrationEmail(newUser.email, newUser.name);
@@ -391,8 +391,8 @@ export const inviteUser = catchAsync(async (req: Request, res: Response, next: N
 export const updateUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
-    // Filter out fields that shouldn't be updated directly if needed, 
-    // but for Admin, we generally trust them. 
+    // Filter out fields that shouldn't be updated directly if needed,
+    // but for Admin, we generally trust them.
     // However, password updates should still go through a specific route or be hashed if allowed here.
     // For now, let's exclude password from this general update to be safe.
     const { password, passwordConfirm, ...dataToUpdate } = req.body;

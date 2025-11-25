@@ -51,7 +51,7 @@ export const promoteStudent = catchAsync(async (req: Request, res: Response, nex
             const nextEligibleDate = new Date(lastPromotion.promotionDate);
             nextEligibleDate.setMonth(nextEligibleDate.getMonth() + 6);
             return next(new AppError(
-                `Student must wait 6 months between belt promotions. Next eligible date: ${nextEligibleDate.toLocaleDateString()}`, 
+                `Student must wait 6 months between belt promotions. Next eligible date: ${nextEligibleDate.toLocaleDateString()}`,
                 400
             ));
         }

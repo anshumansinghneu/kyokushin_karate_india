@@ -148,7 +148,7 @@ export default function UserManagementTable() {
                 currentBeltRank: editFormData.currentBeltRank,
                 membershipStatus: editFormData.membershipStatus
             };
-            
+
             const res = await api.patch(`/users/${editingUser.id}`, updateData);
             console.log("Update user response:", res);
             setIsEditModalOpen(false);

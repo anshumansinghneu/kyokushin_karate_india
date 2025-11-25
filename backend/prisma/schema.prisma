@@ -80,7 +80,7 @@ model User {
   email                 String           @unique
   passwordHash          String
   role                  UserRole         @default(STUDENT)
-  
+
   // Personal Info
   name                  String
   phone                 String?
@@ -92,27 +92,27 @@ model User {
   state                 String?
   country               String?          @default("India")
   profilePhotoUrl       String?
-  
+
   // Guardian Info
   fatherName            String?
   fatherPhone           String?
-  
+
   // Membership (STUDENT only)
   membershipNumber      String?          @unique  // Format: KKI-YYYY-CITY-#####
   membershipStatus      MembershipStatus? @default(PENDING)
   membershipStartDate   DateTime?
   membershipEndDate     DateTime?
-  
+
   // Relationships
   dojoId                String?
   dojo                  Dojo?            @relation(fields: [dojoId], references: [id])
   primaryInstructorId   String?
   primaryInstructor     User?            @relation("InstructorStudents", fields: [primaryInstructorId], references: [id])
   students              User[]           @relation("InstructorStudents")
-  
+
   // Belt Ranking
   currentBeltRank       String?          @default("White")
-  
+
   // Approval Tracking
   isInstructorApproved  Boolean          @default(false)
   instructorApprovedAt  DateTime?
@@ -120,20 +120,20 @@ model User {
   approver              User?            @relation("UserApprover", fields: [approvedBy], references: [id])
   approvedUsers         User[]           @relation("UserApprover")
   approvedAt            DateTime?
-  
+
   // Relations
   beltHistory           BeltHistory[]    @relation("StudentBeltHistory")
   promotedBelts         BeltHistory[]    @relation("PromoterBeltHistory")
   createdEvents         Event[]
   registrations         EventRegistration[]
   approvedRegistrations EventRegistration[] @relation("RegistrationApprover")
-  
+
   // Tournament Relations
   wonMatches            Match[]          @relation("MatchWinner")
   matchesAsFighterA     Match[]          @relation("FighterA")
   matchesAsFighterB     Match[]          @relation("FighterB")
   tournamentResults     TournamentResult[]
-  
+
   // Other
   uploadedGallery       Gallery[]        @relation("GalleryUploader")
   approvedGallery       Gallery[]        @relation("GalleryApprover")
@@ -142,7 +142,7 @@ model User {
   trainingSessions      TrainingSession[]
   posts                 Post[]
   monthlyRecognitions   MonthlyRecognition[]
-  
+
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
 }
@@ -157,12 +157,12 @@ model Dojo {
   address      String?
   contactEmail String?
   contactPhone String?
-  
+
   instructors  User[] // Ideally filtered by role in app logic, but relation exists via User.dojoId
-  
+
   gallery      Gallery[]
   events       Event[]
-  
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -191,29 +191,29 @@ model Event {
   location              String?
   dojoId                String?
   dojo                  Dojo?       @relation(fields: [dojoId], references: [id])
-  
+
   // Registration
   registrationDeadline  DateTime
   maxParticipants       Int?
-  
+
   // Pricing
   memberFee             Float
   nonMemberFee          Float
-  
+
   // Categories (JSON array)
   categories            Json?       // [{age: "18-35", weight: "<70kg", belt: "Brown"}]
-  
+
   status                EventStatus @default(UPCOMING)
   createdBy             String
   creator               User        @relation(fields: [createdBy], references: [id])
-  
+
   registrations         EventRegistration[]
   brackets              TournamentBracket[]
   results               TournamentResult[]
   gallery               Gallery[]
   specificVouchers      VoucherCode[]
   notifications         Notification[]
-  
+
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
 }
@@ -224,33 +224,33 @@ model EventRegistration {
   event                   Event          @relation(fields: [eventId], references: [id])
   userId                  String
   user                    User           @relation(fields: [userId], references: [id])
-  
+
   // Category Selection
   categoryAge             String?
   categoryWeight          String?
   categoryBelt            String?
   eventType               String?        // "Kata", "Kumite", "Both"
-  
+
   // Payment
   paymentStatus           PaymentStatus  @default(PENDING)
   paymentAmount           Float?
   voucherCodeUsed         String?
   discountAmount          Float          @default(0)
   finalAmount             Float?
-  
+
   // Approval (tournaments only)
   approvalStatus          ApprovalStatus @default(PENDING)
   approvedBy              String?
   approver                User?          @relation("RegistrationApprover", fields: [approvedBy], references: [id])
   approvedAt              DateTime?
-  
+
   // Non-member tracking
   isNonMember             Boolean        @default(false)
   nonMemberAccessExpires  DateTime?
-  
+
   registeredAt            DateTime       @default(now())
   updatedAt               DateTime       @updatedAt
-  
+
   @@unique([eventId, userId])
 }
 
@@ -258,22 +258,22 @@ model TournamentBracket {
   id                  String        @id @default(uuid())
   eventId             String
   event               Event         @relation(fields: [eventId], references: [id])
-  
+
   // Category
   categoryName        String        // "18-35, 60-70kg, Brown Belt"
   categoryAge         String?
   categoryWeight      String?
   categoryBelt        String?
-  
+
   totalParticipants   Int
   bracketType         String        @default("SINGLE_ELIMINATION")
   bracketData         Json?         // Full bracket tree structure
-  
+
   status              BracketStatus @default(DRAFT)
-  
+
   matches             Match[]
   results             TournamentResult[]
-  
+
   createdAt           DateTime      @default(now())
   lockedAt            DateTime?
   completedAt         DateTime?
@@ -283,13 +283,13 @@ model Match {
   id                  String      @id @default(uuid())
   bracketId           String
   bracket             TournamentBracket @relation(fields: [bracketId], references: [id])
-  
+
   // Match Position
   roundNumber         Int         // 1=R1, 2=R2, 3=QF, 4=SF, 5=Final, 6=3rdPlace
   roundName           String      // "Round 1", "Quarter-Finals", etc.
   matchNumber         Int
   positionInBracket   String?
-  
+
   // Fighters
   fighterAId          String?
   fighterA            User?       @relation("FighterA", fields: [fighterAId], references: [id])
@@ -297,15 +297,15 @@ model Match {
   fighterB            User?       @relation("FighterB", fields: [fighterBId], references: [id])
   fighterAName        String?
   fighterBName        String?
-  
+
   // Result
   winnerId            String?
   winner              User?       @relation("MatchWinner", fields: [winnerId], references: [id])
   isBye               Boolean     @default(false)
-  
+
   nextMatchId         String?
   status              MatchStatus @default(SCHEDULED)
-  
+
   scheduledDateTime   DateTime?
   startedAt           DateTime?
   completedAt         DateTime?
@@ -321,17 +321,17 @@ model TournamentResult {
   user                User              @relation(fields: [userId], references: [id])
   bracketId           String
   bracket             TournamentBracket @relation(fields: [bracketId], references: [id])
-  
+
   categoryName        String
   finalRank           Int               // 1, 2, 3, 4...
   medal               String?           // GOLD, SILVER, BRONZE
-  
+
   totalMatches        Int               @default(0)
   matchesWon          Int               @default(0)
   matchesLost         Int               @default(0)
   eliminatedInRound   String?
   eliminatedByUserId  String?
-  
+
   createdAt           DateTime          @default(now())
 }
 
@@ -340,18 +340,18 @@ model Gallery {
   uploadedBy        String
   uploader          User      @relation("GalleryUploader", fields: [uploadedBy], references: [id])
   imageUrl          String
-  
+
   eventId           String?
   event             Event?    @relation(fields: [eventId], references: [id])
   dojoId            String?
   dojo              Dojo?     @relation(fields: [dojoId], references: [id])
-  
+
   isApproved        Boolean   @default(false)
   isPublicFeatured  Boolean   @default(false)
   approvedBy        String?
   approver          User?     @relation("GalleryApprover", fields: [approvedBy], references: [id])
   approvedAt        DateTime?
-  
+
   caption           String?
   uploadedAt        DateTime  @default(now())
 }
@@ -436,11 +436,11 @@ model Post {
   externalLink  String?   // For media mentions
   sourceName    String?   // For media mentions (e.g. "Times of India")
   attachmentUrl String?   // For PDF uploads
-  
+
   publishedAt   DateTime  @default(now())
   authorId      String
   author        User      @relation(fields: [authorId], references: [id])
-  
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
