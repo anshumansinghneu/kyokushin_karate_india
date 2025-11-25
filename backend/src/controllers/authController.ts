@@ -49,7 +49,7 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
                 phone,
                 dateOfBirth: dob ? new Date(dob) : undefined,
                 height: height ? parseFloat(height) : undefined,
-                weight: weight ? parseFloat(height) : undefined,
+                weight: weight ? parseFloat(weight) : undefined,
                 city,
                 state,
                 country: country || 'India',

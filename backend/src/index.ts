@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import http from 'http';
 import { Server } from 'socket.io';
 import app from './app';
+import runMigration from './runMigration';
 
 dotenv.config();
 
@@ -25,6 +26,15 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+// Run migration before starting server
+runMigration().then(() => {
+    server.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}).catch((error) => {
+    console.error('Failed to run migration:', error);
+    // Start server anyway
+    server.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
 });
