@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
+// @ts-ignore - Type definitions issue in production build
 import morgan from 'morgan';
 
 import authRouter from './routes/authRoutes';
