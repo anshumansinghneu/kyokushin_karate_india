@@ -111,10 +111,21 @@ export default function ProfilePage() {
                             <h2 className="text-2xl font-bold text-white mb-1">{formData.name}</h2>
                             <p className="text-primary font-bold tracking-wider uppercase text-sm mb-6">{user?.currentBeltRank || "White"} Belt</p>
 
-                            <div className="w-full grid grid-cols-2 gap-4 text-sm border-t border-white/10 pt-6">
-                                <div>
-                                    <p className="text-gray-500 uppercase text-xs font-bold">Membership ID</p>
-                                    <p className="text-white font-mono">{user?.membershipNumber || "PENDING"}</p>
+                            <div className="w-full space-y-4 text-sm border-t border-white/10 pt-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-gray-500 uppercase text-xs font-bold">Membership ID</p>
+                                        <p className="text-white font-mono">{user?.membershipNumber || "Not Assigned"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500 uppercase text-xs font-bold">Status</p>
+                                        <p className={`font-bold ${
+                                            user?.membershipStatus === 'ACTIVE' ? 'text-green-400' :
+                                            user?.membershipStatus === 'PENDING' ? 'text-yellow-400' :
+                                            user?.membershipStatus === 'EXPIRED' ? 'text-red-400' :
+                                            'text-gray-400'
+                                        }`}>{user?.membershipStatus || "PENDING"}</p>
+                                    </div>
                                 </div>
                                 <div>
                                     <p className="text-gray-500 uppercase text-xs font-bold">Dojo</p>

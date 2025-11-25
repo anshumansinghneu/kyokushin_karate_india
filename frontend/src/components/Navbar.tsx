@@ -81,8 +81,16 @@ export default function Navbar() {
                                 </Link>
                             )}
                             <Link href="/profile">
-                                <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50 text-primary transition-transform hover:scale-105">
-                                    <User className="w-4 h-4 lg:w-5 lg:h-5" />
+                                <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50 text-primary transition-transform hover:scale-105 overflow-hidden">
+                                    {user?.profilePhotoUrl ? (
+                                        <img 
+                                            src={user.profilePhotoUrl} 
+                                            alt={user.name} 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <User className="w-4 h-4 lg:w-5 lg:h-5" />
+                                    )}
                                 </div>
                             </Link>
                             <Button
