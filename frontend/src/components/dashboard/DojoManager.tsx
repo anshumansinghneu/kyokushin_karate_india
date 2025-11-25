@@ -16,9 +16,55 @@ interface Dojo {
     city: string;
     state: string;
     address: string;
-    contactEmail: string;
-    contactPhone: string;
 }
+
+const INDIAN_STATES = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana",
+    "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
+    "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+];
+
+const CITIES: Record<string, string[]> = {
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Thane", "Nashik", "Aurangabad", "Solapur", "Amravati", "Navi Mumbai", "Kolhapur"],
+    "Delhi": ["New Delhi", "Delhi", "Noida", "Gurgaon", "Ghaziabad", "Faridabad"],
+    "Karnataka": ["Bangalore", "Mysore", "Hubli", "Mangalore", "Belgaum", "Gulbarga", "Davangere", "Bellary"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Erode", "Vellore"],
+    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Junagadh", "Gandhinagar"],
+    "Uttar Pradesh": ["Lucknow", "Kanpur", "Ghaziabad", "Agra", "Varanasi", "Meerut", "Prayagraj", "Noida"],
+    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar"],
+    "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Kollam", "Kannur"],
+    "Rajasthan": ["Jaipur", "Jodhpur", "Kota", "Bikaner", "Ajmer", "Udaipur", "Bhilwara", "Alwar"],
+    "Madhya Pradesh": ["Indore", "Bhopal", "Jabalpur", "Gwalior", "Ujjain", "Sagar"],
+    "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda"],
+    "Haryana": ["Faridabad", "Gurgaon", "Panipat", "Ambala", "Yamunanagar", "Rohtak"],
+    "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Purnia"],
+    "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur", "Sambalpur"],
+    "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool"],
+    "Assam": ["Guwahati", "Silchar", "Dibrugarh", "Jorhat"],
+    "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro"],
+    "Chhattisgarh": ["Raipur", "Bhilai", "Bilaspur", "Korba"],
+    "Uttarakhand": ["Dehradun", "Haridwar", "Roorkee", "Haldwani"],
+    "Himachal Pradesh": ["Shimla", "Mandi", "Dharamshala", "Solan"],
+    "Goa": ["Panaji", "Margao", "Vasco da Gama", "Mapusa"],
+    "Tripura": ["Agartala"],
+    "Manipur": ["Imphal"],
+    "Meghalaya": ["Shillong"],
+    "Nagaland": ["Kohima", "Dimapur"],
+    "Arunachal Pradesh": ["Itanagar"],
+    "Mizoram": ["Aizawl"],
+    "Sikkim": ["Gangtok"],
+    "Chandigarh": ["Chandigarh"],
+    "Puducherry": ["Puducherry"],
+    "Jammu and Kashmir": ["Srinagar", "Jammu"],
+    "Ladakh": ["Leh", "Kargil"],
+    "Andaman and Nicobar Islands": ["Port Blair"],
+    "Lakshadweep": ["Kavaratti"],
+    "Dadra and Nagar Haveli and Daman and Diu": ["Daman", "Diu", "Silvassa"]
+};
+
 
 export default function DojoManager() {
     const { showToast } = useToast();
@@ -28,12 +74,9 @@ export default function DojoManager() {
     const [editingDojo, setEditingDojo] = useState<Dojo | null>(null);
     const [formData, setFormData] = useState({
         name: "",
-        dojoCode: "",
         city: "",
         state: "",
         address: "",
-        contactEmail: "",
-        contactPhone: "",
         instructorId: ""
     });
 
@@ -53,7 +96,8 @@ export default function DojoManager() {
 
     const fetchInstructors = async () => {
         try {
-            const res = await api.get('/users?role=INSTRUCTOR');
+            // Fetch both INSTRUCTOR and ADMIN roles
+            const res = await api.get('/users?role=INSTRUCTOR,ADMIN');
             setInstructors(res.data.data.users);
         } catch (error) {
             console.error("Failed to fetch instructors", error);
@@ -70,24 +114,18 @@ export default function DojoManager() {
             setEditingDojo(dojo);
             setFormData({
                 name: dojo.name,
-                dojoCode: dojo.dojoCode,
                 city: dojo.city,
-                state: dojo.state,
+                state: dojo.state || "",
                 address: dojo.address || "",
-                contactEmail: dojo.contactEmail || "",
-                contactPhone: dojo.contactPhone || "",
                 instructorId: dojo.instructors && dojo.instructors.length > 0 ? dojo.instructors[0].id : ""
             });
         } else {
             setEditingDojo(null);
             setFormData({
                 name: "",
-                dojoCode: "",
                 city: "",
                 state: "",
                 address: "",
-                contactEmail: "",
-                contactPhone: "",
                 instructorId: ""
             });
         }
@@ -100,10 +138,11 @@ export default function DojoManager() {
             if (editingDojo) {
                 await api.patch(`/dojos/${editingDojo.id}`, formData);
             } else {
-                await api.post('/dojos', formData);
+                await api.post('/dojos', { ...formData, country: 'India' });
             }
             setIsModalOpen(false);
             fetchDojos();
+            showToast(editingDojo ? "Dojo updated successfully" : "Dojo created successfully", "success");
         } catch (error) {
             console.error("Failed to save dojo", error);
             showToast("Failed to save dojo. Please check the inputs.", "error");
@@ -124,6 +163,7 @@ export default function DojoManager() {
             await api.delete(`/dojos/${deleteId}`);
             fetchDojos();
             setDeleteId(null);
+            showToast("Dojo deleted successfully", "success");
         } catch (error) {
             console.error("Failed to delete dojo", error);
             showToast("Failed to delete dojo", "error");
@@ -203,9 +243,6 @@ export default function DojoManager() {
                                 <MapPin className="w-4 h-4" />
                                 {dojo.city}, {dojo.state}
                             </div>
-                            {dojo.contactEmail && (
-                                <div className="truncate">{dojo.contactEmail}</div>
-                            )}
                         </div>
                     </motion.div>
                 ))}
@@ -242,36 +279,48 @@ export default function DojoManager() {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label>Code</Label>
-                                        <Input
-                                            value={formData.dojoCode}
-                                            onChange={(e) => setFormData({ ...formData, dojoCode: e.target.value })}
-                                            placeholder="MUM-01"
+                                        <Label>State</Label>
+                                        <select
+                                            value={formData.state}
+                                            onChange={(e) => setFormData({ ...formData, state: e.target.value, city: "" })}
                                             required
-                                            className="bg-black/50 border-white/10"
-                                        />
+                                            className="flex h-10 w-full rounded-md border border-white/10 bg-black/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                                        >
+                                            <option value="" className="bg-zinc-900">Select State</option>
+                                            {INDIAN_STATES.map((state) => (
+                                                <option key={state} value={state} className="bg-zinc-900">{state}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>City</Label>
-                                        <Input
+                                        <select
                                             value={formData.city}
                                             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                            placeholder="Mumbai"
                                             required
-                                            className="bg-black/50 border-white/10"
-                                        />
+                                            disabled={!formData.state}
+                                            className="flex h-10 w-full rounded-md border border-white/10 bg-black/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                                        >
+                                            <option value="" className="bg-zinc-900">Select City</option>
+                                            {formData.state && CITIES[formData.state]?.map((city) => (
+                                                <option key={city} value={city} className="bg-zinc-900">{city}</option>
+                                            ))}
+                                            {formData.state && !CITIES[formData.state] && (
+                                                <option value={formData.city} className="bg-zinc-900">Other</option>
+                                            )}
+                                        </select>
+                                        {/* Fallback input if city not in list or state has no cities defined */}
+                                        {formData.state && (!CITIES[formData.state] || CITIES[formData.state].length === 0) && (
+                                            <Input
+                                                value={formData.city}
+                                                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                                placeholder="Enter City"
+                                                className="mt-2 bg-black/50 border-white/10"
+                                            />
+                                        )}
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>State</Label>
-                                    <Input
-                                        value={formData.state}
-                                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                                        placeholder="Maharashtra"
-                                        required
-                                        className="bg-black/50 border-white/10"
-                                    />
-                                </div>
+
                                 <div className="space-y-2">
                                     <Label>Address</Label>
                                     <Input
@@ -280,27 +329,6 @@ export default function DojoManager() {
                                         placeholder="Full Address"
                                         className="bg-black/50 border-white/10"
                                     />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Email</Label>
-                                        <Input
-                                            value={formData.contactEmail}
-                                            onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                                            placeholder="contact@dojo.com"
-                                            type="email"
-                                            className="bg-black/50 border-white/10"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Phone</Label>
-                                        <Input
-                                            value={formData.contactPhone}
-                                            onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                                            placeholder="+91..."
-                                            className="bg-black/50 border-white/10"
-                                        />
-                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Primary Instructor <span className="text-red-500">*</span></Label>
@@ -313,7 +341,7 @@ export default function DojoManager() {
                                         <option value="" className="bg-zinc-900">Select Instructor</option>
                                         {instructors.map((instructor) => (
                                             <option key={instructor.id} value={instructor.id} className="bg-zinc-900">
-                                                {instructor.name} ({instructor.email})
+                                                {instructor.name} ({instructor.role})
                                             </option>
                                         ))}
                                     </select>

@@ -59,7 +59,6 @@ export default function AdminDashboard({ user }: { user: any }) {
         { id: 'users', label: 'User Management', icon: Users },
         { id: 'dojos', label: 'Dojo Management', icon: Building },
         { id: 'events', label: 'Event Management', icon: Calendar },
-        { id: 'content', label: 'Site Content', icon: Image },
         { id: 'blogs', label: 'Blogs', icon: FileText },
         { id: 'media', label: 'Media', icon: Newspaper },
         { id: 'recognition', label: 'Monthly Recognition', icon: Trophy },
@@ -232,7 +231,6 @@ export default function AdminDashboard({ user }: { user: any }) {
                         {activeTab === 'users' && <motion.div key="users" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><UserManagementTable /></motion.div>}
                         {activeTab === 'dojos' && <motion.div key="dojos" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><DojoManager /></motion.div>}
                         {activeTab === 'events' && <motion.div key="events" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><EventManager /></motion.div>}
-                        {activeTab === 'content' && <motion.div key="content" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><ContentManagement /></motion.div>}
                         {activeTab === 'blogs' && <motion.div key="blogs" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><BlogManager /></motion.div>}
                         {activeTab === 'media' && <motion.div key="media" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><MediaManager /></motion.div>}
                         {activeTab === 'recognition' && <motion.div key="recognition" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><RecognitionManager /></motion.div>}

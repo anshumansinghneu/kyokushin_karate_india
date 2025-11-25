@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
 import { useToast } from '@/contexts/ToastContext';
+import Portal from "@/components/ui/portal";
 
 export default function UserManagementTable() {
     const { showToast } = useToast();
@@ -130,9 +131,11 @@ export default function UserManagementTable() {
     const handleUpdateUser = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingUser) return;
+        console.log("Updating user:", editingUser.id, "with data:", editFormData);
 
         try {
-            await api.patch(`/users/${editingUser.id}`, editFormData);
+            const res = await api.patch(`/users/${editingUser.id}`, editFormData);
+            console.log("Update user response:", res);
             setIsEditModalOpen(false);
             fetchUsers();
             showToast("User updated successfully!", "success");
@@ -144,9 +147,11 @@ export default function UserManagementTable() {
 
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log("Creating user with data:", createFormData);
 
         try {
-            await api.post("/users", createFormData);
+            const res = await api.post("/users", createFormData);
+            console.log("Create user response:", res);
             setIsCreateModalOpen(false);
             setCreateFormData({
                 name: "",
@@ -172,39 +177,41 @@ export default function UserManagementTable() {
     return (
         <div className="glass-card p-6">
             {/* Delete Confirmation Modal */}
-            <AnimatePresence>
-                {deleteId && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
-                        >
-                            <h3 className="text-xl font-bold text-white mb-2">Delete User?</h3>
-                            <p className="text-gray-400 mb-6">
-                                Are you sure you want to delete this user? This action cannot be undone.
-                            </p>
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setDeleteId(null)}
-                                    className="px-4 py-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors font-medium"
-                                    disabled={isDeleting}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={confirmDelete}
-                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold flex items-center gap-2"
-                                    disabled={isDeleting}
-                                >
-                                    {isDeleting ? 'Deleting...' : 'Delete User'}
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            <Portal>
+                <AnimatePresence>
+                    {deleteId && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                            >
+                                <h3 className="text-xl font-bold text-white mb-2">Delete User?</h3>
+                                <p className="text-gray-400 mb-6">
+                                    Are you sure you want to delete this user? This action cannot be undone.
+                                </p>
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        onClick={() => setDeleteId(null)}
+                                        className="px-4 py-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors font-medium"
+                                        disabled={isDeleting}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={confirmDelete}
+                                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold flex items-center gap-2"
+                                        disabled={isDeleting}
+                                    >
+                                        {isDeleting ? 'Deleting...' : 'Delete User'}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+            </Portal>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -327,198 +334,94 @@ export default function UserManagementTable() {
             </div>
 
             {/* Edit User Modal */}
-            <AnimatePresence>
-                {isEditModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 20 }}
-                            className="bg-zinc-900 border border-white/10 rounded-xl p-6 w-full max-w-md shadow-2xl"
-                        >
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-white">Edit User</h3>
-                                <Button variant="ghost" className="h-8 w-8 p-0" onClick={() => setIsEditModalOpen(false)}>
-                                    <X className="w-5 h-5" />
-                                </Button>
-                            </div>
-
-                            <form onSubmit={handleUpdateUser} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label>Name</Label>
-                                    <Input
-                                        value={editFormData.name}
-                                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                                        className="bg-black/50 border-white/10"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Email</Label>
-                                    <Input
-                                        value={editFormData.email}
-                                        onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                                        className="bg-black/50 border-white/10"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Role</Label>
-                                        <select
-                                            value={editFormData.role}
-                                            onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
-                                            className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                        >
-                                            <option value="STUDENT">Student</option>
-                                            <option value="INSTRUCTOR">Instructor</option>
-                                            <option value="ADMIN">Admin</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Status</Label>
-                                        <select
-                                            value={editFormData.membershipStatus}
-                                            onChange={(e) => setEditFormData({ ...editFormData, membershipStatus: e.target.value })}
-                                            className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                        >
-                                            <option value="PENDING">Pending</option>
-                                            <option value="ACTIVE">Active</option>
-                                            <option value="EXPIRED">Expired</option>
-                                            <option value="REJECTED">Rejected</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Dojo</Label>
-                                    <select
-                                        value={editFormData.dojoId}
-                                        onChange={(e) => setEditFormData({ ...editFormData, dojoId: e.target.value })}
-                                        className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                    >
-                                        <option value="">No Dojo</option>
-                                        {dojos.map((dojo: any) => (
-                                            <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Belt Rank</Label>
-                                    <select
-                                        value={editFormData.currentBeltRank}
-                                        onChange={(e) => setEditFormData({ ...editFormData, currentBeltRank: e.target.value })}
-                                        className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                    >
-                                        {["White", "Orange", "Blue", "Yellow", "Green", "Brown", "Black"].map(belt => (
-                                            <option key={belt} value={belt}>{belt}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="pt-4 flex justify-end gap-2">
-                                    <Button type="button" variant="ghost" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-                                    <Button type="submit" className="bg-primary hover:bg-primary-dark text-white">
-                                        <Save className="w-4 h-4 mr-2" /> Save Changes
+            <Portal>
+                <AnimatePresence>
+                    {isEditModalOpen && editingUser && (
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="bg-zinc-900 border border-white/10 rounded-xl p-6 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
+                            >
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                        <Edit2 className="w-5 h-5 text-primary" />
+                                        Edit User
+                                    </h3>
+                                    <Button variant="ghost" className="h-8 w-8 p-0" onClick={() => {
+                                        setIsEditModalOpen(false);
+                                        setEditingUser(null);
+                                    }}>
+                                        <X className="w-5 h-5" />
                                     </Button>
                                 </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
 
-            {/* Create User Modal */}
-            <AnimatePresence>
-                {isCreateModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 20 }}
-                            className="bg-zinc-900 border border-white/10 rounded-xl p-6 w-full max-w-2xl shadow-2xl my-8"
-                        >
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <UserPlus className="w-5 h-5 text-primary" />
-                                    Create New User
-                                </h3>
-                                <Button variant="ghost" className="h-8 w-8 p-0" onClick={() => setIsCreateModalOpen(false)}>
-                                    <X className="w-5 h-5" />
-                                </Button>
-                            </div>
-
-                            <form onSubmit={handleCreateUser} className="space-y-4">
-                                {/* Email and Password */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Email *</Label>
-                                        <Input
-                                            type="email"
-                                            value={createFormData.email}
-                                            onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
-                                            className="bg-black/50 border-white/10"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Password * (min 8 chars)</Label>
-                                        <Input
-                                            type="password"
-                                            value={createFormData.password}
-                                            onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
-                                            className="bg-black/50 border-white/10"
-                                            required
-                                            minLength={8}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Name */}
-                                <div className="space-y-2">
-                                    <Label>Full Name *</Label>
-                                    <Input
-                                        value={createFormData.name}
-                                        onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
-                                        className="bg-black/50 border-white/10"
-                                        required
-                                    />
-                                </div>
-
-                                {/* Role and Dojo */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Role *</Label>
-                                        <select
-                                            value={createFormData.role}
-                                            onChange={(e) => setCreateFormData({ ...createFormData, role: e.target.value })}
-                                            className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                            required
-                                        >
-                                            <option value="STUDENT">Student</option>
-                                            <option value="INSTRUCTOR">Instructor</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Dojo</Label>
-                                        <select
-                                            value={createFormData.dojoId}
-                                            onChange={(e) => setCreateFormData({ ...createFormData, dojoId: e.target.value })}
-                                            className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                        >
-                                            <option value="">No Dojo</option>
-                                            {dojos.map((dojo: any) => (
-                                                <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {/* Belt Rank and Status (for Students) */}
-                                {createFormData.role === "STUDENT" && (
+                                <form onSubmit={handleUpdateUser} className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Name</Label>
+                                            <Input
+                                                value={editFormData.name}
+                                                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Email</Label>
+                                            <Input
+                                                value={editFormData.email}
+                                                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Role</Label>
+                                            <select
+                                                value={editFormData.role}
+                                                onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                            >
+                                                <option value="STUDENT">Student</option>
+                                                <option value="INSTRUCTOR">Instructor</option>
+                                                <option value="ADMIN">Admin</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Status</Label>
+                                            <select
+                                                value={editFormData.membershipStatus}
+                                                onChange={(e) => setEditFormData({ ...editFormData, membershipStatus: e.target.value })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                            >
+                                                <option value="PENDING">Pending</option>
+                                                <option value="ACTIVE">Active</option>
+                                                <option value="EXPIRED">Expired</option>
+                                                <option value="REJECTED">Rejected</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Dojo</Label>
+                                            <select
+                                                value={editFormData.dojoId}
+                                                onChange={(e) => setEditFormData({ ...editFormData, dojoId: e.target.value })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                            >
+                                                <option value="">No Dojo</option>
+                                                {dojos.map((dojo: any) => (
+                                                    <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
                                         <div className="space-y-2">
                                             <Label>Belt Rank</Label>
                                             <select
-                                                value={createFormData.currentBeltRank}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, currentBeltRank: e.target.value })}
+                                                value={editFormData.currentBeltRank}
+                                                onChange={(e) => setEditFormData({ ...editFormData, currentBeltRank: e.target.value })}
                                                 className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
                                             >
                                                 {["White", "Orange", "Blue", "Yellow", "Green", "Brown", "Black"].map(belt => (
@@ -526,61 +429,182 @@ export default function UserManagementTable() {
                                                 ))}
                                             </select>
                                         </div>
+                                    </div>
+
+                                    <div className="pt-4 flex justify-end gap-2">
+                                        <Button type="button" variant="ghost" onClick={() => {
+                                            setIsEditModalOpen(false);
+                                            setEditingUser(null);
+                                        }}>Cancel</Button>
+                                        <Button type="submit" className="bg-primary hover:bg-primary-dark text-white">
+                                            <Save className="w-4 h-4 mr-2" /> Save Changes
+                                        </Button>
+                                    </div>
+                                </form>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+            </Portal>
+
+            {/* Create User Modal */}
+            <Portal>
+                <AnimatePresence>
+                    {isCreateModalOpen && (
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="bg-zinc-900 border border-white/10 rounded-xl p-6 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
+                            >
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                        <UserPlus className="w-5 h-5 text-primary" />
+                                        Create New User
+                                    </h3>
+                                    <Button variant="ghost" className="h-8 w-8 p-0" onClick={() => setIsCreateModalOpen(false)}>
+                                        <X className="w-5 h-5" />
+                                    </Button>
+                                </div>
+
+                                <form onSubmit={handleCreateUser} className="space-y-4">
+                                    {/* Email and Password */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label>Membership Status</Label>
+                                            <Label>Email *</Label>
+                                            <Input
+                                                type="email"
+                                                value={createFormData.email}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Password * (min 8 chars)</Label>
+                                            <Input
+                                                type="password"
+                                                value={createFormData.password}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                                required
+                                                minLength={8}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Name */}
+                                    <div className="space-y-2">
+                                        <Label>Full Name *</Label>
+                                        <Input
+                                            value={createFormData.name}
+                                            onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
+                                            className="bg-black/50 border-white/10"
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Role and Dojo */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Role *</Label>
                                             <select
-                                                value={createFormData.membershipStatus}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, membershipStatus: e.target.value })}
+                                                value={createFormData.role}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, role: e.target.value })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                                required
+                                            >
+                                                <option value="STUDENT">Student</option>
+                                                <option value="INSTRUCTOR">Instructor</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Dojo</Label>
+                                            <select
+                                                value={createFormData.dojoId}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, dojoId: e.target.value })}
                                                 className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
                                             >
-                                                <option value="ACTIVE">Active</option>
-                                                <option value="PENDING">Pending</option>
+                                                <option value="">No Dojo</option>
+                                                {dojos.map((dojo: any) => (
+                                                    <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
-                                )}
 
-                                {/* Phone, City, State */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Phone</Label>
-                                        <Input
-                                            type="tel"
-                                            value={createFormData.phone}
-                                            onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
-                                            className="bg-black/50 border-white/10"
-                                            placeholder="+91-1234567890"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>City</Label>
-                                        <Input
-                                            value={createFormData.city}
-                                            onChange={(e) => setCreateFormData({ ...createFormData, city: e.target.value })}
-                                            className="bg-black/50 border-white/10"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>State</Label>
-                                        <Input
-                                            value={createFormData.state}
-                                            onChange={(e) => setCreateFormData({ ...createFormData, state: e.target.value })}
-                                            className="bg-black/50 border-white/10"
-                                        />
-                                    </div>
-                                </div>
+                                    {/* Belt Rank and Status (for Students) */}
+                                    {createFormData.role === "STUDENT" && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Belt Rank</Label>
+                                                <select
+                                                    value={createFormData.currentBeltRank}
+                                                    onChange={(e) => setCreateFormData({ ...createFormData, currentBeltRank: e.target.value })}
+                                                    className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                                >
+                                                    {["White", "Orange", "Blue", "Yellow", "Green", "Brown", "Black"].map(belt => (
+                                                        <option key={belt} value={belt}>{belt}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Membership Status</Label>
+                                                <select
+                                                    value={createFormData.membershipStatus}
+                                                    onChange={(e) => setCreateFormData({ ...createFormData, membershipStatus: e.target.value })}
+                                                    className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                                >
+                                                    <option value="ACTIVE">Active</option>
+                                                    <option value="PENDING">Pending</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
 
-                                <div className="pt-4 flex justify-end gap-2">
-                                    <Button type="button" variant="ghost" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
-                                    <Button type="submit" className="bg-primary hover:bg-primary-dark text-white">
-                                        <UserPlus className="w-4 h-4 mr-2" /> Create User
-                                    </Button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                                    {/* Phone, City, State */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Phone</Label>
+                                            <Input
+                                                type="tel"
+                                                value={createFormData.phone}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                                placeholder="+91-1234567890"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>City</Label>
+                                            <Input
+                                                value={createFormData.city}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, city: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>State</Label>
+                                            <Input
+                                                value={createFormData.state}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, state: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 flex justify-end gap-2">
+                                        <Button type="button" variant="ghost" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
+                                        <Button type="submit" className="bg-primary hover:bg-primary-dark text-white">
+                                            <UserPlus className="w-4 h-4 mr-2" /> Create User
+                                        </Button>
+                                    </div>
+                                </form>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+            </Portal>
         </div>
     );
 }

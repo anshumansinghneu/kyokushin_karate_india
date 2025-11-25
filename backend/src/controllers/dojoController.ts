@@ -117,7 +117,7 @@ export const getDojo = catchAsync(async (req: Request, res: Response, next: Next
 });
 
 export const createDojo = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { name, city, state, country, address, contactEmail, contactPhone, instructorId } = req.body;
+    const { name, city, state, country, address, instructorId } = req.body;
 
     if (!city || !state || !instructorId) {
         return next(new AppError('City, State, and Primary Instructor are required', 400));
@@ -143,8 +143,6 @@ export const createDojo = catchAsync(async (req: Request, res: Response, next: N
             state,
             country,
             address,
-            contactEmail,
-            contactPhone,
             instructors: req.body.instructorId ? {
                 connect: { id: req.body.instructorId }
             } : undefined
