@@ -45,11 +45,16 @@ export default function DojoDetailPage() {
     useEffect(() => {
         const fetchDojo = async () => {
             try {
+                console.log('Fetching dojo with ID:', params.id);
                 const response = await api.get(`/dojos/${params.id}`);
+                console.log('Dojo response:', response.data);
                 setDojo(response.data.data.dojo);
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Failed to fetch dojo", err);
-                setError("Failed to load dojo details.");
+                console.error("Error response:", err.response?.data);
+                console.error("Error status:", err.response?.status);
+                const errorMessage = err.response?.data?.message || "Failed to load dojo details.";
+                setError(errorMessage);
             } finally {
                 setIsLoading(false);
             }
@@ -70,8 +75,11 @@ export default function DojoDetailPage() {
 
     if (error || !dojo) {
         return (
-            <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white">
+            <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white px-4">
                 <h2 className="text-2xl font-bold mb-4 text-red-500">{error || "Dojo not found"}</h2>
+                <p className="text-gray-400 mb-6 text-center max-w-md">
+                    Check the browser console for more details. The dojo with ID <code className="bg-zinc-800 px-2 py-1 rounded">{params.id}</code> could not be loaded.
+                </p>
                 <Link href="/dojos">
                     <Button variant="outline">Back to Dojos</Button>
                 </Link>

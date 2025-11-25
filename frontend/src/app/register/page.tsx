@@ -313,7 +313,7 @@ export default function RegisterPage() {
                         {/* Header */}
                         <div className="flex items-center justify-between mb-6">
                             <Link href="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group">
-                                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
+                                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                                 <span className="hidden sm:inline">Back</span>
                             </Link>
                             <div className="text-right">

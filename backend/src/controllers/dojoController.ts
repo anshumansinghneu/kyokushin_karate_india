@@ -80,16 +80,6 @@ export const getDojo = catchAsync(async (req: Request, res: Response, next: Next
     const dojo = await prisma.dojo.findUnique({
         where: { id: req.params.id },
         include: {
-            instructors: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    currentBeltRank: true,
-                    profilePhotoUrl: true,
-                    role: true
-                }
-            },
             gallery: true,
             events: {
                 where: {
@@ -108,10 +98,29 @@ export const getDojo = catchAsync(async (req: Request, res: Response, next: Next
         return next(new AppError('No dojo found with that ID', 404));
     }
 
+    // Fetch instructors separately to avoid relation issues
+    const instructors = await prisma.user.findMany({
+        where: {
+            dojoId: req.params.id,
+            role: 'INSTRUCTOR'
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            currentBeltRank: true,
+            profilePhotoUrl: true,
+            role: true
+        }
+    });
+
     res.status(200).json({
         status: 'success',
         data: {
-            dojo,
+            dojo: {
+                ...dojo,
+                instructors
+            },
         },
     });
 });
