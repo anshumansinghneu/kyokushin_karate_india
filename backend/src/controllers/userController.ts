@@ -23,7 +23,12 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
 
     // Admin sees all, or can filter
     if (req.query.role) {
-        where.role = req.query.role;
+        const roles = (req.query.role as string).split(',');
+        if (roles.length > 1) {
+            where.role = { in: roles };
+        } else {
+            where.role = roles[0];
+        }
     }
     if (req.query.dojoId) {
         where.dojoId = req.query.dojoId;

@@ -117,11 +117,23 @@ export const getDojo = catchAsync(async (req: Request, res: Response, next: Next
 });
 
 export const createDojo = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { name, dojoCode, city, state, country, address, contactEmail, contactPhone, instructorId } = req.body;
+    const { name, city, state, country, address, contactEmail, contactPhone, instructorId } = req.body;
 
     if (!city || !state || !instructorId) {
         return next(new AppError('City, State, and Primary Instructor are required', 400));
     }
+
+    // Generate Dojo Code: First 3 letters of City (uppercase) + Sequence
+    const cityCode = city.substring(0, 3).toUpperCase();
+    const count = await prisma.dojo.count({
+        where: {
+            dojoCode: {
+                startsWith: cityCode
+            }
+        }
+    });
+    const sequence = (count + 1).toString().padStart(2, '0');
+    const dojoCode = `${cityCode}-${sequence}`;
 
     const newDojo = await prisma.dojo.create({
         data: {

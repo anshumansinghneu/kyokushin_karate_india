@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUser = exports.inviteUser = exports.deleteUser = exports.updateMe = exports.rejectUser = exports.approveUser = exports.getUser = exports.getAllUsers = void 0;
+exports.updateUser = exports.inviteUser = exports.createUser = exports.deleteUser = exports.updateMe = exports.rejectUser = exports.approveUser = exports.getUser = exports.getAllUsers = void 0;
 const prisma_1 = __importDefault(require("../prisma"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const errorHandler_1 = require("../utils/errorHandler");
@@ -24,7 +24,13 @@ exports.getAllUsers = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     }
     // Admin sees all, or can filter
     if (req.query.role) {
-        where.role = req.query.role;
+        const roles = req.query.role.split(',');
+        if (roles.length > 1) {
+            where.role = { in: roles };
+        }
+        else {
+            where.role = roles[0];
+        }
     }
     if (req.query.dojoId) {
         where.dojoId = req.query.dojoId;
@@ -209,6 +215,82 @@ exports.deleteUser = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     res.status(204).json({
         status: 'success',
         data: null
+    });
+});
+exports.createUser = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
+    const { name, email, password, role, phone, dojoId, currentBeltRank, membershipStatus, city, state } = req.body;
+    // Validation
+    if (!name || !email || !password || !role) {
+        return next(new errorHandler_1.AppError('Please provide name, email, password, and role', 400));
+    }
+    if (password.length < 8) {
+        return next(new errorHandler_1.AppError('Password must be at least 8 characters long', 400));
+    }
+    if (!['STUDENT', 'INSTRUCTOR'].includes(role)) {
+        return next(new errorHandler_1.AppError('Role must be either STUDENT or INSTRUCTOR', 400));
+    }
+    // Check if user already exists
+    const existingUser = await prisma_1.default.user.findUnique({
+        where: { email }
+    });
+    if (existingUser) {
+        return next(new errorHandler_1.AppError('User with this email already exists', 400));
+    }
+    // Hash password
+    const hashedPassword = await bcryptjs_1.default.hash(password, 12);
+    // Prepare user data based on role
+    const userData = {
+        name,
+        email,
+        passwordHash: hashedPassword,
+        role,
+        phone: phone || null,
+        city: city || null,
+        state: state || null,
+        country: 'India',
+        dojoId: dojoId || null,
+    };
+    // Role-specific defaults
+    if (role === 'STUDENT') {
+        // Generate membership number if dojo is assigned
+        let membershipNumber = null;
+        if (dojoId) {
+            membershipNumber = await generateMembershipNumber(dojoId);
+        }
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + 1);
+        userData.membershipNumber = membershipNumber;
+        userData.membershipStatus = membershipStatus || 'ACTIVE';
+        userData.membershipStartDate = startDate;
+        userData.membershipEndDate = endDate;
+        userData.currentBeltRank = currentBeltRank || 'White';
+        userData.isInstructorApproved = true; // Auto-approved
+        // @ts-ignore
+        userData.approvedBy = req.user.id;
+        userData.approvedAt = new Date();
+    }
+    else if (role === 'INSTRUCTOR') {
+        userData.isInstructorApproved = true;
+        userData.instructorApprovedAt = new Date();
+        userData.membershipStatus = 'ACTIVE';
+        // @ts-ignore
+        userData.approvedBy = req.user.id;
+        userData.approvedAt = new Date();
+    }
+    // Create user
+    const newUser = await prisma_1.default.user.create({
+        data: userData,
+        include: {
+            dojo: true
+        }
+    });
+    res.status(201).json({
+        status: 'success',
+        message: `${role} created successfully`,
+        data: {
+            user: newUser
+        }
     });
 });
 exports.inviteUser = (0, catchAsync_1.catchAsync)(async (req, res, next) => {

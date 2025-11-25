@@ -13,7 +13,8 @@ router.get('/me', authController_1.getMe);
 router.patch('/updateMe', userController_1.updateMe);
 router.post('/invite', (0, authMiddleware_1.restrictTo)('ADMIN', 'INSTRUCTOR'), userController_1.inviteUser);
 router.route('/')
-    .get((0, authMiddleware_1.restrictTo)('ADMIN', 'INSTRUCTOR'), userController_1.getAllUsers);
+    .get((0, authMiddleware_1.restrictTo)('ADMIN', 'INSTRUCTOR'), userController_1.getAllUsers)
+    .post((0, authMiddleware_1.restrictTo)('ADMIN'), userController_1.createUser);
 router.route('/:id')
     .get(userController_1.getUser)
     .patch((0, authMiddleware_1.restrictTo)('ADMIN'), userController_1.updateUser)

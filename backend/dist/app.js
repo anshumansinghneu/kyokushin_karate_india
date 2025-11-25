@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const path_1 = __importDefault(require("path"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
+// @ts-ignore - Type definitions issue in production build
 const morgan_1 = __importDefault(require("morgan"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
@@ -21,6 +22,7 @@ const contentRoutes_1 = __importDefault(require("./routes/contentRoutes"));
 const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
 const postRoutes_1 = __importDefault(require("./routes/postRoutes"));
 const recognitionRoutes_1 = __importDefault(require("./routes/recognitionRoutes"));
+const setupRoutes_1 = __importDefault(require("./routes/setupRoutes"));
 const errorHandler_1 = require("./utils/errorHandler");
 const app = (0, express_1.default)();
 // Middleware
@@ -31,6 +33,7 @@ app.use((0, helmet_1.default)({
 app.use((0, morgan_1.default)('dev'));
 app.use(express_1.default.json());
 // Routes
+app.use('/api/setup', setupRoutes_1.default); // Admin setup (one-time use)
 app.use('/api/auth', authRoutes_1.default);
 app.use('/api/users', userRoutes_1.default);
 app.use('/api/dojos', dojoRoutes_1.default);

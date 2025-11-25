@@ -111,10 +111,21 @@ exports.getDojo = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     });
 });
 exports.createDojo = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
-    const { name, dojoCode, city, state, country, address, contactEmail, contactPhone, instructorId } = req.body;
+    const { name, city, state, country, address, contactEmail, contactPhone, instructorId } = req.body;
     if (!city || !state || !instructorId) {
         return next(new errorHandler_1.AppError('City, State, and Primary Instructor are required', 400));
     }
+    // Generate Dojo Code: First 3 letters of City (uppercase) + Sequence
+    const cityCode = city.substring(0, 3).toUpperCase();
+    const count = await prisma_1.default.dojo.count({
+        where: {
+            dojoCode: {
+                startsWith: cityCode
+            }
+        }
+    });
+    const sequence = (count + 1).toString().padStart(2, '0');
+    const dojoCode = `${cityCode}-${sequence}`;
     const newDojo = await prisma_1.default.dojo.create({
         data: {
             name,
