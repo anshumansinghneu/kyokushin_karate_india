@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, ChevronDown, ChevronRight, Shield, User as UserIcon, Users } from 'lucide-react';
+import { getImageUrl } from '@/lib/imageUtils';
 
 interface OrganizationGraphProps {
     users: any[];
