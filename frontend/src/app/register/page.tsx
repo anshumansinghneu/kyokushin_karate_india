@@ -226,7 +226,7 @@ export default function RegisterPage() {
         let fieldsToValidate = role === "STUDENT"
             ? ["name", "email", "password", "confirmPassword", "phone", "dob", "height", "weight", "state", "city", "dojoId", "fatherName", "fatherPhone", "currentBeltRank"]
             : ["name", "email", "password", "confirmPassword", "phone", "dob", "height", "weight", "state", "city", "currentBeltRank", "yearsOfExperience"];
-        
+
         // Add beltExamDate to validation if student claiming higher belt
         if (role === "STUDENT" && formData.currentBeltRank !== "White") {
             fieldsToValidate.push("beltExamDate");

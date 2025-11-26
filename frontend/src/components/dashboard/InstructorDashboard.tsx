@@ -130,6 +130,26 @@ export default function InstructorDashboard({ user }: { user: any }) {
 
             {activeTab === 'overview' && (
                 <div className="space-y-8">
+                    {/* Quick Actions */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                        <Link href="/management/instructor/belt-approvals">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="glass-card p-6 hover:bg-white/10 transition-all cursor-pointer group border border-yellow-500/20 hover:border-yellow-500/40"
+                            >
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="p-3 rounded-xl bg-yellow-500/10">
+                                        <Medal className="w-6 h-6 text-yellow-400" />
+                                    </div>
+                                    <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                                </div>
+                                <h3 className="text-lg font-bold text-white mb-1">Belt Verifications</h3>
+                                <p className="text-sm text-zinc-400">Review student belt claims</p>
+                            </motion.div>
+                        </Link>
+                    </div>
+
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
