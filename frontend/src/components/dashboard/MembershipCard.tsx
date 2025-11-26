@@ -83,7 +83,7 @@ export default function MembershipCard({ user }: MembershipCardProps) {
                     <div className="flex justify-between items-start">
                         <div className="flex items-center gap-4">
                             <div className="relative group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-white to-green-500 blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
+                                <div className="absolute inset-0 bg-red-500 blur-xl opacity-30 group-hover:opacity-50 transition-opacity" />
                                 <div className="relative bg-gradient-to-br from-zinc-800 to-zinc-900 p-3 rounded-2xl border border-white/20">
                                     <Shield className="w-10 h-10 text-white" strokeWidth={1.5} />
                                 </div>
@@ -136,15 +136,15 @@ export default function MembershipCard({ user }: MembershipCardProps) {
 
                         {/* QR Code - Premium Design */}
                         <div className="relative group">
-                            <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-white to-green-500 blur-xl opacity-50 group-hover:opacity-75 transition-opacity rounded-2xl" />
+                            <div className="absolute inset-0 bg-white blur-lg opacity-30 group-hover:opacity-40 transition-opacity rounded-2xl" />
                             <div className="relative bg-white p-3 rounded-2xl shadow-2xl border-2 border-white/50 backdrop-blur-sm">
                                 <QrCode className="w-16 h-16 text-black" strokeWidth={1.5} />
                             </div>
                         </div>
                     </div>
 
-                    {/* Bottom Status Bar */}
-                    <div className="mt-4 flex items-center justify-between px-4 py-2 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    {/* Bottom Status Bar - Fixed positioning */}
+                    <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between px-4 py-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/10">
                         <div className="flex items-center gap-2">
                             <div className={`w-2 h-2 rounded-full animate-pulse bg-gradient-to-r ${statusColors[membershipStatus as keyof typeof statusColors]}`} />
                             <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Status: {membershipStatus}</span>

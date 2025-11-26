@@ -102,13 +102,25 @@ export default function Navbar() {
                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50 text-primary transition-transform hover:scale-105 overflow-hidden">
                                     {user?.profilePhotoUrl ? (
                                         <img
+                                            key={user.profilePhotoUrl}
                                             src={user.profilePhotoUrl}
                                             alt={user.name}
                                             className="w-full h-full object-cover"
                                             onError={(e) => {
                                                 // Fallback to user icon if image fails to load
-                                                e.currentTarget.style.display = 'none';
-                                                e.currentTarget.parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 lg:w-5 lg:h-5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+                                                const target = e.currentTarget;
+                                                target.style.display = 'none';
+                                                const parent = target.parentElement;
+                                                if (parent && !parent.querySelector('svg')) {
+                                                    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                                                    icon.setAttribute('class', 'w-4 h-4 lg:w-5 lg:h-5');
+                                                    icon.setAttribute('viewBox', '0 0 24 24');
+                                                    icon.setAttribute('fill', 'none');
+                                                    icon.setAttribute('stroke', 'currentColor');
+                                                    icon.setAttribute('stroke-width', '2');
+                                                    icon.innerHTML = '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>';
+                                                    parent.appendChild(icon);
+                                                }
                                             }}
                                         />
                                     ) : (
