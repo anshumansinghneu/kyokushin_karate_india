@@ -50,4 +50,3 @@ export const getTournamentStatistics = catchAsync(async (req: Request, res: Resp
         data: statistics,
     });
 });
-

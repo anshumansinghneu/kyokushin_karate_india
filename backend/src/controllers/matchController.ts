@@ -64,18 +64,18 @@ export const updateScore = catchAsync(async (req: Request, res: Response, next: 
     const { fighterAScore, fighterBScore, winnerId, status, notes } = req.body;
 
     const updateData: any = {};
-    
+
     if (fighterAScore !== undefined) updateData.fighterAScore = fighterAScore;
     if (fighterBScore !== undefined) updateData.fighterBScore = fighterBScore;
     if (winnerId !== undefined) updateData.winnerId = winnerId;
     if (status !== undefined) updateData.status = status;
     if (notes !== undefined) updateData.notes = notes;
-    
+
     // If completing the match, set completedAt timestamp
     if (status === 'COMPLETED') {
         updateData.completedAt = new Date();
     }
-    
+
     // If starting live match, set startedAt timestamp
     if (status === 'LIVE' && !updateData.startedAt) {
         updateData.startedAt = new Date();
@@ -93,11 +93,11 @@ export const updateScore = catchAsync(async (req: Request, res: Response, next: 
     // If match is completed, advance winner to next match
     if (status === 'COMPLETED' && winnerId && match.nextMatchId) {
         const nextMatch = await prisma.match.findUnique({ where: { id: match.nextMatchId } });
-        
+
         if (nextMatch) {
             const dataToUpdate: any = {};
             const winnerName = winnerId === match.fighterAId ? match.fighterAName : match.fighterBName;
-            
+
             if (!nextMatch.fighterAId) {
                 dataToUpdate.fighterAId = winnerId;
                 dataToUpdate.fighterAName = winnerName;
@@ -105,7 +105,7 @@ export const updateScore = catchAsync(async (req: Request, res: Response, next: 
                 dataToUpdate.fighterBId = winnerId;
                 dataToUpdate.fighterBName = winnerName;
             }
-            
+
             if (Object.keys(dataToUpdate).length > 0) {
                 await prisma.match.update({
                     where: { id: match.nextMatchId },

@@ -67,11 +67,11 @@ export default function PublicTournamentViewer() {
                 axios.get(`${API_URL}/events/${id}`),
                 axios.get(`${API_URL}/tournaments/${id}`)
             ]);
-            
+
             setTournament(tournamentRes.data.data.event);
             setBrackets(bracketsRes.data.data.brackets || []);
             setLastUpdated(new Date());
-            
+
             if (!selectedBracket && bracketsRes.data.data.brackets?.length > 0) {
                 setSelectedBracket(bracketsRes.data.data.brackets[0]);
             }
@@ -90,7 +90,7 @@ export default function PublicTournamentViewer() {
     // Auto-refresh every 30 seconds for live updates
     useEffect(() => {
         if (!autoRefresh) return;
-        
+
         const interval = setInterval(() => {
             fetchData();
         }, 30000); // 30 seconds
@@ -193,7 +193,7 @@ export default function PublicTournamentViewer() {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                             <Button
                                 onClick={handleShare}
@@ -224,7 +224,7 @@ export default function PublicTournamentViewer() {
                     <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full ${autoRefresh ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
                         <span className="text-sm text-white/60">
-                            {autoRefresh ? 'Auto-refreshing every 30s' : 'Auto-refresh disabled'} 
+                            {autoRefresh ? 'Auto-refreshing every 30s' : 'Auto-refresh disabled'}
                             {' • '}
                             Last updated: {lastUpdated.toLocaleTimeString()}
                         </span>
@@ -293,7 +293,7 @@ export default function PublicTournamentViewer() {
                                             .map(([roundNum, matches]) => {
                                                 const roundIndex = parseInt(roundNum) - 1;
                                                 const rounds = Object.keys(getMatchesByRound(selectedBracket));
-                                                
+
                                                 return (
                                                     <div key={roundNum} className="flex flex-col gap-4">
                                                         {/* Round Header */}
@@ -334,8 +334,8 @@ export default function PublicTournamentViewer() {
 
                                                                 {/* Fighter A */}
                                                                 <div className={`p-4 flex items-center gap-3 ${
-                                                                    match.winnerId === match.fighterAId 
-                                                                        ? 'bg-yellow-500/20 border-l-4 border-yellow-500' 
+                                                                    match.winnerId === match.fighterAId
+                                                                        ? 'bg-yellow-500/20 border-l-4 border-yellow-500'
                                                                         : ''
                                                                 }`}>
                                                                     <div className="flex-1">
@@ -370,8 +370,8 @@ export default function PublicTournamentViewer() {
 
                                                                 {/* Fighter B */}
                                                                 <div className={`p-4 flex items-center gap-3 ${
-                                                                    match.winnerId === match.fighterBId 
-                                                                        ? 'bg-yellow-500/20 border-l-4 border-yellow-500' 
+                                                                    match.winnerId === match.fighterBId
+                                                                        ? 'bg-yellow-500/20 border-l-4 border-yellow-500'
                                                                         : ''
                                                                 }`}>
                                                                     <div className="flex-1">

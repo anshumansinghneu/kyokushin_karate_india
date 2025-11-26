@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { 
-    Trophy, Medal, Crown, Award, TrendingUp, Zap, Target, 
-    Calendar, MapPin, Users, ArrowLeft, Download, Share2 
+import {
+    Trophy, Medal, Crown, Award, TrendingUp, Zap, Target,
+    Calendar, MapPin, Users, ArrowLeft, Download, Share2, FileCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import axios from "axios";
+import { downloadCertificate, downloadAllCertificates } from "@/lib/certificateGenerator";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -117,6 +118,68 @@ export default function TournamentResultsPage() {
         return "h-32";
     };
 
+    const handleDownloadCertificate = (winner: Winner, position: number, categoryName: string) => {
+        if (!statistics) return;
+        
+        downloadCertificate({
+            participantName: winner.name,
+            categoryName: categoryName,
+            position: position,
+            tournamentName: statistics.tournament.name,
+            date: statistics.tournament.date,
+            location: statistics.tournament.location,
+            dojoName: winner.dojoName
+        });
+    };
+
+    const handleDownloadAllCertificates = async () => {
+        if (!statistics) return;
+
+        const certificates = statistics.categoryWinners.flatMap(category => {
+            const certs = [];
+            
+            if (category.firstPlace) {
+                certs.push({
+                    participantName: category.firstPlace.name,
+                    categoryName: category.categoryName,
+                    position: 1,
+                    tournamentName: statistics.tournament.name,
+                    date: statistics.tournament.date,
+                    location: statistics.tournament.location,
+                    dojoName: category.firstPlace.dojoName
+                });
+            }
+            
+            if (category.secondPlace) {
+                certs.push({
+                    participantName: category.secondPlace.name,
+                    categoryName: category.categoryName,
+                    position: 2,
+                    tournamentName: statistics.tournament.name,
+                    date: statistics.tournament.date,
+                    location: statistics.tournament.location,
+                    dojoName: category.secondPlace.dojoName
+                });
+            }
+            
+            if (category.thirdPlace) {
+                certs.push({
+                    participantName: category.thirdPlace.name,
+                    categoryName: category.categoryName,
+                    position: 3,
+                    tournamentName: statistics.tournament.name,
+                    date: statistics.tournament.date,
+                    location: statistics.tournament.location,
+                    dojoName: category.thirdPlace.dojoName
+                });
+            }
+            
+            return certs;
+        });
+
+        await downloadAllCertificates(certificates);
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-black to-yellow-950/20 flex items-center justify-center">
@@ -188,12 +251,12 @@ export default function TournamentResultsPage() {
                                 Share
                             </Button>
                             <Button
+                                onClick={handleDownloadAllCertificates}
                                 size="sm"
-                                variant="outline"
-                                className="hidden md:flex items-center gap-2"
+                                className="hidden md:flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700"
                             >
                                 <Download className="w-4 h-4" />
-                                Export PDF
+                                Download All Certificates
                             </Button>
                         </div>
                     </div>
@@ -401,38 +464,62 @@ export default function TournamentResultsPage() {
                                 className="bg-white/5 border border-white/10 rounded-xl p-4"
                             >
                                 <h3 className="font-bold text-lg mb-4 text-yellow-500">{category.categoryName}</h3>
-                                
+
                                 <div className="space-y-3">
                                     {category.firstPlace && (
-                                        <div className="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                        <div className="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg group hover:bg-yellow-500/20 transition-colors">
                                             {getMedalIcon(1)}
                                             <div className="flex-1">
                                                 <div className="font-bold">{category.firstPlace.name}</div>
                                                 <div className="text-xs text-white/60">{category.firstPlace.dojoName}</div>
                                             </div>
                                             <div className="text-xs bg-yellow-500/20 px-2 py-1 rounded">1st</div>
+                                            <Button
+                                                onClick={() => handleDownloadCertificate(category.firstPlace!, 1, category.categoryName)}
+                                                size="sm"
+                                                variant="ghost"
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <FileCheck className="w-4 h-4" />
+                                            </Button>
                                         </div>
                                     )}
 
                                     {category.secondPlace && (
-                                        <div className="flex items-center gap-3 p-3 bg-gray-400/10 border border-gray-400/30 rounded-lg">
+                                        <div className="flex items-center gap-3 p-3 bg-gray-400/10 border border-gray-400/30 rounded-lg group hover:bg-gray-400/20 transition-colors">
                                             {getMedalIcon(2)}
                                             <div className="flex-1">
                                                 <div className="font-bold">{category.secondPlace.name}</div>
                                                 <div className="text-xs text-white/60">{category.secondPlace.dojoName}</div>
                                             </div>
                                             <div className="text-xs bg-gray-400/20 px-2 py-1 rounded">2nd</div>
+                                            <Button
+                                                onClick={() => handleDownloadCertificate(category.secondPlace!, 2, category.categoryName)}
+                                                size="sm"
+                                                variant="ghost"
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <FileCheck className="w-4 h-4" />
+                                            </Button>
                                         </div>
                                     )}
 
                                     {category.thirdPlace && (
-                                        <div className="flex items-center gap-3 p-3 bg-orange-600/10 border border-orange-600/30 rounded-lg">
+                                        <div className="flex items-center gap-3 p-3 bg-orange-600/10 border border-orange-600/30 rounded-lg group hover:bg-orange-600/20 transition-colors">
                                             {getMedalIcon(3)}
                                             <div className="flex-1">
                                                 <div className="font-bold">{category.thirdPlace.name}</div>
                                                 <div className="text-xs text-white/60">{category.thirdPlace.dojoName}</div>
                                             </div>
                                             <div className="text-xs bg-orange-600/20 px-2 py-1 rounded">3rd</div>
+                                            <Button
+                                                onClick={() => handleDownloadCertificate(category.thirdPlace!, 3, category.categoryName)}
+                                                size="sm"
+                                                variant="ghost"
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <FileCheck className="w-4 h-4" />
+                                            </Button>
                                         </div>
                                     )}
                                 </div>

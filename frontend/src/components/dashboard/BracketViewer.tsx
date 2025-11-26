@@ -129,8 +129,8 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
             return;
         }
 
-        const winnerId = scores.fighterA > scores.fighterB 
-            ? scoringMatch.fighterAId 
+        const winnerId = scores.fighterA > scores.fighterB
+            ? scoringMatch.fighterAId
             : scoringMatch.fighterBId;
 
         try {
@@ -227,7 +227,7 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
                             </p>
                         </div>
                         <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                            selectedBracket.status === 'COMPLETED' 
+                            selectedBracket.status === 'COMPLETED'
                                 ? 'bg-green-500/20 text-green-400'
                                 : selectedBracket.status === 'IN_PROGRESS'
                                 ? 'bg-blue-500/20 text-blue-400'
@@ -246,8 +246,8 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
                                     <div className="text-center mb-2">
                                         <div className="inline-block bg-white/10 px-4 py-2 rounded-lg">
                                             <span className="text-white font-bold">
-                                                {roundIndex === rounds.length - 1 
-                                                    ? '🏆 Final' 
+                                                {roundIndex === rounds.length - 1
+                                                    ? '🏆 Final'
                                                     : roundIndex === rounds.length - 2
                                                     ? 'Semi Finals'
                                                     : `Round ${parseInt(roundNum)}`
@@ -272,8 +272,8 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
                                         >
                                             {/* Fighter A */}
                                             <div className={`p-3 flex items-center gap-3 ${
-                                                match.winnerId === match.fighterAId 
-                                                    ? 'bg-yellow-500/20' 
+                                                match.winnerId === match.fighterAId
+                                                    ? 'bg-yellow-500/20'
                                                     : 'hover:bg-white/5'
                                             }`}>
                                                 <div className="flex-1">
@@ -306,8 +306,8 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
 
                                             {/* Fighter B */}
                                             <div className={`p-3 flex items-center gap-3 ${
-                                                match.winnerId === match.fighterBId 
-                                                    ? 'bg-yellow-500/20' 
+                                                match.winnerId === match.fighterBId
+                                                    ? 'bg-yellow-500/20'
                                                     : 'hover:bg-white/5'
                                             }`}>
                                                 <div className="flex-1">
@@ -457,8 +457,8 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
                                 <div className="flex items-center gap-2 text-yellow-400 text-sm font-semibold">
                                     <Crown className="w-4 h-4" />
                                     <span>
-                                        Winner: {scores.fighterA > scores.fighterB 
-                                            ? scoringMatch.fighterA?.name 
+                                        Winner: {scores.fighterA > scores.fighterB
+                                            ? scoringMatch.fighterA?.name
                                             : scoringMatch.fighterB?.name}
                                     </span>
                                 </div>

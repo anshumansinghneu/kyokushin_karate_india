@@ -203,7 +203,7 @@ export const TournamentService = {
         // Calculate Winners by Category
         const categoryWinners = brackets.map(bracket => {
             // Find the final match (highest round number)
-            const finalMatch = bracket.matches.reduce((prev, current) => 
+            const finalMatch = bracket.matches.reduce((prev, current) =>
                 (current.roundNumber > prev.roundNumber) ? current : prev
             , bracket.matches[0]);
 
@@ -214,8 +214,8 @@ export const TournamentService = {
                 .filter(f => f && f.id !== finalMatch?.winnerId);
 
             const firstPlace = finalMatch?.winner || null;
-            const secondPlace = finalMatch?.winnerId === finalMatch?.fighterAId 
-                ? finalMatch?.fighterB 
+            const secondPlace = finalMatch?.winnerId === finalMatch?.fighterAId
+                ? finalMatch?.fighterB
                 : finalMatch?.fighterA;
             const thirdPlace = semiFinalists.length > 0 ? semiFinalists[0] : null;
 
@@ -295,8 +295,8 @@ export const TournamentService = {
         let mostDominant: any = null;
 
         completedMatches.forEach(match => {
-            const duration = match.startedAt && match.completedAt 
-                ? (new Date(match.completedAt).getTime() - new Date(match.startedAt).getTime()) / 1000 / 60 
+            const duration = match.startedAt && match.completedAt
+                ? (new Date(match.completedAt).getTime() - new Date(match.startedAt).getTime()) / 1000 / 60
                 : null;
 
             if (duration && (!fastestWin || duration < fastestWin.duration)) {
@@ -332,8 +332,8 @@ export const TournamentService = {
             tournament: {
                 id: event.id,
                 name: event.name,
-                date: event.date,
-                location: event.location,
+                date: event.startDate,
+                location: event.location || '',
                 totalParticipants: event.registrations.length,
                 totalCategories: brackets.length,
                 completedMatches: completedMatches.length,
