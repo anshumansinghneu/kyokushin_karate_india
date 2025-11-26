@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, ClipboardCheck, Medal, ChevronRight, Search, Activity, FileText, Edit, Shield, BarChart, Menu, X, LogOut } from "lucide-react";
+import { Users, ClipboardCheck, Medal, ChevronRight, Search, Activity, FileText, Edit, Shield, BarChart, Menu, X, LogOut, Trophy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
@@ -16,6 +16,7 @@ import BlogManager from "./BlogManager";
 import BlogSubmission from "./BlogSubmission";
 import BeltApprovalsView from "./BeltApprovalsView";
 import BeltPromotionsView from "./BeltPromotionsView";
+import TournamentManager from "./TournamentManager";
 
 export default function InstructorDashboard({ user }: { user: any }) {
     const { showToast } = useToast();
@@ -56,13 +57,14 @@ export default function InstructorDashboard({ user }: { user: any }) {
         }
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions' | 'tournaments'>('overview');
 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: Activity },
         { id: 'belt-approvals', label: 'Belt Verifications', icon: ClipboardCheck },
         { id: 'belt-promotions', label: 'Belt Promotions', icon: Medal },
         { id: 'students', label: 'Student Roster', icon: Users },
+        { id: 'tournaments', label: 'Tournaments', icon: Trophy },
         { id: 'blogs', label: 'My Blogs', icon: FileText },
         { id: 'submit', label: 'Write Blog', icon: Edit },
     ];
@@ -273,6 +275,18 @@ export default function InstructorDashboard({ user }: { user: any }) {
                         <p className="text-gray-400">View students who selected you as their instructor.</p>
                     </div>
                     <StudentRoster />
+                </motion.div>
+            )}
+
+            {activeTab === 'tournaments' && (
+                <motion.div
+                    key="tournaments"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <TournamentManager />
                 </motion.div>
             )}
 
