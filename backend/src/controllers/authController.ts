@@ -27,7 +27,7 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
 };
 
 export const register = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password, name, phone, dob, height, weight, city, state, country, dojoId, instructorId, currentBeltRank, beltExamDate, beltClaimReason } = req.body;
+    const { email, password, name, phone, dob, height, weight, city, state, country, dojoId, instructorId, currentBeltRank, beltExamDate, beltClaimReason, yearsOfExperience, countryCode, fatherName, fatherPhone } = req.body;
 
     // Password validation
     if (!password || password.length < 8) {
@@ -88,18 +88,21 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
                 passwordHash: hashedPassword,
                 name,
                 phone,
+                countryCode: countryCode || '+91',
                 dateOfBirth: dob ? new Date(dob) : undefined,
                 height: height ? parseFloat(height) : undefined,
                 weight: weight ? parseFloat(weight) : undefined,
                 city,
                 state,
                 country: country || 'India',
-                dojoId,
-                primaryInstructorId: instructorId,
+                dojoId: dojoId || undefined,
+                primaryInstructorId: instructorId || undefined,
                 role: req.body.role || 'STUDENT',
                 membershipStatus: 'PENDING',
                 currentBeltRank: initialBelt,
                 verificationStatus,
+                fatherName: isStudent ? fatherName : undefined,
+                fatherPhone: isStudent ? fatherPhone : undefined,
             },
         });
 

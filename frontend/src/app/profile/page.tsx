@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Camera, Edit2, Save, Shield } from "lucide-react";
+import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2 } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 
 export default function ProfilePage() {
-    const { user, updateProfile } = useAuthStore();
+    const router = useRouter();
+    const { user, isAuthenticated, isLoading: authLoading, checkAuth, updateProfile } = useAuthStore();
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [beltHistory, setBeltHistory] = useState<any[]>([]);
@@ -22,6 +24,20 @@ export default function ProfilePage() {
         height: user?.height?.toString() || "",
         weight: user?.weight?.toString() || "",
     });
+
+    // Check authentication
+    useEffect(() => {
+        if (!isAuthenticated) {
+            checkAuth();
+        }
+    }, [isAuthenticated, checkAuth]);
+
+    // Redirect if not authenticated
+    useEffect(() => {
+        if (!authLoading && !isAuthenticated) {
+            router.push("/login");
+        }
+    }, [authLoading, isAuthenticated, router]);
 
     // Update form data when user loads
     useEffect(() => {
@@ -68,8 +84,22 @@ export default function ProfilePage() {
         }
     };
 
+    // Show loading while checking auth
+    if (authLoading) {
+        return (
+            <div className="min-h-screen w-full bg-black flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
+            </div>
+        );
+    }
+
+    // Don't render if not authenticated
+    if (!isAuthenticated || !user) {
+        return null;
+    }
+
     return (
-        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
+        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">{
             {/* Background Elements */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-red-900/20 via-black to-black" />
             <div className="absolute inset-0 bg-[url('/dojo-bg.png')] bg-cover bg-center opacity-10 mix-blend-overlay" />

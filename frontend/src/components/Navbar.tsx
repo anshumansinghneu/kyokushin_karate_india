@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, User, LogOut } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
+import { getUserProfileImage } from "@/lib/imageUtils";
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
@@ -100,10 +101,10 @@ export default function Navbar() {
                             )}
                             <Link href="/profile">
                                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50 text-primary transition-transform hover:scale-105 overflow-hidden">
-                                    {user?.profilePhotoUrl ? (
+                                    {getUserProfileImage(user) ? (
                                         <img
-                                            key={user.profilePhotoUrl}
-                                            src={user.profilePhotoUrl}
+                                            key={user?.profilePhotoUrl}
+                                            src={getUserProfileImage(user)!}
                                             alt={user.name}
                                             className="w-full h-full object-cover"
                                             onError={(e) => {

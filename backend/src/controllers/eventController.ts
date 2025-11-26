@@ -6,8 +6,26 @@ import { catchAsync } from '../utils/catchAsync';
 export const getAllEvents = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const events = await prisma.event.findMany({
         orderBy: { startDate: 'asc' },
-        include: {
-            dojo: { select: { name: true, city: true } }
+        select: {
+            id: true,
+            type: true,
+            name: true,
+            description: true,
+            startDate: true,
+            endDate: true,
+            location: true,
+            registrationDeadline: true,
+            maxParticipants: true,
+            memberFee: true,
+            nonMemberFee: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            dojoId: true,
+            dojo: {
+                select: { name: true, city: true }
+            }
+            // Intentionally omitting imageUrl until migration is run in production
         }
     });
 
