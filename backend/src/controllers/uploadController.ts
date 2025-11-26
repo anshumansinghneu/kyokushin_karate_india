@@ -40,7 +40,7 @@ export const handleUpload = (req: Request, res: Response, next: NextFunction) =>
 
     // Construct URL using backend URL
     // Use environment variable or construct from actual backend host
-    const backendUrl = process.env.BACKEND_URL || 'https://kyokushin-karate.onrender.com';
+    const backendUrl = process.env.BACKEND_URL || 'https://kyokushin-api.onrender.com';
     const fileUrl = `${backendUrl}/uploads/${req.file.filename}`;
 
     res.status(200).json({

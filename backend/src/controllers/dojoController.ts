@@ -69,21 +69,9 @@ export const getDojoLocations = catchAsync(async (req: Request, res: Response, n
 });
 
 export const getDojo = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // Fetch basic dojo info without relations to avoid schema mismatch issues
     const dojo = await prisma.dojo.findUnique({
-        where: { id: req.params.id },
-        include: {
-            gallery: true,
-            events: {
-                where: {
-                    startDate: {
-                        gte: new Date()
-                    }
-                },
-                orderBy: {
-                    startDate: 'asc'
-                }
-            }
-        }
+        where: { id: req.params.id }
     });
 
     if (!dojo) {
@@ -106,12 +94,40 @@ export const getDojo = catchAsync(async (req: Request, res: Response, next: Next
         }
     });
 
+    // Fetch events separately with only fields that exist in production
+    let events = [];
+    try {
+        events = await prisma.event.findMany({
+            where: {
+                dojoId: req.params.id,
+                startDate: {
+                    gte: new Date()
+                }
+            },
+            select: {
+                id: true,
+                name: true,
+                type: true,
+                startDate: true,
+                description: true
+            },
+            orderBy: {
+                startDate: 'asc'
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching events:', error);
+        // Continue without events if there's a schema issue
+    }
+
     res.status(200).json({
         status: 'success',
         data: {
             dojo: {
                 ...dojo,
-                instructors
+                gallery: [], // Empty gallery for now until table is created
+                instructors,
+                events
             },
         },
     });
