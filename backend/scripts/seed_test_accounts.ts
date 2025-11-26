@@ -12,6 +12,29 @@ const prisma = new PrismaClient();
 
 async function main() {
     console.log('🌱 Starting test account seeding...');
+    console.log('🧹 Cleaning existing data...');
+
+    // Clean up existing data (order matters due to foreign keys)
+    await prisma.studentNote.deleteMany();
+    await prisma.profileView.deleteMany();
+    await prisma.notification.deleteMany();
+    await prisma.trainingSession.deleteMany();
+    await prisma.eventRegistration.deleteMany();
+    await prisma.tournamentResult.deleteMany();
+    await prisma.match.deleteMany();
+    await prisma.tournamentBracket.deleteMany();
+    await prisma.event.deleteMany();
+    await prisma.monthlyRecognition.deleteMany();
+    await prisma.beltVerificationRequest.deleteMany();
+    await prisma.post.deleteMany();
+    await prisma.beltHistory.deleteMany();
+    await prisma.gallery.deleteMany();
+    await prisma.voucherCode.deleteMany();
+    await prisma.siteContent.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.dojo.deleteMany();
+
+    console.log('✅ Database cleaned');
 
     const passwordHash = await bcrypt.hash('password123', 12);
 
@@ -109,22 +132,72 @@ async function main() {
 
     console.log(`✅ Created ${instructors.length} instructors`);
 
-    // 4. Create Students (4 per dojo = 16 total for tournament brackets)
+    // 4. Create Students (8 per dojo = 32 total for realistic tournament brackets)
     console.log('👨‍🎓 Creating students...');
     
     const studentNames = [
+        // Mumbai Dojo (8 students)
         'Arjun Singh', 'Priya Desai', 'Rohan Mehta', 'Ananya Iyer',
-        'Karan Verma', 'Sneha Reddy', 'Aditya Joshi', 'Neha Kapoor',
-        'Vikram Gupta', 'Pooja Nair', 'Siddharth Kumar', 'Divya Patel',
-        'Rajesh Rao', 'Kavita Sharma', 'Manish Agarwal', 'Priyanka Bose',
+        'Kunal Sharma', 'Sneha Patel', 'Aditya Nair', 'Isha Kapoor',
+        // Delhi Dojo (8 students)
+        'Karan Verma', 'Meera Reddy', 'Vikram Joshi', 'Neha Gupta',
+        'Siddharth Kumar', 'Priyanka Bose', 'Rahul Agarwal', 'Divya Singh',
+        // Bangalore Dojo (8 students)
+        'Ravi Kumar', 'Kavita Rao', 'Amit Deshmukh', 'Pooja Nair',
+        'Suresh Pillai', 'Lakshmi Iyer', 'Karthik Reddy', 'Anjali Menon',
+        // Pune Dojo (8 students)
+        'Rajesh Patil', 'Smita Joshi', 'Manish Kulkarni', 'Deepa Sharma',
+        'Varun Desai', 'Shruti Phadke', 'Nikhil Jadhav', 'Pallavi Deshpande',
     ];
 
-    const beltRanks = ['White', 'Yellow', 'Orange', 'Blue', 'Green', 'Brown', 'Black'];
+    // Realistic belt distribution (pyramid structure - more lower belts)
+    const beltDistribution = [
+        'White', 'White', 'White', 'White',      // 4 white belts
+        'Yellow', 'Yellow', 'Orange', 'Orange',   // 2 yellow, 2 orange
+        'Blue', 'Blue', 'Green', 'Green',         // 2 blue, 2 green
+        'Brown', 'Brown',                         // 2 brown
+        'Black 1st Dan', 'Black 1st Dan',        // 2 black belts
+    ];
+
+    // Age ranges for realistic categories (birth years)
+    const ageRanges = [
+        { name: '18-25', minYear: 2000, maxYear: 2007 },  // 8 students
+        { name: '26-35', minYear: 1990, maxYear: 1999 },  // 12 students
+        { name: '36-45', minYear: 1980, maxYear: 1989 },  // 8 students
+        { name: '46-55', minYear: 1970, maxYear: 1979 },  // 4 students
+    ];
+
+    // Weight ranges for realistic categories (kg)
+    const weightRanges = [
+        { name: 'Under 65kg', min: 55, max: 64 },   // 8 students
+        { name: 'Under 75kg', min: 65, max: 74 },   // 12 students
+        { name: 'Under 85kg', min: 75, max: 84 },   // 8 students
+        { name: 'Over 85kg', min: 85, max: 100 },   // 4 students
+    ];
+
     const students = [];
+    let ageIdx = 0;
+    let weightIdx = 0;
+    let beltIdx = 0;
 
     for (let dojoIdx = 0; dojoIdx < dojos.length; dojoIdx++) {
-        for (let studentIdx = 0; studentIdx < 4; studentIdx++) {
-            const overallIdx = dojoIdx * 4 + studentIdx;
+        for (let studentIdx = 0; studentIdx < 8; studentIdx++) {
+            const overallIdx = dojoIdx * 8 + studentIdx;
+            
+            // Distribute students across age ranges
+            const ageRange = ageRanges[ageIdx % ageRanges.length];
+            const birthYear = ageRange.minYear + Math.floor(Math.random() * (ageRange.maxYear - ageRange.minYear + 1));
+            ageIdx++;
+
+            // Distribute students across weight ranges
+            const weightRange = weightRanges[weightIdx % weightRanges.length];
+            const weight = weightRange.min + Math.floor(Math.random() * (weightRange.max - weightRange.min + 1));
+            weightIdx++;
+
+            // Assign belt from distribution
+            const currentBeltRank = beltDistribution[beltIdx % beltDistribution.length];
+            beltIdx++;
+
             const student = await prisma.user.create({
                 data: {
                     email: `student${overallIdx + 1}@kyokushin.in`,
@@ -132,31 +205,32 @@ async function main() {
                     name: studentNames[overallIdx],
                     role: 'STUDENT',
                     membershipStatus: 'ACTIVE',
-                    currentBeltRank: beltRanks[Math.floor(Math.random() * beltRanks.length)],
+                    currentBeltRank,
                     dojoId: dojos[dojoIdx].id,
                     primaryInstructorId: instructors[dojoIdx].id,
                     membershipNumber: `KKI-2025-${dojos[dojoIdx].dojoCode}-${String(studentIdx + 1).padStart(5, '0')}`,
                     membershipStartDate: new Date('2024-06-01'),
                     membershipEndDate: new Date('2026-05-31'),
                     phone: `+91-${9000000000 + overallIdx}`,
-                    dateOfBirth: new Date(1995 + Math.floor(Math.random() * 15), Math.floor(Math.random() * 12), 1),
-                    weight: 60 + Math.floor(Math.random() * 30), // 60-90 kg
+                    dateOfBirth: new Date(birthYear, Math.floor(Math.random() * 12), 1 + Math.floor(Math.random() * 28)),
+                    weight,
+                    height: 155 + Math.floor(Math.random() * 30), // 155-185 cm
                 },
             });
             students.push(student);
         }
     }
 
-    console.log(`✅ Created ${students.length} students`);
+    console.log(`✅ Created ${students.length} students with realistic age/weight/belt distribution`);
 
-    // 5. Create Test Tournament Event
+    // 5. Create Test Tournament Event with proper categories
     console.log('🏆 Creating test tournament...');
     
     const tournament = await prisma.event.create({
         data: {
             type: 'TOURNAMENT',
             name: 'National Kyokushin Championship 2025',
-            description: 'Annual National Championship - Kumite and Kata competitions',
+            description: 'Annual National Championship - Kumite competitions across age, weight, and belt categories',
             startDate: new Date('2025-12-15'),
             endDate: new Date('2025-12-16'),
             location: 'Mumbai, Maharashtra',
@@ -167,45 +241,65 @@ async function main() {
             createdBy: admin.id,
             status: 'UPCOMING',
             categories: [
-                { age: '18-35', weight: 'Under 70kg', belt: 'Brown' },
-                { age: '18-35', weight: 'Under 80kg', belt: 'Black' },
-                { age: '18-35', weight: 'Over 80kg', belt: 'Open' },
-                { age: '36-45', weight: 'Open', belt: 'Open' },
+                // Youth Categories (8 fighters per category)
+                { age: '18-25', weight: 'Under 65kg', belt: 'Open' },
+                { age: '18-25', weight: 'Under 75kg', belt: 'Open' },
+                // Adult Categories (8 fighters per category)
+                { age: '26-35', weight: 'Under 75kg', belt: 'Open' },
+                { age: '26-35', weight: 'Under 85kg', belt: 'Open' },
+                // Masters Categories (4-8 fighters per category)
+                { age: '36-45', weight: 'Under 85kg', belt: 'Open' },
+                { age: '36-45', weight: 'Over 85kg', belt: 'Open' },
+                // Belt-Specific Categories
+                { age: 'Open', weight: 'Open', belt: 'White-Yellow' },
+                { age: 'Open', weight: 'Open', belt: 'Brown-Black' },
             ],
         },
     });
 
     console.log(`✅ Tournament created: ${tournament.name}`);
 
-    // 6. Auto-register all students to the tournament
-    console.log('📝 Registering students to tournament...');
+    // 6. Auto-register students to appropriate tournament categories based on their profile
+    console.log('📝 Registering students to tournament categories...');
     
-    const categories = [
-        { age: '18-35', weight: 'Under 70kg', belt: 'Brown' },
-        { age: '18-35', weight: 'Under 80kg', belt: 'Black' },
-        { age: '18-35', weight: 'Over 80kg', belt: 'Open' },
-        { age: '36-45', weight: 'Open', belt: 'Open' },
-    ];
+    const registrations = [];
+    
+    for (const student of students) {
+        const age = new Date().getFullYear() - (student.dateOfBirth?.getFullYear() || 2000);
+        const weight = student.weight || 70;
+        const belt = student.currentBeltRank || 'White';
 
-    const registrations = await Promise.all(
-        students.map(async (student, idx) => {
-            const category = categories[idx % categories.length];
-            return prisma.eventRegistration.create({
-                data: {
-                    eventId: tournament.id,
-                    userId: student.id,
-                    categoryAge: category.age,
-                    categoryWeight: category.weight,
-                    categoryBelt: category.belt,
-                    eventType: 'KUMITE',
-                    paymentStatus: 'PAID',
-                    approvalStatus: 'APPROVED',
-                    approvedBy: admin.id,
-                    approvedAt: new Date(),
-                },
-            });
-        })
-    );
+        // Determine age category
+        let ageCategory = '26-35';
+        if (age >= 18 && age <= 25) ageCategory = '18-25';
+        else if (age >= 26 && age <= 35) ageCategory = '26-35';
+        else if (age >= 36 && age <= 45) ageCategory = '36-45';
+        else if (age >= 46 && age <= 55) ageCategory = '46-55';
+
+        // Determine weight category
+        let weightCategory = 'Under 75kg';
+        if (weight < 65) weightCategory = 'Under 65kg';
+        else if (weight < 75) weightCategory = 'Under 75kg';
+        else if (weight < 85) weightCategory = 'Under 85kg';
+        else weightCategory = 'Over 85kg';
+
+        // Register to age/weight category with Open belt
+        const registration = await prisma.eventRegistration.create({
+            data: {
+                eventId: tournament.id,
+                userId: student.id,
+                categoryAge: ageCategory,
+                categoryWeight: weightCategory,
+                categoryBelt: 'Open',
+                eventType: 'KUMITE',
+                paymentStatus: 'PAID',
+                approvalStatus: 'APPROVED',
+                approvedBy: admin.id,
+                approvedAt: new Date(),
+            },
+        });
+        registrations.push(registration);
+    }
 
     console.log(`✅ Registered ${registrations.length} students to tournament`);
 
@@ -254,9 +348,12 @@ async function main() {
     });
     
     console.log(`\n👨‍🎓 STUDENT ACCOUNTS: ${students.length} students created`);
-    console.log('   student1@kyokushin.in to student16@kyokushin.in');
+    console.log('   student1@kyokushin.in to student32@kyokushin.in');
+    console.log('   Age Distribution: 18-25 (8), 26-35 (12), 36-45 (8), 46-55 (4)');
+    console.log('   Weight Distribution: Under 65kg (8), 65-75kg (12), 75-85kg (8), Over 85kg (4)');
+    console.log('   Belt Distribution: White (4), Yellow (2), Orange (2), Blue (2), Green (2), Brown (2), Black (2)');
     
-    console.log(`\n🏯 DOJOS: ${dojos.length} dojos created`);
+    console.log(`\n🏯 DOJOS: ${dojos.length} dojos created (8 students each)`);
     dojos.forEach((dojo, idx) => {
         console.log(`   ${idx + 1}. ${dojo.name} (${dojo.city})`);
     });
@@ -264,8 +361,8 @@ async function main() {
     console.log(`\n🏆 TOURNAMENT:`);
     console.log(`   Name: ${tournament.name}`);
     console.log(`   Date: ${tournament.startDate.toLocaleDateString()}`);
-    console.log(`   Registered: ${registrations.length} participants`);
-    console.log(`   Categories: ${categories.length}`);
+    console.log(`   Total Registrations: ${registrations.length} (${students.length} students × 2 categories)`);
+    console.log(`   Categories: 8 divisions (age/weight combinations + belt-specific)`);
     
     console.log('\n' + '='.repeat(60));
     console.log('🎯 QUICK START:');
