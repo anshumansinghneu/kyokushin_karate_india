@@ -85,7 +85,13 @@ export default function MembershipCard({ user }: MembershipCardProps) {
                             <div className="relative group">
                                 <div className="absolute inset-0 bg-red-500 blur-xl opacity-30 group-hover:opacity-50 transition-opacity" />
                                 <div className="relative bg-gradient-to-br from-zinc-800 to-zinc-900 p-3 rounded-2xl border border-white/20">
-                                    <Shield className="w-10 h-10 text-white" strokeWidth={1.5} />
+                                    <Image 
+                                        src="/kkfi-logo.avif" 
+                                        alt="KKFI Logo" 
+                                        width={40} 
+                                        height={40} 
+                                        className="w-10 h-10 object-contain"
+                                    />
                                 </div>
                             </div>
                             <div>
@@ -143,16 +149,19 @@ export default function MembershipCard({ user }: MembershipCardProps) {
                         </div>
                     </div>
 
-                    {/* Bottom Status Bar - Fixed positioning */}
-                    <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between px-4 py-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/10">
-                        <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full animate-pulse bg-gradient-to-r ${statusColors[membershipStatus as keyof typeof statusColors]}`} />
-                            <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Status: {membershipStatus}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-400">
-                            <Sparkles className="w-4 h-4" />
-                            <span className="text-xs font-medium">Verified Member</span>
-                        </div>
+                    {/* Bottom Status Bar - Fixed below card content */}
+                    
+                </div>
+                
+                {/* Status Bar - Outside of 3D transform to prevent overlap */}
+                <div className="mt-4 flex items-center justify-between px-6 py-3 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10">
+                    <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full animate-pulse bg-gradient-to-r ${statusColors[membershipStatus as keyof typeof statusColors]}`} />
+                        <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Status: {membershipStatus}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-400">
+                        <Sparkles className="w-4 h-4" />
+                        <span className="text-xs font-medium">Verified Member</span>
                     </div>
                 </div>
 

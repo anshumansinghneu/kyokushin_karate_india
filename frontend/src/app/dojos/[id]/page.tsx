@@ -135,152 +135,128 @@ export default function DojoDetailPage() {
                 </div>
             </div>
 
-            {/* BENTO GRID LAYOUT */}
+            {/* CLEAN GRID LAYOUT */}
             <div className="container mx-auto px-4 py-12 pb-32">
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[minmax(180px,auto)]">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                    {/* AREA A: About (Large Text) */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="md:col-span-2 lg:col-span-2 row-span-2 bg-zinc-900/50 border border-white/5 rounded-3xl p-8 flex flex-col justify-center relative overflow-hidden group"
-                    >
-                        <div className="absolute top-0 right-0 p-32 bg-red-600/5 rounded-full blur-3xl group-hover:bg-red-600/10 transition-colors duration-700" />
-                        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 relative z-10">
-                            <span className="w-1 h-6 bg-red-600 rounded-full" />
-                            About the Dojo
-                        </h2>
-                        <p className="text-gray-400 text-lg leading-relaxed relative z-10">
-                            Welcome to {dojo.name}, a premier destination for Kyokushin Karate training in {dojo.city}.
-                            We are dedicated to fostering strength, discipline, and spirit through traditional martial arts practice.
-                            Our facility is equipped with state-of-the-art training gear while maintaining the traditional atmosphere of a true dojo.
-                        </p>
-                        <div className="mt-8 flex gap-4 relative z-10">
-                            <Link href="/register">
-                                <Button className="bg-white text-black hover:bg-gray-200 rounded-full px-8 font-bold">
-                                    Join Now
-                                </Button>
-                            </Link>
-                        </div>
-                    </motion.div>
+                    {/* LEFT COLUMN - Main Content */}
+                    <div className="lg:col-span-2 space-y-8">
+                        
+                        {/* About Section */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="bg-zinc-900/50 border border-white/10 rounded-2xl p-8"
+                        >
+                            <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
+                                <span className="w-1 h-7 bg-red-600 rounded-full" />
+                                About the Dojo
+                            </h2>
+                            <p className="text-gray-300 text-base leading-relaxed">
+                                Welcome to {dojo.name}, a premier destination for Kyokushin Karate training in {dojo.city}.
+                                We are dedicated to fostering strength, discipline, and spirit through traditional martial arts practice.
+                                Our facility is equipped with state-of-the-art training gear while maintaining the traditional atmosphere of a true dojo.
+                            </p>
+                        </motion.div>
 
-                    {/* AREA B: Head Instructor */}
-                    {dojo.instructors.length > 0 && (
+                        {/* Gallery Section */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: 0.1 }}
-                            className="md:col-span-1 lg:col-span-1 row-span-2 bg-zinc-900/50 border border-white/5 rounded-3xl overflow-hidden relative group"
+                            className="bg-zinc-900/50 border border-white/10 rounded-2xl p-8"
                         >
-                            <img
-                                src={dojo.instructors[0].profilePhotoUrl || "/instructor-placeholder.jpg"}
-                                alt={dojo.instructors[0].name}
-                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                            <div className="absolute bottom-0 left-0 right-0 p-6">
-                                <p className="text-red-500 font-bold text-sm uppercase tracking-wider mb-1">Head Instructor</p>
-                                <h3 className="text-2xl font-black text-white leading-tight mb-2">{dojo.instructors[0].name}</h3>
-                                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md w-fit px-3 py-1 rounded-full border border-white/10">
-                                    <Medal className="w-3 h-3 text-yellow-500" />
-                                    <span className="text-xs font-bold">{dojo.instructors[0].currentBeltRank}</span>
-                                </div>
+                            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                                <span className="w-1 h-7 bg-red-600 rounded-full" />
+                                Gallery
+                            </h2>
+                            <div className="grid grid-cols-3 gap-4">
+                                {dojo.gallery.length > 0 ? (
+                                    dojo.gallery.slice(0, 6).map((photo: any, index: number) => (
+                                        <div key={index} className="aspect-square rounded-xl overflow-hidden bg-zinc-800">
+                                            <img src={photo.url} alt={`Dojo ${index + 1}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <>
+                                        <div className="aspect-square rounded-xl bg-zinc-800 flex items-center justify-center">
+                                            <span className="text-gray-500 text-sm">No Img</span>
+                                        </div>
+                                        <div className="aspect-square rounded-xl bg-zinc-800 flex items-center justify-center">
+                                            <span className="text-gray-500 text-sm">No Img</span>
+                                        </div>
+                                        <div className="aspect-square rounded-xl bg-zinc-800 flex items-center justify-center">
+                                            <span className="text-gray-500 text-sm">No Img</span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </motion.div>
-                    )}
+                    </div>
 
-                    {/* AREA C: Location Info */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.2 }}
-                        className="md:col-span-1 lg:col-span-1 bg-red-900/20 border border-red-500/20 rounded-3xl p-6 flex flex-col justify-center"
-                    >
-                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-red-500" /> Location
-                        </h3>
-                        <div className="space-y-3 text-sm">
-                            <p className="text-gray-300">{dojo.city}, {dojo.state}</p>
-                            {dojo.address && <p className="text-gray-300 break-all">{dojo.address}</p>}
+                    {/* RIGHT COLUMN - Sidebar */}
+                    <div className="lg:col-span-1 space-y-8">
+                        
+                        {/* Location Card */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.2 }}
+                            className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6"
+                        >
+                            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <MapPin className="w-5 h-5 text-red-500" /> Location
+                            </h3>
+                            <div className="space-y-2 text-sm">
+                                <p className="text-gray-300 font-semibold">{dojo.city}, {dojo.state}</p>
+                                {dojo.address && (
+                                    <p className="text-gray-400 leading-relaxed">{dojo.address}</p>
+                                )}
+                            </div>
+                        </motion.div>
+
+                        {/* Upcoming Events Card */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.3 }}
+                            className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6"
+                        >
+                                    <Calendar className="w-5 h-5 text-red-500" />
+                                <span className="font-bold">Upcoming Events</span>
+                            </div>
+                            <Link href="/events" className="text-xs text-red-500 hover:text-red-400 transition-colors font-semibold">View All</Link>
                         </div>
-                    </motion.div>
 
-                    {/* AREA D: Upcoming Events */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.3 }}
-                        className="md:col-span-2 lg:col-span-2 row-span-2 bg-zinc-900/50 border border-white/5 rounded-3xl p-8 overflow-hidden"
-                    >
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold flex items-center gap-2">
-                                <Calendar className="w-5 h-5 text-red-600" />
-                                Upcoming Events
-                            </h2>
-                            <Link href="/events" className="text-sm text-gray-400 hover:text-white transition-colors">View All</Link>
-                        </div>
-
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             {dojo.events.length > 0 ? (
                                 dojo.events.slice(0, 3).map((event) => (
                                     <Link key={event.id} href={`/events/${event.id}`}>
-                                        <div className="group flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-red-600/30 transition-all cursor-pointer">
-                                            <div className="bg-zinc-800 rounded-xl p-3 text-center min-w-[60px]">
-                                                <span className="block text-xs text-gray-400 uppercase">
-                                                    {new Date(event.startDate).toLocaleString('default', { month: 'short' })}
-                                                </span>
-                                                <span className="block text-xl font-bold text-white">
-                                                    {new Date(event.startDate).getDate()}
-                                                </span>
-                                            </div>
-                                            <div className="flex-1">
+                                        <div className="group p-4 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 border border-white/5 hover:border-red-600/30 transition-all cursor-pointer">
+                                            <div className="flex items-start justify-between mb-2">
                                                 <span className="text-xs font-bold text-red-500 uppercase tracking-wider">{event.type}</span>
-                                                <h3 className="text-lg font-bold text-white group-hover:text-red-500 transition-colors">{event.name}</h3>
+                                                <span className="text-xs text-gray-400">
+                                                    {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                </span>
                                             </div>
-                                            <ArrowLeft className="w-5 h-5 text-gray-500 rotate-180 group-hover:text-white transition-colors" />
+                                            <h4 className="text-sm font-bold text-white group-hover:text-red-400 transition-colors line-clamp-2">
+                                                {event.name}
+                                            </h4>
                                         </div>
                                     </Link>
                                 ))
                             ) : (
                                 <div className="text-center py-8 text-gray-500 border border-dashed border-white/10 rounded-xl">
-                                    No upcoming events.
+                                    <p className="text-sm">No upcoming events</p>
                                 </div>
                             )}
                         </div>
-                    </motion.div>
-
-                    {/* AREA E: Gallery Preview */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.4 }}
-                        className="md:col-span-1 lg:col-span-2 bg-zinc-900/50 border border-white/5 rounded-3xl p-6"
-                    >
-                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                            <Trophy className="w-4 h-4 text-red-500" /> Gallery
-                        </h3>
-                        <div className="grid grid-cols-3 gap-2">
-                            {dojo.gallery.length > 0 ? (
-                                dojo.gallery.slice(0, 3).map((item, i) => (
-                                    <div key={item.id || i} className="aspect-square rounded-lg overflow-hidden bg-zinc-800">
-                                        <img src={item.imageUrl} alt="Gallery" className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
-                                    </div>
-                                ))
-                            ) : (
-                                [1, 2, 3].map(i => (
-                                    <div key={i} className="aspect-square rounded-lg bg-white/5 border border-white/5 flex items-center justify-center">
-                                        <span className="text-xs text-gray-600">No Img</span>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </motion.div>
-
+                        </motion.div>
+                    </div>
                 </div>
             </div>
         </div>
