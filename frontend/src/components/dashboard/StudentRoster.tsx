@@ -35,6 +35,7 @@ export default function StudentRoster() {
     const [inviteEmail, setInviteEmail] = useState("");
     const [inviteName, setInviteName] = useState("");
     const { user } = useAuthStore();
+    const isInstructor = user?.role === 'INSTRUCTOR';
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -80,9 +81,11 @@ export default function StudentRoster() {
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
-                    <Button onClick={() => setShowInviteModal(true)} className="bg-primary hover:bg-primary-dark text-white">
-                        <Plus className="w-4 h-4 mr-2" /> Invite
-                    </Button>
+                    {!isInstructor && (
+                        <Button onClick={() => setShowInviteModal(true)} className="bg-primary hover:bg-primary-dark text-white">
+                            <Plus className="w-4 h-4 mr-2" /> Invite
+                        </Button>
+                    )}
                 </div>
             </div>
 

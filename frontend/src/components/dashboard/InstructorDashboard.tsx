@@ -268,17 +268,9 @@ export default function InstructorDashboard({ user }: { user: any }) {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
                 >
-                    <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <h1 className="text-3xl font-black text-white mb-2">Student Roster</h1>
-                            <p className="text-gray-400">View and manage your students.</p>
-                        </div>
-                        <Button
-                            className="bg-primary hover:bg-primary-dark text-white font-bold"
-                            onClick={() => setIsAddModalOpen(true)}
-                        >
-                            + New Student
-                        </Button>
+                    <div className="mb-6">
+                        <h1 className="text-3xl font-black text-white mb-2">Student Roster</h1>
+                        <p className="text-gray-400">View students who selected you as their instructor.</p>
                     </div>
                     <StudentRoster />
                 </motion.div>

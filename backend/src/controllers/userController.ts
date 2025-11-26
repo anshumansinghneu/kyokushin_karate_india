@@ -11,12 +11,12 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
 
     let where: any = {};
 
-    // Instructor can see ALL students (Global Directory)
+    // Instructor can only see their assigned students
     if (currentUser.role === 'INSTRUCTOR') {
-        // No restriction on dojoId for viewing
         where.role = 'STUDENT';
+        where.primaryInstructorId = currentUser.id;
     }
-    // Student can only see themselves (though they shouldn't really call this endpoint)
+    // Student can only see themselves
     else if (currentUser.role === 'STUDENT') {
         where.id = currentUser.id;
     }
@@ -113,8 +113,8 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
 
     // Instructor Approval
     if (currentUser.role === 'INSTRUCTOR') {
-        if (userToApprove.dojoId !== currentUser.dojoId) {
-            return next(new AppError('You can only approve students from your dojo', 403));
+        if (userToApprove.primaryInstructorId !== currentUser.id) {
+            return next(new AppError('You can only approve students assigned to you', 403));
         }
 
         if (userToApprove.isInstructorApproved) {
