@@ -100,7 +100,7 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">{
+        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
             {/* Background Elements */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-red-900/20 via-black to-black" />
             <div className="absolute inset-0 bg-[url('/dojo-bg.png')] bg-cover bg-center opacity-10 mix-blend-overlay" />
