@@ -195,30 +195,6 @@ export default function TournamentManager() {
         }
     };
 
-    const handleViewDetails = async (tournament: Tournament) => {
-        setViewingTournament(tournament);
-        await fetchParticipants(tournament.id);
-    };
-
-    const handleGenerateBrackets = async () => {
-        if (!viewingTournament) return;
-
-        if (!confirm(`Generate brackets for ${viewingTournament.name}? This will create matches for all registered participants.`)) {
-            return;
-        }
-
-        try {
-            await api.post(`/tournaments/${viewingTournament.id}/generate`);
-            showToast("Brackets generated successfully!", "success");
-            setViewingTournament(null);
-            fetchTournaments();
-        } catch (error) {
-            console.error("Failed to generate brackets:", error);
-            const err = error as { response?: { data?: { message?: string } } };
-            showToast(err.response?.data?.message || "Failed to generate brackets", "error");
-        }
-    };
-
     const removeCategory = (index: number) => {
         setFormData(prev => ({
             ...prev,
