@@ -18,12 +18,15 @@ import OrganizationGraph from "./OrganizationGraph";
 import BeltPromotionsView from "./BeltPromotionsView";
 import BeltApprovalsView from "./BeltApprovalsView";
 import TournamentManager from "./TournamentManager";
+import GlobalSearch from "./GlobalSearch";
+import StudentDetailView from "./StudentDetailView";
 import { useToast } from '@/contexts/ToastContext';
 
 export default function AdminDashboard({ user }: { user: any }) {
     const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState<'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'content' | 'belt-verifications' | 'belt-promotions' | 'tournaments'>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
     const { logout } = useAuthStore();
     const [stats, setStats] = useState({
         users: [] as any[],
@@ -126,6 +129,10 @@ export default function AdminDashboard({ user }: { user: any }) {
             {/* Main Content */}
             <div className="flex-1 overflow-y-auto h-[80vh] relative">
                 <div className="p-8 lg:p-10">
+                    {/* Global Search */}
+                    <div className="mb-8">
+                        <GlobalSearch onResultClick={(userId) => setSelectedStudentId(userId)} />
+                    </div>
                     <AnimatePresence mode="wait">
                         {activeTab === 'overview' && (
                             <motion.div
@@ -246,6 +253,14 @@ export default function AdminDashboard({ user }: { user: any }) {
                     </AnimatePresence>
                 </div>
             </div>
+
+            {/* Student Detail View Modal */}
+            {selectedStudentId && (
+                <StudentDetailView
+                    studentId={selectedStudentId}
+                    onClose={() => setSelectedStudentId(null)}
+                />
+            )}
         </div >
     );
 }

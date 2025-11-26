@@ -1,6 +1,6 @@
 import express from 'express';
 import { getMe } from '../controllers/authController';
-import { getAllUsers, getUser, getUserFullProfile, approveUser, rejectUser, deleteUser, inviteUser, updateMe, updateUser, createUser } from '../controllers/userController';
+import { getAllUsers, getUser, getUserFullProfile, searchUsers, approveUser, rejectUser, deleteUser, inviteUser, updateMe, updateUser, createUser } from '../controllers/userController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -11,6 +11,9 @@ router.get('/me', getMe);
 router.patch('/updateMe', updateMe);
 
 router.post('/invite', restrictTo('ADMIN', 'INSTRUCTOR'), inviteUser);
+
+// Search route (must come before other routes)
+router.get('/search', restrictTo('ADMIN', 'INSTRUCTOR'), searchUsers);
 
 router.route('/')
     .get(restrictTo('ADMIN', 'INSTRUCTOR'), getAllUsers)

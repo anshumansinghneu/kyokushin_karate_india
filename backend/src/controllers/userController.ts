@@ -56,6 +56,87 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
     });
 });
 
+export const searchUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // @ts-ignore
+    const currentUser = req.user;
+    const query = req.query.q as string;
+
+    if (!query || query.trim().length < 2) {
+        return res.status(200).json({
+            status: 'success',
+            results: 0,
+            data: {
+                users: [],
+            },
+        });
+    }
+
+    const searchTerm = query.trim();
+
+    // Build where clause for search
+    let where: any = {
+        OR: [
+            { name: { contains: searchTerm, mode: 'insensitive' } },
+            { email: { contains: searchTerm, mode: 'insensitive' } },
+            { membershipNumber: { contains: searchTerm, mode: 'insensitive' } },
+            { phone: { contains: searchTerm, mode: 'insensitive' } },
+        ],
+    };
+
+    // Instructor can only search their assigned students
+    if (currentUser.role === 'INSTRUCTOR') {
+        where.AND = [
+            { role: 'STUDENT' },
+            { primaryInstructorId: currentUser.id },
+        ];
+    }
+    // Student can only search themselves (not very useful, but for consistency)
+    else if (currentUser.role === 'STUDENT') {
+        where.AND = [{ id: currentUser.id }];
+    }
+    // Admin can search all users
+
+    const users = await prisma.user.findMany({
+        where,
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            membershipNumber: true,
+            currentBeltRank: true,
+            role: true,
+            membershipStatus: true,
+            dojo: {
+                select: {
+                    name: true,
+                },
+            },
+        },
+        take: 20, // Limit results
+        orderBy: {
+            name: 'asc',
+        },
+    });
+
+    // Transform results to include dojoName at top level
+    const transformedUsers = users.map(user => ({
+        ...user,
+        dojoName: user.dojo?.name,
+        dojo: undefined, // Remove nested dojo object
+        status: user.membershipStatus,
+        membershipId: user.membershipNumber,
+    }));
+
+    res.status(200).json({
+        status: 'success',
+        results: transformedUsers.length,
+        data: {
+            users: transformedUsers,
+        },
+    });
+});
+
 export const getUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const user = await prisma.user.findUnique({
         where: { id: req.params.id },

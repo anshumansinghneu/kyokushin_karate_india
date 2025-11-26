@@ -17,6 +17,8 @@ import BlogSubmission from "./BlogSubmission";
 import BeltApprovalsView from "./BeltApprovalsView";
 import BeltPromotionsView from "./BeltPromotionsView";
 import TournamentManager from "./TournamentManager";
+import GlobalSearch from "./GlobalSearch";
+import StudentDetailView from "./StudentDetailView";
 
 export default function InstructorDashboard({ user }: { user: any }) {
     const { showToast } = useToast();
@@ -25,6 +27,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
     const [pendingStudents, setPendingStudents] = useState<any[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -158,6 +161,11 @@ export default function InstructorDashboard({ user }: { user: any }) {
             {/* Main Content */}
             <div className="flex-1 overflow-y-auto h-[80vh] relative">
                 <div className="p-8 lg:p-10">
+                    {/* Global Search */}
+                    <div className="mb-8">
+                        <GlobalSearch onResultClick={(userId) => setSelectedStudentId(userId)} />
+                    </div>
+
                     <AnimatePresence mode="wait">
 
             {activeTab === 'overview' && (
@@ -324,6 +332,14 @@ export default function InstructorDashboard({ user }: { user: any }) {
                 </AnimatePresence>
                 </div>
             </div>
+
+            {/* Student Detail View Modal */}
+            {selectedStudentId && (
+                <StudentDetailView
+                    studentId={selectedStudentId}
+                    onClose={() => setSelectedStudentId(null)}
+                />
+            )}
         </div>
     );
 }
