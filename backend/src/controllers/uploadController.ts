@@ -38,12 +38,10 @@ export const handleUpload = (req: Request, res: Response, next: NextFunction) =>
         return next(new AppError('Please upload a file', 400));
     }
 
-    // Construct URL
-    // In production, this would be the cloud storage URL
-    // For local, we serve from /uploads
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+    // Construct URL using backend URL
+    // Use environment variable or construct from actual backend host
+    const backendUrl = process.env.BACKEND_URL || 'https://kyokushin-karate.onrender.com';
+    const fileUrl = `${backendUrl}/uploads/${req.file.filename}`;
 
     res.status(200).json({
         status: 'success',
