@@ -120,7 +120,7 @@ export default function TournamentResultsPage() {
 
     const handleDownloadCertificate = (winner: Winner, position: number, categoryName: string) => {
         if (!statistics) return;
-        
+
         downloadCertificate({
             participantName: winner.name,
             categoryName: categoryName,
@@ -137,7 +137,7 @@ export default function TournamentResultsPage() {
 
         const certificates = statistics.categoryWinners.flatMap(category => {
             const certs = [];
-            
+
             if (category.firstPlace) {
                 certs.push({
                     participantName: category.firstPlace.name,
@@ -149,7 +149,7 @@ export default function TournamentResultsPage() {
                     dojoName: category.firstPlace.dojoName
                 });
             }
-            
+
             if (category.secondPlace) {
                 certs.push({
                     participantName: category.secondPlace.name,
@@ -161,7 +161,7 @@ export default function TournamentResultsPage() {
                     dojoName: category.secondPlace.dojoName
                 });
             }
-            
+
             if (category.thirdPlace) {
                 certs.push({
                     participantName: category.thirdPlace.name,
@@ -173,7 +173,7 @@ export default function TournamentResultsPage() {
                     dojoName: category.thirdPlace.dojoName
                 });
             }
-            
+
             return certs;
         });
 

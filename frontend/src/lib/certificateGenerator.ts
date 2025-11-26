@@ -64,7 +64,7 @@ export const generateCertificate = (data: CertificateData) => {
     // Position with medal
     let positionText = '';
     let positionColor: [number, number, number] = [255, 215, 0];
-    
+
     switch(data.position) {
         case 1:
             positionText = '🥇 FIRST PLACE';
@@ -94,11 +94,11 @@ export const generateCertificate = (data: CertificateData) => {
     pdf.setFontSize(14);
     pdf.setTextColor(150, 150, 150);
     pdf.text(data.tournamentName, pageWidth / 2, 140, { align: 'center' });
-    
-    const dateStr = new Date(data.date).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+
+    const dateStr = new Date(data.date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
     });
     pdf.text(`${dateStr} • ${data.location}`, pageWidth / 2, 148, { align: 'center' });
 
@@ -114,7 +114,7 @@ export const generateCertificate = (data: CertificateData) => {
     pdf.setLineWidth(0.5);
     pdf.setDrawColor(150, 150, 150);
     pdf.line(40, signatureY, 100, signatureY);
-    
+
     pdf.setFontSize(10);
     pdf.setTextColor(150, 150, 150);
     pdf.text('Tournament Director', 70, signatureY + 5, { align: 'center' });
@@ -142,7 +142,7 @@ export const downloadAllCertificates = async (certificates: CertificateData[]) =
         const pdf = generateCertificate(cert);
         const fileName = `${cert.categoryName.replace(/\s+/g, '_')}_${cert.position}${getPositionSuffix(cert.position)}_${cert.participantName.replace(/\s+/g, '_')}.pdf`;
         pdf.save(fileName);
-        
+
         // Small delay between downloads to prevent browser blocking
         await new Promise(resolve => setTimeout(resolve, 500));
     }

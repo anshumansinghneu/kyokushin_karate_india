@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.ts",
     "build": "npx prisma generate && tsc",
-    "start": "npx prisma migrate deploy && node dist/index.js"
+    "start": "npx prisma migrate deploy && node dist/index.js",
+    "seed": "ts-node prisma/seed.ts",
+    "seed:test": "ts-node scripts/seed_test_accounts.ts"
   },
   "keywords": [],
   "author": "",

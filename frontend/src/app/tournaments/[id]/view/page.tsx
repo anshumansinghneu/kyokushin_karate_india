@@ -115,15 +115,15 @@ export default function PublicTournamentViewer() {
         socket.on('match:update', (data: { matchId: string; bracketId: string; fighterAScore?: number; fighterBScore?: number; winnerId?: string; status?: string }) => {
             console.log('Match update received:', data);
             setLastUpdated(new Date());
-            
+
             // Update the specific match in brackets
-            setBrackets(prevBrackets => 
+            setBrackets(prevBrackets =>
                 prevBrackets.map(bracket => {
                     if (bracket.id === data.bracketId) {
                         return {
                             ...bracket,
-                            matches: bracket.matches.map(match => 
-                                match.id === data.matchId 
+                            matches: bracket.matches.map(match =>
+                                match.id === data.matchId
                                     ? { ...match, ...data }
                                     : match
                             )
