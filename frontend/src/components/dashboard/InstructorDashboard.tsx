@@ -1,24 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Users, ClipboardCheck, Medal, ChevronRight, Search, Activity, FileText, Edit } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Users, ClipboardCheck, Medal, ChevronRight, Search, Activity, FileText, Edit, Shield, BarChart, Menu, X, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import Link from "next/link";
 import { useToast } from "@/contexts/ToastContext";
+import { useAuthStore } from "@/store/authStore";
 
 import StudentRoster from "./StudentRoster";
 import AddStudentModal from "./AddStudentModal";
 import BlogManager from "./BlogManager";
 import BlogSubmission from "./BlogSubmission";
+import BeltApprovalsView from "./BeltApprovalsView";
 
 export default function InstructorDashboard({ user }: { user: any }) {
     const { showToast } = useToast();
+    const { logout } = useAuthStore();
     const [students, setStudents] = useState<any[]>([]);
     const [pendingStudents, setPendingStudents] = useState<any[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -51,25 +55,61 @@ export default function InstructorDashboard({ user }: { user: any }) {
         }
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals'>('overview');
+
+    const menuItems = [
+        { id: 'overview', label: 'Overview', icon: Activity },
+        { id: 'belt-approvals', label: 'Belt Verifications', icon: Medal },
+        { id: 'students', label: 'Student Roster', icon: Users },
+        { id: 'blogs', label: 'My Blogs', icon: FileText },
+        { id: 'submit', label: 'Write Blog', icon: Edit },
+    ];
 
     return (
-        <div className="space-y-8">
+        <div className="flex min-h-[80vh] bg-black/50 rounded-3xl border border-white/10 overflow-hidden relative">
             <AddStudentModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
 
-            {/* Welcome Section */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-6"
+            {/* Mobile Sidebar Toggle */}
+            <button
+                className="lg:hidden absolute top-4 left-4 z-50 p-2 bg-white/10 rounded-lg text-white"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
-                <div>
-                    <h1 className="text-4xl font-black text-white tracking-tight">
-                        OSU, <span className="text-primary">Sensei {user?.name?.split(' ')[0]}</span>
-                    </h1>
-                    <p className="text-gray-400 mt-1">Manage your dojo and students.</p>
+                {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
+            {/* Sidebar */}
+            <motion.div
+                className={`w-64 bg-black/80 backdrop-blur-xl border-r border-white/10 flex flex-col absolute lg:relative z-40 h-full transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+            >
+                <div className="p-6 border-b border-white/10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-600 to-green-700 flex items-center justify-center shadow-lg shadow-orange-900/20">
+                            <Shield className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="font-black text-white tracking-tight leading-none">KYOKUSHIN</h2>
+                            <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Instructor Panel</p>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex gap-3">
+
+                <div className="flex-1 overflow-y-auto py-6 px-3 space-y-1">
+                    {menuItems.map((item) => (
+                        <button
+                            key={item.id}
+                            onClick={() => { setActiveTab(item.id as any); setIsSidebarOpen(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === item.id
+                                ? 'bg-gradient-to-r from-orange-600 to-green-700 text-white shadow-lg shadow-orange-900/20'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                }`}
+                        >
+                            <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-gray-500 group-hover:text-white'}`} />
+                            {item.label}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="p-4 border-t border-white/10">
                     <input
                         type="file"
                         id="instructor-profile-upload"
@@ -97,57 +137,37 @@ export default function InstructorDashboard({ user }: { user: any }) {
                     />
                     <Button
                         onClick={() => document.getElementById('instructor-profile-upload')?.click()}
-                        className="backdrop-blur-sm bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
+                        className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10 mb-2"
                     >
                         <Users className="w-4 h-4 mr-2" /> Update Photo
                     </Button>
-                    <Button
-                        onClick={() => setActiveTab('overview')}
-                        className={`backdrop-blur-sm border ${activeTab === 'overview' ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
+                    <button
+                        onClick={logout}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-400 hover:text-orange-400 hover:bg-orange-950/30 transition-all"
                     >
-                        <Activity className="w-4 h-4 mr-2" /> Overview
-                    </Button>
-                    <Button
-                        onClick={() => setActiveTab('students')}
-                        className={`backdrop-blur-sm border ${activeTab === 'students' ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
-                    >
-                        <Users className="w-4 h-4 mr-2" /> Students
-                    </Button>
-                    <Button
-                        onClick={() => setActiveTab('blogs')}
-                        className={`backdrop-blur-sm border ${activeTab === 'blogs' ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
-                    >
-                        <FileText className="w-4 h-4 mr-2" /> My Blogs
-                    </Button>
-                    <Button
-                        onClick={() => setActiveTab('submit')}
-                        className={`backdrop-blur-sm border ${activeTab === 'submit' ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
-                    >
-                        <Edit className="w-4 h-4 mr-2" /> Write Blog
-                    </Button>
+                        <LogOut className="w-5 h-5" />
+                        Sign Out
+                    </button>
                 </div>
             </motion.div>
 
+            {/* Main Content */}
+            <div className="flex-1 overflow-y-auto h-[80vh] relative">
+                <div className="p-8 lg:p-10">
+                    <AnimatePresence mode="wait">
+
             {activeTab === 'overview' && (
-                <div className="space-y-8">
-                    {/* Quick Actions */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                        <Link href="/management/instructor/belt-approvals">
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="glass-card p-6 hover:bg-white/10 transition-all cursor-pointer group border border-yellow-500/20 hover:border-yellow-500/40"
-                            >
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="p-3 rounded-xl bg-yellow-500/10">
-                                        <Medal className="w-6 h-6 text-yellow-400" />
-                                    </div>
-                                    <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                                </div>
-                                <h3 className="text-lg font-bold text-white mb-1">Belt Verifications</h3>
-                                <p className="text-sm text-zinc-400">Review student belt claims</p>
-                            </motion.div>
-                        </Link>
+                <motion.div
+                    key="overview"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-8"
+                >
+                    <div>
+                        <h1 className="text-3xl font-black text-white mb-2">Instructor Dashboard</h1>
+                        <p className="text-gray-400">OSU, Sensei {user?.name?.split(' ')[0]}! Manage your dojo and students.</p>
                     </div>
 
                     {/* Stats Grid */}
@@ -214,13 +234,36 @@ export default function InstructorDashboard({ user }: { user: any }) {
                 </div>
             )}
 
+            </motion.div>
+                )}
+                </motion.div>
+            )}
+
+            {activeTab === 'belt-approvals' && (
+                <motion.div
+                    key="belt-approvals"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <BeltApprovalsView />
+                </motion.div>
+            )}
+
             {activeTab === 'students' && (
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    key="students"
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
                 >
-                    <div className="flex justify-end mb-4">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h1 className="text-3xl font-black text-white mb-2">Student Roster</h1>
+                            <p className="text-gray-400">View and manage your students.</p>
+                        </div>
                         <Button
                             className="bg-primary hover:bg-primary-dark text-white font-bold"
                             onClick={() => setIsAddModalOpen(true)}
@@ -231,6 +274,44 @@ export default function InstructorDashboard({ user }: { user: any }) {
                     <StudentRoster />
                 </motion.div>
             )}
+
+            {activeTab === 'blogs' && (
+                <motion.div
+                    key="blogs"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <div className="mb-6">
+                        <h1 className="text-3xl font-black text-white mb-2">My Blogs</h1>
+                        <p className="text-gray-400">Manage your published articles.</p>
+                    </div>
+                    <BlogManager />
+                </motion.div>
+            )}
+
+            {activeTab === 'submit' && (
+                <motion.div
+                    key="submit"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <div className="mb-6">
+                        <h1 className="text-3xl font-black text-white mb-2">Write New Blog</h1>
+                        <p className="text-gray-400">Share your knowledge with the community.</p>
+                    </div>
+                    <BlogSubmission />
+                </motion.div>
+            )}
+                </AnimatePresence>
+                </div>
+            </div>
+        </div>
+    );
+}
 
             {activeTab === 'blogs' && (
                 <motion.div

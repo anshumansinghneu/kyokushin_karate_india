@@ -140,7 +140,7 @@ export const getPendingVerifications = catchAsync(async (req: Request, res: Resp
     }
 
     // Get all pending requests (admins see all, instructors see their students)
-    const whereClause = userRole === 'ADMIN' 
+    const whereClause = userRole === 'ADMIN'
         ? { status: 'PENDING' as const }
         : {
             status: 'PENDING' as const,

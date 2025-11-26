@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import api from "@/lib/api";
 import Link from "next/link";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/imageUtils";
 
 interface BeltVerificationRequest {
     id: string;
@@ -212,9 +213,9 @@ export default function BeltApprovalsPage() {
                                     <div className="flex items-start gap-4 flex-1">
                                         {/* Profile Photo */}
                                         <div className="relative w-16 h-16 rounded-full overflow-hidden bg-zinc-800 flex-shrink-0">
-                                            {request.student.profilePhotoUrl ? (
+                                            {getImageUrl(request.student.profilePhotoUrl) ? (
                                                 <Image
-                                                    src={request.student.profilePhotoUrl}
+                                                    src={getImageUrl(request.student.profilePhotoUrl)!}
                                                     alt={request.student.name}
                                                     fill
                                                     className="object-cover"

@@ -112,8 +112,8 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
 
                     <div className="flex items-center gap-3 mb-2">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${badgeColor} text-white font-bold shadow-lg`}>
-                            {node.user.profilePhotoUrl ? (
-                                <img src={node.user.profilePhotoUrl} alt={node.user.name} className="w-full h-full rounded-full object-cover" />
+                            {getImageUrl(node.user.profilePhotoUrl) ? (
+                                <img src={getImageUrl(node.user.profilePhotoUrl)!} alt={node.user.name} className="w-full h-full rounded-full object-cover" />
                             ) : (
                                 <span className="text-sm">{node.user.name.charAt(0)}</span>
                             )}

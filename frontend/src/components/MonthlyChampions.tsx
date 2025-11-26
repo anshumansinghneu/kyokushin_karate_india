@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Medal, Star } from "lucide-react";
+import { Trophy, Award, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { getImageUrl } from "@/lib/imageUtils";
 import api from "@/lib/api";
 
 interface Champion {
@@ -159,7 +160,7 @@ function ChampionCard({ champion, type, index }: { champion: Champion; type: str
                 {/* Image Section */}
                 <div className="sm:w-2/5 relative h-64 sm:h-auto overflow-hidden">
                     <img
-                        src={champion.profilePhotoUrl || "/default-avatar.png"}
+                        src={getImageUrl(champion.profilePhotoUrl) || "/default-avatar.png"}
                         alt={champion.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />

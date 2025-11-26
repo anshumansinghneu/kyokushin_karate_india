@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2 } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
+import { getUserProfileImage } from "@/lib/imageUtils";
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -127,8 +128,8 @@ export default function ProfilePage() {
 
                             <div className="relative mb-6 group">
                                 <div className="w-32 h-32 rounded-full border-4 border-primary/30 overflow-hidden bg-black/50 flex items-center justify-center">
-                                    {user?.profilePhotoUrl ? (
-                                        <img src={user.profilePhotoUrl} alt="Profile" className="w-full h-full object-cover" />
+                                    {getUserProfileImage(user) ? (
+                                        <img src={getUserProfileImage(user)!} alt="Profile" className="w-full h-full object-cover" />
                                     ) : (
                                         <Shield className="w-16 h-16 text-gray-600" />
                                     )}
