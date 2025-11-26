@@ -226,13 +226,15 @@ export default function DojoDetailPage() {
                             transition={{ delay: 0.3 }}
                             className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6"
                         >
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
                                     <Calendar className="w-5 h-5 text-red-500" />
-                                <span className="font-bold">Upcoming Events</span>
+                                    <span className="font-bold">Upcoming Events</span>
+                                </div>
+                                <Link href="/events" className="text-xs text-red-500 hover:text-red-400 transition-colors font-semibold">View All</Link>
                             </div>
-                            <Link href="/events" className="text-xs text-red-500 hover:text-red-400 transition-colors font-semibold">View All</Link>
-                        </div>
 
-                        <div className="space-y-3">
+                            <div className="space-y-3">
                             {dojo.events.length > 0 ? (
                                 dojo.events.slice(0, 3).map((event) => (
                                     <Link key={event.id} href={`/events/${event.id}`}>
