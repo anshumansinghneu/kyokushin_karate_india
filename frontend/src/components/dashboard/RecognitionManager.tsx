@@ -55,7 +55,7 @@ export default function RecognitionManager() {
         if (!searchQuery.trim()) return;
         setLoading(true);
         try {
-            // Search users endpoint needed. Using getAllUsers with filter for now if API supports it, 
+            // Search users endpoint needed. Using getAllUsers with filter for now if API supports it,
             // or just fetching all and filtering client side if list is small.
             // Ideally we'd have a search endpoint. Let's assume /users?search=... or just fetch all and filter.
             // Given the userController, we can filter by role but not name search.

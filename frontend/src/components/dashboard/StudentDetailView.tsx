@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-    X, User as UserIcon, Award, Calendar, Trophy, Clock, 
-    MapPin, Mail, Phone, Shield, Download, Printer, 
+import {
+    X, User as UserIcon, Award, Calendar, Trophy, Clock,
+    MapPin, Mail, Phone, Shield, Download, Printer,
     ChevronRight, TrendingUp, Activity, Medal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -157,7 +157,7 @@ export default function StudentDetailView({ studentId, onClose }: StudentDetailV
     const avgSessionsPerMonth = totalSessions / Math.max(1, calculateDaysBetween(student.createdAt, new Date().toISOString()) / 30);
 
     // Belt history stats
-    const daysSinceLastPromotion = student.beltHistory.length > 0 
+    const daysSinceLastPromotion = student.beltHistory.length > 0
         ? calculateDaysBetween(student.beltHistory[0].promotionDate, new Date().toISOString())
         : calculateDaysBetween(student.createdAt, new Date().toISOString());
     const isEligibleForPromotion = daysSinceLastPromotion >= 180; // 6 months
@@ -422,20 +422,20 @@ export default function StudentDetailView({ studentId, onClose }: StudentDetailV
                                     <div className="relative">
                                         {/* Timeline line */}
                                         <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-white/10"></div>
-                                        
+
                                         {/* Timeline items */}
                                         <div className="space-y-6">
                                             {student.beltHistory.map((promotion, index) => {
                                                 const nextPromotion = student.beltHistory[index + 1];
-                                                const daysGap = nextPromotion 
+                                                const daysGap = nextPromotion
                                                     ? calculateDaysBetween(nextPromotion.promotionDate, promotion.promotionDate)
                                                     : calculateDaysBetween(student.createdAt, promotion.promotionDate);
-                                                
+
                                                 return (
                                                     <div key={promotion.id} className="relative pl-20">
                                                         {/* Timeline dot */}
                                                         <div className="absolute left-6 w-5 h-5 rounded-full bg-yellow-500 border-4 border-black"></div>
-                                                        
+
                                                         {/* Content */}
                                                         <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                                                             <div className="flex items-start justify-between mb-2">
@@ -465,7 +465,7 @@ export default function StudentDetailView({ studentId, onClose }: StudentDetailV
                                                     </div>
                                                 );
                                             })}
-                                            
+
                                             {/* Starting point */}
                                             <div className="relative pl-20">
                                                 <div className="absolute left-6 w-5 h-5 rounded-full bg-gray-500 border-4 border-black"></div>
@@ -495,7 +495,7 @@ export default function StudentDetailView({ studentId, onClose }: StudentDetailV
                                         <p className="text-sm text-gray-400">Total Sessions</p>
                                     </div>
                                 </div>
-                                
+
                                 {student.trainingSessions.length === 0 ? (
                                     <div className="text-center py-12 text-gray-400">
                                         <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -577,14 +577,14 @@ export default function StudentDetailView({ studentId, onClose }: StudentDetailV
                                 <h3 className="text-lg font-bold text-white mb-6">Activity Timeline</h3>
                                 <div className="relative">
                                     <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-white/10"></div>
-                                    
+
                                     <div className="space-y-6">
                                         {timelineEvents.map((event, index) => {
                                             const Icon = event.icon;
                                             return (
                                                 <div key={index} className="relative pl-20">
                                                     <div className={`absolute left-6 w-5 h-5 rounded-full ${event.color} border-4 border-black`}></div>
-                                                    
+
                                                     <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                                                         <div className="flex items-start justify-between mb-2">
                                                             <div className="flex items-center gap-2">
