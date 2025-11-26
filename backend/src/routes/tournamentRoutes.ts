@@ -1,8 +1,11 @@
 import express from 'express';
-import { generateBrackets, getBrackets } from '../controllers/tournamentController';
+import { generateBrackets, getBrackets, getTournamentStatistics } from '../controllers/tournamentController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
+
+// Public route for statistics
+router.get('/:eventId/statistics', getTournamentStatistics);
 
 router.use(protect);
 

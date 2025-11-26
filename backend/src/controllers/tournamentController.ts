@@ -40,3 +40,14 @@ export const getBrackets = catchAsync(async (req: Request, res: Response, next: 
     });
 });
 
+export const getTournamentStatistics = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { eventId } = req.params;
+
+    const statistics = await TournamentService.getTournamentStatistics(eventId);
+
+    res.status(200).json({
+        status: 'success',
+        data: statistics,
+    });
+});
+
