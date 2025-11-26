@@ -156,7 +156,7 @@ export default function BeltPromotionsView() {
     };
 
     const filteredStudents = students.filter(student => {
-        const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        const matchesSearch = student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             student.membershipNumber?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesFilter = !filterEligible || student.isEligible;
         return matchesSearch && matchesFilter;

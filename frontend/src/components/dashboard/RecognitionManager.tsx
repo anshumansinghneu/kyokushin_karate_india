@@ -63,8 +63,8 @@ export default function RecognitionManager() {
             const response = await api.get('/users');
             const allUsers = response.data.data.users;
             const filtered = allUsers.filter((u: User) =>
-                u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                u.email.toLowerCase().includes(searchQuery.toLowerCase())
+                u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                u.email?.toLowerCase().includes(searchQuery.toLowerCase())
             );
             setSearchResults(filtered.slice(0, 5)); // Limit to 5 results
         } catch (error) {

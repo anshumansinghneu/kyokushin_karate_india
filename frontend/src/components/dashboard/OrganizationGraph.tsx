@@ -32,7 +32,7 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
         // 1. Find the Root (Shihan Vasant Singh - Admin)
         // We look for role 'ADMIN' or specific name if needed.
         // Assuming there is only one main admin or we pick the first one.
-        const rootUser = users.find(u => u.role === 'ADMIN') || users.find(u => u.name.includes('Vasant'));
+        const rootUser = users.find(u => u.role === 'ADMIN') || users.find(u => u.name?.includes('Vasant'));
 
         if (!rootUser) return null;
 

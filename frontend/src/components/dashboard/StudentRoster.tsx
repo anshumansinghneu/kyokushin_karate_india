@@ -28,7 +28,7 @@ export default function StudentRoster() {
     }, []);
 
     const filteredStudents = students.filter(student =>
-        student.name.toLowerCase().includes(search.toLowerCase())
+        student.name?.toLowerCase().includes(search.toLowerCase())
     );
 
     const [showInviteModal, setShowInviteModal] = useState(false);

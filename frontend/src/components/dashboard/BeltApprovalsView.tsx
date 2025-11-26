@@ -103,6 +103,7 @@ export default function BeltApprovalsView() {
     };
 
     const getBeltColor = (belt: string) => {
+        if (!belt) return "bg-gray-500 text-white";
         if (belt.includes("White")) return "bg-gray-200 text-gray-800";
         if (belt.includes("Yellow")) return "bg-yellow-400 text-yellow-900";
         if (belt.includes("Orange")) return "bg-orange-500 text-white";
