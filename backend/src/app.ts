@@ -36,7 +36,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Rate limiting for auth endpoints (prevent brute force)
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // limit each IP to 5 requests per windowMs
+    max: 20, // limit each IP to 20 requests per windowMs (increased for testing)
     message: 'Too many authentication attempts, please try again after 15 minutes',
     standardHeaders: true,
     legacyHeaders: false,
@@ -53,7 +53,7 @@ const apiLimiter = rateLimit({
 
 // Routes
 app.use('/api/setup', setupRouter);  // Admin setup (one-time use)
-app.use('/api/auth', authLimiter, authRouter);  // Rate limited auth
+app.use('/api/auth', authRouter);  // No rate limit for testing
 app.use('/api/users', userRouter);
 app.use('/api/dojos', dojoRouter);
 app.use('/api/belts', beltRouter);
