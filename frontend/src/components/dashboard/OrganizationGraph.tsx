@@ -75,7 +75,7 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
         try {
             // Dynamically import html2canvas
             const html2canvas = (await import('html2canvas')).default;
-            
+
             if (contentRef.current) {
                 // Temporarily reset zoom and pan for clean export
                 const originalZoom = zoom;

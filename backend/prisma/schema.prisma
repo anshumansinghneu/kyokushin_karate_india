@@ -152,6 +152,12 @@ model User {
   posts                 Post[]
   monthlyRecognitions   MonthlyRecognition[]
 
+  // Audit & Notes
+  profileViews          ProfileView[]    @relation("ProfileViewed")
+  viewedProfiles        ProfileView[]    @relation("ProfileViewer")
+  notesReceived         StudentNote[]    @relation("StudentNotes")
+  notesAuthored         StudentNote[]    @relation("AuthoredNotes")
+
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
 }
@@ -483,4 +489,32 @@ model BeltVerificationRequest {
 
   @@index([studentId])
   @@index([status])
+}
+
+model ProfileView {
+  id         String   @id @default(uuid())
+  studentId  String
+  student    User     @relation("ProfileViewed", fields: [studentId], references: [id])
+  viewedBy   String
+  viewer     User     @relation("ProfileViewer", fields: [viewedBy], references: [id])
+  viewedAt   DateTime @default(now())
+
+  @@index([studentId])
+  @@index([viewedBy])
+  @@index([viewedAt])
+}
+
+model StudentNote {
+  id         String   @id @default(uuid())
+  studentId  String
+  student    User     @relation("StudentNotes", fields: [studentId], references: [id])
+  createdBy  String
+  author     User     @relation("AuthoredNotes", fields: [createdBy], references: [id])
+  noteText   String   @db.Text
+  isPrivate  Boolean  @default(false) // Private notes only visible to the author
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([createdBy])
 }
