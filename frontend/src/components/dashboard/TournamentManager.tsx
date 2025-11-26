@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-    Trophy, Plus, Calendar, MapPin, Users, Edit2, Trash2, 
+import {
+    Trophy, Plus, Calendar, MapPin, Users, Edit2, Trash2,
     Eye, Medal, Target, Filter, Search, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -36,17 +36,17 @@ export default function StudentRoster() {
                 // Fetch all users
                 const response = await api.get('/users');
                 const allUsers = response.data.data.users;
-                
+
                 // Enhance student data with eligibility info
                 const enhancedStudents = await Promise.all(
                     allUsers.map(async (student: any) => {
                         if (student.role !== 'STUDENT') return null;
-                        
+
                         try {
                             // Fetch belt history for each student
                             const beltHistoryRes = await api.get(`/belts/history/${student.id}`);
                             const beltHistory = beltHistoryRes.data.data.beltHistory || [];
-                            
+
                             let daysSincePromotion = 0;
                             if (beltHistory.length > 0) {
                                 const lastPromotion = new Date(beltHistory[0].promotionDate);
@@ -57,7 +57,7 @@ export default function StudentRoster() {
                                 const now = new Date();
                                 daysSincePromotion = Math.floor((now.getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
                             }
-                            
+
                             return {
                                 ...student,
                                 daysSincePromotion,
@@ -74,7 +74,7 @@ export default function StudentRoster() {
                         }
                     })
                 );
-                
+
                 setStudents(enhancedStudents.filter(s => s !== null) as EnhancedStudent[]);
             } catch (error) {
                 console.error("Failed to fetch students", error);
@@ -98,7 +98,7 @@ export default function StudentRoster() {
             return (b.daysSincePromotion || 0) - (a.daysSincePromotion || 0);
         } else if (sortBy === 'belt') {
             const beltOrder: Record<string, number> = {
-                'White': 0, 'Orange': 1, 'Blue': 2, 'Yellow': 3, 
+                'White': 0, 'Orange': 1, 'Blue': 2, 'Yellow': 3,
                 'Green': 4, 'Brown': 5, 'Black': 6
             };
             const aBelt = beltOrder[a.currentBeltRank] || 0;

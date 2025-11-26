@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, ChevronDown, ChevronRight, Shield, User as UserIcon, Users } from 'lucide-react';
+import { User, ChevronDown, ChevronRight, Shield, User as UserIcon, Users, ZoomIn, ZoomOut, Maximize2, Download, Move } from 'lucide-react';
 import { getImageUrl } from '@/lib/imageUtils';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/contexts/ToastContext';
 
 interface OrganizationGraphProps {
     users: any[];
@@ -13,7 +15,14 @@ interface TreeNode {
 }
 
 const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
+    const { showToast } = useToast();
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+    const [zoom, setZoom] = useState(1);
+    const [pan, setPan] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const containerRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
 
     const toggleNode = (userId: string) => {
         const newExpanded = new Set(expandedNodes);
@@ -23,6 +32,103 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
             newExpanded.add(userId);
         }
         setExpandedNodes(newExpanded);
+    };
+
+    // Zoom controls
+    const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
+    const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
+    const handleZoomReset = () => {
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+    };
+
+    // Pan controls
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (e.button === 0) { // Left click only
+            setIsDragging(true);
+            setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+        }
+    };
+
+    const handleMouseMove = useCallback((e: React.MouseEvent) => {
+        if (isDragging) {
+            setPan({
+                x: e.clientX - dragStart.x,
+                y: e.clientY - dragStart.y,
+            });
+        }
+    }, [isDragging, dragStart]);
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    // Mouse wheel zoom
+    const handleWheel = (e: React.WheelEvent) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        setZoom(prev => Math.max(0.5, Math.min(3, prev + delta)));
+    };
+
+    // Export to PNG
+    const handleExportPNG = async () => {
+        try {
+            // Dynamically import html2canvas
+            const html2canvas = (await import('html2canvas')).default;
+            
+            if (contentRef.current) {
+                // Temporarily reset zoom and pan for clean export
+                const originalZoom = zoom;
+                const originalPan = pan;
+                setZoom(1);
+                setPan({ x: 0, y: 0 });
+
+                // Wait for state update
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const canvas = await html2canvas(contentRef.current, {
+                    backgroundColor: '#09090b',
+                    scale: 2,
+                });
+
+                // Restore zoom and pan
+                setZoom(originalZoom);
+                setPan(originalPan);
+
+                // Download
+                const link = document.createElement('a');
+                link.download = `kyokushin-org-chart-${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+
+                showToast('Organization chart exported successfully!', 'success');
+            }
+        } catch (error) {
+            console.error('Export failed:', error);
+            showToast('Failed to export chart. Please try again.', 'error');
+        }
+    };
+
+    // Collapse all nodes
+    const handleCollapseAll = () => {
+        if (tree) {
+            const newExpanded = new Set<string>();
+            newExpanded.add(tree.user.id);
+            setExpandedNodes(newExpanded);
+        }
+    };
+
+    // Expand all nodes
+    const handleExpandAll = () => {
+        const allIds = new Set<string>();
+        const collectIds = (node: TreeNode) => {
+            allIds.add(node.user.id);
+            node.children.forEach(child => collectIds(child));
+        };
+        if (tree) {
+            collectIds(tree);
+            setExpandedNodes(allIds);
+        }
     };
 
     // Build the hierarchy tree
@@ -186,9 +292,105 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
     }
 
     return (
-        <div className="w-full overflow-x-auto pb-12 pt-4 custom-scrollbar">
-            <div className="min-w-max flex justify-center">
-                {renderNode(tree)}
+        <div className="relative w-full h-[calc(100vh-200px)] bg-black/20 rounded-2xl border border-white/10 overflow-hidden">
+            {/* Control Panel */}
+            <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 bg-black/80 backdrop-blur-xl rounded-xl border border-white/10 p-2">
+                <Button
+                    onClick={handleZoomIn}
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/10 h-8 w-8 p-0"
+                    title="Zoom In"
+                >
+                    <ZoomIn className="w-4 h-4" />
+                </Button>
+                <Button
+                    onClick={handleZoomOut}
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/10 h-8 w-8 p-0"
+                    title="Zoom Out"
+                >
+                    <ZoomOut className="w-4 h-4" />
+                </Button>
+                <Button
+                    onClick={handleZoomReset}
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/10 h-8 w-8 p-0"
+                    title="Reset View"
+                >
+                    <Maximize2 className="w-4 h-4" />
+                </Button>
+                <div className="h-px bg-white/10 my-1" />
+                <Button
+                    onClick={handleExportPNG}
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/10 h-8 w-8 p-0"
+                    title="Export as PNG"
+                >
+                    <Download className="w-4 h-4" />
+                </Button>
+            </div>
+
+            {/* Zoom/Pan Controls Info */}
+            <div className="absolute top-4 right-4 z-20 bg-black/80 backdrop-blur-xl rounded-xl border border-white/10 px-4 py-2">
+                <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <div className="flex items-center gap-1">
+                        <Move className="w-3 h-3" />
+                        <span>Drag to pan</span>
+                    </div>
+                    <span className="text-white/20">•</span>
+                    <span>Scroll to zoom</span>
+                    <span className="text-white/20">•</span>
+                    <span className="text-white font-semibold">{Math.round(zoom * 100)}%</span>
+                </div>
+            </div>
+
+            {/* Expand/Collapse All Controls */}
+            <div className="absolute bottom-4 left-4 z-20 flex gap-2">
+                <Button
+                    onClick={handleExpandAll}
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/10 bg-black/80 backdrop-blur-xl border border-white/10"
+                >
+                    Expand All
+                </Button>
+                <Button
+                    onClick={handleCollapseAll}
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/10 bg-black/80 backdrop-blur-xl border border-white/10"
+                >
+                    Collapse All
+                </Button>
+            </div>
+
+            {/* Chart Container */}
+            <div
+                ref={containerRef}
+                className="w-full h-full overflow-hidden"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
+                style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+            >
+                <div
+                    ref={contentRef}
+                    className="w-full h-full flex items-center justify-center transition-transform"
+                    style={{
+                        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                        transformOrigin: 'center center',
+                    }}
+                >
+                    <div className="pb-12 pt-4">
+                        {renderNode(tree)}
+                    </div>
+                </div>
             </div>
         </div>
     );

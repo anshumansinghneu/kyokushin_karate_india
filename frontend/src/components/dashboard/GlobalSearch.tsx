@@ -30,7 +30,7 @@ export default function GlobalSearch({ onResultClick }: GlobalSearchProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const searchRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const debounceTimer = useRef<NodeJS.Timeout>();
+    const debounceTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
     // Handle search with debouncing
     const performSearch = useCallback(async (searchQuery: string) => {
