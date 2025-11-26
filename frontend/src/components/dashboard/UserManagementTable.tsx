@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Trash2, CheckCircle, XCircle, MoreVertical, Shield, User, Users, Edit2, Save, X, Pencil, Mail, Calendar, UserPlus } from "lucide-react";
+import { Search, Trash2, CheckCircle, XCircle, MoreVertical, Shield, User, Users, Edit2, Save, X, Pencil, Mail, Calendar, UserPlus, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import api from "@/lib/api";
 import { useToast } from '@/contexts/ToastContext';
 import Portal from "@/components/ui/portal";
 import { INDIAN_STATES, CITIES, COUNTRY_CODES, BELT_RANKS } from "@/lib/constants";
+import StudentDetailView from "./StudentDetailView";
 
 export default function UserManagementTable() {
     const { showToast } = useToast();
@@ -18,6 +19,7 @@ export default function UserManagementTable() {
     const [dojos, setDojos] = useState<any[]>([]);
     const [search, setSearch] = useState("");
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
     // Edit Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -323,20 +325,23 @@ export default function UserManagementTable() {
                                     </td>
                                     <td className="py-3 px-4 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button variant="ghost" className="h-8 w-8 p-0 text-blue-400 hover:bg-blue-500/20" onClick={() => openEditModal(user)}>
+                                            <Button variant="ghost" className="h-8 w-8 p-0 text-purple-400 hover:bg-purple-500/20" onClick={() => setSelectedStudentId(user.id)} title="View Details">
+                                                <Eye className="w-4 h-4" />
+                                            </Button>
+                                            <Button variant="ghost" className="h-8 w-8 p-0 text-blue-400 hover:bg-blue-500/20" onClick={() => openEditModal(user)} title="Edit">
                                                 <Edit2 className="w-4 h-4" />
                                             </Button>
                                             {user.membershipStatus === 'PENDING' && (
                                                 <>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0 text-green-400 hover:text-green-300 hover:bg-green-500/20" onClick={() => handleApprove(user.id)}>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0 text-green-400 hover:text-green-300 hover:bg-green-500/20" onClick={() => handleApprove(user.id)} title="Approve">
                                                         <CheckCircle className="w-4 h-4" />
                                                     </Button>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20" onClick={() => handleReject(user.id)}>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20" onClick={() => handleReject(user.id)} title="Reject">
                                                         <XCircle className="w-4 h-4" />
                                                     </Button>
                                                 </>
                                             )}
-                                            <Button variant="ghost" className="h-8 w-8 p-0 text-gray-500 hover:text-red-400 hover:bg-red-500/10" onClick={() => handleDeleteClick(user.id)}>
+                                            <Button variant="ghost" className="h-8 w-8 p-0 text-gray-500 hover:text-red-400 hover:bg-red-500/10" onClick={() => handleDeleteClick(user.id)} title="Delete">
                                                 <Trash2 className="w-4 h-4" />
                                             </Button>
                                         </div>
@@ -719,6 +724,14 @@ export default function UserManagementTable() {
                     )}
                 </AnimatePresence>
             </Portal>
+
+            {/* Student Detail View Modal */}
+            {selectedStudentId && (
+                <StudentDetailView
+                    studentId={selectedStudentId}
+                    onClose={() => setSelectedStudentId(null)}
+                />
+            )}
         </div>
     );
 }

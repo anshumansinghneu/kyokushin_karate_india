@@ -1,6 +1,6 @@
 import express from 'express';
 import { getMe } from '../controllers/authController';
-import { getAllUsers, getUser, approveUser, rejectUser, deleteUser, inviteUser, updateMe, updateUser, createUser } from '../controllers/userController';
+import { getAllUsers, getUser, getUserFullProfile, approveUser, rejectUser, deleteUser, inviteUser, updateMe, updateUser, createUser } from '../controllers/userController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -15,6 +15,9 @@ router.post('/invite', restrictTo('ADMIN', 'INSTRUCTOR'), inviteUser);
 router.route('/')
     .get(restrictTo('ADMIN', 'INSTRUCTOR'), getAllUsers)
     .post(restrictTo('ADMIN'), createUser);
+
+// Full profile route (must come before /:id)
+router.get('/:id/full-profile', getUserFullProfile);
 
 router.route('/:id')
     .get(getUser)

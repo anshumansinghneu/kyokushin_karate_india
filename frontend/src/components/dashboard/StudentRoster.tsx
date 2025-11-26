@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, MoreVertical, Shield, User, Award, Calendar, Plus, Check } from "lucide-react";
+import { Search, MoreVertical, Shield, User, Award, Calendar, Plus, Check, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useToast } from '@/contexts/ToastContext';
 import { useAuthStore } from "@/store/authStore";
+import StudentDetailView from "./StudentDetailView";
 
 export default function StudentRoster() {
     const [students, setStudents] = useState<any[]>([]);
     const [search, setSearch] = useState("");
+    const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -143,6 +145,16 @@ export default function StudentRoster() {
                             </div>
                         </div>
 
+                        {/* View Details Button */}
+                        <Button
+                            onClick={() => setSelectedStudentId(student.id)}
+                            className="w-full mt-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white"
+                            size="sm"
+                        >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                        </Button>
+
                         {/* Belt Color Indicator Strip */}
                         <div className={`absolute bottom-0 left-0 right-0 h-1 
                             ${(student.currentBeltRank || "").includes("Black") ? "bg-black" :
@@ -178,6 +190,14 @@ export default function StudentRoster() {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* Student Detail View Modal */}
+            {selectedStudentId && (
+                <StudentDetailView
+                    studentId={selectedStudentId}
+                    onClose={() => setSelectedStudentId(null)}
+                />
             )}
         </div>
     );

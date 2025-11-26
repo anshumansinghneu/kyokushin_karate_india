@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Medal, ChevronRight, Calendar, CheckCircle, User, AlertCircle, Search, Filter } from "lucide-react";
+import { Medal, ChevronRight, Calendar, CheckCircle, User, AlertCircle, Search, Filter, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 import { getImageUrl } from "@/lib/imageUtils";
+import StudentDetailView from "./StudentDetailView";
 
 interface Student {
     id: string;
@@ -47,6 +48,7 @@ export default function BeltPromotionsView() {
     const [isPromoting, setIsPromoting] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
+    const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchEligibleStudents();
@@ -343,10 +345,16 @@ export default function BeltPromotionsView() {
                                         className={`${student.isEligible
                                             ? 'bg-green-600 hover:bg-green-700'
                                             : 'bg-gray-700 cursor-not-allowed'
-                                            } text-white font-bold`}
+                                            } text-white font-bold flex-1`}
                                     >
                                         <Medal className="w-4 h-4 mr-2" />
                                         Promote
+                                    </Button>
+                                    <Button
+                                        onClick={() => setSelectedStudentId(student.id)}
+                                        className="bg-white/5 hover:bg-white/10 border border-white/10 text-white"
+                                    >
+                                        <Eye className="w-4 h-4" />
                                     </Button>
                                 </div>
                             </motion.div>
@@ -445,6 +453,14 @@ export default function BeltPromotionsView() {
                         </div>
                     </motion.div>
                 </div>
+            )}
+
+            {/* Student Detail View Modal */}
+            {selectedStudentId && (
+                <StudentDetailView
+                    studentId={selectedStudentId}
+                    onClose={() => setSelectedStudentId(null)}
+                />
             )}
         </div>
     );

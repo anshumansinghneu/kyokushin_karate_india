@@ -409,3 +409,115 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
         },
     });
 });
+
+/**
+ * Get comprehensive student profile with all related data
+ */
+export const getUserFullProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    // @ts-ignore
+    const currentUser = req.user;
+
+    // Authorization: Admin can see all, Instructor can see their students, Student can see themselves
+    const user = await prisma.user.findUnique({
+        where: { id },
+        include: {
+            dojo: {
+                select: {
+                    id: true,
+                    name: true,
+                    city: true,
+                    state: true,
+                }
+            },
+            primaryInstructor: {
+                select: {
+                    id: true,
+                    name: true,
+                    currentBeltRank: true,
+                }
+            },
+            beltHistory: {
+                orderBy: {
+                    promotionDate: 'desc'
+                },
+                include: {
+                    promotedByUser: {
+                        select: {
+                            id: true,
+                            name: true,
+                        }
+                    }
+                }
+            },
+            trainingSessions: {
+                orderBy: {
+                    date: 'desc'
+                },
+                take: 50 // Limit to last 50 sessions
+            },
+            tournamentResults: {
+                orderBy: {
+                    date: 'desc'
+                },
+                include: {
+                    tournament: {
+                        select: {
+                            name: true,
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    if (!user) {
+        return next(new AppError('User not found', 404));
+    }
+
+    // Authorization check
+    if (currentUser.role === 'INSTRUCTOR') {
+        if (user.primaryInstructorId !== currentUser.id && user.id !== currentUser.id) {
+            return next(new AppError('You can only view profiles of your assigned students', 403));
+        }
+    } else if (currentUser.role === 'STUDENT') {
+        if (user.id !== currentUser.id) {
+            return next(new AppError('You can only view your own profile', 403));
+        }
+    }
+    // Admin can view all profiles
+
+    // Transform belt history to include promoter name
+    const beltHistory = user.beltHistory.map(belt => ({
+        id: belt.id,
+        oldBelt: belt.oldBelt,
+        newBelt: belt.newBelt,
+        promotionDate: belt.promotionDate,
+        promotedBy: belt.promotedBy,
+        promotedByName: belt.promotedByUser?.name || 'Unknown',
+        notes: belt.notes,
+    }));
+
+    // Transform tournament results to include tournament name
+    const tournamentResults = user.tournamentResults.map(result => ({
+        id: result.id,
+        tournamentName: result.tournament?.name || 'Unknown Tournament',
+        category: result.category || 'N/A',
+        placement: result.placement || 0,
+        date: result.date,
+    }));
+
+    // Remove password from response
+    const { password, ...userWithoutPassword } = user;
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            user: {
+                ...userWithoutPassword,
+                beltHistory,
+                tournamentResults,
+            }
+        }
+    });
+});
