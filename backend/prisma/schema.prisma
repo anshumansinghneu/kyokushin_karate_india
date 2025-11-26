@@ -314,6 +314,8 @@ model Match {
   fighterBName        String?
 
   // Result
+  fighterAScore       Int?
+  fighterBScore       Int?
   winnerId            String?
   winner              User?       @relation("MatchWinner", fields: [winnerId], references: [id])
   isBye               Boolean     @default(false)

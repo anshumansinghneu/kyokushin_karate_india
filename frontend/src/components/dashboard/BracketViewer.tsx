@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Trophy, User, Crown, Medal, ChevronRight, RefreshCw } from "lucide-react";
+import { Trophy, Crown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
@@ -59,6 +59,7 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
 
     useEffect(() => {
         fetchBrackets();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tournamentId]);
 
     const fetchBrackets = async () => {
@@ -77,6 +78,19 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
         }
     };
 
+    const handleStartMatch = async (match: Match) => {
+        try {
+            await api.patch(`/matches/${match.id}`, {
+                status: 'LIVE'
+            });
+            showToast("Match started!", "success");
+            fetchBrackets();
+        } catch (error) {
+            console.error("Failed to start match:", error);
+            showToast("Failed to start match", "error");
+        }
+    };
+
     const handleScoreMatch = (match: Match) => {
         setScoringMatch(match);
         setScores({
@@ -85,8 +99,35 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
         });
     };
 
+    const handleUpdateLiveScore = async (isIncrement: boolean, fighter: 'A' | 'B') => {
+        if (!scoringMatch) return;
+
+        const newScores = { ...scores };
+        if (fighter === 'A') {
+            newScores.fighterA = Math.max(0, newScores.fighterA + (isIncrement ? 1 : -1));
+        } else {
+            newScores.fighterB = Math.max(0, newScores.fighterB + (isIncrement ? 1 : -1));
+        }
+        setScores(newScores);
+
+        try {
+            await api.patch(`/matches/${scoringMatch.id}`, {
+                fighterAScore: newScores.fighterA,
+                fighterBScore: newScores.fighterB,
+                status: 'LIVE'
+            });
+        } catch (error) {
+            console.error("Failed to update score:", error);
+        }
+    };
+
     const handleSubmitScore = async () => {
         if (!scoringMatch) return;
+
+        if (scores.fighterA === scores.fighterB) {
+            showToast("Cannot complete match with a tie score", "error");
+            return;
+        }
 
         const winnerId = scores.fighterA > scores.fighterB 
             ? scoringMatch.fighterAId 
@@ -100,12 +141,12 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
                 status: 'COMPLETED'
             });
 
-            showToast("Match score updated successfully!", "success");
+            showToast("Match completed successfully!", "success");
             setScoringMatch(null);
             fetchBrackets();
         } catch (error) {
-            console.error("Failed to update match:", error);
-            showToast("Failed to update match score", "error");
+            console.error("Failed to complete match:", error);
+            showToast("Failed to complete match", "error");
         }
     };
 
@@ -295,13 +336,22 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
                                                 )}
                                             </div>
 
-                                            {/* Score Button */}
+                                            {/* Match Control Buttons */}
                                             {user?.role === 'ADMIN' && match.status !== 'COMPLETED' && match.fighterA && match.fighterB && (
-                                                <div className="p-2 border-t border-white/10">
+                                                <div className="p-2 border-t border-white/10 flex gap-2">
+                                                    {match.status === 'SCHEDULED' && (
+                                                        <Button
+                                                            onClick={() => handleStartMatch(match)}
+                                                            size="sm"
+                                                            className="flex-1 bg-green-600 hover:bg-green-700"
+                                                        >
+                                                            Start Match
+                                                        </Button>
+                                                    )}
                                                     <Button
                                                         onClick={() => handleScoreMatch(match)}
                                                         size="sm"
-                                                        className="w-full bg-blue-600 hover:bg-blue-700"
+                                                        className="flex-1 bg-blue-600 hover:bg-blue-700"
                                                     >
                                                         {match.status === 'LIVE' ? 'Update Score' : 'Score Match'}
                                                     </Button>
@@ -324,37 +374,96 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
                         animate={{ opacity: 1, scale: 1 }}
                         className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-md w-full"
                     >
-                        <h3 className="text-xl font-bold text-white mb-6">Score Match</h3>
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-white">
+                                {scoringMatch.status === 'LIVE' ? 'Live Match Scoring' : 'Score Match'}
+                            </h3>
+                            {scoringMatch.status === 'LIVE' && (
+                                <span className="flex items-center gap-2 text-red-500 text-sm font-semibold">
+                                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                    LIVE
+                                </span>
+                            )}
+                        </div>
 
-                        <div className="space-y-4 mb-6">
+                        <div className="space-y-6 mb-6">
                             {/* Fighter A Score */}
-                            <div>
-                                <label className="text-white font-semibold block mb-2">
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                <label className="text-white font-semibold block mb-3">
                                     {scoringMatch.fighterA?.name}
                                 </label>
-                                <input
-                                    type="number"
-                                    value={scores.fighterA}
-                                    onChange={(e) => setScores(prev => ({ ...prev, fighterA: parseInt(e.target.value) || 0 }))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-2xl font-bold text-center"
-                                    min="0"
-                                />
+                                <div className="flex items-center gap-3">
+                                    <Button
+                                        onClick={() => handleUpdateLiveScore(false, 'A')}
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-12 h-12 text-xl"
+                                        disabled={scores.fighterA === 0}
+                                    >
+                                        -
+                                    </Button>
+                                    <div className="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white text-4xl font-bold text-center">
+                                        {scores.fighterA}
+                                    </div>
+                                    <Button
+                                        onClick={() => handleUpdateLiveScore(true, 'A')}
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-12 h-12 text-xl"
+                                    >
+                                        +
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* VS Divider */}
+                            <div className="flex items-center justify-center">
+                                <span className="text-white/50 font-bold text-lg">VS</span>
                             </div>
 
                             {/* Fighter B Score */}
-                            <div>
-                                <label className="text-white font-semibold block mb-2">
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                <label className="text-white font-semibold block mb-3">
                                     {scoringMatch.fighterB?.name}
                                 </label>
-                                <input
-                                    type="number"
-                                    value={scores.fighterB}
-                                    onChange={(e) => setScores(prev => ({ ...prev, fighterB: parseInt(e.target.value) || 0 }))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-2xl font-bold text-center"
-                                    min="0"
-                                />
+                                <div className="flex items-center gap-3">
+                                    <Button
+                                        onClick={() => handleUpdateLiveScore(false, 'B')}
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-12 h-12 text-xl"
+                                        disabled={scores.fighterB === 0}
+                                    >
+                                        -
+                                    </Button>
+                                    <div className="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white text-4xl font-bold text-center">
+                                        {scores.fighterB}
+                                    </div>
+                                    <Button
+                                        onClick={() => handleUpdateLiveScore(true, 'B')}
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-12 h-12 text-xl"
+                                    >
+                                        +
+                                    </Button>
+                                </div>
                             </div>
                         </div>
+
+                        {/* Winner Preview */}
+                        {scores.fighterA !== scores.fighterB && (
+                            <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+                                <div className="flex items-center gap-2 text-yellow-400 text-sm font-semibold">
+                                    <Crown className="w-4 h-4" />
+                                    <span>
+                                        Winner: {scores.fighterA > scores.fighterB 
+                                            ? scoringMatch.fighterA?.name 
+                                            : scoringMatch.fighterB?.name}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex gap-3">
                             <Button
@@ -367,8 +476,9 @@ export default function BracketViewer({ tournamentId, onClose }: BracketViewerPr
                             <Button
                                 onClick={handleSubmitScore}
                                 className="flex-1 bg-green-600 hover:bg-green-700"
+                                disabled={scores.fighterA === scores.fighterB}
                             >
-                                Submit Score
+                                Complete Match
                             </Button>
                         </div>
                     </motion.div>

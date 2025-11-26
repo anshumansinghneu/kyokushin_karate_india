@@ -61,44 +61,69 @@ export const startMatch = catchAsync(async (req: Request, res: Response, next: N
 
 export const updateScore = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { matchId } = req.params;
-    const { fighterAScore, fighterBScore, notes } = req.body;
+    const { fighterAScore, fighterBScore, winnerId, status, notes } = req.body;
+
+    const updateData: any = {};
+    
+    if (fighterAScore !== undefined) updateData.fighterAScore = fighterAScore;
+    if (fighterBScore !== undefined) updateData.fighterBScore = fighterBScore;
+    if (winnerId !== undefined) updateData.winnerId = winnerId;
+    if (status !== undefined) updateData.status = status;
+    if (notes !== undefined) updateData.notes = notes;
+    
+    // If completing the match, set completedAt timestamp
+    if (status === 'COMPLETED') {
+        updateData.completedAt = new Date();
+    }
+    
+    // If starting live match, set startedAt timestamp
+    if (status === 'LIVE' && !updateData.startedAt) {
+        updateData.startedAt = new Date();
+    }
 
     const match = await prisma.match.update({
         where: { id: matchId },
-        data: {
-            // We might need to add score fields to the Match model if they don't exist.
-            // Checking schema... Match model doesn't have score fields!
-            // We should store scores in 'notes' or add fields.
-            // For now, let's assume we add them or use notes.
-            // Wait, schema check: Match model has 'notes'. No specific score fields.
-            // I should probably add score fields to the schema or just use a JSON field or notes.
-            // Let's check schema again.
-            notes: notes ? notes : undefined
+        data: updateData,
+        include: {
+            fighterA: { select: { name: true, currentBeltRank: true, dojo: { select: { name: true } } } },
+            fighterB: { select: { name: true, currentBeltRank: true, dojo: { select: { name: true } } } }
         }
     });
 
-    // Actually, without score fields in DB, we can't persist scores easily unless we use 'notes' or a JSON field.
-    // Let's check the schema one more time.
-    // If no score fields, I'll use 'notes' to store JSON score for now: "Score: 2-1"
-
-    if (fighterAScore !== undefined || fighterBScore !== undefined) {
-        // Append or replace score in notes? 
-        // Better: Add score fields to schema. But I wanted to avoid schema changes if possible.
-        // Let's stick to the plan: "Update scores".
-        // I will add 'scoreA' and 'scoreB' to Match model?
-        // No, let's just use 'notes' for MVP or assume the user is okay with just status updates.
-        // But "Live Match Control" implies scoring.
-        // I'll add a TODO to add score fields, but for now I'll broadcast the score via WebSocket even if not persisted strictly as columns.
-        // Or persist in 'notes' as "Score: A=1, B=2".
+    // If match is completed, advance winner to next match
+    if (status === 'COMPLETED' && winnerId && match.nextMatchId) {
+        const nextMatch = await prisma.match.findUnique({ where: { id: match.nextMatchId } });
+        
+        if (nextMatch) {
+            const dataToUpdate: any = {};
+            const winnerName = winnerId === match.fighterAId ? match.fighterAName : match.fighterBName;
+            
+            if (!nextMatch.fighterAId) {
+                dataToUpdate.fighterAId = winnerId;
+                dataToUpdate.fighterAName = winnerName;
+            } else if (!nextMatch.fighterBId) {
+                dataToUpdate.fighterBId = winnerId;
+                dataToUpdate.fighterBName = winnerName;
+            }
+            
+            if (Object.keys(dataToUpdate).length > 0) {
+                await prisma.match.update({
+                    where: { id: match.nextMatchId },
+                    data: dataToUpdate
+                });
+            }
+        }
     }
 
-    // Broadcast update
+    // Broadcast update via WebSocket
     if (io) {
         io.emit('match:update', {
             matchId: match.id,
-            fighterAScore,
-            fighterBScore,
-            notes
+            bracketId: match.bracketId,
+            fighterAScore: match.fighterAScore,
+            fighterBScore: match.fighterBScore,
+            winnerId: match.winnerId,
+            status: match.status
         });
     }
 

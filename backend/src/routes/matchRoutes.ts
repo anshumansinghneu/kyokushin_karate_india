@@ -7,8 +7,8 @@ const router = express.Router();
 router.use(protect);
 
 router.get('/:id', getMatch);
+router.patch('/:matchId', restrictTo('ADMIN'), updateScore);
 router.post('/:matchId/start', restrictTo('ADMIN'), startMatch);
 router.post('/:matchId/end', restrictTo('ADMIN'), endMatch);
-router.patch('/:matchId/score', restrictTo('ADMIN'), updateScore);
 
 export default router;
