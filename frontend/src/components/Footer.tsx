@@ -10,7 +10,7 @@ export default function Footer() {
                     <div className="space-y-4 sm:space-y-6 col-span-1 sm:col-span-2 lg:col-span-1">
                         <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white italic">OSU!</h2>
                         <p className="text-gray-400 text-sm md:text-base leading-relaxed max-w-xs">
-                            The official platform for Kyokushin Karate India. Dedicated to the preservation and promotion of the ultimate truth.
+                            The official platform for Kyokushin Karate Foundation of India. Dedicated to the preservation and promotion of the ultimate truth.
                         </p>
                         <div className="flex gap-3 md:gap-4">
                             <a href="#" className="text-gray-400 hover:text-primary transition-colors"><Facebook className="w-5 h-5" /></a>
@@ -64,7 +64,7 @@ export default function Footer() {
                 </div>
 
                 <div className="border-t border-white/10 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4 text-xs md:text-sm text-gray-500">
-                    <p className="text-center md:text-left">&copy; {new Date().getFullYear()} Kyokushin Karate India. All rights reserved.</p>
+                    <p className="text-center md:text-left">&copy; {new Date().getFullYear()} Kyokushin Karate Foundation of India. All rights reserved.</p>
                     <p className="text-center md:text-right">Designed with Spirit & Strength.</p>
                 </div>
             </div>

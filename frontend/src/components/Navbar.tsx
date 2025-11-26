@@ -66,8 +66,8 @@ export default function Navbar() {
         >
             <div className="container-responsive flex justify-between items-center">
                 {/* Brand */}
-                <Link href="/" className="text-2xl md:text-3xl font-black tracking-tighter text-white italic z-50 relative">
-                    KKI
+                <Link href="/" className="text-2xl md:text-3xl font-black tracking-tighter z-50 relative">
+                    <span className="bg-gradient-to-r from-orange-500 via-white to-green-500 bg-clip-text text-transparent italic">KKFI</span>
                 </Link>
 
                 {/* Desktop Menu */}

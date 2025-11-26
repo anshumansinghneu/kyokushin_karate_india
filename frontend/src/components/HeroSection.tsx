@@ -33,7 +33,7 @@ export default function HeroSection() {
                         </span>
                     </h1>
                     <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-light">
-                        Join the official platform of Kyokushin Karate India.
+                        Join the official platform of Kyokushin Karate Foundation of India.
                         Train hard, compete with honor, and forge your spirit.
                     </p>
 

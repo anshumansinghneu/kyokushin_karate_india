@@ -16,15 +16,19 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://kyokushin-karate-india.vercel.app'),
-  title: {
-    default: "Kyokushin Karate India | Official Platform",
-    template: "%s | Kyokushin Karate India"
+  icons: {
+    icon: '/kkfi-logo.avif',
+    apple: '/kkfi-logo.avif',
   },
-  description: "Official platform for Kyokushin Karate India. Join dojos, track belt progression, register for tournaments, and connect with the martial arts community.",
+  title: {
+    default: "Kyokushin Karate Foundation of India | Official Platform",
+    template: "%s | KKFI"
+  },
+  description: "Official platform for Kyokushin Karate Foundation of India. Join dojos, track belt progression, register for tournaments, and connect with the martial arts community.",
   keywords: ["Kyokushin Karate", "Martial Arts India", "Karate Training", "Belt Promotion", "Karate Tournament", "Dojo India", "Karate Classes"],
-  authors: [{ name: "Kyokushin Karate India" }],
-  creator: "Kyokushin Karate India",
-  publisher: "Kyokushin Karate India",
+  authors: [{ name: "Kyokushin Karate Foundation of India" }],
+  creator: "Kyokushin Karate Foundation of India",
+  publisher: "Kyokushin Karate Foundation of India",
   formatDetection: {
     email: false,
     address: false,
@@ -34,22 +38,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     url: "https://kyokushin-karate-india.vercel.app",
-    title: "Kyokushin Karate India | Official Platform",
-    description: "Official platform for Kyokushin Karate India. Join dojos, track belt progression, register for tournaments.",
-    siteName: "Kyokushin Karate India",
+    title: "Kyokushin Karate Foundation of India | Official Platform",
+    description: "Official platform for Kyokushin Karate Foundation of India. Join dojos, track belt progression, register for tournaments.",
+    siteName: "Kyokushin Karate Foundation of India",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Kyokushin Karate India"
+        alt: "Kyokushin Karate Foundation of India"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kyokushin Karate India | Official Platform",
-    description: "Official platform for Kyokushin Karate India. Join dojos, track belt progression, register for tournaments.",
+    title: "Kyokushin Karate Foundation of India | Official Platform",
+    description: "Official platform for Kyokushin Karate Foundation of India. Join dojos, track belt progression, register for tournaments.",
     images: ["/og-image.png"],
   },
   robots: {

@@ -4,8 +4,8 @@ export default function StructuredData() {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "SportsOrganization",
-    "name": "Kyokushin Karate India",
-    "description": "Official platform for Kyokushin Karate India training, belt promotion, and tournaments",
+    "name": "Kyokushin Karate Foundation of India",
+    "description": "Official platform for Kyokushin Karate Foundation of India training, belt promotion, and tournaments",
     "url": "https://kyokushin-karate-india.vercel.app",
     "logo": "https://kyokushin-karate-india.vercel.app/logos/kki-logo.png",
     "sameAs": [
@@ -26,7 +26,7 @@ export default function StructuredData() {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Kyokushin Karate India",
+    "name": "Kyokushin Karate Foundation of India",
     "url": "https://kyokushin-karate-india.vercel.app",
     "potentialAction": {
       "@type": "SearchAction",

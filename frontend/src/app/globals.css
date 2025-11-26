@@ -163,3 +163,22 @@ body {
 .clip-path-slant {
   clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
 }
+
+/* Membership Card Animations */
+@keyframes gradient-slow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-slow {
+  background-size: 200% 200%;
+  animation: gradient-slow 15s ease infinite;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}

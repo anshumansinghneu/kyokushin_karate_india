@@ -95,7 +95,7 @@ export const getDojo = catchAsync(async (req: Request, res: Response, next: Next
     });
 
     // Fetch events separately with only fields that exist in production
-    let events = [];
+    let events: any[] = [];
     try {
         events = await prisma.event.findMany({
             where: {

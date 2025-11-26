@@ -31,7 +31,7 @@ export default function TermsPage() {
                         <section>
                             <h2 className="text-2xl font-bold text-white mb-4">1. Acceptance of Terms</h2>
                             <p>
-                                By accessing and using the Kyokushin Karate India platform, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.
+                                By accessing and using the Kyokushin Karate Foundation of India platform, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.
                             </p>
                         </section>
 
@@ -158,7 +158,7 @@ export default function TermsPage() {
                             </p>
                             <ul className="list-disc list-inside space-y-2 ml-4 mt-2">
                                 <li>First: Direct communication with platform support</li>
-                                <li>Then: Mediation by Kyokushin Karate India leadership</li>
+                                <li>Then: Mediation by Kyokushin Karate Foundation of India leadership</li>
                                 <li>Finally: Arbitration under Indian law</li>
                             </ul>
                         </section>

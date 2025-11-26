@@ -31,7 +31,7 @@ export default function PrivacyPage() {
                         <section>
                             <h2 className="text-2xl font-bold text-white mb-4">1. Introduction</h2>
                             <p>
-                                Kyokushin Karate India (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our platform.
+                                Kyokushin Karate Foundation of India (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our platform.
                             </p>
                         </section>
 
