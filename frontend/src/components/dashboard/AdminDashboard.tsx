@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, MapPin, Calendar, Settings, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy } from "lucide-react";
+import { Shield, Users, MapPin, Calendar, Settings, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -15,11 +15,13 @@ import BlogManager from "./BlogManager";
 import MediaManager from "./MediaManager";
 import RecognitionManager from "./RecognitionManager";
 import OrganizationGraph from "./OrganizationGraph";
+import BeltPromotionsView from "./BeltPromotionsView";
+import BeltApprovalsView from "./BeltApprovalsView";
 import { useToast } from '@/contexts/ToastContext';
 
 export default function AdminDashboard({ user }: { user: any }) {
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'content'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'content' | 'belt-verifications' | 'belt-promotions'>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const { logout } = useAuthStore();
     const [stats, setStats] = useState({
@@ -57,6 +59,8 @@ export default function AdminDashboard({ user }: { user: any }) {
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: BarChart },
         { id: 'users', label: 'User Management', icon: Users },
+        { id: 'belt-verifications', label: 'Belt Verifications', icon: Shield },
+        { id: 'belt-promotions', label: 'Belt Promotions', icon: Award },
         { id: 'dojos', label: 'Dojo Management', icon: Building },
         { id: 'events', label: 'Event Management', icon: Calendar },
         { id: 'blogs', label: 'Blogs', icon: FileText },
@@ -229,6 +233,8 @@ export default function AdminDashboard({ user }: { user: any }) {
                         )}
 
                         {activeTab === 'users' && <motion.div key="users" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><UserManagementTable /></motion.div>}
+                        {activeTab === 'belt-verifications' && <motion.div key="belt-verifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><BeltApprovalsView /></motion.div>}
+                        {activeTab === 'belt-promotions' && <motion.div key="belt-promotions" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><BeltPromotionsView /></motion.div>}
                         {activeTab === 'dojos' && <motion.div key="dojos" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><DojoManager /></motion.div>}
                         {activeTab === 'events' && <motion.div key="events" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><EventManager /></motion.div>}
                         {activeTab === 'blogs' && <motion.div key="blogs" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><BlogManager /></motion.div>}

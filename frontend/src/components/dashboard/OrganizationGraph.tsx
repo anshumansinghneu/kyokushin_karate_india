@@ -40,12 +40,14 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
             let directReports = [];
 
             if (currentUser.role === 'ADMIN') {
-                // Admin sees all instructors
+                // Admin (Country Director) sees all instructors
                 directReports = users.filter(u =>
                     u.role === 'INSTRUCTOR' && u.id !== currentUser.id
                 );
             } else if (currentUser.role === 'INSTRUCTOR') {
-                // Instructor sees students assigned to them OR students in same dojo without instructor
+                // Instructor sees:
+                // 1. Students explicitly assigned to them (primaryInstructorId)
+                // 2. Students in same dojo without any instructor assigned (fallback)
                 directReports = users.filter(u =>
                     u.role === 'STUDENT' && (
                         u.primaryInstructorId === currentUser.id ||
@@ -53,6 +55,7 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
                     )
                 );
             }
+            // Students have no direct reports
 
             return {
                 user: currentUser,
