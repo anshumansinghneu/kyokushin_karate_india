@@ -233,11 +233,6 @@ export default function InstructorDashboard({ user }: { user: any }) {
                             </div>
                         </motion.div>
                     )}
-                </div>
-            )}
-
-            </motion.div>
-                )}
                 </motion.div>
             )}
 
