@@ -21,6 +21,18 @@ export const io = new Server(server, {
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
 
+    // Join tournament room
+    socket.on('join-tournament', (tournamentId: string) => {
+        socket.join(`tournament-${tournamentId}`);
+        console.log(`Socket ${socket.id} joined tournament-${tournamentId}`);
+    });
+
+    // Leave tournament room
+    socket.on('leave-tournament', (tournamentId: string) => {
+        socket.leave(`tournament-${tournamentId}`);
+        console.log(`Socket ${socket.id} left tournament-${tournamentId}`);
+    });
+
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
     });

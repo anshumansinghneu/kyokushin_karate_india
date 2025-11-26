@@ -86,7 +86,8 @@ export const updateScore = catchAsync(async (req: Request, res: Response, next: 
         data: updateData,
         include: {
             fighterA: { select: { name: true, currentBeltRank: true, dojo: { select: { name: true } } } },
-            fighterB: { select: { name: true, currentBeltRank: true, dojo: { select: { name: true } } } }
+            fighterB: { select: { name: true, currentBeltRank: true, dojo: { select: { name: true } } } },
+            bracket: { select: { eventId: true } }
         }
     });
 
@@ -115,16 +116,27 @@ export const updateScore = catchAsync(async (req: Request, res: Response, next: 
         }
     }
 
-    // Broadcast update via WebSocket
+    // Broadcast update via WebSocket to tournament room
     if (io) {
-        io.emit('match:update', {
+        const tournamentId = match.bracket.eventId;
+        io.to(`tournament-${tournamentId}`).emit('match:update', {
             matchId: match.id,
             bracketId: match.bracketId,
             fighterAScore: match.fighterAScore,
             fighterBScore: match.fighterBScore,
             winnerId: match.winnerId,
-            status: match.status
+            status: match.status,
+            fighterA: match.fighterA,
+            fighterB: match.fighterB
         });
+
+        // If match completed, also emit bracket refresh event
+        if (status === 'COMPLETED') {
+            io.to(`tournament-${tournamentId}`).emit('bracket:refresh', {
+                tournamentId,
+                bracketId: match.bracketId
+            });
+        }
     }
 
     res.status(200).json({

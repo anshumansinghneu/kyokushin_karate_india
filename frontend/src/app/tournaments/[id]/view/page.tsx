@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Trophy, Crown, Calendar, MapPin, Users, RefreshCw, Share2 } from "lucide-react";
+import { Trophy, Crown, Calendar, MapPin, Users, RefreshCw, Share2, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
+import { io, Socket } from "socket.io-client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 interface Match {
     id: string;
@@ -58,8 +60,10 @@ export default function PublicTournamentViewer() {
     const [tournament, setTournament] = useState<Tournament | null>(null);
     const [brackets, setBrackets] = useState<Bracket[]>([]);
     const [selectedBracket, setSelectedBracket] = useState<Bracket | null>(null);
-    const [autoRefresh, setAutoRefresh] = useState(true);
+    const [liveUpdates, setLiveUpdates] = useState(true);
+    const [isConnected, setIsConnected] = useState(false);
     const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+    const socketRef = useRef<Socket | null>(null);
 
     const fetchData = async () => {
         try {
@@ -87,17 +91,60 @@ export default function PublicTournamentViewer() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
-    // Auto-refresh every 30 seconds for live updates
+    // WebSocket connection for live updates
     useEffect(() => {
-        if (!autoRefresh) return;
+        if (!liveUpdates || !id) return;
 
-        const interval = setInterval(() => {
+        const socket = io(SOCKET_URL, {
+            transports: ['websocket', 'polling']
+        });
+
+        socketRef.current = socket;
+
+        socket.on('connect', () => {
+            console.log('Connected to live updates');
+            setIsConnected(true);
+            socket.emit('join-tournament', id);
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from live updates');
+            setIsConnected(false);
+        });
+
+        socket.on('match:update', (data: { matchId: string; bracketId: string; fighterAScore?: number; fighterBScore?: number; winnerId?: string; status?: string }) => {
+            console.log('Match update received:', data);
+            setLastUpdated(new Date());
+            
+            // Update the specific match in brackets
+            setBrackets(prevBrackets => 
+                prevBrackets.map(bracket => {
+                    if (bracket.id === data.bracketId) {
+                        return {
+                            ...bracket,
+                            matches: bracket.matches.map(match => 
+                                match.id === data.matchId 
+                                    ? { ...match, ...data }
+                                    : match
+                            )
+                        };
+                    }
+                    return bracket;
+                })
+            );
+        });
+
+        socket.on('bracket:refresh', () => {
+            console.log('Bracket refresh requested');
             fetchData();
-        }, 30000); // 30 seconds
+        });
 
-        return () => clearInterval(interval);
+        return () => {
+            socket.emit('leave-tournament', id);
+            socket.disconnect();
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [autoRefresh, id]);
+    }, [liveUpdates, id]);
 
     const handleShare = async () => {
         const url = window.location.href;
@@ -219,12 +266,16 @@ export default function PublicTournamentViewer() {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 py-6">
-                {/* Auto-refresh indicator */}
+                {/* Live updates indicator */}
                 <div className="flex items-center justify-between mb-6 p-3 bg-black/40 rounded-lg border border-white/10">
                     <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${autoRefresh ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
+                        {isConnected ? (
+                            <Wifi className="w-4 h-4 text-green-500" />
+                        ) : (
+                            <WifiOff className="w-4 h-4 text-gray-500" />
+                        )}
                         <span className="text-sm text-white/60">
-                            {autoRefresh ? 'Auto-refreshing every 30s' : 'Auto-refresh disabled'}
+                            {isConnected ? 'Live updates active' : 'Live updates disconnected'}
                             {' • '}
                             Last updated: {lastUpdated.toLocaleTimeString()}
                         </span>
@@ -232,11 +283,11 @@ export default function PublicTournamentViewer() {
                     <label className="flex items-center gap-2 cursor-pointer">
                         <input
                             type="checkbox"
-                            checked={autoRefresh}
-                            onChange={(e) => setAutoRefresh(e.target.checked)}
+                            checked={liveUpdates}
+                            onChange={(e) => setLiveUpdates(e.target.checked)}
                             className="w-4 h-4 rounded bg-white/10 border-white/20"
                         />
-                        <span className="text-sm text-white/80">Auto-refresh</span>
+                        <span className="text-sm text-white/80">Live updates</span>
                     </label>
                 </div>
 
