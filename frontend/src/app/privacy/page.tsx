@@ -9,7 +9,7 @@ export default function PrivacyPage() {
         <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
             {/* Background */}
             <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black pointer-events-none" />
-            
+
             <div className="container mx-auto px-4 py-24 relative z-10 max-w-4xl">
                 {/* Back Button */}
                 <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">

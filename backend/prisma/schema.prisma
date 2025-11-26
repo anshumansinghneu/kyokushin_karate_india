@@ -75,6 +75,12 @@ enum NotificationType {
   GENERAL
 }
 
+enum VerificationStatus {
+  VERIFIED
+  PENDING_VERIFICATION
+  REJECTED
+}
+
 model User {
   id                    String           @id @default(uuid())
   email                 String           @unique
@@ -112,6 +118,7 @@ model User {
 
   // Belt Ranking
   currentBeltRank       String?          @default("White")
+  verificationStatus    VerificationStatus? @default(VERIFIED)
 
   // Approval Tracking
   isInstructorApproved  Boolean          @default(false)
@@ -124,6 +131,8 @@ model User {
   // Relations
   beltHistory           BeltHistory[]    @relation("StudentBeltHistory")
   promotedBelts         BeltHistory[]    @relation("PromoterBeltHistory")
+  beltVerificationRequests BeltVerificationRequest[] @relation("StudentVerificationRequests")
+  reviewedVerifications BeltVerificationRequest[] @relation("InstructorReviews")
   createdEvents         Event[]
   registrations         EventRegistration[]
   approvedRegistrations EventRegistration[] @relation("RegistrationApprover")
@@ -455,4 +464,23 @@ model MonthlyRecognition {
   createdAt DateTime @default(now())
 
   @@unique([month, year, type, userId]) // Prevent duplicate awards for same person in same month/type
+}
+
+model BeltVerificationRequest {
+  id              String         @id @default(uuid())
+  studentId       String
+  student         User           @relation("StudentVerificationRequests", fields: [studentId], references: [id])
+  requestedBelt   String         // Belt color being claimed
+  examDate        DateTime       // Date when student claims they passed the belt exam
+  reason          String?        // Optional explanation from student
+  status          ApprovalStatus @default(PENDING)
+  reviewedBy      String?
+  reviewer        User?          @relation("InstructorReviews", fields: [reviewedBy], references: [id])
+  reviewedAt      DateTime?
+  rejectionReason String?        // Why it was rejected (if applicable)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([studentId])
+  @@index([status])
 }

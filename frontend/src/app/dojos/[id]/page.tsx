@@ -141,7 +141,7 @@ export default function DojoDetailPage() {
 
                     {/* LEFT COLUMN - Main Content */}
                     <div className="lg:col-span-2 space-y-8">
-                        
+
                         {/* About Section */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -198,7 +198,7 @@ export default function DojoDetailPage() {
 
                     {/* RIGHT COLUMN - Sidebar */}
                     <div className="lg:col-span-1 space-y-8">
-                        
+
                         {/* Location Card */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}

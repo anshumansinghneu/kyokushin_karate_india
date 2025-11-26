@@ -27,13 +27,13 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
 };
 
 export const register = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password, name, phone, dob, height, weight, city, state, country, dojoId, instructorId, currentBeltRank } = req.body;
+    const { email, password, name, phone, dob, height, weight, city, state, country, dojoId, instructorId, currentBeltRank, beltExamDate, beltClaimReason } = req.body;
 
     // Password validation
     if (!password || password.length < 8) {
         return next(new AppError('Password must be at least 8 characters long', 400));
     }
-    
+
     // Check for at least one special character
     const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
     if (!specialCharRegex.test(password)) {
@@ -56,11 +56,32 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Use transaction to create user and initial belt history
+    // Use transaction to create user and handle belt logic
     const userId = await prisma.$transaction(async (tx) => {
-        // ALL STUDENTS START AT WHITE BELT - Higher belts require instructor verification
-        const initialBelt = req.body.role === 'STUDENT' ? 'White' : (currentBeltRank || 'White');
-        
+        const isStudent = req.body.role === 'STUDENT';
+        const isInstructor = req.body.role === 'INSTRUCTOR';
+        const requestedBelt = currentBeltRank || 'White';
+        const isClaimingHigherBelt = isStudent && requestedBelt !== 'White';
+
+        // Determine verification status and initial belt
+        let verificationStatus: 'VERIFIED' | 'PENDING_VERIFICATION' = 'VERIFIED';
+        let initialBelt = 'White';
+
+        if (isInstructor) {
+            // Instructors can set their belt directly
+            initialBelt = requestedBelt;
+        } else if (isStudent) {
+            if (requestedBelt === 'White') {
+                // White belt students are auto-verified
+                initialBelt = 'White';
+                verificationStatus = 'VERIFIED';
+            } else {
+                // Higher belt claims need verification
+                initialBelt = 'White'; // Start at White until verified
+                verificationStatus = 'PENDING_VERIFICATION';
+            }
+        }
+
         const user = await tx.user.create({
             data: {
                 email,
@@ -78,20 +99,34 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
                 role: req.body.role || 'STUDENT',
                 membershipStatus: 'PENDING',
                 currentBeltRank: initialBelt,
+                verificationStatus,
             },
         });
 
-        // Create initial belt history record
-        await tx.beltHistory.create({
-            data: {
-                studentId: user.id,
-                oldBelt: null,
-                newBelt: initialBelt,
-                promotedBy: instructorId || null,
-                notes: req.body.role === 'STUDENT' ? 'Initial registration - Started at White Belt' : 'Initial registration',
-                promotionDate: new Date(),
-            },
-        });
+        if (isClaimingHigherBelt) {
+            // Create belt verification request for instructor review
+            await tx.beltVerificationRequest.create({
+                data: {
+                    studentId: user.id,
+                    requestedBelt,
+                    examDate: beltExamDate ? new Date(beltExamDate) : new Date(),
+                    reason: beltClaimReason || `Student claims ${requestedBelt} belt from previous training`,
+                    status: 'PENDING',
+                },
+            });
+        } else {
+            // Create initial belt history for auto-approved cases
+            await tx.beltHistory.create({
+                data: {
+                    studentId: user.id,
+                    oldBelt: null,
+                    newBelt: initialBelt,
+                    promotedBy: instructorId || user.id,
+                    notes: isInstructor ? 'Initial registration - Instructor' : 'Initial registration - White Belt',
+                    promotionDate: new Date(),
+                },
+            });
+        }
 
         return user.id;
     });

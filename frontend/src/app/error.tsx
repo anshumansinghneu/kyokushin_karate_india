@@ -74,7 +74,7 @@ export default function Error({
                                 <RefreshCcw className="w-5 h-5 mr-2" />
                                 Try Again
                             </Button>
-                            
+
                             <Link href="/">
                                 <Button
                                     variant="outline"

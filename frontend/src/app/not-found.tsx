@@ -54,7 +54,7 @@ export default function NotFound() {
                                     Go Home
                                 </Button>
                             </Link>
-                            
+
                             <Button
                                 variant="outline"
                                 size="lg"

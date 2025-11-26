@@ -1,6 +1,7 @@
 # 🥋 Kyokushin Karate India - Feature Roadmap
 
 ## 📋 Table of Contents
+
 - [Final Deployment (Before Launch)](#final-deployment-before-launch)
 - [Phase 1 - Post Launch (Month 1-2)](#phase-1---post-launch-month-1-2)
 - [Phase 2 - Growth (Month 3-4)](#phase-2---growth-month-3-4)
@@ -14,6 +15,7 @@
 ### **CRITICAL - Must Fix Before Going Live**
 
 #### **1. Environment & Configuration**
+
 - [ ] Set `NEXT_PUBLIC_API_URL` in Vercel environment variables
 - [ ] Verify all database migrations run on production
 - [ ] Test all API endpoints in production environment
@@ -23,6 +25,7 @@
 - [ ] Environment variables audit (remove any test/dev values)
 
 #### **2. Security Hardening**
+
 - [ ] Rate limiting on authentication endpoints
 - [ ] Password strength validation (min 8 chars, special chars)
 - [ ] JWT token expiration policy (currently set?)
@@ -33,6 +36,7 @@
 - [ ] Helmet.js for security headers
 
 #### **3. Data Validation & Error Handling**
+
 - [ ] Add comprehensive input validation on all forms
 - [ ] Better error messages (user-friendly, not technical)
 - [ ] Handle edge cases (empty states, no data scenarios)
@@ -42,6 +46,7 @@
 - [ ] Date validation for events/registrations
 
 #### **4. Testing & Quality Assurance**
+
 - [ ] Test complete user registration flow (Student + Instructor)
 - [ ] Test login/logout across all roles (Admin, Instructor, Student)
 - [ ] Test all CRUD operations for each feature
@@ -52,6 +57,7 @@
 - [ ] Verify email sending works in production
 
 #### **5. Content & SEO**
+
 - [ ] Add proper meta tags for SEO
 - [ ] Add Open Graph tags for social sharing
 - [ ] Create sitemap.xml
@@ -62,6 +68,7 @@
 - [ ] Add loading states for all async operations
 
 #### **6. Performance Optimization**
+
 - [ ] Enable Next.js image optimization
 - [ ] Lazy load images below the fold
 - [ ] Code splitting for large components
@@ -72,6 +79,7 @@
 - [ ] Reduce bundle size (analyze with webpack-bundle-analyzer)
 
 #### **7. Analytics & Monitoring**
+
 - [ ] Set up Google Analytics or alternative
 - [ ] Add event tracking (registrations, logins, etc.)
 - [ ] Set up uptime monitoring (UptimeRobot, Pingdom)
@@ -80,6 +88,7 @@
 - [ ] Log rotation and retention policy
 
 #### **8. Legal & Compliance**
+
 - [ ] Add Privacy Policy page
 - [ ] Add Terms of Service page
 - [ ] Cookie consent banner (if tracking users)
@@ -89,6 +98,7 @@
 - [ ] Account deletion functionality
 
 #### **9. Documentation**
+
 - [ ] Admin user manual
 - [ ] Instructor user manual
 - [ ] Student onboarding guide
@@ -98,6 +108,7 @@
 - [ ] Troubleshooting guide
 
 #### **10. User Experience Polish**
+
 - [ ] Add helpful tooltips for complex features
 - [ ] Improve form validation messages
 - [ ] Add success notifications for all actions
@@ -114,19 +125,23 @@
 ### **HIGH PRIORITY - User Engagement & Core Features**
 
 #### **Belt & Training System**
+
 - [ ] **Belt Eligibility Checker**
+
   - Show "Ready for Promotion" badge when 6 months passed
   - Dashboard widget for students
   - Notification bell for eligible students
   - Instructor dashboard showing eligible students list
 
 - [ ] **Belt Requirements Checklist**
+
   - Define requirements per belt (techniques, hours, attendance)
   - Student progress tracking per requirement
   - Instructor can mark techniques as completed
   - Visual progress bars
 
 - [ ] **Training Session Logging**
+
   - Students log training hours
   - Attendance tracking integration
   - Link training logs to belt progression
@@ -139,19 +154,23 @@
   - Belt timeline visualization
 
 #### **Event Management**
+
 - [ ] **Event Photo Galleries**
+
   - Upload multiple photos per event
   - Gallery view for each event
   - Participant tagging in photos
   - Download event photos
 
 - [ ] **Event Attendance Tracking**
+
   - Check-in system for events
   - QR code scanning for attendance
   - Attendance reports per event
   - Integration with training hours
 
 - [ ] **Event Feedback & Reviews**
+
   - Participants can rate events
   - Written feedback collection
   - Display average ratings
@@ -164,19 +183,23 @@
   - iCal export functionality
 
 #### **Dojo Management**
+
 - [ ] **Dojo Photo Galleries**
+
   - Multiple photos per dojo
   - Cover photo selection
   - Photo approval workflow
   - Gallery management by instructors
 
 - [ ] **Dojo Reviews & Ratings**
+
   - Students can rate dojos
   - Written reviews
   - Star rating system
   - Response from instructors
 
 - [ ] **Dojo Class Schedule**
+
   - Weekly class timetable
   - Different classes (Kids, Adults, Advanced)
   - Class capacity management
@@ -189,13 +212,16 @@
   - Growth metrics
 
 #### **User Profile Enhancements**
+
 - [ ] **Student Progress Dashboard**
+
   - Training hours this month/year
   - Upcoming events registered for
   - Belt progression timeline
   - Achievement badges
 
 - [ ] **Instructor Dashboard**
+
   - Students under supervision
   - Pending promotion requests
   - Event management quick links
@@ -208,13 +234,16 @@
   - Rewards for complete profiles
 
 #### **Communication Features**
+
 - [ ] **Announcement System**
+
   - Admin/Instructor can post announcements
   - Dojo-specific announcements
   - System-wide announcements
   - Email notifications for important announcements
 
 - [ ] **In-App Notifications**
+
   - Real-time notification bell
   - Notification history
   - Mark as read functionality
@@ -234,7 +263,9 @@
 ### **MEDIUM PRIORITY - Advanced Features**
 
 #### **Belt & Certification System**
+
 - [ ] **Digital Belt Certificates**
+
   - Auto-generate PDF certificates on promotion
   - Include QR code for verification
   - Downloadable from profile
@@ -242,6 +273,7 @@
   - Certificate design templates
 
 - [ ] **Belt Verification Portal**
+
   - Public verification page
   - Enter membership number to verify belt
   - Show current rank and history
@@ -249,6 +281,7 @@
   - Shareable verification links
 
 - [ ] **Promotion Request System**
+
   - Students can request belt testing
   - Instructor reviews readiness
   - Approve/deny with feedback
@@ -263,7 +296,9 @@
   - Testing criteria checklist
 
 #### **Tournament Management**
+
 - [ ] **Tournament Bracket System**
+
   - Automatic bracket generation
   - Weight class divisions
   - Age group divisions
@@ -271,6 +306,7 @@
   - Winner progression
 
 - [ ] **Match Scoring System**
+
   - Live score entry during matches
   - Point tracking per match
   - Judge score aggregation
@@ -278,6 +314,7 @@
   - Statistics and analytics
 
 - [ ] **Tournament Registration**
+
   - Category selection (Kata/Kumite)
   - Weight class auto-suggestion
   - Payment integration
@@ -292,7 +329,9 @@
   - Spectator view mode
 
 #### **Member Management**
+
 - [ ] **Membership Renewal System**
+
   - Expiry date tracking
   - Renewal reminders (30, 15, 7 days)
   - Online renewal process
@@ -300,6 +339,7 @@
   - Automatic status updates
 
 - [ ] **Membership Cards**
+
   - Digital membership card
   - QR code with member ID
   - Apple Wallet / Google Pay integration
@@ -307,6 +347,7 @@
   - Expiry date display
 
 - [ ] **Student Attendance System**
+
   - Class attendance tracking
   - QR code check-in
   - Attendance percentage calculation
@@ -321,7 +362,9 @@
   - Payment history
 
 #### **Payment & Financial**
+
 - [ ] **Payment Gateway Integration**
+
   - Razorpay / Paytm integration
   - Event registration payments
   - Membership fee payments
@@ -329,6 +372,7 @@
   - Automatic receipts
 
 - [ ] **Invoice Generation**
+
   - Auto-generate invoices
   - GST compliance
   - Downloadable PDF invoices
@@ -343,7 +387,9 @@
   - Export to Excel
 
 #### **Content Management**
+
 - [ ] **Blog/News System**
+
   - Post articles and news
   - Featured images
   - Categories and tags
@@ -351,6 +397,7 @@
   - SEO optimization
 
 - [ ] **Technique Library**
+
   - Video tutorials for techniques
   - Organized by belt level
   - Search functionality
@@ -371,7 +418,9 @@
 ### **NICE TO HAVE - Competitive Advantage**
 
 #### **Advanced Analytics**
+
 - [ ] **Admin Analytics Dashboard**
+
   - Total users by role
   - Growth trends (new users per month)
   - Active users metrics
@@ -380,6 +429,7 @@
   - Geographic distribution
 
 - [ ] **Instructor Performance Metrics**
+
   - Student retention rates
   - Promotion success rates
   - Average training time per belt
@@ -387,6 +437,7 @@
   - Class attendance trends
 
 - [ ] **Student Performance Analytics**
+
   - Training consistency
   - Belt progression pace
   - Event participation
@@ -400,7 +451,9 @@
   - Revenue projections
 
 #### **Social & Community**
+
 - [ ] **Social Feed**
+
   - Share achievements
   - Post training updates
   - Like and comment
@@ -408,6 +461,7 @@
   - Share event photos
 
 - [ ] **Leaderboards**
+
   - Training hours leaderboard
   - Event participation ranking
   - Technique mastery scores
@@ -415,6 +469,7 @@
   - Badges and achievements
 
 - [ ] **Messaging System**
+
   - Direct messages between users
   - Instructor-student messaging
   - Group chats per dojo
@@ -428,7 +483,9 @@
   - Motivation system
 
 #### **Mobile App Features**
+
 - [ ] **Mobile App Development**
+
   - React Native or Flutter app
   - All web features in mobile
   - Push notifications
@@ -436,6 +493,7 @@
   - App store deployment
 
 - [ ] **QR Code System**
+
   - QR code for profile
   - Check-in via QR scan
   - Belt verification via QR
@@ -450,7 +508,9 @@
   - Integration with Apple Health/Google Fit
 
 #### **Gamification**
+
 - [ ] **Achievement Badges**
+
   - Belt milestones
   - Training streaks (30, 60, 90 days)
   - Event participation badges
@@ -458,6 +518,7 @@
   - Community contributor
 
 - [ ] **Points & Rewards System**
+
   - Earn points for training
   - Earn points for events
   - Leaderboard rankings
@@ -472,7 +533,9 @@
   - Prize distribution
 
 #### **Advanced Belt System**
+
 - [ ] **Skill Tree System**
+
   - Visual skill tree per belt
   - Unlock advanced techniques
   - Prerequisite tracking
@@ -480,6 +543,7 @@
   - Instructor validation
 
 - [ ] **Video Assessment**
+
   - Upload technique videos
   - Instructor reviews and comments
   - Technique correction feedback
@@ -500,7 +564,9 @@
 ### **SCALING & ENTERPRISE FEATURES**
 
 #### **Multi-Organization Support**
+
 - [ ] **White Label Solution**
+
   - Custom branding per organization
   - Separate domains
   - Custom color schemes
@@ -508,6 +574,7 @@
   - Organization-specific features
 
 - [ ] **Franchise Management**
+
   - Central admin for all dojos
   - Franchise-level reporting
   - Revenue sharing system
@@ -522,19 +589,23 @@
   - RTL language support
 
 #### **Advanced Integrations**
+
 - [ ] **Google Calendar Integration**
+
   - Sync events to Google Calendar
   - Class schedule sync
   - Automatic reminders
   - iCal export
 
 - [ ] **Zoom/Meet Integration**
+
   - Online classes
   - Virtual seminars
   - Remote belt testing
   - Recording storage
 
 - [ ] **WhatsApp Integration**
+
   - WhatsApp notifications
   - Group messaging
   - Event updates
@@ -547,13 +618,16 @@
   - Emergency alerts
 
 #### **AI & Machine Learning**
+
 - [ ] **AI Technique Analysis**
+
   - Computer vision for form checking
   - Real-time feedback on techniques
   - Pose estimation
   - Technique scoring
 
 - [ ] **Smart Recommendations**
+
   - Recommend training focus areas
   - Suggest events based on level
   - Personalized training plans
@@ -566,13 +640,16 @@
   - 24/7 support
 
 #### **Business Intelligence**
+
 - [ ] **Custom Report Builder**
+
   - Drag-and-drop report creation
   - Custom filters
   - Schedule automated reports
   - Export to multiple formats
 
 - [ ] **Data Visualization**
+
   - Interactive charts and graphs
   - Dashboard customization
   - Real-time data updates
@@ -585,13 +662,16 @@
   - Database backups
 
 #### **Advanced Security**
+
 - [ ] **Two-Factor Authentication**
+
   - OTP via SMS/Email
   - Authenticator app support
   - Backup codes
   - Device management
 
 - [ ] **Role-Based Access Control (RBAC)**
+
   - Granular permissions
   - Custom role creation
   - Permission templates
@@ -604,19 +684,23 @@
   - Compliance reports
 
 #### **Performance & Reliability**
+
 - [ ] **CDN Integration**
+
   - CloudFlare or similar
   - Global content delivery
   - DDoS protection
   - Edge caching
 
 - [ ] **Database Optimization**
+
   - Read replicas
   - Query optimization
   - Indexing strategy
   - Connection pooling
 
 - [ ] **Microservices Architecture**
+
   - Split into smaller services
   - Independent scaling
   - Better fault isolation
@@ -635,6 +719,7 @@
 ### **Impact vs Effort**
 
 #### **HIGH IMPACT, LOW EFFORT (Do First)**
+
 1. Belt eligibility checker
 2. Event calendar view
 3. Profile completion indicator
@@ -645,6 +730,7 @@
 8. Dojo class schedule
 
 #### **HIGH IMPACT, HIGH EFFORT (Strategic Projects)**
+
 1. Digital belt certificates with QR verification
 2. Payment gateway integration
 3. Mobile app development
@@ -655,6 +741,7 @@
 8. Live tournament updates
 
 #### **LOW IMPACT, LOW EFFORT (Quick Wins)**
+
 1. Event photo galleries
 2. Dojo photo galleries
 3. Social feed
@@ -663,6 +750,7 @@
 6. Blog/news system
 
 #### **LOW IMPACT, HIGH EFFORT (Avoid for Now)**
+
 1. AI technique analysis
 2. Wearable integration
 3. White label solution
@@ -673,12 +761,14 @@
 ## 🎯 Recommended Implementation Order
 
 ### **Immediate (Week 1-2)**
+
 1. Fix all critical deployment issues
 2. Security hardening
 3. Performance optimization
 4. Complete testing
 
 ### **Month 1**
+
 1. Belt eligibility checker
 2. Training session logging
 3. Event calendar view
@@ -686,6 +776,7 @@
 5. In-app notifications
 
 ### **Month 2**
+
 1. Belt requirements checklist
 2. Belt statistics dashboard
 3. Event photo galleries
@@ -693,18 +784,21 @@
 5. Profile completion indicator
 
 ### **Month 3**
+
 1. Digital belt certificates
 2. Belt verification portal
 3. Attendance tracking
 4. Event feedback system
 
 ### **Month 4**
+
 1. Payment gateway integration
 2. Membership renewal system
 3. Tournament bracket system
 4. Financial reports
 
 ### **Month 5-6**
+
 1. Mobile app development
 2. Advanced analytics
 3. Social features
@@ -723,5 +817,5 @@
 
 ---
 
-*Last Updated: November 25, 2025*
-*Version: 1.0*
+_Last Updated: November 25, 2025_
+_Version: 1.0_

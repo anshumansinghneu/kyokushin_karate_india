@@ -66,7 +66,7 @@ export default function MembershipCard({ user }: MembershipCardProps) {
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-zinc-900 via-black to-zinc-900 border-2 border-white/20 overflow-hidden backdrop-blur-xl">
                     {/* Animated Gradient Background */}
                     <div className="absolute inset-0 bg-gradient-to-br from-red-950/30 via-black to-orange-950/30 animate-gradient-slow" />
-                    
+
                     {/* Subtle Pattern Overlay */}
                     <div className="absolute inset-0 opacity-10">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
@@ -85,11 +85,11 @@ export default function MembershipCard({ user }: MembershipCardProps) {
                             <div className="relative group">
                                 <div className="absolute inset-0 bg-red-500 blur-xl opacity-30 group-hover:opacity-50 transition-opacity" />
                                 <div className="relative bg-gradient-to-br from-zinc-800 to-zinc-900 p-3 rounded-2xl border border-white/20">
-                                    <Image 
-                                        src="/kkfi-logo.avif" 
-                                        alt="KKFI Logo" 
-                                        width={40} 
-                                        height={40} 
+                                    <Image
+                                        src="/kkfi-logo.avif"
+                                        alt="KKFI Logo"
+                                        width={40}
+                                        height={40}
                                         className="w-10 h-10 object-contain"
                                     />
                                 </div>
@@ -150,9 +150,9 @@ export default function MembershipCard({ user }: MembershipCardProps) {
                     </div>
 
                     {/* Bottom Status Bar - Fixed below card content */}
-                    
+
                 </div>
-                
+
                 {/* Status Bar - Outside of 3D transform to prevent overlap */}
                 <div className="mt-4 flex items-center justify-between px-6 py-3 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10">
                     <div className="flex items-center gap-2">
@@ -168,7 +168,7 @@ export default function MembershipCard({ user }: MembershipCardProps) {
                 {/* Holographic / Sheen Effect on Hover */}
                 <motion.div
                     className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                    style={{ 
+                    style={{
                         transform: "translateZ(60px)",
                         background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)"
                     }}

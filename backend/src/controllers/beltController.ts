@@ -125,3 +125,223 @@ export const getBeltHistory = catchAsync(async (req: Request, res: Response, nex
         },
     });
 });
+
+/**
+ * Get pending belt verification requests for instructor
+ */
+export const getPendingVerifications = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // @ts-ignore
+    const instructorId = req.user.id;
+    // @ts-ignore
+    const userRole = req.user.role;
+
+    if (userRole !== 'INSTRUCTOR' && userRole !== 'ADMIN') {
+        return next(new AppError('Only instructors and admins can view verification requests', 403));
+    }
+
+    // Get all pending requests (admins see all, instructors see their students)
+    const whereClause = userRole === 'ADMIN' 
+        ? { status: 'PENDING' }
+        : {
+            status: 'PENDING',
+            student: {
+                primaryInstructorId: instructorId
+            }
+        };
+
+    const requests = await prisma.beltVerificationRequest.findMany({
+        where: whereClause,
+        include: {
+            student: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    phone: true,
+                    currentBeltRank: true,
+                    profilePhotoUrl: true,
+                    membershipNumber: true,
+                    city: true,
+                    state: true,
+                    dojo: {
+                        select: {
+                            id: true,
+                            name: true,
+                            city: true,
+                        }
+                    },
+                    primaryInstructor: {
+                        select: {
+                            id: true,
+                            name: true,
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: {
+            createdAt: 'asc'
+        }
+    });
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            requests,
+            count: requests.length
+        }
+    });
+});
+
+/**
+ * Approve or reject belt verification request
+ */
+export const reviewVerification = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const { action, rejectionReason } = req.body; // action: 'APPROVE' | 'REJECT'
+    // @ts-ignore
+    const reviewerId = req.user.id;
+    // @ts-ignore
+    const userRole = req.user.role;
+
+    if (userRole !== 'INSTRUCTOR' && userRole !== 'ADMIN') {
+        return next(new AppError('Only instructors and admins can review verification requests', 403));
+    }
+
+    if (!action || !['APPROVE', 'REJECT'].includes(action)) {
+        return next(new AppError('Action must be either APPROVE or REJECT', 400));
+    }
+
+    if (action === 'REJECT' && !rejectionReason) {
+        return next(new AppError('Rejection reason is required', 400));
+    }
+
+    const request = await prisma.beltVerificationRequest.findUnique({
+        where: { id },
+        include: {
+            student: {
+                select: {
+                    id: true,
+                    name: true,
+                    currentBeltRank: true,
+                    primaryInstructorId: true,
+                }
+            }
+        }
+    });
+
+    if (!request) {
+        return next(new AppError('Verification request not found', 404));
+    }
+
+    if (request.status !== 'PENDING') {
+        return next(new AppError('This request has already been reviewed', 400));
+    }
+
+    // Instructors can only review their own students
+    if (userRole === 'INSTRUCTOR' && request.student.primaryInstructorId !== reviewerId) {
+        return next(new AppError('You can only review verification requests for your own students', 403));
+    }
+
+    // Use transaction to update request and student belt if approved
+    const result = await prisma.$transaction(async (tx) => {
+        // Update verification request
+        const updatedRequest = await tx.beltVerificationRequest.update({
+            where: { id },
+            data: {
+                status: action === 'APPROVE' ? 'APPROVED' : 'REJECTED',
+                reviewedBy: reviewerId,
+                reviewedAt: new Date(),
+                rejectionReason: action === 'REJECT' ? rejectionReason : null,
+            },
+            include: {
+                student: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        currentBeltRank: true,
+                    }
+                }
+            }
+        });
+
+        if (action === 'APPROVE') {
+            // Update student's current belt
+            await tx.user.update({
+                where: { id: request.student.id },
+                data: {
+                    currentBeltRank: request.requestedBelt,
+                    verificationStatus: 'VERIFIED',
+                }
+            });
+
+            // Create belt history entry using the exam date from request
+            await tx.beltHistory.create({
+                data: {
+                    studentId: request.student.id,
+                    oldBelt: request.student.currentBeltRank,
+                    newBelt: request.requestedBelt,
+                    promotedBy: reviewerId,
+                    promotionDate: request.examDate, // Use the exam date provided by student
+                    notes: `Belt verified by instructor. Original exam date: ${request.examDate.toLocaleDateString()}. ${request.reason || ''}`,
+                }
+            });
+        } else {
+            // Mark student as rejected
+            await tx.user.update({
+                where: { id: request.student.id },
+                data: {
+                    verificationStatus: 'REJECTED',
+                }
+            });
+        }
+
+        return updatedRequest;
+    });
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            request: result
+        }
+    });
+});
+
+/**
+ * Get verification request history for a student
+ */
+export const getStudentVerifications = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { studentId } = req.params;
+    // @ts-ignore
+    const userId = req.user.id;
+    // @ts-ignore
+    const userRole = req.user.role;
+
+    // Students can only view their own requests
+    if (userRole === 'STUDENT' && userId !== studentId) {
+        return next(new AppError('You can only view your own verification requests', 403));
+    }
+
+    const requests = await prisma.beltVerificationRequest.findMany({
+        where: { studentId },
+        include: {
+            reviewer: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            }
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    });
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            requests
+        }
+    });
+});

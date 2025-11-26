@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://kyokushin-karate-india.vercel.app'
-  
+
   return [
     {
       url: baseUrl,

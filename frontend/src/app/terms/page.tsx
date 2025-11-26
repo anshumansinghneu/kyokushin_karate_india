@@ -9,7 +9,7 @@ export default function TermsPage() {
         <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
             {/* Background */}
             <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black pointer-events-none" />
-            
+
             <div className="container mx-auto px-4 py-24 relative z-10 max-w-4xl">
                 {/* Back Button */}
                 <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
@@ -55,7 +55,7 @@ export default function TermsPage() {
 
                         <section>
                             <h2 className="text-2xl font-bold text-white mb-4">3. User Roles and Responsibilities</h2>
-                            
+
                             <h3 className="text-xl font-semibold text-white mb-2">Students:</h3>
                             <ul className="list-disc list-inside space-y-2 ml-4">
                                 <li>Maintain accurate profile information</li>

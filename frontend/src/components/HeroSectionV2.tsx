@@ -342,4 +342,3 @@ function MapPinIcon({ className }: { className?: string }) {
         </svg>
     );
 }
-

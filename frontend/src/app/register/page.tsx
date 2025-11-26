@@ -29,7 +29,9 @@ export default function RegisterPage() {
         state: "",
         city: "",
         dojoId: "",
-        currentBeltRank: "",
+        currentBeltRank: "White", // Default to White for students
+        beltExamDate: "", // Date when student claims they passed belt exam
+        beltClaimReason: "", // Optional reason for claiming higher belt
         instructorId: "",
         fatherName: "",
         fatherPhone: "",
@@ -161,7 +163,16 @@ export default function RegisterPage() {
                 else if (isNaN(Number(value)) || Number(value) < 20 || Number(value) > 200) error = "Invalid weight (20-200 kg)";
                 break;
             case "currentBeltRank":
-                if (!value) error = "Please select your current belt";
+                if (role === "INSTRUCTOR" && !value) error = "Please select your current belt";
+                break;
+            case "beltExamDate":
+                if (role === "STUDENT" && formData.currentBeltRank !== "White" && !value) {
+                    error = "Belt exam date is required for higher belts";
+                } else if (value) {
+                    const examDate = new Date(value);
+                    const today = new Date();
+                    if (examDate > today) error = "Exam date cannot be in the future";
+                }
                 break;
             case "state":
                 if (!value) error = "State is required";
@@ -212,9 +223,14 @@ export default function RegisterPage() {
 
         // Validate required fields based on role
         const newErrors: Record<string, string> = {};
-        const fieldsToValidate = role === "STUDENT"
-            ? ["name", "email", "password", "confirmPassword", "phone", "dob", "height", "weight", "state", "city", "dojoId", "fatherName", "fatherPhone"]
+        let fieldsToValidate = role === "STUDENT"
+            ? ["name", "email", "password", "confirmPassword", "phone", "dob", "height", "weight", "state", "city", "dojoId", "fatherName", "fatherPhone", "currentBeltRank"]
             : ["name", "email", "password", "confirmPassword", "phone", "dob", "height", "weight", "state", "city", "currentBeltRank", "yearsOfExperience"];
+        
+        // Add beltExamDate to validation if student claiming higher belt
+        if (role === "STUDENT" && formData.currentBeltRank !== "White") {
+            fieldsToValidate.push("beltExamDate");
+        }
 
         fieldsToValidate.forEach(key => {
             const error = validateField(key, formData[key as keyof typeof formData]);
@@ -240,10 +256,18 @@ export default function RegisterPage() {
                 // Remove student-specific fields
                 delete payload.fatherName;
                 delete payload.fatherPhone;
+                delete payload.beltExamDate;
+                delete payload.beltClaimReason;
                 if (!formData.dojoId) delete payload.dojoId; // Dojo optional for instructors
             } else {
-                // STUDENTS: Always start at White belt
-                payload.currentBeltRank = "White";
+                // STUDENTS: Include belt verification info if claiming higher belt
+                if (formData.currentBeltRank !== "White") {
+                    payload.beltExamDate = formData.beltExamDate;
+                    payload.beltClaimReason = formData.beltClaimReason || "";
+                } else {
+                    delete payload.beltExamDate;
+                    delete payload.beltClaimReason;
+                }
                 // Remove instructor-specific fields for students
                 delete payload.yearsOfExperience;
             }
@@ -434,11 +458,13 @@ export default function RegisterPage() {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {/* Belt Selection - Only for INSTRUCTORS */}
-                                        {role === "INSTRUCTOR" && (
-                                            <div className="space-y-1.5 col-span-2 md:col-span-1">
-                                                <label className="text-xs font-medium text-zinc-400">Current Belt <span className="text-red-400">*</span></label>
+                                    <div className="space-y-4">
+                                        {/* Belt Selection for Both Roles */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-zinc-400">
+                                                    {role === "INSTRUCTOR" ? "Current Belt" : "Starting Belt"} <span className="text-red-400">*</span>
+                                                </label>
                                                 <select
                                                     name="currentBeltRank"
                                                     value={formData.currentBeltRank}
@@ -446,24 +472,55 @@ export default function RegisterPage() {
                                                     onBlur={handleBlur}
                                                     className={`w-full h-11 rounded-lg border bg-zinc-950/50 px-3 text-sm text-white focus:outline-none focus:border-red-500 transition-colors ${errors.currentBeltRank ? 'border-red-500/50' : 'border-white/10'}`}
                                                 >
-                                                    <option value="" className="bg-zinc-900">Select</option>
                                                     {BELT_RANKS.map(belt => (
                                                         <option key={belt} value={belt} className="bg-zinc-900">{belt}</option>
                                                     ))}
                                                 </select>
                                                 {errors.currentBeltRank && <p className="text-xs text-red-400">{errors.currentBeltRank}</p>}
+                                                {role === "STUDENT" && formData.currentBeltRank === "White" && (
+                                                    <p className="text-xs text-zinc-500">✓ No verification needed</p>
+                                                )}
+                                                {role === "STUDENT" && formData.currentBeltRank !== "White" && (
+                                                    <p className="text-xs text-amber-400">⚠ Instructor verification required</p>
+                                                )}
                                             </div>
-                                        )}
-                                        {/* Note for Students */}
-                                        {role === "STUDENT" && (
-                                            <div className="space-y-1.5 col-span-2 md:col-span-1">
-                                                <label className="text-xs font-medium text-zinc-400">Starting Belt</label>
-                                                <div className="h-11 rounded-lg border border-white/10 bg-zinc-950/30 px-3 text-sm text-zinc-400 flex items-center">
-                                                    White Belt (Default)
+
+                                            {/* Belt Exam Date - Only for Students claiming higher belts */}
+                                            {role === "STUDENT" && formData.currentBeltRank !== "White" && (
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium text-zinc-400">Belt Exam Date <span className="text-red-400">*</span></label>
+                                                    <Input
+                                                        name="beltExamDate"
+                                                        type="date"
+                                                        value={formData.beltExamDate}
+                                                        onChange={handleChange}
+                                                        onBlur={handleBlur}
+                                                        max={new Date().toISOString().split('T')[0]}
+                                                        className={`bg-zinc-950/50 border-white/10 focus:border-red-500 h-11 rounded-lg text-white ${errors.beltExamDate ? 'border-red-500/50' : ''}`}
+                                                    />
+                                                    {errors.beltExamDate && <p className="text-xs text-red-400">{errors.beltExamDate}</p>}
+                                                    <p className="text-xs text-zinc-500">When did you earn this belt?</p>
                                                 </div>
-                                                <p className="text-xs text-zinc-500">All students start here</p>
+                                            )}
+                                        </div>
+
+                                        {/* Belt Claim Reason - Optional for Students claiming higher belts */}
+                                        {role === "STUDENT" && formData.currentBeltRank !== "White" && (
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-zinc-400">Reason (Optional)</label>
+                                                <Input
+                                                    name="beltClaimReason"
+                                                    placeholder="E.g., Trained at another dojo for 2 years"
+                                                    value={formData.beltClaimReason}
+                                                    onChange={handleChange}
+                                                    className="bg-zinc-950/50 border-white/10 focus:border-red-500 h-11 rounded-lg text-white placeholder:text-zinc-600"
+                                                />
+                                                <p className="text-xs text-zinc-500">Help instructors understand your background</p>
                                             </div>
                                         )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <div className="space-y-1.5">
                                             <label className="text-xs font-medium text-zinc-400">Height (cm) <span className="text-red-400">*</span></label>
                                             <Input
