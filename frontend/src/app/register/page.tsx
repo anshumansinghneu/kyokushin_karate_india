@@ -213,7 +213,7 @@ export default function RegisterPage() {
         // Validate required fields based on role
         const newErrors: Record<string, string> = {};
         const fieldsToValidate = role === "STUDENT"
-            ? ["name", "email", "password", "confirmPassword", "phone", "dob", "height", "weight", "state", "city", "currentBeltRank", "dojoId", "fatherName", "fatherPhone"]
+            ? ["name", "email", "password", "confirmPassword", "phone", "dob", "height", "weight", "state", "city", "dojoId", "fatherName", "fatherPhone"]
             : ["name", "email", "password", "confirmPassword", "phone", "dob", "height", "weight", "state", "city", "currentBeltRank", "yearsOfExperience"];
 
         fieldsToValidate.forEach(key => {
@@ -242,6 +242,8 @@ export default function RegisterPage() {
                 delete payload.fatherPhone;
                 if (!formData.dojoId) delete payload.dojoId; // Dojo optional for instructors
             } else {
+                // STUDENTS: Always start at White belt
+                payload.currentBeltRank = "White";
                 // Remove instructor-specific fields for students
                 delete payload.yearsOfExperience;
             }
@@ -342,10 +344,13 @@ export default function RegisterPage() {
                             )}
 
                             <form onSubmit={handleSubmit} className="space-y-6">
-                                {/* Role Selection Toggle */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">I am a</label>
-                                    <div className="grid grid-cols-2 gap-3">
+                                {/* Role Selection Toggle - STEP 1: MUST SELECT FIRST */}
+                                <div className="space-y-3 pb-6 border-b border-white/10">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600 text-white font-bold text-sm">1</span>
+                                        <label className="text-sm font-bold text-white uppercase tracking-wider">Select Your Role</label>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
                                         <button
                                             type="button"
                                             onClick={() => setRole("STUDENT")}
@@ -430,22 +435,35 @@ export default function RegisterPage() {
                                     </div>
 
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <div className="space-y-1.5 col-span-2 md:col-span-1">
-                                            <label className="text-xs font-medium text-zinc-400">Current Belt <span className="text-red-400">*</span></label>
-                                            <select
-                                                name="currentBeltRank"
-                                                value={formData.currentBeltRank}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                                className={`w-full h-11 rounded-lg border bg-zinc-950/50 px-3 text-sm text-white focus:outline-none focus:border-red-500 transition-colors ${errors.currentBeltRank ? 'border-red-500/50' : 'border-white/10'}`}
-                                            >
-                                                <option value="" className="bg-zinc-900">Select</option>
-                                                {BELT_RANKS.map(belt => (
-                                                    <option key={belt} value={belt} className="bg-zinc-900">{belt}</option>
-                                                ))}
-                                            </select>
-                                            {errors.currentBeltRank && <p className="text-xs text-red-400">{errors.currentBeltRank}</p>}
-                                        </div>
+                                        {/* Belt Selection - Only for INSTRUCTORS */}
+                                        {role === "INSTRUCTOR" && (
+                                            <div className="space-y-1.5 col-span-2 md:col-span-1">
+                                                <label className="text-xs font-medium text-zinc-400">Current Belt <span className="text-red-400">*</span></label>
+                                                <select
+                                                    name="currentBeltRank"
+                                                    value={formData.currentBeltRank}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                    className={`w-full h-11 rounded-lg border bg-zinc-950/50 px-3 text-sm text-white focus:outline-none focus:border-red-500 transition-colors ${errors.currentBeltRank ? 'border-red-500/50' : 'border-white/10'}`}
+                                                >
+                                                    <option value="" className="bg-zinc-900">Select</option>
+                                                    {BELT_RANKS.map(belt => (
+                                                        <option key={belt} value={belt} className="bg-zinc-900">{belt}</option>
+                                                    ))}
+                                                </select>
+                                                {errors.currentBeltRank && <p className="text-xs text-red-400">{errors.currentBeltRank}</p>}
+                                            </div>
+                                        )}
+                                        {/* Note for Students */}
+                                        {role === "STUDENT" && (
+                                            <div className="space-y-1.5 col-span-2 md:col-span-1">
+                                                <label className="text-xs font-medium text-zinc-400">Starting Belt</label>
+                                                <div className="h-11 rounded-lg border border-white/10 bg-zinc-950/30 px-3 text-sm text-zinc-400 flex items-center">
+                                                    White Belt (Default)
+                                                </div>
+                                                <p className="text-xs text-zinc-500">All students start here</p>
+                                            </div>
+                                        )}
                                         <div className="space-y-1.5">
                                             <label className="text-xs font-medium text-zinc-400">Height (cm) <span className="text-red-400">*</span></label>
                                             <Input

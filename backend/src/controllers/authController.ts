@@ -58,6 +58,9 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
 
     // Use transaction to create user and initial belt history
     const userId = await prisma.$transaction(async (tx) => {
+        // ALL STUDENTS START AT WHITE BELT - Higher belts require instructor verification
+        const initialBelt = req.body.role === 'STUDENT' ? 'White' : (currentBeltRank || 'White');
+        
         const user = await tx.user.create({
             data: {
                 email,
@@ -72,9 +75,9 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
                 country: country || 'India',
                 dojoId,
                 primaryInstructorId: instructorId,
-                role: 'STUDENT',
+                role: req.body.role || 'STUDENT',
                 membershipStatus: 'PENDING',
-                currentBeltRank: currentBeltRank || 'White',
+                currentBeltRank: initialBelt,
             },
         });
 
@@ -83,9 +86,9 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
             data: {
                 studentId: user.id,
                 oldBelt: null,
-                newBelt: currentBeltRank || 'White',
+                newBelt: initialBelt,
                 promotedBy: instructorId || null,
-                notes: 'Initial registration',
+                notes: req.body.role === 'STUDENT' ? 'Initial registration - Started at White Belt' : 'Initial registration',
                 promotionDate: new Date(),
             },
         });
