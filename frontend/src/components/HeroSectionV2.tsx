@@ -3,6 +3,7 @@
 import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform, useScroll } from "framer-motion";
 import { ArrowRight, ChevronRight, Play } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { MouseEvent, useRef, useState } from "react";
 
@@ -108,10 +109,12 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
                             <source src={content['home_hero_video']?.value} type="video/mp4" />
                         </video>
                     ) : (
-                        <img
+                        <Image
                             src="/oyama.png"
-                            alt="Sosai Mas Oyama"
-                            className="w-full h-full object-cover grayscale contrast-150"
+                            alt="Sosai Mas Oyama - Founder of Kyokushin Karate"
+                            fill
+                            className="object-cover grayscale contrast-150"
+                            priority
                         />
                     )}
                 </div>

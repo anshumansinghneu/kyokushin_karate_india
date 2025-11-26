@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Phone, Mail, Users, Calendar, ArrowLeft, Star, Loader2, Trophy, Medal } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import api from "@/lib/api";
@@ -92,7 +93,7 @@ export default function DojoDetailPage() {
             {/* IMMERSIVE HEADER */}
             <div className="relative h-[80vh] w-full">
                 <div className="absolute inset-0">
-                    <img src="/dojo-bg.png" alt="Dojo" className="w-full h-full object-cover" />
+                    <Image src="/dojo-bg.png" alt="Dojo training facility" fill className="object-cover" priority />
                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black" />
                 </div>
 

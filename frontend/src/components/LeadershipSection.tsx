@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Quote } from "lucide-react";
+import Image from "next/image";
 
 export default function LeadershipSection() {
     return (
@@ -59,10 +60,11 @@ export default function LeadershipSection() {
                         <div className="aspect-[3/4] bg-zinc-900 rounded-2xl overflow-hidden relative group border border-white/10 hover:border-red-600/50 transition-colors duration-500">
                             {/* Ryuko Take's Image with Blending */}
                             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent z-10" />
-                            <img
+                            <Image
                                 src="/ryuko-take.png"
-                                alt="Daihyo Ryuko Take"
-                                className="w-full h-full object-cover object-top grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-110"
+                                alt="Daihyo Ryuko Take - President of World Kyokushin Kaikan"
+                                fill
+                                className="object-cover object-top grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-110"
                             />
 
                             {/* Overlay Details */}
@@ -98,10 +100,11 @@ export default function LeadershipSection() {
                         <div className="aspect-[3/4] bg-zinc-900 rounded-2xl overflow-hidden relative group border border-white/10 hover:border-red-600/50 transition-colors duration-500">
                             {/* Shihan's Image with Blending */}
                             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent z-10" />
-                            <img
+                            <Image
                                 src="/shihan-vasant.png"
-                                alt="Shihan Vasant K. Singh"
-                                className="w-full h-full object-cover object-top grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-110"
+                                alt="Shihan Vasant K. Singh - Chief Instructor Kyokushin Karate India"
+                                fill
+                                className="object-cover object-top grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-110"
                             />
 
                             {/* Overlay Details */}
