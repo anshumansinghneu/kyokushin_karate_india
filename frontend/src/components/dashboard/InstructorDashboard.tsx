@@ -15,6 +15,7 @@ import AddStudentModal from "./AddStudentModal";
 import BlogManager from "./BlogManager";
 import BlogSubmission from "./BlogSubmission";
 import BeltApprovalsView from "./BeltApprovalsView";
+import BeltPromotionsView from "./BeltPromotionsView";
 
 export default function InstructorDashboard({ user }: { user: any }) {
     const { showToast } = useToast();
@@ -55,11 +56,12 @@ export default function InstructorDashboard({ user }: { user: any }) {
         }
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions'>('overview');
 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: Activity },
-        { id: 'belt-approvals', label: 'Belt Verifications', icon: Medal },
+        { id: 'belt-approvals', label: 'Belt Verifications', icon: ClipboardCheck },
+        { id: 'belt-promotions', label: 'Belt Promotions', icon: Medal },
         { id: 'students', label: 'Student Roster', icon: Users },
         { id: 'blogs', label: 'My Blogs', icon: FileText },
         { id: 'submit', label: 'Write Blog', icon: Edit },
@@ -248,6 +250,18 @@ export default function InstructorDashboard({ user }: { user: any }) {
                     transition={{ duration: 0.2 }}
                 >
                     <BeltApprovalsView />
+                </motion.div>
+            )}
+
+            {activeTab === 'belt-promotions' && (
+                <motion.div
+                    key="belt-promotions"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <BeltPromotionsView />
                 </motion.div>
             )}
 

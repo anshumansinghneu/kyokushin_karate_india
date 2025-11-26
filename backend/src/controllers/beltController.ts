@@ -11,7 +11,7 @@ const getBeltValue = (belt: string) => {
 };
 
 export const promoteStudent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { studentId, newBelt, notes } = req.body;
+    const { studentId, newBelt, notes, promotionDate } = req.body;
     // @ts-ignore
     const currentUser = req.user;
 
@@ -37,6 +37,14 @@ export const promoteStudent = catchAsync(async (req: Request, res: Response, nex
         return next(new AppError('Not authorized to promote students', 403));
     }
 
+    // Parse and validate promotion date
+    const promDate = promotionDate ? new Date(promotionDate) : new Date();
+    
+    // Date cannot be in the future
+    if (promDate > new Date()) {
+        return next(new AppError('Promotion date cannot be in the future', 400));
+    }
+
     // Check 6-month constraint: Student must wait 6 months since last promotion
     const lastPromotion = await prisma.beltHistory.findFirst({
         where: { studentId },
@@ -44,20 +52,31 @@ export const promoteStudent = catchAsync(async (req: Request, res: Response, nex
     });
 
     if (lastPromotion) {
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        // Promotion date must be after last promotion date
+        if (promDate <= new Date(lastPromotion.promotionDate)) {
+            return next(new AppError('Promotion date must be after the last promotion date', 400));
+        }
 
-        if (new Date(lastPromotion.promotionDate) > sixMonthsAgo) {
-            const nextEligibleDate = new Date(lastPromotion.promotionDate);
-            nextEligibleDate.setMonth(nextEligibleDate.getMonth() + 6);
+        const sixMonthsAfterLast = new Date(lastPromotion.promotionDate);
+        sixMonthsAfterLast.setMonth(sixMonthsAfterLast.getMonth() + 6);
+
+        if (promDate < sixMonthsAfterLast) {
             return next(new AppError(
-                `Student must wait 6 months between belt promotions. Next eligible date: ${nextEligibleDate.toLocaleDateString()}`,
+                `Student must wait 6 months between belt promotions. Next eligible date: ${sixMonthsAfterLast.toLocaleDateString()}`,
                 400
             ));
         }
     }
 
     const oldBelt = student.currentBeltRank;
+
+    // Validate belt progression (no skipping)
+    const currentBeltValue = getBeltValue(oldBelt || 'White');
+    const newBeltValue = getBeltValue(newBelt);
+    
+    if (newBeltValue !== currentBeltValue + 1 && currentUser.role !== 'ADMIN') {
+        return next(new AppError('Cannot skip belt ranks. Must promote to the next belt level.', 400));
+    }
 
     // Transaction to update user and create history record
     const result = await prisma.$transaction(async (tx) => {
@@ -75,7 +94,7 @@ export const promoteStudent = catchAsync(async (req: Request, res: Response, nex
                 newBelt,
                 promotedBy: currentUser.id,
                 notes,
-                promotionDate: new Date(),
+                promotionDate: promDate,
             },
         });
 
@@ -342,6 +361,87 @@ export const getStudentVerifications = catchAsync(async (req: Request, res: Resp
         status: 'success',
         data: {
             requests
+        }
+    });
+});
+
+/**
+ * Get students eligible for belt promotion
+ */
+export const getEligibleStudents = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // @ts-ignore
+    const instructorId = req.user.id;
+    // @ts-ignore
+    const userRole = req.user.role;
+
+    if (userRole !== 'INSTRUCTOR' && userRole !== 'ADMIN') {
+        return next(new AppError('Only instructors and admins can view eligible students', 403));
+    }
+
+    // Get all students (admins see all, instructors see their students)
+    const whereClause = userRole === 'ADMIN'
+        ? { role: 'STUDENT' as const }
+        : {
+            role: 'STUDENT' as const,
+            primaryInstructorId: instructorId
+        };
+
+    const students = await prisma.user.findMany({
+        where: whereClause,
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            membershipNumber: true,
+            profilePhotoUrl: true,
+            currentBeltRank: true,
+            createdAt: true,
+            dojo: {
+                select: {
+                    name: true
+                }
+            }
+        }
+    });
+
+    // Get latest promotion date for each student
+    const studentsWithEligibility = await Promise.all(students.map(async (student) => {
+        const lastPromotion = await prisma.beltHistory.findFirst({
+            where: { studentId: student.id },
+            orderBy: { promotionDate: 'desc' },
+            select: {
+                promotionDate: true,
+                newBelt: true
+            }
+        });
+
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+        const lastPromotionDate = lastPromotion?.promotionDate || student.createdAt;
+        const isEligible = new Date(lastPromotionDate) <= sixMonthsAgo;
+        
+        const daysSincePromotion = Math.floor(
+            (Date.now() - new Date(lastPromotionDate).getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        const nextEligibleDate = new Date(lastPromotionDate);
+        nextEligibleDate.setMonth(nextEligibleDate.getMonth() + 6);
+
+        return {
+            ...student,
+            lastPromotionDate,
+            daysSincePromotion,
+            isEligible,
+            nextEligibleDate: isEligible ? null : nextEligibleDate
+        };
+    }));
+
+    res.status(200).json({
+        status: 'success',
+        results: studentsWithEligibility.length,
+        data: {
+            students: studentsWithEligibility
         }
     });
 });
