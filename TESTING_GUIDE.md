@@ -8,18 +8,44 @@ This guide provides step-by-step instructions for testing the complete tournamen
 
 ### Quick Setup with Seed Script
 
-**Fastest way to get started**: Run the test account seed script to automatically create all test data.
+**⚠️ IMPORTANT: Choose Your Testing Environment**
+
+#### Option A: Local Testing (Recommended)
+
+Test with local database - fastest and safest for development:
 
 ```bash
-# Navigate to backend directory
+# Step 1: Seed local database
 cd backend
-
-# Run the seed script
 npm run seed:test
 
-# Or using ts-node directly
-npx ts-node scripts/seed_test_accounts.ts
+# Step 2: Start local servers
+cd ..
+./run-local.sh
+
+# Or manually:
+# Terminal 1: cd backend && npm run dev
+# Terminal 2: cd frontend && npm run dev
 ```
+
+Then open: `http://localhost:3000`
+
+#### Option B: Production Testing
+
+Seed the production database (⚠️ creates test data in production):
+
+```bash
+# Get your production DATABASE_URL from Render
+# Render Dashboard → Backend Service → Environment → DATABASE_URL
+
+# Set it as environment variable
+export PRODUCTION_DATABASE_URL='your-render-postgres-url'
+
+# Run production seed
+./seed-production.sh
+```
+
+Then use your production URL to login.
 
 **What gets created:**
 - ✅ 1 Admin account
