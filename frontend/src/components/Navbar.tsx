@@ -105,7 +105,7 @@ export default function Navbar() {
                                         <img
                                             key={user?.profilePhotoUrl}
                                             src={getUserProfileImage(user)!}
-                                            alt={user.name}
+                                            alt={user?.name || 'User'}
                                             className="w-full h-full object-cover"
                                             onError={(e) => {
                                                 // Fallback to user icon if image fails to load
