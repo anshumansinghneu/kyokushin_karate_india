@@ -205,3 +205,36 @@ export const deleteEvent = catchAsync(async (req: Request, res: Response, next: 
         data: null,
     });
 });
+
+export const getEventRegistrations = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const registrations = await prisma.eventRegistration.findMany({
+        where: { eventId: req.params.id },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    phone: true,
+                    currentBeltRank: true,
+                    membershipNumber: true,
+                    dojo: {
+                        select: {
+                            name: true,
+                            city: true
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    res.status(200).json({
+        status: 'success',
+        results: registrations.length,
+        data: {
+            registrations,
+        },
+    });
+});

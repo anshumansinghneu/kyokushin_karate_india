@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllEvents, getEvent, createEvent, registerForEvent, approveRegistration, updateEvent, deleteEvent } from '../controllers/eventController';
+import { getAllEvents, getEvent, createEvent, registerForEvent, approveRegistration, updateEvent, deleteEvent, getEventRegistrations } from '../controllers/eventController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -15,6 +15,7 @@ router.post('/', restrictTo('ADMIN', 'INSTRUCTOR'), createEvent);
 router.patch('/:id', restrictTo('ADMIN', 'INSTRUCTOR'), updateEvent);
 router.delete('/:id', restrictTo('ADMIN'), deleteEvent);
 
+router.get('/:id/registrations', getEventRegistrations);
 router.post('/:eventId/register', registerForEvent);
 router.post('/registrations/:registrationId/approve', restrictTo('ADMIN'), approveRegistration);
 

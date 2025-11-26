@@ -42,6 +42,9 @@ export default function TournamentManager() {
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
+    const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
+    const [participants, setParticipants] = useState<any[]>([]);
+    const [loadingParticipants, setLoadingParticipants] = useState(false);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -177,11 +180,81 @@ export default function TournamentManager() {
         }));
     };
 
+    const fetchParticipants = async (tournamentId: string) => {
+        setLoadingParticipants(true);
+        try {
+            const res = await api.get(`/events/${tournamentId}/registrations`);
+            setParticipants(res.data.data.registrations || []);
+        } catch (error) {
+            console.error("Failed to fetch participants:", error);
+            showToast("Failed to load participants", "error");
+        } finally {
+            setLoadingParticipants(false);
+        }
+    };
+
+    const handleViewDetails = async (tournament: Tournament) => {
+        setViewingTournament(tournament);
+        await fetchParticipants(tournament.id);
+    };
+
+    const handleGenerateBrackets = async () => {
+        if (!viewingTournament) return;
+
+        if (!confirm(`Generate brackets for ${viewingTournament.name}? This will create matches for all registered participants.`)) {
+            return;
+        }
+
+        try {
+            await api.post(`/tournaments/${viewingTournament.id}/generate`);
+            showToast("Brackets generated successfully!", "success");
+            setViewingTournament(null);
+            fetchTournaments();
+        } catch (error) {
+            console.error("Failed to generate brackets:", error);
+            const err = error as { response?: { data?: { message?: string } } };
+            showToast(err.response?.data?.message || "Failed to generate brackets", "error");
+        }
+    };
+
     const removeCategory = (index: number) => {
         setFormData(prev => ({
             ...prev,
             categories: prev.categories.filter((_, i) => i !== index)
         }));
+    };
+
+    const handleViewDetails = async (tournament: Tournament) => {
+        setViewingTournament(tournament);
+        setLoadingParticipants(true);
+        try {
+            const res = await api.get(`/events/${tournament.id}/registrations`);
+            setParticipants(res.data.data.registrations || []);
+        } catch (error) {
+            console.error("Failed to fetch participants:", error);
+            showToast("Failed to load participants", "error");
+        } finally {
+            setLoadingParticipants(false);
+        }
+    };
+
+    const handleGenerateBrackets = async () => {
+        if (!viewingTournament) return;
+
+        if (!confirm("Generate tournament brackets? This will create matches based on registered participants.")) {
+            return;
+        }
+
+        try {
+            await api.post(`/tournaments/${viewingTournament.id}/generate-brackets`);
+            showToast("Brackets generated successfully!", "success");
+            fetchTournaments();
+            handleViewDetails(viewingTournament); // Refresh data
+        } catch (error) {
+            console.error("Failed to generate brackets:", error);
+            const err = error as { response?: { data?: { message?: string } } };
+            showToast(err.response?.data?.message || "Failed to generate brackets", "error");
+        }
     };
 
     const filteredTournaments = tournaments.filter(tournament => {
@@ -343,22 +416,32 @@ export default function TournamentManager() {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="flex gap-2">
+                                <div className="flex flex-col gap-2">
                                     <Button
-                                        onClick={() => openEditModal(tournament)}
-                                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                        onClick={() => handleViewDetails(tournament)}
+                                        className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
                                         size="sm"
                                     >
-                                        <Edit2 className="w-4 h-4 mr-2" />
-                                        Edit
+                                        <Eye className="w-4 h-4 mr-2" />
+                                        View Details & Brackets
                                     </Button>
-                                    <Button
-                                        onClick={() => handleDelete(tournament.id)}
-                                        className="bg-red-600 hover:bg-red-700 text-white"
-                                        size="sm"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            onClick={() => openEditModal(tournament)}
+                                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                            size="sm"
+                                        >
+                                            <Edit2 className="w-4 h-4 mr-2" />
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            onClick={() => handleDelete(tournament.id)}
+                                            className="bg-red-600 hover:bg-red-700 text-white"
+                                            size="sm"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
@@ -551,6 +634,112 @@ export default function TournamentManager() {
                                     </Button>
                                 </div>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Tournament Detail View Modal */}
+            <AnimatePresence>
+                {viewingTournament && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-black/95 border border-white/10 rounded-2xl w-full max-w-5xl my-8"
+                        >
+                            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-2xl font-bold text-white">{viewingTournament.name}</h3>
+                                    <p className="text-gray-400 text-sm mt-1">
+                                        {new Date(viewingTournament.startDate).toLocaleDateString()} • {viewingTournament.location}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setViewingTournament(null);
+                                        setParticipants([]);
+                                    }}
+                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-white" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                                {/* Stats Cards */}
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                                        <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                                        <div className="text-2xl font-bold text-white">{participants.length}</div>
+                                        <div className="text-xs text-gray-400">Participants</div>
+                                    </div>
+                                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                                        <Target className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
+                                        <div className="text-2xl font-bold text-white">
+                                            {viewingTournament.categories ? JSON.parse(viewingTournament.categories).length : 0}
+                                        </div>
+                                        <div className="text-xs text-gray-400">Categories</div>
+                                    </div>
+                                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                                        <Medal className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                                        <div className="text-2xl font-bold text-white">{viewingTournament._count?.results || 0}</div>
+                                        <div className="text-xs text-gray-400">Results</div>
+                                    </div>
+                                </div>
+
+                                {/* Generate Brackets Button */}
+                                <Button
+                                    onClick={handleGenerateBrackets}
+                                    className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg"
+                                    disabled={participants.length === 0}
+                                >
+                                    <Trophy className="w-5 h-5 mr-2" />
+                                    Generate Tournament Brackets
+                                </Button>
+
+                                {/* Participants List */}
+                                <div>
+                                    <h4 className="text-lg font-bold text-white mb-4">Registered Participants</h4>
+                                    {loadingParticipants ? (
+                                        <div className="text-center py-8 text-gray-400">Loading participants...</div>
+                                    ) : participants.length === 0 ? (
+                                        <div className="text-center py-8 bg-white/5 border border-white/10 rounded-xl">
+                                            <Users className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                                            <p className="text-gray-400">No participants yet</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                                            {participants.map((registration: any) => (
+                                                <div
+                                                    key={registration.id}
+                                                    className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3"
+                                                >
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-600 to-red-600 flex items-center justify-center">
+                                                        <span className="text-white text-sm font-bold">
+                                                            {registration.user.name.charAt(0)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="text-white font-semibold">{registration.user.name}</div>
+                                                        <div className="text-xs text-gray-400">
+                                                            {registration.user.currentBeltRank} • {registration.user.membershipNumber}
+                                                        </div>
+                                                    </div>
+                                                    <span className={`text-xs px-2 py-1 rounded-full ${
+                                                        registration.paymentStatus === 'PAID'
+                                                            ? 'bg-green-500/20 text-green-400'
+                                                            : 'bg-yellow-500/20 text-yellow-400'
+                                                    }`}>
+                                                        {registration.paymentStatus}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </motion.div>
                     </div>
                 )}
