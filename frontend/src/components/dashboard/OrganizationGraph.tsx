@@ -29,7 +29,7 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
         if (!users || users.length === 0) return null;
 
         // 1. Find the Root (Shihan Vasant Singh - Admin)
-        // We look for role 'ADMIN' or specific name if needed. 
+        // We look for role 'ADMIN' or specific name if needed.
         // Assuming there is only one main admin or we pick the first one.
         const rootUser = users.find(u => u.role === 'ADMIN') || users.find(u => u.name.includes('Vasant'));
 
@@ -41,7 +41,7 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
 
             let directReports = users.filter(u => u.primaryInstructorId === currentUser.id);
 
-            // Special case for Root: If no explicit primaryInstructorId link to Admin, 
+            // Special case for Root: If no explicit primaryInstructorId link to Admin,
             // assume all other INSTRUCTORS report to Admin if they don't have another instructor.
             if (currentUser.role === 'ADMIN') {
                 const topLevelInstructors = users.filter(u =>
@@ -97,7 +97,7 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={`
-                        relative z-10 flex flex-col items-center p-4 rounded-xl border border-white/10 
+                        relative z-10 flex flex-col items-center p-4 rounded-xl border border-white/10
                         backdrop-blur-md bg-zinc-900/80 shadow-xl transition-all duration-300
                         ${isExpanded ? 'ring-2 ring-white/10' : ''}
                         hover:scale-105 hover:bg-zinc-800

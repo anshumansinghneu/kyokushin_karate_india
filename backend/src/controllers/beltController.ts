@@ -39,7 +39,7 @@ export const promoteStudent = catchAsync(async (req: Request, res: Response, nex
 
     // Parse and validate promotion date
     const promDate = promotionDate ? new Date(promotionDate) : new Date();
-    
+
     // Date cannot be in the future
     if (promDate > new Date()) {
         return next(new AppError('Promotion date cannot be in the future', 400));
@@ -73,7 +73,7 @@ export const promoteStudent = catchAsync(async (req: Request, res: Response, nex
     // Validate belt progression (no skipping)
     const currentBeltValue = getBeltValue(oldBelt || 'White');
     const newBeltValue = getBeltValue(newBelt);
-    
+
     if (newBeltValue !== currentBeltValue + 1 && currentUser.role !== 'ADMIN') {
         return next(new AppError('Cannot skip belt ranks. Must promote to the next belt level.', 400));
     }
@@ -420,7 +420,7 @@ export const getEligibleStudents = catchAsync(async (req: Request, res: Response
 
         const lastPromotionDate = lastPromotion?.promotionDate || student.createdAt;
         const isEligible = new Date(lastPromotionDate) <= sixMonthsAgo;
-        
+
         const daysSincePromotion = Math.floor(
             (Date.now() - new Date(lastPromotionDate).getTime()) / (1000 * 60 * 60 * 24)
         );
