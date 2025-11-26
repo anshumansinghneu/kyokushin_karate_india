@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Award, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trophy, Award, Users, ChevronLeft, ChevronRight, Medal } from "lucide-react";
 import { getImageUrl } from "@/lib/imageUtils";
 import api from "@/lib/api";
 
