@@ -20,8 +20,21 @@ interface BeltVerificationRequest {
         id: string;
         name: string;
         email: string;
+        phone: string;
         profilePhotoUrl: string | null;
-        membershipId: string;
+        membershipNumber: string;
+        currentBeltRank: string;
+        city: string;
+        state: string;
+        dojo: {
+            id: string;
+            name: string;
+            city: string;
+        };
+        primaryInstructor: {
+            id: string;
+            name: string;
+        } | null;
     };
 }
 
@@ -43,7 +56,7 @@ export default function BeltApprovalsView() {
     const fetchRequests = async () => {
         try {
             const res = await api.get("/belts/verifications/pending");
-            setRequests(res.data.data);
+            setRequests(res.data.data.requests || []);
         } catch (error) {
             console.error("Failed to fetch belt verification requests:", error);
             const err = error as { response?: { data?: { message?: string } } };
@@ -59,8 +72,8 @@ export default function BeltApprovalsView() {
         setIsApproving(true);
         try {
             await api.patch(`/belts/verifications/${selectedRequest.id}`, {
-                status: approve ? "APPROVED" : "REJECTED",
-                reviewerNotes: reviewReason,
+                action: approve ? "APPROVE" : "REJECT",
+                rejectionReason: approve ? undefined : reviewReason,
             });
 
             showToast(
@@ -158,7 +171,7 @@ export default function BeltApprovalsView() {
                                                 {request.student.name}
                                             </h3>
                                             <span className="text-xs font-mono text-gray-500 px-2 py-1 bg-white/5 rounded">
-                                                {request.student.membershipId}
+                                                {request.student.membershipNumber}
                                             </span>
                                         </div>
 
