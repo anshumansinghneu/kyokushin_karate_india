@@ -29,6 +29,23 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
 export const register = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { email, password, name, phone, dob, height, weight, city, state, country, dojoId, instructorId, currentBeltRank } = req.body;
 
+    // Password validation
+    if (!password || password.length < 8) {
+        return next(new AppError('Password must be at least 8 characters long', 400));
+    }
+    
+    // Check for at least one special character
+    const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+    if (!specialCharRegex.test(password)) {
+        return next(new AppError('Password must contain at least one special character', 400));
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        return next(new AppError('Please provide a valid email address', 400));
+    }
+
     const existingUser = await prisma.user.findUnique({
         where: { email },
     });

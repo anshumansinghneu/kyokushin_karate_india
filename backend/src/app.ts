@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 // @ts-ignore - Type definitions issue in production build
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 
 import authRouter from './routes/authRoutes';
 import userRouter from './routes/userRoutes';
@@ -23,17 +24,36 @@ import { globalErrorHandler } from './utils/errorHandler';
 
 const app = express();
 
-// Middleware
+// Security Middleware
 app.use(cors());
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(morgan('dev'));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Rate limiting for auth endpoints (prevent brute force)
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 requests per windowMs
+    message: 'Too many authentication attempts, please try again after 15 minutes',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// General API rate limiting
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 // Routes
 app.use('/api/setup', setupRouter);  // Admin setup (one-time use)
-app.use('/api/auth', authRouter);
+app.use('/api/auth', authLimiter, authRouter);  // Rate limited auth
 app.use('/api/users', userRouter);
 app.use('/api/dojos', dojoRouter);
 app.use('/api/belts', beltRouter);

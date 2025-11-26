@@ -140,6 +140,7 @@ export default function RegisterPage() {
             case "password":
                 if (!value) error = "Password is required";
                 else if (value.length < 8) error = "Password must be at least 8 characters";
+                else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) error = "Password must contain at least one special character";
                 break;
             case "confirmPassword":
                 if (value !== formData.password) error = "Passwords do not match";
