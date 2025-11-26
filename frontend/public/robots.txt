@@ -1,0 +1,17 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow admin and private pages
+Disallow: /admin
+Disallow: /api/
+Disallow: /dashboard
+
+# Allow specific routes
+Allow: /dojos
+Allow: /events
+Allow: /about
+Allow: /contact
+
+# Sitemap location
+Sitemap: https://kyokushin-karate-india.vercel.app/sitemap.xml
