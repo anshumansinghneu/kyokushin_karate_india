@@ -22,8 +22,8 @@ export const promoteStudent = catchAsync(async (req: Request, res: Response, nex
 
     // Authorization Check
     if (currentUser.role === 'INSTRUCTOR') {
-        if (student.dojoId !== currentUser.dojoId) {
-            return next(new AppError('You can only promote students from your dojo', 403));
+        if (student.primaryInstructorId !== currentUser.id) {
+            return next(new AppError('You can only promote students assigned to you', 403));
         }
 
         // Check if new belt is higher or equal to instructor's belt

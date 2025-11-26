@@ -37,23 +37,21 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
         if (!rootUser) return null;
 
         const buildNode = (currentUser: any): TreeNode => {
-            // Find direct reports: users whose primaryInstructorId matches currentUser.id
-            // OR for the root admin, we might want to include all INSTRUCTORS who don't have a primary instructor set (top level instructors)
+            let directReports = [];
 
-            let directReports = users.filter(u => u.primaryInstructorId === currentUser.id);
-
-            // Special case for Root: If no explicit primaryInstructorId link to Admin,
-            // assume all other INSTRUCTORS report to Admin if they don't have another instructor.
             if (currentUser.role === 'ADMIN') {
-                const topLevelInstructors = users.filter(u =>
-                    u.role === 'INSTRUCTOR' &&
-                    u.id !== currentUser.id &&
-                    (!u.primaryInstructorId || u.primaryInstructorId === currentUser.id)
+                // Admin sees all instructors
+                directReports = users.filter(u =>
+                    u.role === 'INSTRUCTOR' && u.id !== currentUser.id
                 );
-                // Merge and deduplicate
-                const combined = [...directReports, ...topLevelInstructors];
-                directReports = Array.from(new Set(combined.map(u => u.id)))
-                    .map(id => combined.find(u => u.id === id));
+            } else if (currentUser.role === 'INSTRUCTOR') {
+                // Instructor sees students assigned to them OR students in same dojo without instructor
+                directReports = users.filter(u =>
+                    u.role === 'STUDENT' && (
+                        u.primaryInstructorId === currentUser.id ||
+                        (u.dojoId === currentUser.dojoId && !u.primaryInstructorId)
+                    )
+                );
             }
 
             return {
