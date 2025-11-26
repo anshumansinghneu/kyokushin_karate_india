@@ -227,7 +227,7 @@ export const getEventRegistrations = catchAsync(async (req: Request, res: Respon
                 }
             }
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { registeredAt: 'desc' }
     });
 
     res.status(200).json({
