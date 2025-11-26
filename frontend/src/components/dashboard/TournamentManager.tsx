@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 import { getImageUrl } from "@/lib/imageUtils";
+import BracketViewer from "./BracketViewer";
 
 interface Tournament {
     id: string;
@@ -45,6 +46,7 @@ export default function TournamentManager() {
     const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
     const [participants, setParticipants] = useState<any[]>([]);
     const [loadingParticipants, setLoadingParticipants] = useState(false);
+    const [detailTab, setDetailTab] = useState<'info' | 'brackets'>('info');
 
     const [formData, setFormData] = useState({
         name: "",
@@ -667,9 +669,37 @@ export default function TournamentManager() {
                                 </button>
                             </div>
 
+                            {/* Tabs */}
+                            <div className="px-6 border-b border-white/10">
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={() => setDetailTab('info')}
+                                        className={`pb-3 px-2 font-semibold transition-colors border-b-2 ${
+                                            detailTab === 'info'
+                                                ? 'border-yellow-500 text-yellow-500'
+                                                : 'border-transparent text-gray-400 hover:text-white'
+                                        }`}
+                                    >
+                                        Participants & Info
+                                    </button>
+                                    <button
+                                        onClick={() => setDetailTab('brackets')}
+                                        className={`pb-3 px-2 font-semibold transition-colors border-b-2 ${
+                                            detailTab === 'brackets'
+                                                ? 'border-yellow-500 text-yellow-500'
+                                                : 'border-transparent text-gray-400 hover:text-white'
+                                        }`}
+                                    >
+                                        Tournament Brackets
+                                    </button>
+                                </div>
+                            </div>
+
                             <div className="p-6 space-y-6">
-                                {/* Stats Cards */}
-                                <div className="grid grid-cols-3 gap-4">
+                                {detailTab === 'info' && (
+                                    <>
+                                        {/* Stats Cards */}
+                                        <div className="grid grid-cols-3 gap-4">
                                     <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
                                         <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
                                         <div className="text-2xl font-bold text-white">{participants.length}</div>
@@ -739,6 +769,12 @@ export default function TournamentManager() {
                                         </div>
                                     )}
                                 </div>
+                                    </>
+                                )}
+
+                                {detailTab === 'brackets' && (
+                                    <BracketViewer tournamentId={viewingTournament.id} />
+                                )}
                             </div>
                         </motion.div>
                     </div>
