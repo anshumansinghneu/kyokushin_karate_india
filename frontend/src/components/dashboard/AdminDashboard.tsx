@@ -17,11 +17,12 @@ import RecognitionManager from "./RecognitionManager";
 import OrganizationGraph from "./OrganizationGraph";
 import BeltPromotionsView from "./BeltPromotionsView";
 import BeltApprovalsView from "./BeltApprovalsView";
+import TournamentManager from "./TournamentManager";
 import { useToast } from '@/contexts/ToastContext';
 
 export default function AdminDashboard({ user }: { user: any }) {
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'content' | 'belt-verifications' | 'belt-promotions'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'content' | 'belt-verifications' | 'belt-promotions' | 'tournaments'>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const { logout } = useAuthStore();
     const [stats, setStats] = useState({
@@ -63,6 +64,7 @@ export default function AdminDashboard({ user }: { user: any }) {
         { id: 'belt-promotions', label: 'Belt Promotions', icon: Award },
         { id: 'dojos', label: 'Dojo Management', icon: Building },
         { id: 'events', label: 'Event Management', icon: Calendar },
+        { id: 'tournaments', label: 'Tournaments', icon: Trophy },
         { id: 'blogs', label: 'Blogs', icon: FileText },
         { id: 'media', label: 'Media', icon: Newspaper },
         { id: 'recognition', label: 'Monthly Recognition', icon: Trophy },
@@ -237,6 +239,7 @@ export default function AdminDashboard({ user }: { user: any }) {
                         {activeTab === 'belt-promotions' && <motion.div key="belt-promotions" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><BeltPromotionsView /></motion.div>}
                         {activeTab === 'dojos' && <motion.div key="dojos" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><DojoManager /></motion.div>}
                         {activeTab === 'events' && <motion.div key="events" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><EventManager /></motion.div>}
+                        {activeTab === 'tournaments' && <motion.div key="tournaments" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><TournamentManager /></motion.div>}
                         {activeTab === 'blogs' && <motion.div key="blogs" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><BlogManager /></motion.div>}
                         {activeTab === 'media' && <motion.div key="media" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><MediaManager /></motion.div>}
                         {activeTab === 'recognition' && <motion.div key="recognition" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><RecognitionManager /></motion.div>}

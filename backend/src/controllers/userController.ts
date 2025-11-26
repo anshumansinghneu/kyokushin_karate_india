@@ -442,7 +442,7 @@ export const getUserFullProfile = catchAsync(async (req: Request, res: Response,
                     promotionDate: 'desc'
                 },
                 include: {
-                    promotedByUser: {
+                    promoter: {
                         select: {
                             id: true,
                             name: true,
@@ -458,10 +458,10 @@ export const getUserFullProfile = catchAsync(async (req: Request, res: Response,
             },
             tournamentResults: {
                 orderBy: {
-                    date: 'desc'
+                    createdAt: 'desc'
                 },
                 include: {
-                    tournament: {
+                    event: {
                         select: {
                             name: true,
                         }
@@ -488,27 +488,28 @@ export const getUserFullProfile = catchAsync(async (req: Request, res: Response,
     // Admin can view all profiles
 
     // Transform belt history to include promoter name
-    const beltHistory = user.beltHistory.map(belt => ({
+    const beltHistory = user.beltHistory.map((belt: any) => ({
         id: belt.id,
         oldBelt: belt.oldBelt,
         newBelt: belt.newBelt,
         promotionDate: belt.promotionDate,
         promotedBy: belt.promotedBy,
-        promotedByName: belt.promotedByUser?.name || 'Unknown',
+        promotedByName: belt.promoter?.name || 'Unknown',
         notes: belt.notes,
     }));
 
     // Transform tournament results to include tournament name
-    const tournamentResults = user.tournamentResults.map(result => ({
+    const tournamentResults = user.tournamentResults.map((result: any) => ({
         id: result.id,
-        tournamentName: result.tournament?.name || 'Unknown Tournament',
-        category: result.category || 'N/A',
-        placement: result.placement || 0,
-        date: result.date,
+        tournamentName: result.event?.name || 'Unknown Tournament',
+        categoryName: result.categoryName || 'N/A',
+        finalRank: result.finalRank || 0,
+        medal: result.medal,
+        createdAt: result.createdAt,
     }));
 
     // Remove password from response
-    const { password, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = user as any;
 
     res.status(200).json({
         status: 'success',
