@@ -250,6 +250,12 @@ export default function RegisterPage() {
                 weight: Number(formData.weight)
             };
 
+            // Handle dojoId for both roles
+            if (formData.dojoId === 'fallback' || !formData.dojoId || formData.dojoId === '') {
+                delete payload.dojoId;
+                delete payload.instructorId;
+            }
+
             // Add instructor-specific fields
             if (role === "INSTRUCTOR") {
                 payload.yearsOfExperience = Number(formData.yearsOfExperience);
@@ -258,7 +264,6 @@ export default function RegisterPage() {
                 delete payload.fatherPhone;
                 delete payload.beltExamDate;
                 delete payload.beltClaimReason;
-                if (!formData.dojoId) delete payload.dojoId; // Dojo optional for instructors
             } else {
                 // STUDENTS: Include belt verification info if claiming higher belt
                 if (formData.currentBeltRank !== "White") {

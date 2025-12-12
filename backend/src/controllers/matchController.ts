@@ -3,6 +3,7 @@ import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { io } from '../index'; // We need to export io from index.ts
+import { autoCalculateBracketResults, checkTournamentCompletion } from '../utils/tournamentAutomation';
 
 export const getMatch = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const match = await prisma.match.findUnique({
@@ -136,6 +137,22 @@ export const updateScore = catchAsync(async (req: Request, res: Response, next: 
                 tournamentId,
                 bracketId: match.bracketId
             });
+
+            // 🤖 AUTO-CALCULATE RESULTS: Check if all bracket matches are done
+            setTimeout(async () => {
+                try {
+                    await autoCalculateBracketResults(match.bracketId);
+                    await checkTournamentCompletion(tournamentId);
+
+                    // Notify about results update
+                    io.to(`tournament-${tournamentId}`).emit('results:updated', {
+                        tournamentId,
+                        bracketId: match.bracketId
+                    });
+                } catch (error) {
+                    console.error('Error auto-calculating results:', error);
+                }
+            }, 1000); // Small delay to ensure DB consistency
         }
     }
 
@@ -199,11 +216,35 @@ export const endMatch = catchAsync(async (req: Request, res: Response, next: Nex
 
     // Broadcast
     if (io) {
+        const matchWithBracket = await prisma.match.findUnique({
+            where: { id: matchId },
+            include: { bracket: { select: { eventId: true } } }
+        });
+
+        const tournamentId = matchWithBracket?.bracket.eventId;
+
         io.emit('match:ended', {
             matchId: match.id,
             winnerId,
             bracketId: match.bracketId
         });
+
+        // 🤖 AUTO-CALCULATE RESULTS: Check if all bracket matches are done
+        if (tournamentId) {
+            setTimeout(async () => {
+                try {
+                    await autoCalculateBracketResults(match.bracketId);
+                    await checkTournamentCompletion(tournamentId);
+
+                    io.to(`tournament-${tournamentId}`).emit('results:updated', {
+                        tournamentId,
+                        bracketId: match.bracketId
+                    });
+                } catch (error) {
+                    console.error('Error auto-calculating results:', error);
+                }
+            }, 1000);
+        }
     }
 
     res.status(200).json({

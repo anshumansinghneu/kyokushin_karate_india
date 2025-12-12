@@ -21,6 +21,7 @@ import postRouter from './routes/postRoutes';
 import recognitionRouter from './routes/recognitionRoutes';
 import setupRouter from './routes/setupRoutes';
 import noteRouter from './routes/noteRoutes';
+import winnerRouter from './routes/winnerRoutes';
 import { globalErrorHandler } from './utils/errorHandler';
 
 const app = express();
@@ -68,6 +69,7 @@ app.use('/api/upload', uploadRouter);
 app.use('/api/posts', postRouter);
 app.use('/api/recognitions', recognitionRouter);
 app.use('/api', noteRouter);  // Notes and profile views
+app.use('/api/winners', winnerRouter);  // Tournament winners
 
 // Serve static files (uploads)
 app.use('/uploads', express.static(path.join(__dirname, '../src/uploads')));

@@ -10,6 +10,7 @@ import { useToast } from "@/contexts/ToastContext";
 import MembershipCard from "./MembershipCard";
 import BlogManager from "./BlogManager";
 import BlogSubmission from "./BlogSubmission";
+import TournamentHistory from "./TournamentHistory";
 
 export default function StudentDashboard({ user }: { user: any }) {
     const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
@@ -295,6 +296,11 @@ export default function StudentDashboard({ user }: { user: any }) {
                                 </div>
                             </motion.div>
                         </div>
+
+                        {/* Tournament History Section */}
+                        <motion.div variants={itemVariants}>
+                            <TournamentHistory userId={user?.id} />
+                        </motion.div>
                     </div>
                 </div>
             )}

@@ -17,6 +17,7 @@ import BlogSubmission from "./BlogSubmission";
 import BeltApprovalsView from "./BeltApprovalsView";
 import BeltPromotionsView from "./BeltPromotionsView";
 import TournamentManager from "./TournamentManager";
+import WinnersTab from "../management/WinnersTab";
 import GlobalSearch from "./GlobalSearch";
 import StudentDetailView from "./StudentDetailView";
 
@@ -60,7 +61,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
         }
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions' | 'tournaments'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions' | 'tournaments' | 'winners'>('overview');
 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: Activity },
@@ -68,6 +69,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
         { id: 'belt-promotions', label: 'Belt Promotions', icon: Medal },
         { id: 'students', label: 'Student Roster', icon: Users },
         { id: 'tournaments', label: 'Tournaments', icon: Trophy },
+        { id: 'winners', label: 'Winners', icon: Medal },
         { id: 'blogs', label: 'My Blogs', icon: FileText },
         { id: 'submit', label: 'Write Blog', icon: Edit },
     ];
@@ -295,6 +297,18 @@ export default function InstructorDashboard({ user }: { user: any }) {
                     transition={{ duration: 0.2 }}
                 >
                     <TournamentManager />
+                </motion.div>
+            )}
+
+            {activeTab === 'winners' && (
+                <motion.div
+                    key="winners"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <WinnersTab />
                 </motion.div>
             )}
 
