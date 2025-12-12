@@ -1,0 +1,110 @@
+/* Chatbot specific animations */
+@keyframes chatbot-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes chatbot-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes chatbot-slide-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes chatbot-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes typing-dots {
+  0%, 60%, 100% {
+    transform: initial;
+  }
+  30% {
+    transform: translateY(-10px);
+  }
+}
+
+.chatbot-float {
+  animation: chatbot-float 3s ease-in-out infinite;
+}
+
+.chatbot-pulse {
+  animation: chatbot-pulse 2s ease-in-out infinite;
+}
+
+.chatbot-slide-in {
+  animation: chatbot-slide-in 0.3s ease-out forwards;
+}
+
+.chatbot-fade-in {
+  animation: chatbot-fade-in 0.2s ease-out forwards;
+}
+
+.typing-dot {
+  animation: typing-dots 1.5s infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Custom scrollbar for chatbot */
+.chatbot-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chatbot-messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.chatbot-messages::-webkit-scrollbar-thumb {
+  background: #dc2626;
+  border-radius: 2px;
+}
+
+.chatbot-messages::-webkit-scrollbar-thumb:hover {
+  background: #b91c1c;
+}
+
+/* Message animations */
+.message-enter {
+  animation: chatbot-fade-in 0.3s ease-out forwards;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .chatbot-window {
+    width: calc(100vw - 2rem);
+    max-width: 350px;
+    height: 450px;
+  }
+}

@@ -10,6 +10,7 @@ import api from "@/lib/api";
 import HeroSectionV2 from "@/components/HeroSectionV2";
 import LeadershipSection from "@/components/LeadershipSection";
 import MonthlyChampions from "@/components/MonthlyChampions";
+import Chatbot from "@/components/ui/Chatbot";
 
 interface Event {
   id: string;
@@ -316,6 +317,9 @@ export default function Home() {
 
         </div>
       )}
+      
+      {/* Chatbot Component */}
+      <Chatbot />
     </div>
   );
 }
