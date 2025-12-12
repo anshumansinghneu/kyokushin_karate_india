@@ -1,0 +1,14 @@
+services:
+  # Frontend Web Service
+  - type: web
+    name: kyokushin-frontend
+    runtime: node
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://kyokushin-api.onrender.com/api
