@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import app from './app';
 import runMigration from './runMigration';
 
+// Load environment variables
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;

@@ -1,6 +1,7 @@
 # 🎯 QUICK FRONTEND DEPLOYMENT
 
 ## Your Backend is Already Live! ✅
+
 **URL:** https://kyokushin-api.onrender.com
 
 ---
@@ -25,6 +26,7 @@
 6. Wait 3-5 minutes
 
 **Then Update Backend:**
+
 - Go to `kyokushin-api` service
 - Environment → `FRONTEND_URL` → Set to your new frontend URL
 - Save
@@ -48,6 +50,7 @@
 6. Deploy!
 
 **Then Update Backend:**
+
 - Go to Render → `kyokushin-api` service
 - Environment → `FRONTEND_URL` → Set to your Netlify URL
 - Save
@@ -71,6 +74,7 @@
 7. Deploy!
 
 **Then Update Backend:**
+
 - Go to Render → `kyokushin-api` service
 - Environment → `FRONTEND_URL` → Set to your Railway URL
 - Save
@@ -82,6 +86,7 @@
 If you want to fix Vercel instead, tell me the error message and I'll help!
 
 Common fixes:
+
 - Make sure **Root Directory** is set to `frontend`
 - Check build logs for errors
 - Verify environment variable is set correctly
