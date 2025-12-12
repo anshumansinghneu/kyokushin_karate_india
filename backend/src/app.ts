@@ -76,6 +76,25 @@ const apiLimiter = rateLimit({
 // Routes
 app.use('/api/setup', setupRouter);  // Admin setup (one-time use)
 app.use('/api/auth', authRouter);  // No rate limit for testing
+
+// TEMPORARY: Emergency reseed endpoint (remove after use)
+app.post('/api/emergency-reseed', async (req, res) => {
+    try {
+        const { exec } = require('child_process');
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+        
+        console.log('🌱 Starting emergency reseed...');
+        const { stdout, stderr } = await execAsync('npm run seed');
+        console.log('✅ Reseed completed:', stdout);
+        
+        res.json({ success: true, message: 'Database reseeded successfully', output: stdout });
+    } catch (error: any) {
+        console.error('❌ Reseed error:', error);
+        res.status(500).json({ error: 'Failed to reseed database', details: error.message });
+    }
+});
+
 app.use('/api/users', userRouter);
 app.use('/api/dojos', dojoRouter);
 app.use('/api/belts', beltRouter);
