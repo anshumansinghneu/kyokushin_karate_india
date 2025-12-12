@@ -23,6 +23,7 @@ import setupRouter from './routes/setupRoutes';
 import noteRouter from './routes/noteRoutes';
 import winnerRouter from './routes/winnerRoutes';
 import { globalErrorHandler } from './utils/errorHandler';
+import { setupSwagger } from './config/swagger';
 
 const app = express();
 
@@ -36,7 +37,7 @@ app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (mobile apps, Postman, etc.)
         if (!origin) return callback(null, true);
-        
+
         if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
             callback(null, true);
         } else {
@@ -73,6 +74,9 @@ const apiLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+// Setup Swagger Documentation
+setupSwagger(app);
+
 // Routes
 app.use('/api/setup', setupRouter);  // Admin setup (one-time use)
 app.use('/api/auth', authRouter);  // No rate limit for testing
@@ -83,11 +87,11 @@ app.post('/api/emergency-reseed', async (req, res) => {
         const { exec } = require('child_process');
         const { promisify } = require('util');
         const execAsync = promisify(exec);
-        
+
         console.log('🌱 Starting emergency reseed...');
         const { stdout, stderr } = await execAsync('npm run seed');
         console.log('✅ Reseed completed:', stdout);
-        
+
         res.json({ success: true, message: 'Database reseeded successfully', output: stdout });
     } catch (error: any) {
         console.error('❌ Reseed error:', error);

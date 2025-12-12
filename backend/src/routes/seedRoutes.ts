@@ -15,22 +15,22 @@ router.post('/reset-and-seed', async (req, res) => {
         }
 
         console.log('🌱 Starting database reset and seed...');
-        
+
         // Run seed
         const { stdout, stderr } = await execAsync('npm run seed');
-        
+
         console.log('✅ Seed completed:', stdout);
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             message: 'Database reseeded successfully',
             output: stdout
         });
     } catch (error: any) {
         console.error('❌ Seed error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to seed database',
-            details: error.message 
+            details: error.message
         });
     }
 });

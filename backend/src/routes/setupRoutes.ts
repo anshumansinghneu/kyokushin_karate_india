@@ -7,10 +7,10 @@ const router = Router();
 /**
  * ONE-TIME ADMIN SETUP ENDPOINT
  * POST /api/setup/admin
- * 
+ *
  * This endpoint creates the initial admin user for production.
  * It can only be used ONCE and requires a secret key.
- * 
+ *
  * Security Features:
  * 1. Requires ADMIN_SETUP_KEY environment variable
  * 2. Only works if NO admin users exist
@@ -167,7 +167,7 @@ router.get('/status', async (req, res) => {
 /**
  * EMERGENCY DATABASE RESEED ENDPOINT
  * POST /api/setup/emergency-reseed
- * 
+ *
  * This endpoint completely resets and reseeds the database with demo data.
  * Use with EXTREME caution - this will DELETE ALL EXISTING DATA.
  */
@@ -187,7 +187,7 @@ router.post('/emergency-reseed', async (req, res) => {
         console.log('[EMERGENCY RESEED] Starting database cleanup...');
 
         // Delete all data in correct order (reverse of foreign key dependencies)
-        await prisma.note.deleteMany();
+        await prisma.studentNote.deleteMany();
         await prisma.monthlyRecognition.deleteMany();
         await prisma.trainingSession.deleteMany();
         await prisma.eventRegistration.deleteMany();
