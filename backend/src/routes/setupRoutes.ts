@@ -164,4 +164,62 @@ router.get('/status', async (req, res) => {
     }
 });
 
+/**
+ * EMERGENCY DATABASE RESEED ENDPOINT
+ * POST /api/setup/emergency-reseed
+ * 
+ * This endpoint completely resets and reseeds the database with demo data.
+ * Use with EXTREME caution - this will DELETE ALL EXISTING DATA.
+ */
+router.post('/emergency-reseed', async (req, res) => {
+    try {
+        const { setupKey } = req.body;
+
+        // Validate setup key
+        const ADMIN_SETUP_KEY = process.env.ADMIN_SETUP_KEY;
+        if (!ADMIN_SETUP_KEY || setupKey !== ADMIN_SETUP_KEY) {
+            return res.status(403).json({
+                status: 'error',
+                message: 'Invalid setup key. Access denied.'
+            });
+        }
+
+        console.log('[EMERGENCY RESEED] Starting database cleanup...');
+
+        // Delete all data in correct order (reverse of foreign key dependencies)
+        await prisma.note.deleteMany();
+        await prisma.monthlyRecognition.deleteMany();
+        await prisma.trainingSession.deleteMany();
+        await prisma.eventRegistration.deleteMany();
+        await prisma.beltVerificationRequest.deleteMany();
+        await prisma.post.deleteMany();
+        await prisma.siteContent.deleteMany();
+        await prisma.event.deleteMany();
+        await prisma.user.deleteMany();
+        await prisma.dojo.deleteMany();
+
+        console.log('[EMERGENCY RESEED] Database cleaned. Starting reseed...');
+
+        // Import and run the seed function
+        const { main: seedMain } = require('../../../prisma/seed');
+        await seedMain();
+
+        console.log('[EMERGENCY RESEED] Database successfully reseeded!');
+
+        return res.json({
+            status: 'success',
+            message: 'Database successfully reseeded with demo data.',
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('[EMERGENCY RESEED ERROR]', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Failed to reseed database.',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
 export default router;

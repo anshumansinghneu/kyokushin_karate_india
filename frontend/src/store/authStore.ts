@@ -106,6 +106,13 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ user: response.data.data.user, isAuthenticated: true, isLoading: false });
         } catch (error) {
             console.error('checkAuth failed:', error);
+            // @ts-ignore
+            if (error.response) {
+                // @ts-ignore
+                console.error('Error Response Data:', error.response.data);
+                // @ts-ignore
+                console.error('Error Status:', error.response.status);
+            }
             localStorage.removeItem('token');
             set({ user: null, token: null, isAuthenticated: false, isLoading: false });
         }
