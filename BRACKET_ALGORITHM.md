@@ -5,6 +5,7 @@ This document explains the bracket generation and seeding logic used in the Kyok
 ## Overview
 
 The system implements a **single-elimination tournament** with intelligent seeding based on:
+
 1. **Belt Rank** (primary factor)
 2. **Experience Level** (secondary factor)
 3. **Standard bracket pairing** (1 vs lowest, 2 vs 2nd lowest, etc.)
@@ -14,6 +15,7 @@ The system implements a **single-elimination tournament** with intelligent seedi
 ### 1. Category Grouping
 
 Participants are grouped into categories based on:
+
 - **Age Range**: 18-25, 26-35, 36-45, 46-55, Open
 - **Weight Class**: Under 65kg, Under 75kg, Under 85kg, Over 85kg, Open
 - **Belt Level**: White-Yellow, Brown-Black, Open
@@ -23,6 +25,7 @@ Example category: `"26-35, Under 75kg, Open"`
 ### 2. Seeding Algorithm
 
 #### Belt Rank Values (Descending Order)
+
 ```typescript
 {
     'Black 3rd Dan': 9,
@@ -39,6 +42,7 @@ Example category: `"26-35, Under 75kg, Open"`
 ```
 
 #### Seeding Process
+
 1. **Sort participants** by belt rank (highest to lowest)
 2. **Seed #1**: Highest belt rank → **Top of bracket**
 3. **Seed #2**: 2nd highest → **Bottom of bracket**
@@ -68,6 +72,7 @@ Seed #6  ─┘
 **Pairing Logic**: `1v8, 2v7, 3v6, 4v5`
 
 This ensures:
+
 - Top two seeds cannot meet until final
 - Top four seeds cannot meet until semifinals
 - Stronger fighters distributed across bracket halves
@@ -77,6 +82,7 @@ This ensures:
 When participant count is **not a power of 2** (2, 4, 8, 16, 32, etc.):
 
 #### Example: 6 Participants → 8-Person Bracket
+
 ```
 Seed #1  ─── BYE (auto-advances)
                                 ┐
@@ -92,6 +98,7 @@ Seed #6  ─┘                     │
 ```
 
 **Bye Assignment Rules**:
+
 - Top seeds (highest belt ranks) receive byes
 - Byes auto-advance to Round 2
 - Number of byes = `bracketSize - actualParticipants`
@@ -99,27 +106,30 @@ Seed #6  ─┘                     │
 
 ### 5. Round Naming Convention
 
-| Participants | Rounds |
-|-------------|--------|
-| 2 | Final |
-| 4 | Semi Finals, Final |
-| 8 | Quarter Finals, Semi Finals, Final |
-| 16 | Round of 16, Quarter Finals, Semi Finals, Final |
-| 32 | Round of 32, Round of 16, Quarter Finals, Semi Finals, Final |
+| Participants | Rounds                                                       |
+| ------------ | ------------------------------------------------------------ |
+| 2            | Final                                                        |
+| 4            | Semi Finals, Final                                           |
+| 8            | Quarter Finals, Semi Finals, Final                           |
+| 16           | Round of 16, Quarter Finals, Semi Finals, Final              |
+| 32           | Round of 32, Round of 16, Quarter Finals, Semi Finals, Final |
 
 **Implementation**:
+
 ```typescript
 const totalRounds = Math.log2(bracketSize);
-if (roundNumber === totalRounds) return 'Final';
-if (roundNumber === totalRounds - 1) return 'Semi Finals';
-if (roundNumber === totalRounds - 2) return 'Quarter Finals';
+if (roundNumber === totalRounds) return "Final";
+if (roundNumber === totalRounds - 1) return "Semi Finals";
+if (roundNumber === totalRounds - 2) return "Quarter Finals";
 return `Round ${roundNumber}`;
 ```
 
 ## Advanced Seeding Strategies
 
 ### Current Implementation
+
 ✅ **Belt-based seeding** (implemented)
+
 - Primary factor: Belt rank
 - Ensures skill-appropriate matchups
 - Reduces mismatches in early rounds
@@ -127,22 +137,25 @@ return `Round ${roundNumber}`;
 ### Potential Enhancements
 
 #### 1. Experience-Based Seeding
+
 ```typescript
 // Could add years of experience as tiebreaker
 if (beltA === beltB) {
-    return (b.yearsOfExperience || 0) - (a.yearsOfExperience || 0);
+  return (b.yearsOfExperience || 0) - (a.yearsOfExperience || 0);
 }
 ```
 
 #### 2. Geographic Distribution
+
 ```typescript
 // Avoid same-dojo matchups in early rounds
 if (beltA === beltB && experienceA === experienceB) {
-    if (a.dojo.id === b.dojo.id) return 1; // Push same dojo apart
+  if (a.dojo.id === b.dojo.id) return 1; // Push same dojo apart
 }
 ```
 
 #### 3. Tournament History Seeding
+
 ```typescript
 // Use past tournament performance
 const winRateA = a.tournamentsWon / a.tournamentsParticipated;
@@ -151,7 +164,9 @@ return winRateB - winRateA;
 ```
 
 #### 4. Swiss-System Seeding (Alternative)
+
 For larger tournaments, consider Swiss-system first rounds:
+
 - Everyone plays same number of rounds
 - Matchups based on current record
 - Top performers advance to knockout
@@ -165,6 +180,7 @@ SCHEDULED → LIVE → COMPLETED
 ```
 
 ### Status Descriptions
+
 - **SCHEDULED**: Match not yet started, waiting for time slot
 - **LIVE**: Match currently in progress, scores being updated
 - **COMPLETED**: Match finished, winner determined, advances to next round
@@ -182,6 +198,7 @@ SCHEDULED → LIVE → COMPLETED
 ```
 
 ### Example Flow (8-Fighter Bracket)
+
 ```
 Match 1 Winner → Semi Finals Match 1 (FighterA)
 Match 2 Winner → Semi Finals Match 1 (FighterB)
@@ -195,6 +212,7 @@ Semi Final 2 Winner → Final (FighterB)
 ## Third Place Determination
 
 ### Current Method (Semi-Final Losers)
+
 ```
 Final:    Winner vs Winner
 3rd Place: Both semi-final losers
@@ -203,29 +221,32 @@ Final:    Winner vs Winner
 Both semi-final losers are awarded 3rd place (no playoff match).
 
 ### Alternative: Third Place Match (Can be implemented)
+
 ```typescript
 // Create actual 3rd place match
 const thirdPlaceMatch = await prisma.match.create({
-    data: {
-        bracketId,
-        roundNumber: finalRound,
-        matchNumber: 2, // After final
-        fighterAId: semifinalLoser1,
-        fighterBId: semifinalLoser2,
-        status: 'SCHEDULED',
-    }
+  data: {
+    bracketId,
+    roundNumber: finalRound,
+    matchNumber: 2, // After final
+    fighterAId: semifinalLoser1,
+    fighterBId: semifinalLoser2,
+    status: "SCHEDULED",
+  },
 });
 ```
 
 ## Real-World Examples
 
 ### Scenario 1: Perfect Power of 2 (8 Fighters)
+
 - **Participants**: 8 fighters
 - **Bracket Size**: 8 (no byes needed)
 - **Rounds**: 3 (Quarter Finals, Semi Finals, Final)
 - **Total Matches**: 7 (4 + 2 + 1)
 
 ### Scenario 2: Non-Power of 2 (6 Fighters)
+
 - **Participants**: 6 fighters
 - **Bracket Size**: 8 (next power of 2)
 - **Byes**: 2 (top 2 seeds)
@@ -233,6 +254,7 @@ const thirdPlaceMatch = await prisma.match.create({
 - **Total Matches**: 5 (2 + 2 + 1)
 
 ### Scenario 3: Large Tournament (32 Fighters)
+
 - **Participants**: 32 fighters
 - **Bracket Size**: 32 (perfect fit)
 - **Rounds**: 5 (R32, R16, QF, SF, Final)
@@ -241,6 +263,7 @@ const thirdPlaceMatch = await prisma.match.create({
 ## Best Practices
 
 ### For Fair Tournaments
+
 1. ✅ **Seed by skill level** (belt rank, experience)
 2. ✅ **Use power-of-2 brackets** for clean progression
 3. ✅ **Give byes to top seeds** to reward qualification performance
@@ -248,12 +271,14 @@ const thirdPlaceMatch = await prisma.match.create({
 5. ✅ **Consider geographic diversity** in early rounds (same dojo)
 
 ### For Spectator Experience
+
 1. ✅ **Clear round naming** (Semi Finals vs "Round 2")
 2. ✅ **Match numbering** for easy reference
 3. ✅ **Real-time updates** via WebSocket
 4. ✅ **Visual bracket tree** for progression tracking
 
 ### For Competitive Integrity
+
 1. ✅ **Transparent seeding criteria** (published before tournament)
 2. ✅ **Consistent application** across all categories
 3. ✅ **Minimal manual intervention** (automated seeding)
@@ -262,6 +287,7 @@ const thirdPlaceMatch = await prisma.match.create({
 ## References
 
 Based on:
+
 - **Wikipedia**: [Single-elimination tournament](https://en.wikipedia.org/wiki/Single-elimination_tournament)
 - **NCAA March Madness** seeding system
 - **UFC/Boxing** championship bracket structures
@@ -276,5 +302,5 @@ Based on:
 
 ---
 
-**Last Updated**: November 26, 2025  
+**Last Updated**: November 26, 2025
 **Version**: 2.0.0 (Enhanced with age/weight distribution)

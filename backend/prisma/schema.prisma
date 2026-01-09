@@ -24,6 +24,7 @@ enum EventType {
   TOURNAMENT
   CAMP
   SEMINAR
+  BELT_TEST
 }
 
 enum EventStatus {
@@ -73,6 +74,12 @@ enum NotificationType {
   BELT_PROMOTION
   EVENT_REMINDER
   GENERAL
+}
+
+enum ResultStatus {
+  PENDING
+  PASS
+  FAIL
 }
 
 enum VerificationStatus {
@@ -151,6 +158,8 @@ model User {
   trainingSessions      TrainingSession[]
   posts                 Post[]
   monthlyRecognitions   MonthlyRecognition[]
+  beltTestResults       BeltTestResult[] @relation("StudentBeltTestResults")
+  evaluatedResults      BeltTestResult[] @relation("EvaluatorResults")
 
   // Audit & Notes
   profileViews          ProfileView[]    @relation("ProfileViewed")
@@ -190,9 +199,13 @@ model BeltHistory {
   newBelt       String
   promotedBy    String
   promoter      User     @relation("PromoterBeltHistory", fields: [promotedBy], references: [id])
+  eventId       String?  // Belt test event that triggered promotion
   promotionDate DateTime @default(now())
   notes         String?
   createdAt     DateTime @default(now())
+
+  @@index([studentId])
+  @@index([promotedBy])
 }
 
 model Event {
@@ -225,6 +238,7 @@ model Event {
   registrations         EventRegistration[]
   brackets              TournamentBracket[]
   results               TournamentResult[]
+  beltTestResults       BeltTestResult[]
   gallery               Gallery[]
   specificVouchers      VoucherCode[]
   notifications         Notification[]
@@ -519,4 +533,32 @@ model StudentNote {
 
   @@index([studentId])
   @@index([createdBy])
+}
+
+model BeltTestResult {
+  id          String       @id @default(uuid())
+  eventId     String
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User         @relation("StudentBeltTestResults", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Result
+  result      ResultStatus @default(PENDING)
+  notes       String?      @db.Text // Instructor feedback
+
+  // Evaluation
+  evaluatedBy String?
+  evaluator   User?        @relation("EvaluatorResults", fields: [evaluatedBy], references: [id])
+  evaluatedAt DateTime?
+
+  // Promotion tracking
+  wasPromoted Boolean      @default(false) // Did this result cause a belt promotion?
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([eventId, userId]) // One result per student per belt test
+  @@index([eventId])
+  @@index([userId])
+  @@index([result])
 }

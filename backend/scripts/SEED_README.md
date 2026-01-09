@@ -7,15 +7,18 @@ This script automatically creates a complete test environment for E2E testing of
 ### Accounts (Password: `password123` for all)
 
 **1 Admin Account:**
+
 - `admin@kyokushin.in` - Shihan Admin (5th Dan)
 
 **4 Instructor Accounts:**
+
 - `instructor1@kyokushin.in` - Sensei Ravi Kumar (Mumbai)
 - `instructor2@kyokushin.in` - Sensei Amit Sharma (Delhi)
 - `instructor3@kyokushin.in` - Sensei Vijay Patel (Bangalore)
 - `instructor4@kyokushin.in` - Sensei Rahul Singh (Pune)
 
 **16 Student Accounts:**
+
 - `student1@kyokushin.in` to `student16@kyokushin.in`
 - 4 students per dojo
 - Mixed belt ranks (White to Black)
@@ -24,12 +27,14 @@ This script automatically creates a complete test environment for E2E testing of
 ### Infrastructure
 
 **4 Dojos:**
+
 1. Mumbai Central Dojo (MUM-01)
 2. Delhi Kyokushin Academy (DEL-01)
 3. Bangalore Warriors Dojo (BLR-01)
 4. Pune Fighting Spirit (PUN-01)
 
 **1 Tournament:**
+
 - Name: National Kyokushin Championship 2025
 - Date: December 15-16, 2025
 - Location: Mumbai, Maharashtra
@@ -41,6 +46,7 @@ This script automatically creates a complete test environment for E2E testing of
   - 36-45, Open, Open
 
 **Training Sessions:**
+
 - 24 training sessions for first 8 students
 - 3 sessions each with varied intensity and focus
 
@@ -128,17 +134,20 @@ To modify the seed data, edit `backend/scripts/seed_test_accounts.ts`:
 ## Troubleshooting
 
 **Error: Database connection failed**
+
 - Check `.env` file has correct `DATABASE_URL`
 - Ensure PostgreSQL is running
 - Verify database exists
 
 **Error: Prisma schema out of sync**
+
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
 **Error: Unique constraint violation**
+
 - Database already has data with same emails/codes
 - Run `npx prisma migrate reset` to clear database
 - Or manually delete conflicting records
@@ -148,6 +157,7 @@ npx prisma db push
 ⚠️ **DO NOT run this script in production!**
 
 This script is for development and testing only. It:
+
 - Deletes existing data (not explicitly, but conflicts may occur)
 - Uses weak passwords
 - Creates fake data

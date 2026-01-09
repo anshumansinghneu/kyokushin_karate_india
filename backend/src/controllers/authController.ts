@@ -63,6 +63,26 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
         const requestedBelt = currentBeltRank || 'White';
         const isClaimingHigherBelt = isStudent && requestedBelt !== 'White';
 
+        // Validate dojoId if provided (skip validation for empty, null, or 'fallback')
+        if (dojoId && dojoId !== 'fallback' && dojoId.trim() !== '') {
+            const dojoExists = await tx.dojo.findUnique({
+                where: { id: dojoId }
+            });
+            if (!dojoExists) {
+                throw new AppError('Invalid dojo selected', 400);
+            }
+        }
+
+        // Validate instructorId if provided (skip validation for empty or null)
+        if (instructorId && instructorId.trim() !== '') {
+            const instructorExists = await tx.user.findUnique({
+                where: { id: instructorId, role: 'INSTRUCTOR' }
+            });
+            if (!instructorExists) {
+                throw new AppError('Invalid instructor selected', 400);
+            }
+        }
+
         // Determine verification status and initial belt
         let verificationStatus: 'VERIFIED' | 'PENDING_VERIFICATION' = 'VERIFIED';
         let initialBelt = 'White';
@@ -95,8 +115,8 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
                 city,
                 state,
                 country: country || 'India',
-                dojoId: dojoId || undefined,
-                primaryInstructorId: instructorId || undefined,
+                dojoId: (dojoId && dojoId !== 'fallback' && dojoId.trim() !== '') ? dojoId : undefined,
+                primaryInstructorId: (instructorId && instructorId.trim() !== '') ? instructorId : undefined,
                 role: req.body.role || 'STUDENT',
                 membershipStatus: 'PENDING',
                 currentBeltRank: initialBelt,

@@ -40,7 +40,7 @@ async function main() {
 
     // 1. Create Multiple Dojos
     console.log('🏯 Creating dojos...');
-    
+
     const dojos = await Promise.all([
         prisma.dojo.create({
             data: {
@@ -88,7 +88,7 @@ async function main() {
 
     // 2. Create Admin Account
     console.log('👑 Creating admin account...');
-    
+
     const admin = await prisma.user.create({
         data: {
             email: 'admin@kyokushin.in',
@@ -109,7 +109,7 @@ async function main() {
 
     // 3. Create Instructors (one per dojo)
     console.log('🥋 Creating instructors...');
-    
+
     const instructors = await Promise.all(
         dojos.map(async (dojo, idx) => {
             return prisma.user.create({
@@ -134,7 +134,7 @@ async function main() {
 
     // 4. Create Students (8 per dojo = 32 total for realistic tournament brackets)
     console.log('👨‍🎓 Creating students...');
-    
+
     const studentNames = [
         // Mumbai Dojo (8 students)
         'Arjun Singh', 'Priya Desai', 'Rohan Mehta', 'Ananya Iyer',
@@ -183,7 +183,7 @@ async function main() {
     for (let dojoIdx = 0; dojoIdx < dojos.length; dojoIdx++) {
         for (let studentIdx = 0; studentIdx < 8; studentIdx++) {
             const overallIdx = dojoIdx * 8 + studentIdx;
-            
+
             // Distribute students across age ranges
             const ageRange = ageRanges[ageIdx % ageRanges.length];
             const birthYear = ageRange.minYear + Math.floor(Math.random() * (ageRange.maxYear - ageRange.minYear + 1));
@@ -225,7 +225,7 @@ async function main() {
 
     // 5. Create Test Tournament Event with proper categories
     console.log('🏆 Creating test tournament...');
-    
+
     const tournament = await prisma.event.create({
         data: {
             type: 'TOURNAMENT',
@@ -261,9 +261,9 @@ async function main() {
 
     // 6. Auto-register students to appropriate tournament categories based on their profile
     console.log('📝 Registering students to tournament categories...');
-    
+
     const registrations = [];
-    
+
     for (const student of students) {
         const age = new Date().getFullYear() - (student.dateOfBirth?.getFullYear() || 2000);
         const weight = student.weight || 70;
@@ -305,7 +305,7 @@ async function main() {
 
     // 7. Create some training sessions for students
     console.log('🥊 Creating training sessions...');
-    
+
     const today = new Date();
     let sessionCount = 0;
 
@@ -336,34 +336,34 @@ async function main() {
     console.log('='.repeat(60));
     console.log('\n📋 ACCOUNT SUMMARY:\n');
     console.log('🔐 All accounts use password: password123\n');
-    
+
     console.log('👑 ADMIN ACCOUNT:');
     console.log(`   Email: ${admin.email}`);
     console.log(`   Name: ${admin.name}`);
     console.log(`   Role: ${admin.role}\n`);
-    
+
     console.log('🥋 INSTRUCTOR ACCOUNTS:');
     instructors.forEach((inst, idx) => {
         console.log(`   ${idx + 1}. ${inst.email} - ${inst.name} (${dojos[idx].name})`);
     });
-    
+
     console.log(`\n👨‍🎓 STUDENT ACCOUNTS: ${students.length} students created`);
     console.log('   student1@kyokushin.in to student32@kyokushin.in');
     console.log('   Age Distribution: 18-25 (8), 26-35 (12), 36-45 (8), 46-55 (4)');
     console.log('   Weight Distribution: Under 65kg (8), 65-75kg (12), 75-85kg (8), Over 85kg (4)');
     console.log('   Belt Distribution: White (4), Yellow (2), Orange (2), Blue (2), Green (2), Brown (2), Black (2)');
-    
+
     console.log(`\n🏯 DOJOS: ${dojos.length} dojos created (8 students each)`);
     dojos.forEach((dojo, idx) => {
         console.log(`   ${idx + 1}. ${dojo.name} (${dojo.city})`);
     });
-    
+
     console.log(`\n🏆 TOURNAMENT:`);
     console.log(`   Name: ${tournament.name}`);
     console.log(`   Date: ${tournament.startDate.toLocaleDateString()}`);
     console.log(`   Total Registrations: ${registrations.length} (${students.length} students × 2 categories)`);
     console.log(`   Categories: 8 divisions (age/weight combinations + belt-specific)`);
-    
+
     console.log('\n' + '='.repeat(60));
     console.log('🎯 QUICK START:');
     console.log('   1. Login as admin@kyokushin.in');
