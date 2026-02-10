@@ -53,8 +53,12 @@ export default function MediaPage() {
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-zinc-700 font-bold text-xl">
-                                                MEDIA
+                                            <div className="w-full h-full bg-gradient-to-br from-red-900/30 via-zinc-900 to-black flex flex-col items-center justify-center relative">
+                                                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:16px_16px]" />
+                                                <svg viewBox="0 0 120 80" className="w-24 h-16 text-white/10 relative z-10">
+                                                    <text x="60" y="35" textAnchor="middle" dominantBaseline="middle" fontSize="18" fontWeight="900" fill="currentColor">KKFI</text>
+                                                    <text x="60" y="55" textAnchor="middle" dominantBaseline="middle" fontSize="10" fontWeight="700" fill="currentColor">MEDIA</text>
+                                                </svg>
                                             </div>
                                         )}
                                         <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">

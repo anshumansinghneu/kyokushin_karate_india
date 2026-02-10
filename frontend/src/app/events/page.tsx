@@ -95,8 +95,14 @@ export default function EventsPage() {
                                 >
                                     {/* Background Image */}
                                     <div className="absolute inset-0 bg-gray-900">
-                                        {/* Placeholder for image */}
-                                        <div className={`w-full h-full opacity-50 bg-gradient-to-br ${event.type === 'TOURNAMENT' ? 'from-red-900 to-black' : 'from-green-900 to-black'}`} />
+                                        <div className={`absolute inset-0 bg-gradient-to-br ${event.type === 'TOURNAMENT' ? 'from-red-900/50 via-zinc-900 to-black' : 'from-green-900/50 via-zinc-900 to-black'}`} />
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-[0.06]">
+                                            <svg viewBox="0 0 100 100" className="w-40 h-40" fill="currentColor">
+                                                <text x="50" y="55" textAnchor="middle" dominantBaseline="middle" fontSize="24" fontWeight="900" className="text-white">OSU</text>
+                                                <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                                            </svg>
+                                        </div>
+                                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:20px_20px]" />
                                     </div>
 
                                     {/* Content */}

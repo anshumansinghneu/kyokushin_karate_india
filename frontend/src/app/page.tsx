@@ -189,13 +189,17 @@ export default function Home() {
                             </span>
                           </div>
 
-                          {/* Image Placeholder */}
+                          {/* Default Event Background */}
                           <div className="absolute inset-0 bg-zinc-800">
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10" />
-                            {/* Ideally fetch event image here */}
-                            <div className="w-full h-full flex items-center justify-center text-zinc-700 font-black text-9xl opacity-20">
-                              OSU
+                            <div className={`absolute inset-0 bg-gradient-to-br ${event.type === 'TOURNAMENT' ? 'from-red-900/40 via-zinc-900 to-black' : event.type === 'CAMP' ? 'from-green-900/40 via-zinc-900 to-black' : 'from-blue-900/40 via-zinc-900 to-black'}`} />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-[0.07]">
+                              <svg viewBox="0 0 100 100" className="w-32 h-32" fill="currentColor">
+                                <text x="50" y="55" textAnchor="middle" dominantBaseline="middle" fontSize="28" fontWeight="900" className="text-white">OSU</text>
+                                <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="2" fill="none" />
+                              </svg>
                             </div>
+                            <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-transparent" />
                           </div>
 
                           {/* Content */}
