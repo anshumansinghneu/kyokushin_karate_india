@@ -1,6 +1,6 @@
 import express from 'express';
 import { getMe } from '../controllers/authController';
-import { getAllUsers, getUser, getUserFullProfile, searchUsers, approveUser, rejectUser, deleteUser, inviteUser, updateMe, updateUser, createUser } from '../controllers/userController';
+import { getAllUsers, getUser, getUserFullProfile, getUserByMembershipId, searchUsers, approveUser, rejectUser, deleteUser, inviteUser, updateMe, updateUser, createUser } from '../controllers/userController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -14,6 +14,9 @@ router.post('/invite', restrictTo('ADMIN', 'INSTRUCTOR'), inviteUser);
 
 // Search route (must come before other routes)
 router.get('/search', restrictTo('ADMIN', 'INSTRUCTOR'), searchUsers);
+
+// Lookup by membership ID (e.g. KKFI-STD-00001)
+router.get('/member/:membershipId', getUserByMembershipId);
 
 router.route('/')
     .get(restrictTo('ADMIN', 'INSTRUCTOR'), getAllUsers)

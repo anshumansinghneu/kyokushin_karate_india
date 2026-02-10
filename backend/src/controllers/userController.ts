@@ -159,27 +159,75 @@ export const getUser = catchAsync(async (req: Request, res: Response, next: Next
     });
 });
 
-// Generate Membership Number: KKI-[YEAR]-[DOJO_CODE]-[SEQUENCE]
-const generateMembershipNumber = async (dojoId: string) => {
-    const dojo = await prisma.dojo.findUnique({ where: { id: dojoId } });
-    if (!dojo) throw new AppError('Dojo not found', 404);
+// Lookup user by membership number (public-facing for future member lookup feature)
+export const getUserByMembershipId = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { membershipId } = req.params;
 
-    const year = new Date().getFullYear();
-    const dojoCode = dojo.dojoCode;
-
-    // Count existing members in this dojo for this year to generate sequence
-    // This is a simplified sequence generation. In production, might need a separate counter table to avoid race conditions.
-    const count = await prisma.user.count({
-        where: {
-            dojoId,
-            membershipNumber: {
-                startsWith: `KKI-${year}-${dojoCode}`
-            }
-        }
+    const user = await prisma.user.findFirst({
+        where: { membershipNumber: membershipId.toUpperCase() },
+        select: {
+            id: true,
+            name: true,
+            membershipNumber: true,
+            membershipStatus: true,
+            currentBeltRank: true,
+            role: true,
+            profilePhotoUrl: true,
+            city: true,
+            state: true,
+            dojo: { select: { name: true, city: true } },
+            beltHistory: {
+                orderBy: { promotionDate: 'desc' },
+                select: {
+                    newBelt: true,
+                    promotionDate: true,
+                }
+            },
+        },
     });
 
-    const sequence = (count + 1).toString().padStart(5, '0');
-    return `KKI-${year}-${dojoCode}-${sequence}`;
+    if (!user) {
+        return next(new AppError('No member found with that membership ID', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: { user },
+    });
+});
+
+// Generate Membership Number by role:
+//   Admin:      KKFI-ADM-0001
+//   Instructor: KKFI-INS-0001
+//   Student:    KKFI-STD-00001
+const getRolePrefix = (role: string) => {
+    switch (role) {
+        case 'ADMIN': return { prefix: 'KKFI-ADM-', pad: 4 };
+        case 'INSTRUCTOR': return { prefix: 'KKFI-INS-', pad: 4 };
+        default: return { prefix: 'KKFI-STD-', pad: 5 };
+    }
+};
+
+const generateMembershipNumber = async (role: string) => {
+    const { prefix, pad } = getRolePrefix(role);
+
+    // Find the highest existing sequence for this role prefix
+    const lastUser = await prisma.user.findFirst({
+        where: {
+            membershipNumber: { startsWith: prefix }
+        },
+        orderBy: { membershipNumber: 'desc' },
+        select: { membershipNumber: true }
+    });
+
+    let nextSeq = 1;
+    if (lastUser?.membershipNumber) {
+        const seqStr = lastUser.membershipNumber.replace(prefix, '');
+        const parsed = parseInt(seqStr, 10);
+        if (!isNaN(parsed)) nextSeq = parsed + 1;
+    }
+
+    return `${prefix}${nextSeq.toString().padStart(pad, '0')}`;
 };
 
 export const approveUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -227,7 +275,7 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
 
     // Admin Approval
     if (currentUser.role === 'ADMIN') {
-        const membershipNumber = await generateMembershipNumber(userToApprove.dojoId!);
+        const membershipNumber = await generateMembershipNumber(userToApprove.role);
         const startDate = new Date();
         const endDate = new Date();
         endDate.setFullYear(endDate.getFullYear() + 1);
@@ -382,10 +430,7 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
     // Role-specific defaults
     if (role === 'STUDENT') {
         // Generate membership number if dojo is assigned
-        let membershipNumber = null;
-        if (dojoId) {
-            membershipNumber = await generateMembershipNumber(dojoId);
-        }
+        const membershipNumber = await generateMembershipNumber(role);
 
         const startDate = new Date();
         const endDate = new Date();
@@ -401,6 +446,8 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         userData.approvedBy = req.user.id;
         userData.approvedAt = new Date();
     } else if (role === 'INSTRUCTOR') {
+        const instrMembershipNumber = await generateMembershipNumber('INSTRUCTOR');
+        userData.membershipNumber = instrMembershipNumber;
         userData.isInstructorApproved = true;
         userData.instructorApprovedAt = new Date();
         userData.membershipStatus = 'ACTIVE';
