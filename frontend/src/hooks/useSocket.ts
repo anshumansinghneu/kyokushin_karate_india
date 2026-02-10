@@ -4,7 +4,8 @@ import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '@/store/authStore';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// Use the base backend URL (without /api) for Socket.IO connections
+const SOCKET_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
 export const useSocket = (namespace?: string) => {
     const socketRef = useRef<Socket | null>(null);

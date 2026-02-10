@@ -25,8 +25,27 @@ import { globalErrorHandler } from './utils/errorHandler';
 
 const app = express();
 
+// CORS configuration
+const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3000',
+    'https://kyokushin-karate-india.vercel.app',
+];
+
 // Security Middleware
-app.use(cors());
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(null, true); // Allow all in development, restrict in production if needed
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));

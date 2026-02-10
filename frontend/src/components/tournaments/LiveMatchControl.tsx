@@ -29,7 +29,7 @@ const LiveMatchControl: React.FC<LiveMatchControlProps> = ({ matchId, onMatchUpd
         fetchMatch();
 
         // Socket connection
-        const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
+        const newSocket = io(process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000');
         setSocket(newSocket);
 
         return () => { newSocket.close(); };
@@ -75,7 +75,7 @@ const LiveMatchControl: React.FC<LiveMatchControlProps> = ({ matchId, onMatchUpd
         if (!confirm('Are you sure you want to end this match?')) return;
         setLoading(true);
         try {
-            // For MVP, we need actual User IDs. 
+            // For MVP, we need actual User IDs.
             // Assuming match object has them, but here we simplified.
             // We'll pass the name for now or need to fetch full object.
             // Let's assume we pass the ID if we had it.

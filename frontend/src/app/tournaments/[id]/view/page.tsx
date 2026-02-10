@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { io, Socket } from "socket.io-client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const SOCKET_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
 interface Match {
     id: string;
