@@ -130,7 +130,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
                             formData.append('image', file);
 
                             try {
-                                const uploadRes = await api.post('/upload', formData, {
+                                const uploadRes = await api.post('/upload?folder=profiles', formData, {
                                     headers: { 'Content-Type': 'multipart/form-data' }
                                 });
                                 const imageUrl = uploadRes.data.data.url;

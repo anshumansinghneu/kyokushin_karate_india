@@ -6,13 +6,13 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://kyokushin-ap
 
 /**
  * Converts a relative image path from backend to full URL
- * @param path - Relative path (e.g., "/uploads/image-123.jpg") or full URL
+ * @param path - Relative path (e.g., "/uploads/image-123.jpg"), full URL, or Supabase URL
  * @returns Full URL to the image
  */
 export function getImageUrl(path: string | null | undefined): string | null {
     if (!path) return null;
     
-    // If already a full URL, return as is
+    // If already a full URL (Supabase, Cloudinary, etc.), return as is
     if (path.startsWith('http://') || path.startsWith('https://')) {
         return path;
     }

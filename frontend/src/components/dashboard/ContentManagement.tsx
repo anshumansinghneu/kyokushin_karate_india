@@ -63,7 +63,7 @@ const ContentManagement = () => {
         setUploadingKey(key);
         try {
             // 1. Upload Image
-            const uploadRes = await api.post('/upload', formData, {
+            const uploadRes = await api.post('/upload?folder=content', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             const imageUrl = uploadRes.data.data.url;

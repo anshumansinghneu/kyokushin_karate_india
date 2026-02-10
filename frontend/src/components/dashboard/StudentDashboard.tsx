@@ -112,7 +112,7 @@ export default function StudentDashboard({ user }: { user: any }) {
 
                             try {
                                 // 1. Upload Image
-                                const uploadRes = await api.post('/upload', formData, {
+                                const uploadRes = await api.post('/upload?folder=profiles', formData, {
                                     headers: { 'Content-Type': 'multipart/form-data' }
                                 });
                                 const imageUrl = uploadRes.data.data.url;
