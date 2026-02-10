@@ -72,7 +72,7 @@ export default function Navbar() {
         { name: "Events", href: "/events" },
         { name: "Sponsors", href: "/sponsors" },
         { name: "Low Kick", href: "/low-kick", icon: "/india-flag.png" },
-        // { name: "Gallery", href: "/gallery" }, // TODO: Implement Gallery
+        { name: "Gallery", href: "/gallery" },
     ];
 
     return (

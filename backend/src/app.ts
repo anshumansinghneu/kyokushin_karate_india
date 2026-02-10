@@ -21,6 +21,7 @@ import postRouter from './routes/postRoutes';
 import recognitionRouter from './routes/recognitionRoutes';
 import setupRouter from './routes/setupRoutes';
 import noteRouter from './routes/noteRoutes';
+import galleryRouter from './routes/galleryRoutes';
 import { globalErrorHandler } from './utils/errorHandler';
 
 const app = express();
@@ -86,6 +87,7 @@ app.use('/api/content', contentRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/posts', postRouter);
 app.use('/api/recognitions', recognitionRouter);
+app.use('/api/gallery', galleryRouter);
 app.use('/api', noteRouter);  // Notes and profile views
 
 // Serve static files (uploads)
