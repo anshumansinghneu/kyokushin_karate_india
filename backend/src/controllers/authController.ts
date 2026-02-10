@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
+import { sendRegistrationEmail, sendNewApplicantEmail } from '../services/emailService';
 
 const signToken = (id: string) => {
     return jwt.sign({ id }, process.env.JWT_SECRET!, {
@@ -152,9 +153,22 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
                     city: true,
                     state: true,
                 }
+            },
+            primaryInstructor: {
+                select: { email: true, name: true }
             }
         }
     });
+
+    // Send welcome email to the new user
+    if (newUser) {
+        sendRegistrationEmail(newUser.email, newUser.name);
+
+        // Notify their instructor about the new applicant
+        if (newUser.primaryInstructor?.email) {
+            sendNewApplicantEmail(newUser.primaryInstructor.email, newUser.name);
+        }
+    }
 
     createSendToken(newUser, 201, res);
 });

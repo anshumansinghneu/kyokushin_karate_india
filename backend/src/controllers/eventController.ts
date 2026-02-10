@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
+import { sendEventRegistrationEmail } from '../services/emailService';
 
 export const getAllEvents = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const events = await prisma.event.findMany({
@@ -147,6 +148,9 @@ export const registerForEvent = catchAsync(async (req: Request, res: Response, n
             approvalStatus: event.type === 'TOURNAMENT' ? 'PENDING' : 'APPROVED' // Camps auto-approve
         }
     });
+
+    // Send event registration confirmation email
+    sendEventRegistrationEmail(currentUser.email, currentUser.name, event.name);
 
     res.status(201).json({
         status: 'success',
