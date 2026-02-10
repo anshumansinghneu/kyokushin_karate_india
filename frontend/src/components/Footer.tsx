@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Instagram, Twitter, Youtube, Mail, MapPin, Phone } from "lucide-react";
+import { Facebook, Instagram, Twitter, Youtube, Mail, MapPin, Phone, ExternalLink } from "lucide-react";
 
 export default function Footer() {
     return (
@@ -49,11 +49,19 @@ export default function Footer() {
                         <ul className="space-y-3 md:space-y-4 text-sm md:text-base text-gray-400">
                             <li className="flex items-start gap-3">
                                 <MapPin className="w-4 h-4 md:w-5 md:h-5 text-primary shrink-0 mt-1" />
-                                <span className="break-words">123 Dojo Street, Martial Arts District, Mumbai, India 400001</span>
+                                <a
+                                    href="https://www.google.com/maps/search/?api=1&query=Shuklaganj+Bypass+Rd,+Poni+Road,+Shuklaganj,+Netua+Grameen,+Uttar+Pradesh+209861,+India"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hover:text-primary transition-colors break-words group"
+                                >
+                                    Shuklaganj Bypass Rd, Poni Road, Shuklaganj, Netua Grameen, Uttar Pradesh 209861, India
+                                    <ExternalLink className="w-3 h-3 inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </a>
                             </li>
                             <li className="flex items-center gap-3">
                                 <Phone className="w-4 h-4 md:w-5 md:h-5 text-primary shrink-0" />
-                                <a href="tel:+919876543210" className="hover:text-primary transition-colors">+91 98765 43210</a>
+                                <a href="tel:+919956711400" className="hover:text-primary transition-colors">+91 99567 11400</a>
                             </li>
                             <li className="flex items-center gap-3">
                                 <Mail className="w-4 h-4 md:w-5 md:h-5 text-primary shrink-0" />

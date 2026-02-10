@@ -131,10 +131,10 @@ export default function PrivacyPage() {
                             <p>
                                 If you have questions about this privacy policy or wish to exercise your rights, please contact us at:
                             </p>
-                            <div className="mt-4 p-4 bg-zinc-900/50 border border-white/10 rounded-lg">
-                                <p>Email: privacy@kyokushinkarateindia.org</p>
-                                <p>Phone: +91 XXX XXX XXXX</p>
-                                <p>Address: [Your Organization Address]</p>
+                            <div className="mt-4 p-4 bg-zinc-900/50 border border-white/10 rounded-lg space-y-1">
+                                <p>Email: contact@kyokushin.in</p>
+                                <p>Phone: +91 99567 11400</p>
+                                <p>Address: Shuklaganj Bypass Rd, Poni Road, Shuklaganj, Netua Grameen, Uttar Pradesh 209861, India</p>
                             </div>
                         </section>
                     </div>

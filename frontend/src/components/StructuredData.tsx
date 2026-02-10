@@ -14,10 +14,15 @@ export default function StructuredData() {
     "sport": "Karate",
     "address": {
       "@type": "PostalAddress",
+      "streetAddress": "Shuklaganj Bypass Rd, Poni Road",
+      "addressLocality": "Shuklaganj",
+      "addressRegion": "Uttar Pradesh",
+      "postalCode": "209861",
       "addressCountry": "IN"
     },
     "contactPoint": {
       "@type": "ContactPoint",
+      "telephone": "+91-99567-11400",
       "contactType": "Customer Service",
       "availableLanguage": ["English", "Hindi"]
     }
