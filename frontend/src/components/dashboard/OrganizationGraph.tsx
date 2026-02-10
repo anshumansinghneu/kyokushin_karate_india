@@ -135,33 +135,49 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
     const tree = useMemo(() => {
         if (!users || users.length === 0) return null;
 
-        // 1. Find the Root (Shihan Vasant Singh - Admin)
-        // We look for role 'ADMIN' or specific name if needed.
-        // Assuming there is only one main admin or we pick the first one.
         const rootUser = users.find(u => u.role === 'ADMIN') || users.find(u => u.name?.includes('Vasant'));
 
         if (!rootUser) return null;
 
+        // Track which students get placed under an instructor
+        const assignedStudentIds = new Set<string>();
+
+        // First pass: determine which students belong to which instructor
+        const instructors = users.filter(u => u.role === 'INSTRUCTOR' && u.id !== rootUser.id);
+        instructors.forEach(instructor => {
+            users.forEach(u => {
+                if (u.role === 'STUDENT' && (
+                    u.primaryInstructorId === instructor.id ||
+                    (u.dojoId && u.dojoId === instructor.dojoId && !u.primaryInstructorId)
+                )) {
+                    assignedStudentIds.add(u.id);
+                }
+            });
+        });
+
         const buildNode = (currentUser: any): TreeNode => {
-            let directReports = [];
+            let directReports: any[] = [];
 
             if (currentUser.role === 'ADMIN') {
-                // Admin (Country Director) sees all instructors
-                directReports = users.filter(u =>
+                // Admin sees all instructors + any unassigned students
+                const instructorNodes = users.filter(u =>
                     u.role === 'INSTRUCTOR' && u.id !== currentUser.id
                 );
+                const unassignedStudents = users.filter(u =>
+                    u.role === 'STUDENT' && !assignedStudentIds.has(u.id)
+                );
+                directReports = [...instructorNodes, ...unassignedStudents];
             } else if (currentUser.role === 'INSTRUCTOR') {
                 // Instructor sees:
                 // 1. Students explicitly assigned to them (primaryInstructorId)
-                // 2. Students in same dojo without any instructor assigned (fallback)
+                // 2. Students in same dojo without any instructor assigned
                 directReports = users.filter(u =>
                     u.role === 'STUDENT' && (
                         u.primaryInstructorId === currentUser.id ||
-                        (u.dojoId === currentUser.dojoId && !u.primaryInstructorId)
+                        (u.dojoId && u.dojoId === currentUser.dojoId && !u.primaryInstructorId)
                     )
                 );
             }
-            // Students have no direct reports
 
             return {
                 user: currentUser,

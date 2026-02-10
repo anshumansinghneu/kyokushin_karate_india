@@ -63,6 +63,13 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
         const requestedBelt = currentBeltRank || 'White';
         const isClaimingHigherBelt = isStudent && requestedBelt !== 'White';
 
+        // If no instructor specified, default to the admin (Shihan)
+        let resolvedInstructorId = instructorId;
+        if (!resolvedInstructorId && isStudent) {
+            const admin = await tx.user.findFirst({ where: { role: 'ADMIN' }, select: { id: true } });
+            if (admin) resolvedInstructorId = admin.id;
+        }
+
         // Determine verification status and initial belt
         let verificationStatus: 'VERIFIED' | 'PENDING_VERIFICATION' = 'VERIFIED';
         let initialBelt = 'White';
@@ -96,7 +103,7 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
                 state,
                 country: country || 'India',
                 dojoId: dojoId || undefined,
-                primaryInstructorId: instructorId || undefined,
+                primaryInstructorId: resolvedInstructorId || undefined,
                 role: req.body.role || 'STUDENT',
                 membershipStatus: 'PENDING',
                 currentBeltRank: initialBelt,

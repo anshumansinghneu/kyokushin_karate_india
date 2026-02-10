@@ -29,6 +29,7 @@ export default function UserManagementTable() {
         email: "",
         role: "STUDENT",
         dojoId: "",
+        primaryInstructorId: "",
         currentBeltRank: "White",
         membershipStatus: "PENDING"
     });
@@ -130,11 +131,23 @@ export default function UserManagementTable() {
             email: user.email,
             role: user.role,
             dojoId: user.dojoId || "",
+            primaryInstructorId: user.primaryInstructorId || "",
             currentBeltRank: user.currentBeltRank || "White",
             membershipStatus: user.membershipStatus
         });
         setIsEditModalOpen(true);
     };
+
+    // Get instructors for the edit modal dropdown
+    const availableInstructors = users.filter(u => {
+        if (u.role !== 'INSTRUCTOR' && u.role !== 'ADMIN') return false;
+        // If a dojo is selected, show instructors at that dojo + admin
+        if (editFormData.dojoId) {
+            return u.role === 'ADMIN' || u.dojoId === editFormData.dojoId;
+        }
+        // If no dojo, show all instructors + admin
+        return true;
+    });
 
     const handleUpdateUser = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -142,11 +155,12 @@ export default function UserManagementTable() {
         console.log("Updating user:", editingUser.id, "with data:", editFormData);
 
         try {
-            const updateData = {
+            const updateData: any = {
                 name: editFormData.name,
                 email: editFormData.email,
                 role: editFormData.role,
                 dojoId: editFormData.dojoId || null,
+                primaryInstructorId: editFormData.primaryInstructorId || null,
                 currentBeltRank: editFormData.currentBeltRank,
                 membershipStatus: editFormData.membershipStatus
             };
@@ -435,7 +449,11 @@ export default function UserManagementTable() {
                                             <Label>Dojo</Label>
                                             <select
                                                 value={editFormData.dojoId}
-                                                onChange={(e) => setEditFormData({ ...editFormData, dojoId: e.target.value })}
+                                                onChange={(e) => {
+                                                    const newDojoId = e.target.value;
+                                                    // Reset instructor when dojo changes
+                                                    setEditFormData({ ...editFormData, dojoId: newDojoId, primaryInstructorId: "" });
+                                                }}
                                                 className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
                                             >
                                                 <option value="">No Dojo</option>
@@ -444,6 +462,23 @@ export default function UserManagementTable() {
                                                 ))}
                                             </select>
                                         </div>
+                                        <div className="space-y-2">
+                                            <Label>Instructor</Label>
+                                            <select
+                                                value={editFormData.primaryInstructorId}
+                                                onChange={(e) => setEditFormData({ ...editFormData, primaryInstructorId: e.target.value })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                            >
+                                                <option value="">Direct under Shihan</option>
+                                                {availableInstructors.map((inst: any) => (
+                                                    <option key={inst.id} value={inst.id}>
+                                                        {inst.name} {inst.role === 'ADMIN' ? '(Shihan)' : `(${inst.dojo?.name || 'No Dojo'})`}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label>Belt Rank</Label>
                                             <select
