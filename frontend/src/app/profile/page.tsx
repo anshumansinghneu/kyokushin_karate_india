@@ -1,27 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { getUserProfileImage } from "@/lib/imageUtils";
+import { INDIAN_CITIES, CityData } from "@/lib/indianCities";
 
 export default function ProfilePage() {
     const router = useRouter();
     const { user, isAuthenticated, isLoading: authLoading, checkAuth, updateProfile } = useAuthStore();
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [beltHistory, setBeltHistory] = useState<any[]>([]);
+    const [cityQuery, setCityQuery] = useState("");
+    const [showCityDropdown, setShowCityDropdown] = useState(false);
+    const [phoneError, setPhoneError] = useState("");
+    const cityDropdownRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [formData, setFormData] = useState({
         name: user?.name || "",
         email: user?.email || "",
         phone: user?.phone || "",
+        countryCode: user?.countryCode || "+91",
         city: user?.city || "",
+        state: user?.state || "",
         height: user?.height?.toString() || "",
         weight: user?.weight?.toString() || "",
     });
@@ -43,16 +52,35 @@ export default function ProfilePage() {
     // Update form data when user loads
     useEffect(() => {
         if (user) {
+            // Strip country code prefix if phone was stored with it
+            let phone = user.phone || "";
+            if (phone.startsWith("+91")) phone = phone.slice(3);
+            else if (phone.startsWith("91") && phone.length > 10) phone = phone.slice(2);
+
             setFormData({
                 name: user.name || "",
                 email: user.email || "",
-                phone: user.phone || "",
+                phone,
+                countryCode: user.countryCode || "+91",
                 city: user.city || "",
+                state: user.state || "",
                 height: user.height?.toString() || "",
                 weight: user.weight?.toString() || "",
             });
+            setCityQuery(user.city || "");
         }
     }, [user]);
+
+    // Close city dropdown on outside click
+    useEffect(() => {
+        const handleClick = (e: MouseEvent) => {
+            if (cityDropdownRef.current && !cityDropdownRef.current.contains(e.target as Node)) {
+                setShowCityDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
 
     // Fetch belt history
     useEffect(() => {
@@ -68,18 +96,68 @@ export default function ProfilePage() {
         fetchBeltHistory();
     }, [user]);
 
+    const filteredCities = cityQuery.length >= 1
+        ? INDIAN_CITIES.filter((c) =>
+              c.city.toLowerCase().startsWith(cityQuery.toLowerCase())
+          ).slice(0, 20)
+        : [];
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        if (name === "phone") {
+            // Only allow digits, max 10
+            const digits = value.replace(/\D/g, "").slice(0, 10);
+            setFormData({ ...formData, phone: digits });
+            if (digits.length > 0 && digits.length !== 10) {
+                setPhoneError("Phone number must be 10 digits");
+            } else {
+                setPhoneError("");
+            }
+            return;
+        }
+        setFormData({ ...formData, [name]: value });
+    };
+
+    const handleCitySelect = (city: CityData) => {
+        setFormData({ ...formData, city: city.city, state: city.state });
+        setCityQuery(city.city);
+        setShowCityDropdown(false);
+    };
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIsUploading(true);
+        try {
+            const fd = new FormData();
+            fd.append("file", file);
+            const res = await api.post("/upload?folder=profiles", fd, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            const imageUrl = res.data.url || res.data.data?.url;
+            if (imageUrl) {
+                await api.patch("/users/updateMe", { profilePhotoUrl: imageUrl });
+                await checkAuth();
+            }
+        } catch (err) {
+            console.error("Photo upload failed", err);
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     const handleSave = async () => {
+        // Validate phone
+        if (formData.phone && formData.phone.length !== 10) {
+            setPhoneError("Phone number must be 10 digits");
+            return;
+        }
         setIsLoading(true);
         try {
             await updateProfile(formData);
             setIsEditing(false);
         } catch (error) {
             console.error("Failed to update profile", error);
-            // Ideally show a toast notification here
         } finally {
             setIsLoading(false);
         }
@@ -128,13 +206,25 @@ export default function ProfilePage() {
 
                             <div className="relative mb-6 group">
                                 <div className="w-32 h-32 rounded-full border-4 border-primary/30 overflow-hidden bg-black/50 flex items-center justify-center">
-                                    {getUserProfileImage(user) ? (
+                                    {isUploading ? (
+                                        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                                    ) : getUserProfileImage(user) ? (
                                         <img src={getUserProfileImage(user)!} alt="Profile" className="w-full h-full object-cover" />
                                     ) : (
                                         <Shield className="w-16 h-16 text-gray-600" />
                                     )}
                                 </div>
-                                <button className="absolute bottom-0 right-0 p-2 bg-primary rounded-full text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handlePhotoUpload}
+                                />
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="absolute bottom-0 right-0 p-2 bg-primary rounded-full text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/80"
+                                >
                                     <Camera className="w-4 h-4" />
                                 </button>
                             </div>
@@ -215,22 +305,78 @@ export default function ProfilePage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Phone</label>
-                                    <Input
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleChange}
-                                        disabled={!isEditing}
-                                        className="input-glass"
-                                    />
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+                                        Phone <span className="text-red-400">*</span>
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <div className="flex items-center px-3 rounded-md bg-white/5 border border-white/10 text-white text-sm font-mono min-w-[60px] justify-center">
+                                            +91
+                                        </div>
+                                        <Input
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            disabled={!isEditing}
+                                            placeholder="10-digit number"
+                                            maxLength={10}
+                                            className={`input-glass flex-1 ${phoneError ? 'border-red-500' : ''}`}
+                                        />
+                                    </div>
+                                    {phoneError && <p className="text-red-400 text-xs mt-1">{phoneError}</p>}
+                                </div>
+                                <div className="space-y-2 relative" ref={cityDropdownRef}>
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+                                        <MapPin className="w-3 h-3 inline mr-1" />City
+                                    </label>
+                                    <div className="relative">
+                                        <Input
+                                            name="city"
+                                            value={isEditing ? cityQuery : formData.city}
+                                            onChange={(e) => {
+                                                setCityQuery(e.target.value);
+                                                setFormData({ ...formData, city: e.target.value, state: "" });
+                                                setShowCityDropdown(true);
+                                            }}
+                                            disabled={!isEditing}
+                                            placeholder="Search city..."
+                                            className="input-glass"
+                                            autoComplete="off"
+                                        />
+                                        {isEditing && cityQuery && (
+                                            <button
+                                                onClick={() => {
+                                                    setCityQuery("");
+                                                    setFormData({ ...formData, city: "", state: "" });
+                                                }}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                    {showCityDropdown && isEditing && filteredCities.length > 0 && (
+                                        <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg bg-gray-900 border border-white/10 shadow-xl">
+                                            {filteredCities.map((c) => (
+                                                <button
+                                                    key={`${c.city}-${c.state}`}
+                                                    onClick={() => handleCitySelect(c)}
+                                                    className="w-full text-left px-4 py-2 hover:bg-primary/20 text-sm text-white flex justify-between items-center"
+                                                >
+                                                    <span>{c.city}</span>
+                                                    <span className="text-gray-500 text-xs">{c.state}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">City</label>
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">State</label>
                                     <Input
-                                        name="city"
-                                        value={formData.city}
+                                        name="state"
+                                        value={formData.state}
                                         onChange={handleChange}
                                         disabled={!isEditing}
+                                        placeholder="Auto-filled from city"
                                         className="input-glass"
                                     />
                                 </div>
