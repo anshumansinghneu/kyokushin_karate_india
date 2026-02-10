@@ -50,7 +50,7 @@ export default function Footer() {
                             <li className="flex items-start gap-3">
                                 <MapPin className="w-4 h-4 md:w-5 md:h-5 text-primary shrink-0 mt-1" />
                                 <a
-                                    href="https://www.google.com/maps/search/?api=1&query=Shuklaganj+Bypass+Rd,+Poni+Road,+Shuklaganj,+Netua+Grameen,+Uttar+Pradesh+209861,+India"
+                                    href="https://maps.app.goo.gl/o8ttnRaNuRAPqA3H9"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="hover:text-primary transition-colors break-words group"

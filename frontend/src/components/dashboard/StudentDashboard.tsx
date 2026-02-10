@@ -98,44 +98,6 @@ export default function StudentDashboard({ user }: { user: any }) {
                     </h1>
                 </div>
                 <div className="flex gap-3 items-center">
-                    <input
-                        type="file"
-                        id="profile-upload"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-
-                            const formData = new FormData();
-                            formData.append('image', file);
-
-                            try {
-                                // 1. Upload Image
-                                const uploadRes = await api.post('/upload?folder=profiles', formData, {
-                                    headers: { 'Content-Type': 'multipart/form-data' }
-                                });
-                                const imageUrl = uploadRes.data.data.url;
-
-                                // 2. Update User Profile
-                                await api.patch('/users/updateMe', { profilePhotoUrl: imageUrl });
-
-                                // 3. Refresh User Data
-                                checkAuth();
-                                showToast("Profile picture updated successfully!", "success");
-                            } catch (error) {
-                                console.error("Failed to upload profile picture", error);
-                                showToast("Failed to upload profile picture", "error");
-                            }
-                        }}
-                    />
-                    <Button
-                        onClick={() => document.getElementById('profile-upload')?.click()}
-                        className="backdrop-blur-sm bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
-                    >
-                        <User className="w-4 h-4 mr-2" /> Update Photo
-                    </Button>
-
                     <Button
                         onClick={() => setActiveTab('overview')}
                         className={`backdrop-blur-sm border ${activeTab === 'overview' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}

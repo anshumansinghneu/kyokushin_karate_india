@@ -149,37 +149,6 @@ export default function AdminDashboard({ user }: { user: any }) {
                                         <p className="text-gray-400">Welcome back, Shihan. Here's what's happening today.</p>
                                     </div>
                                     <div className="flex gap-3">
-                                        <input
-                                            type="file"
-                                            id="admin-profile-upload"
-                                            className="hidden"
-                                            accept="image/*"
-                                            onChange={async (e) => {
-                                                const file = e.target.files?.[0];
-                                                if (!file) return;
-
-                                                const formData = new FormData();
-                                                formData.append('image', file);
-
-                                                try {
-                                                    const uploadRes = await api.post('/upload?folder=profiles', formData, {
-                                                        headers: { 'Content-Type': 'multipart/form-data' }
-                                                    });
-                                                    const imageUrl = uploadRes.data.data.url;
-                                                    await api.patch('/users/updateMe', { profilePhotoUrl: imageUrl });
-                                                    window.location.reload(); // Simple reload to refresh avatar
-                                                } catch (error) {
-                                                    console.error("Failed to upload profile picture", error);
-                                                    showToast("Failed to upload profile picture", "error");
-                                                }
-                                            }}
-                                        />
-                                        <Button
-                                            className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
-                                            onClick={() => document.getElementById('admin-profile-upload')?.click()}
-                                        >
-                                            <Users className="w-4 h-4 mr-2" /> Update Photo
-                                        </Button>
                                         <Button
                                             className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
                                             onClick={() => {

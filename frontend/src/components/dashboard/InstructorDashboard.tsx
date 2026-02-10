@@ -117,37 +117,6 @@ export default function InstructorDashboard({ user }: { user: any }) {
                 </div>
 
                 <div className="p-4 border-t border-white/10">
-                    <input
-                        type="file"
-                        id="instructor-profile-upload"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-
-                            const formData = new FormData();
-                            formData.append('image', file);
-
-                            try {
-                                const uploadRes = await api.post('/upload?folder=profiles', formData, {
-                                    headers: { 'Content-Type': 'multipart/form-data' }
-                                });
-                                const imageUrl = uploadRes.data.data.url;
-                                await api.patch('/users/updateMe', { profilePhotoUrl: imageUrl });
-                                window.location.reload();
-                            } catch (error) {
-                                console.error("Failed to upload profile picture", error);
-                                showToast("Failed to upload profile picture", "error");
-                            }
-                        }}
-                    />
-                    <Button
-                        onClick={() => document.getElementById('instructor-profile-upload')?.click()}
-                        className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10 mb-2"
-                    >
-                        <Users className="w-4 h-4 mr-2" /> Update Photo
-                    </Button>
                     <button
                         onClick={logout}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-400 hover:text-orange-400 hover:bg-orange-950/30 transition-all"
