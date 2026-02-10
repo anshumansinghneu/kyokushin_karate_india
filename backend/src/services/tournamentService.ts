@@ -33,7 +33,7 @@ const getRoundName = (roundNumber: number, totalRounds: number): string => {
 export const TournamentService = {
     /**
      * Generates single-elimination brackets with proper bye distribution.
-     * 
+     *
      * Algorithm:
      * 1. Pad participant list to next power of 2 with BYEs
      * 2. Place BYEs so top seeds face them (spread evenly)

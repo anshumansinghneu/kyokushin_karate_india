@@ -11,17 +11,17 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://kyokushin-ap
  */
 export function getImageUrl(path: string | null | undefined): string | null {
     if (!path) return null;
-    
+
     // If already a full URL (Supabase, Cloudinary, etc.), return as is
     if (path.startsWith('http://') || path.startsWith('https://')) {
         return path;
     }
-    
+
     // If relative path, prepend backend URL
     if (path.startsWith('/')) {
         return `${BACKEND_URL}${path}`;
     }
-    
+
     // If no leading slash, add it
     return `${BACKEND_URL}/${path}`;
 }

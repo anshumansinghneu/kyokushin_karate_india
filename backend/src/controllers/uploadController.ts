@@ -78,4 +78,3 @@ export const handleUpload = async (req: Request, res: Response, next: NextFuncti
         return next(new AppError('Upload failed', 500));
     }
 };
-
