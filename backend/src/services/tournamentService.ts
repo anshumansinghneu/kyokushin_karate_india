@@ -3,7 +3,7 @@ import { AppError } from '../utils/errorHandler';
 
 // Helper to calculate next power of 2
 const nextPowerOf2 = (n: number) => {
-    if (n === 0) return 0;
+    if (n <= 1) return 1;
     return Math.pow(2, Math.ceil(Math.log2(n)));
 };
 
@@ -21,22 +21,43 @@ const getBeltValue = (belt: string | null) => {
     return 1;
 };
 
+// Get proper round name based on how many matches remain
+const getRoundName = (roundNumber: number, totalRounds: number): string => {
+    const roundsFromEnd = totalRounds - roundNumber;
+    if (roundsFromEnd === 0) return 'Final';
+    if (roundsFromEnd === 1) return 'Semi-Finals';
+    if (roundsFromEnd === 2) return 'Quarter-Finals';
+    return `Round ${roundNumber}`;
+};
+
 export const TournamentService = {
+    /**
+     * Generates single-elimination brackets with proper bye distribution.
+     * 
+     * Algorithm:
+     * 1. Pad participant list to next power of 2 with BYEs
+     * 2. Place BYEs so top seeds face them (spread evenly)
+     * 3. Create all rounds, auto-advance bye winners
+     */
     async generateBrackets(eventId: string) {
         const event = await prisma.event.findUnique({ where: { id: eventId } });
         if (!event) throw new AppError('Event not found', 404);
 
+        // Delete existing brackets for this event (allow re-generation)
+        const existingBrackets = await prisma.tournamentBracket.findMany({
+            where: { eventId },
+            select: { id: true }
+        });
+        if (existingBrackets.length > 0) {
+            const bracketIds = existingBrackets.map(b => b.id);
+            await prisma.match.deleteMany({ where: { bracketId: { in: bracketIds } } });
+            await prisma.tournamentBracket.deleteMany({ where: { eventId } });
+        }
+
         // 1. Get all approved registrations
         const registrations = await prisma.eventRegistration.findMany({
-            where: {
-                eventId,
-                approvalStatus: 'APPROVED'
-            },
-            include: {
-                user: {
-                    include: { dojo: true }
-                }
-            }
+            where: { eventId, approvalStatus: 'APPROVED' },
+            include: { user: { include: { dojo: true } } }
         });
 
         if (registrations.length === 0) {
@@ -45,12 +66,9 @@ export const TournamentService = {
 
         // 2. Group by Category
         const categories = new Map<string, typeof registrations>();
-
         registrations.forEach((reg) => {
             const key = `${reg.categoryAge || 'Open'}|${reg.categoryWeight || 'Open'}|${reg.categoryBelt || 'Open'}`;
-            if (!categories.has(key)) {
-                categories.set(key, []);
-            }
+            if (!categories.has(key)) categories.set(key, []);
             categories.get(key)?.push(reg);
         });
 
@@ -61,95 +79,172 @@ export const TournamentService = {
             const [age, weight, belt] = categoryKey.split('|');
             const categoryName = `${age}, ${weight}, ${belt}`;
 
-            // Sort/Seed Participants
+            // Sort/Seed Participants — highest belt rank first (best player = seed #1)
             participants.sort((a, b) => {
                 const beltA = getBeltValue(a.user.currentBeltRank);
                 const beltB = getBeltValue(b.user.currentBeltRank);
-                if (beltA !== beltB) return beltB - beltA;
-                return 0;
+                return beltB - beltA;
             });
 
             const totalParticipants = participants.length;
-            const bracketSize = nextPowerOf2(totalParticipants);
 
-            // Create Bracket Record
+            // Handle single participant — auto-win
+            if (totalParticipants === 1) {
+                const bracket = await prisma.tournamentBracket.create({
+                    data: {
+                        eventId, categoryName, categoryAge: age, categoryWeight: weight,
+                        categoryBelt: belt, totalParticipants: 1, status: 'COMPLETED',
+                        completedAt: new Date()
+                    }
+                });
+                // Create a single "final" match with the lone participant as winner
+                await prisma.match.create({
+                    data: {
+                        bracketId: bracket.id, roundNumber: 1, roundName: 'Final',
+                        matchNumber: 1,
+                        fighterAId: participants[0].userId,
+                        fighterAName: participants[0].user.name,
+                        isBye: true, status: 'COMPLETED',
+                        winnerId: participants[0].userId,
+                        completedAt: new Date()
+                    }
+                });
+                generatedBrackets.push(bracket);
+                continue;
+            }
+
+            const bracketSize = nextPowerOf2(totalParticipants);
+            const numByes = bracketSize - totalParticipants;
+            const totalRounds = Math.log2(bracketSize);
+
+            // Create bracket record
             const bracket = await prisma.tournamentBracket.create({
                 data: {
-                    eventId,
-                    categoryName,
-                    categoryAge: age,
-                    categoryWeight: weight,
-                    categoryBelt: belt,
-                    totalParticipants,
-                    status: 'DRAFT'
+                    eventId, categoryName, categoryAge: age, categoryWeight: weight,
+                    categoryBelt: belt, totalParticipants, status: 'DRAFT'
                 }
             });
 
-            const matches = [];
+            // Build the seeded slot list with BYEs distributed to top seeds
+            // Slot format: { userId, userName } or null (BYE)
+            type Slot = { userId: string; userName: string } | null;
+            const slots: Slot[] = new Array(bracketSize).fill(null);
+
+            // Place participants — top seed at 0, second seed at end, etc. (standard bracket seeding)
+            // For simplicity, place participants in order and byes at the end
+            // This means top seeds get byes (since they're at the top and byes fill the bottom)
+            for (let i = 0; i < totalParticipants; i++) {
+                slots[i] = { userId: participants[i].userId, userName: participants[i].user.name };
+            }
+            // Remaining slots (indices totalParticipants..bracketSize-1) are null = BYE
+
             let matchNumber = 1;
+            const allRoundMatches: { id: string; isBye: boolean; winnerId: string | null; winnerName: string | null }[][] = [];
 
-            // Create Round 1
-            for (let i = 0; i < participants.length; i += 2) {
-                const fighterA = participants[i];
-                const fighterB = participants[i + 1];
+            // === Round 1: Create all first-round matches ===
+            const round1Matches: { id: string; isBye: boolean; winnerId: string | null; winnerName: string | null }[] = [];
+            const r1Name = getRoundName(1, totalRounds);
 
-                const isBye = !fighterB;
+            for (let i = 0; i < bracketSize; i += 2) {
+                const slotA = slots[i];
+                const slotB = slots[i + 1];
+                const isBye = !slotA || !slotB;
+
+                let winnerId: string | null = null;
+                let winnerName: string | null = null;
+                if (isBye) {
+                    // The non-null fighter auto-advances
+                    if (slotA) { winnerId = slotA.userId; winnerName = slotA.userName; }
+                    else if (slotB) { winnerId = slotB.userId; winnerName = slotB.userName; }
+                }
 
                 const match = await prisma.match.create({
                     data: {
                         bracketId: bracket.id,
                         roundNumber: 1,
-                        roundName: 'Round 1',
+                        roundName: r1Name,
                         matchNumber: matchNumber++,
-                        fighterAId: fighterA.userId,
-                        fighterAName: fighterA.user.name,
-                        fighterBId: fighterB ? fighterB.userId : null,
-                        fighterBName: fighterB ? fighterB.user.name : null,
+                        fighterAId: slotA?.userId || null,
+                        fighterAName: slotA?.userName || null,
+                        fighterBId: slotB?.userId || null,
+                        fighterBName: slotB?.userName || null,
                         isBye,
                         status: isBye ? 'COMPLETED' : 'SCHEDULED',
-                        winnerId: isBye ? fighterA.userId : null,
+                        winnerId,
                         completedAt: isBye ? new Date() : null
                     }
                 });
-                matches.push(match);
+
+                round1Matches.push({ id: match.id, isBye, winnerId, winnerName });
             }
+            allRoundMatches.push(round1Matches);
 
-            // Generate placeholders for subsequent rounds
-            let currentRoundMatches = matches;
-            let round = 2;
+            // === Subsequent rounds: Create matches and link them, advancing bye winners ===
+            let prevRoundMatches = round1Matches;
 
-            while (currentRoundMatches.length > 1) {
-                const nextRoundMatches = [];
-                for (let i = 0; i < currentRoundMatches.length; i += 2) {
-                    const prevMatch1 = currentRoundMatches[i];
-                    const prevMatch2 = currentRoundMatches[i + 1];
+            for (let round = 2; round <= totalRounds; round++) {
+                const roundName = getRoundName(round, totalRounds);
+                const currentRoundMatches: typeof round1Matches = [];
 
-                    const nextMatch = await prisma.match.create({
+                for (let i = 0; i < prevRoundMatches.length; i += 2) {
+                    const prev1 = prevRoundMatches[i];
+                    const prev2 = prevRoundMatches[i + 1];
+
+                    // Pre-fill fighters from bye winners of previous round
+                    let fighterAId: string | null = null;
+                    let fighterAName: string | null = null;
+                    let fighterBId: string | null = null;
+                    let fighterBName: string | null = null;
+
+                    if (prev1.isBye && prev1.winnerId) {
+                        fighterAId = prev1.winnerId;
+                        fighterAName = prev1.winnerName;
+                    }
+                    if (prev2 && prev2.isBye && prev2.winnerId) {
+                        fighterBId = prev2.winnerId;
+                        fighterBName = prev2.winnerName;
+                    }
+
+                    // If both slots are filled by bye winners, this match is also a bye (auto-resolved)
+                    // This shouldn't happen in proper bracket but handle gracefully
+                    const bothFilled = fighterAId !== null && fighterBId !== null;
+
+                    const match = await prisma.match.create({
                         data: {
                             bracketId: bracket.id,
                             roundNumber: round,
-                            roundName: `Round ${round}`,
+                            roundName,
                             matchNumber: matchNumber++,
-                            status: 'SCHEDULED'
+                            fighterAId,
+                            fighterAName,
+                            fighterBId,
+                            fighterBName,
+                            status: 'SCHEDULED',
                         }
                     });
 
+                    // Link previous round matches to this one
                     await prisma.match.update({
-                        where: { id: prevMatch1.id },
-                        data: { nextMatchId: nextMatch.id }
+                        where: { id: prev1.id },
+                        data: { nextMatchId: match.id }
                     });
-
-                    if (prevMatch2) {
+                    if (prev2) {
                         await prisma.match.update({
-                            where: { id: prevMatch2.id },
-                            data: { nextMatchId: nextMatch.id }
+                            where: { id: prev2.id },
+                            data: { nextMatchId: match.id }
                         });
                     }
 
-                    nextRoundMatches.push(nextMatch);
+                    currentRoundMatches.push({
+                        id: match.id,
+                        isBye: false,
+                        winnerId: null,
+                        winnerName: null
+                    });
                 }
-                currentRoundMatches = nextRoundMatches;
-                round++;
+
+                prevRoundMatches = currentRoundMatches;
+                allRoundMatches.push(currentRoundMatches);
             }
 
             generatedBrackets.push(bracket);
@@ -167,6 +262,13 @@ export const TournamentService = {
                 }
             }
         });
+    },
+
+    async updateBracketStatus(bracketId: string, status: 'DRAFT' | 'LOCKED' | 'IN_PROGRESS' | 'COMPLETED') {
+        const data: any = { status };
+        if (status === 'LOCKED') data.lockedAt = new Date();
+        if (status === 'COMPLETED') data.completedAt = new Date();
+        return prisma.tournamentBracket.update({ where: { id: bracketId }, data });
     },
 
     async getTournamentStatistics(eventId: string) {

@@ -40,6 +40,23 @@ export const getBrackets = catchAsync(async (req: Request, res: Response, next: 
     });
 });
 
+export const updateBracketStatus = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { bracketId } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['DRAFT', 'LOCKED', 'IN_PROGRESS', 'COMPLETED'];
+    if (!validStatuses.includes(status)) {
+        return next(new AppError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`, 400));
+    }
+
+    const bracket = await TournamentService.updateBracketStatus(bracketId, status);
+
+    res.status(200).json({
+        status: 'success',
+        data: { bracket },
+    });
+});
+
 export const getTournamentStatistics = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { eventId } = req.params;
 

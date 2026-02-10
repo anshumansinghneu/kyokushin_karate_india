@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { getUserProfileImage } from "@/lib/imageUtils";
@@ -12,7 +12,10 @@ import { getUserProfileImage } from "@/lib/imageUtils";
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
     const pathname = usePathname();
+    const router = useRouter();
     const { user, logout, isAuthenticated, checkAuth } = useAuthStore();
 
     // Check auth status on mount
@@ -32,7 +35,19 @@ export default function Navbar() {
     // Close mobile menu on route change
     useEffect(() => {
         setIsOpen(false);
+        setDropdownOpen(false);
     }, [pathname]);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // Prevent body scroll when mobile menu is open
     useEffect(() => {
@@ -86,21 +101,12 @@ export default function Navbar() {
                     ))}
 
                     {isAuthenticated ? (
-                        <div className="flex items-center gap-4 ml-4">
-                            <Link href="/dashboard">
-                                <Button variant="ghost" className="text-white hover:text-primary hover:bg-white/5 text-xs lg:text-sm">
-                                    Dashboard
-                                </Button>
-                            </Link>
-                            {(user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR') && (
-                                <Link href="/management">
-                                    <Button variant="ghost" className="text-white hover:text-primary hover:bg-white/5 text-xs lg:text-sm">
-                                        Management
-                                    </Button>
-                                </Link>
-                            )}
-                            <Link href="/profile">
-                                <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50 text-primary transition-transform hover:scale-105 overflow-hidden">
+                        <div className="relative ml-4" ref={dropdownRef}>
+                            <button
+                                onClick={() => setDropdownOpen(!dropdownOpen)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 hover:border-primary/50 hover:bg-white/5 transition-all group"
+                            >
+                                <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50 text-primary overflow-hidden flex-shrink-0">
                                     {getUserProfileImage(user) ? (
                                         <img
                                             key={user?.profilePhotoUrl}
@@ -108,34 +114,74 @@ export default function Navbar() {
                                             alt={user?.name || 'User'}
                                             className="w-full h-full object-cover"
                                             onError={(e) => {
-                                                // Fallback to user icon if image fails to load
                                                 const target = e.currentTarget;
                                                 target.style.display = 'none';
-                                                const parent = target.parentElement;
-                                                if (parent && !parent.querySelector('svg')) {
-                                                    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                                                    icon.setAttribute('class', 'w-4 h-4 lg:w-5 lg:h-5');
-                                                    icon.setAttribute('viewBox', '0 0 24 24');
-                                                    icon.setAttribute('fill', 'none');
-                                                    icon.setAttribute('stroke', 'currentColor');
-                                                    icon.setAttribute('stroke-width', '2');
-                                                    icon.innerHTML = '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>';
-                                                    parent.appendChild(icon);
-                                                }
                                             }}
                                         />
                                     ) : (
-                                        <User className="w-4 h-4 lg:w-5 lg:h-5" />
+                                        <User className="w-3.5 h-3.5" />
                                     )}
                                 </div>
-                            </Link>
-                            <Button
-                                variant="ghost"
-                                className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 w-10 h-10 p-0"
-                                onClick={logout}
-                            >
-                                <LogOut className="w-4 h-4" />
-                            </Button>
+                                <span className="text-xs lg:text-sm font-semibold text-white group-hover:text-primary transition-colors max-w-[120px] truncate">
+                                    {user?.name?.split(' ')[0] || 'Account'}
+                                </span>
+                                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            <AnimatePresence>
+                                {dropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="absolute right-0 mt-2 w-56 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden"
+                                    >
+                                        <div className="px-4 py-3 border-b border-white/10">
+                                            <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
+                                            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                                        </div>
+                                        <div className="py-1">
+                                            <Link
+                                                href="/dashboard"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                                            >
+                                                <LayoutDashboard className="w-4 h-4" />
+                                                Dashboard
+                                            </Link>
+                                            {(user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR') && (
+                                                <Link
+                                                    href="/management"
+                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                                                >
+                                                    <Settings className="w-4 h-4" />
+                                                    Management
+                                                </Link>
+                                            )}
+                                            <Link
+                                                href="/profile"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                                            >
+                                                <UserCircle className="w-4 h-4" />
+                                                Profile
+                                            </Link>
+                                        </div>
+                                        <div className="border-t border-white/10 py-1">
+                                            <button
+                                                onClick={() => {
+                                                    logout();
+                                                    setDropdownOpen(false);
+                                                    router.push('/');
+                                                }}
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors w-full"
+                                            >
+                                                <LogOut className="w-4 h-4" />
+                                                Logout
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     ) : (
                         <div className="flex items-center gap-4 ml-4">
@@ -170,42 +216,56 @@ export default function Navbar() {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: "100%" }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="fixed inset-0 top-0 left-0 right-0 bottom-0 bg-gradient-to-b from-black via-black to-zinc-900 z-40 flex flex-col items-center justify-start gap-6 md:hidden overflow-y-auto pt-24 pb-8 px-6 safe-area-inset"
+                            className="fixed inset-0 bg-black z-40 flex flex-col md:hidden overflow-y-auto"
                             style={{ touchAction: 'pan-y' }}
                         >
-                            {navLinks.map((link, index) => (
-                                <motion.div
-                                    key={link.name}
-                                    initial={{ opacity: 0, x: 50 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className="w-full"
-                                >
-                                    <Link
-                                        href={link.href}
-                                        className="flex items-center justify-between text-xl font-bold uppercase tracking-wider text-white hover:text-primary active:text-primary transition-colors py-3 px-4 rounded-lg hover:bg-white/5 active:bg-white/10"
+                            {/* Spacer for navbar height */}
+                            <div className="pt-20 px-6 pb-8 flex flex-col gap-2">
+                                {navLinks.map((link, index) => (
+                                    <motion.div
+                                        key={link.name}
+                                        initial={{ opacity: 0, x: 50 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: index * 0.08 }}
                                     >
-                                        <span>{link.name}</span>
-                                        {link.icon && <img src={link.icon} alt="Flag" className="h-5 w-auto rounded-sm" />}
-                                    </Link>
-                                </motion.div>
-                            ))}
+                                        <Link
+                                            href={link.href}
+                                            className="flex items-center justify-between text-xl font-bold uppercase tracking-wider text-white hover:text-primary active:text-primary transition-colors py-4 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 border-b border-white/5"
+                                        >
+                                            <span>{link.name}</span>
+                                            {link.icon && <img src={link.icon} alt="Flag" className="h-5 w-auto rounded-sm" />}
+                                        </Link>
+                                    </motion.div>
+                                ))}
 
                             {isAuthenticated ? (
                                 <div className="w-full space-y-2 mt-4 border-t border-white/10 pt-6">
-                                    <Link href="/dashboard" className="block text-lg font-bold uppercase tracking-wider text-white hover:text-primary py-3 px-4 rounded-lg hover:bg-white/5 transition-colors">
-                                        Dashboard
+                                    <div className="flex items-center gap-3 px-4 py-3 mb-2">
+                                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50 text-primary overflow-hidden flex-shrink-0">
+                                            {getUserProfileImage(user) ? (
+                                                <img src={getUserProfileImage(user)!} alt={user?.name || 'User'} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <User className="w-5 h-5" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-bold text-lg">{user?.name}</p>
+                                            <p className="text-gray-400 text-sm">{user?.email}</p>
+                                        </div>
+                                    </div>
+                                    <Link href="/dashboard" className="flex items-center gap-3 text-lg font-bold uppercase tracking-wider text-white hover:text-primary py-3 px-4 rounded-lg hover:bg-white/5 transition-colors">
+                                        <LayoutDashboard className="w-5 h-5" /> Dashboard
                                     </Link>
                                     {(user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR') && (
-                                        <Link href="/management" className="block text-lg font-bold uppercase tracking-wider text-white hover:text-primary py-3 px-4 rounded-lg hover:bg-white/5 transition-colors">
-                                            Management
+                                        <Link href="/management" className="flex items-center gap-3 text-lg font-bold uppercase tracking-wider text-white hover:text-primary py-3 px-4 rounded-lg hover:bg-white/5 transition-colors">
+                                            <Settings className="w-5 h-5" /> Management
                                         </Link>
                                     )}
-                                    <Link href="/profile" className="block text-lg font-bold uppercase tracking-wider text-white hover:text-primary py-3 px-4 rounded-lg hover:bg-white/5 transition-colors">
-                                        Profile
+                                    <Link href="/profile" className="flex items-center gap-3 text-lg font-bold uppercase tracking-wider text-white hover:text-primary py-3 px-4 rounded-lg hover:bg-white/5 transition-colors">
+                                        <UserCircle className="w-5 h-5" /> Profile
                                     </Link>
                                     <button
-                                        onClick={logout}
+                                        onClick={() => { logout(); router.push('/'); }}
                                         className="w-full text-left text-lg font-bold uppercase tracking-wider text-red-500 hover:text-red-400 py-3 px-4 rounded-lg hover:bg-red-500/10 transition-colors flex items-center gap-3 mt-4"
                                     >
                                         <LogOut className="w-5 h-5" /> Logout
@@ -221,6 +281,7 @@ export default function Navbar() {
                                     </Link>
                                 </div>
                             )}
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
