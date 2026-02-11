@@ -133,7 +133,7 @@ export default function EventDetailPage() {
 
     return (
         <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
-            <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+            <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
             {/* Hero Section */}
             <div className="relative h-[50vh] w-full">
                 <div className="absolute inset-0">

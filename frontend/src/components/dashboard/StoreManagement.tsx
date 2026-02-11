@@ -19,6 +19,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
     READY_FOR_PICKUP: { label: "Ready for Pickup", color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20", icon: MapPin },
     SHIPPED: { label: "Shipped", color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/20", icon: Truck },
     DELIVERED: { label: "Delivered", color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/20", icon: CheckCircle },
+    COMPLETED: { label: "Completed", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", icon: CheckCircle },
     CANCELLED: { label: "Cancelled", color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", icon: XCircle },
 };
 
@@ -28,7 +29,8 @@ const STATUS_FLOW: Record<string, string[]> = {
     PROCESSING: ["READY_FOR_PICKUP", "SHIPPED", "CANCELLED"],
     READY_FOR_PICKUP: ["SHIPPED", "DELIVERED"],
     SHIPPED: ["DELIVERED"],
-    DELIVERED: [],
+    DELIVERED: ["COMPLETED"],
+    COMPLETED: [],
     CANCELLED: [],
 };
 
@@ -101,10 +103,11 @@ function OrderManagement() {
         setUpdating(orderId);
         try {
             await api.patch(`/merch/orders/${orderId}/status`, { status });
-            showToast(`Order updated to ${STATUS_CONFIG[status]?.label}`, "success");
+            showToast(`Order updated to ${STATUS_CONFIG[status]?.label || status}`, "success");
             fetchOrders();
-        } catch (err) {
-            showToast("Failed to update order", "error");
+        } catch (err: any) {
+            console.error("Status update failed:", err.response?.data || err);
+            showToast(err.response?.data?.message || "Failed to update order", "error");
         } finally {
             setUpdating(null);
         }

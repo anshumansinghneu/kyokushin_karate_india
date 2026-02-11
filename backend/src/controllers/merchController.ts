@@ -281,6 +281,14 @@ export const getAllOrders = catchAsync(async (req: Request, res: Response) => {
 export const updateOrderStatus = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { status } = req.body;
 
+    const validStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP', 'SHIPPED', 'DELIVERED', 'COMPLETED', 'CANCELLED'];
+    if (!status || !validStatuses.includes(status)) {
+        return next(new AppError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`, 400));
+    }
+
+    const existing = await prisma.merchOrder.findUnique({ where: { id: req.params.id } });
+    if (!existing) return next(new AppError('Order not found', 404));
+
     const order = await prisma.merchOrder.update({
         where: { id: req.params.id },
         data: { status },
@@ -289,8 +297,6 @@ export const updateOrderStatus = catchAsync(async (req: Request, res: Response, 
             user: { select: { name: true, email: true } },
         },
     });
-
-    if (!order) return next(new AppError('Order not found', 404));
 
     res.status(200).json({
         status: 'success',
