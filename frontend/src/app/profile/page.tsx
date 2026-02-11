@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X, Download } from "lucide-react";
+import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X, Download, Award } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { getUserProfileImage } from "@/lib/imageUtils";
 import { INDIAN_CITIES, CityData } from "@/lib/indianCities";
+import BeltCertificate from "@/components/BeltCertificate";
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -515,24 +516,38 @@ export default function ProfilePage() {
                             <div className="space-y-4">
                                 {beltHistory.length > 0 ? (
                                     beltHistory.map((record, index) => (
-                                        <div key={index} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xs border-2 shadow-lg
-                                                ${record.newBelt === 'White' ? 'bg-white text-black border-gray-300' : ''}
-                                                ${record.newBelt === 'Orange' ? 'bg-orange-500 text-white border-orange-600' : ''}
-                                                ${record.newBelt === 'Blue' ? 'bg-blue-500 text-white border-blue-600' : ''}
-                                                ${record.newBelt === 'Yellow' ? 'bg-yellow-500 text-white border-yellow-600' : ''}
-                                                ${record.newBelt === 'Green' ? 'bg-green-500 text-white border-green-600' : ''}
-                                                ${record.newBelt === 'Brown' ? 'bg-amber-700 text-white border-amber-800' : ''}
-                                                ${record.newBelt === 'Black' ? 'bg-black text-white border-gray-600' : ''}
-                                            `}>
-                                                {record.newBelt?.[0] || 'W'}
+                                        <div key={index}>
+                                            <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xs border-2 shadow-lg
+                                                    ${record.newBelt === 'White' ? 'bg-white text-black border-gray-300' : ''}
+                                                    ${record.newBelt === 'Orange' ? 'bg-orange-500 text-white border-orange-600' : ''}
+                                                    ${record.newBelt === 'Blue' ? 'bg-blue-500 text-white border-blue-600' : ''}
+                                                    ${record.newBelt === 'Yellow' ? 'bg-yellow-500 text-white border-yellow-600' : ''}
+                                                    ${record.newBelt === 'Green' ? 'bg-green-500 text-white border-green-600' : ''}
+                                                    ${record.newBelt === 'Brown' ? 'bg-amber-700 text-white border-amber-800' : ''}
+                                                    ${record.newBelt === 'Black' ? 'bg-black text-white border-gray-600' : ''}
+                                                `}>
+                                                    {record.newBelt?.[0] || 'W'}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="font-bold text-white">{record.newBelt} Belt Promotion</h4>
+                                                    <p className="text-sm text-gray-400">Promoted by {record.promotedBy?.name || 'Sensei'}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-sm font-mono text-primary">{new Date(record.promotionDate).toLocaleDateString()}</p>
+                                                </div>
                                             </div>
-                                            <div className="flex-1">
-                                                <h4 className="font-bold text-white">{record.newBelt} Belt Promotion</h4>
-                                                <p className="text-sm text-gray-400">Promoted by {record.promotedBy?.name || 'Sensei'}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-sm font-mono text-primary">{new Date(record.promotionDate).toLocaleDateString()}</p>
+                                            {/* Belt Certificate Download */}
+                                            <div className="mt-2">
+                                                <BeltCertificate
+                                                    studentName={user?.name || ''}
+                                                    beltRank={record.newBelt}
+                                                    promotionDate={record.promotionDate}
+                                                    promoterName={record.promotedBy?.name || 'Sensei'}
+                                                    membershipNumber={user?.membershipNumber}
+                                                    dojoName={user?.dojo?.name}
+                                                    oldBelt={record.oldBelt}
+                                                />
                                             </div>
                                         </div>
                                     ))

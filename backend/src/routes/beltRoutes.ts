@@ -1,8 +1,11 @@
 import express from 'express';
-import { promoteStudent, getBeltHistory, getPendingVerifications, reviewVerification, getStudentVerifications, getEligibleStudents } from '../controllers/beltController';
+import { promoteStudent, getBeltHistory, getPendingVerifications, reviewVerification, getStudentVerifications, getEligibleStudents, publicVerify } from '../controllers/beltController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
+
+// ── Public Routes ──
+router.get('/verify/:membershipNumber', publicVerify);
 
 router.use(protect);
 

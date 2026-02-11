@@ -24,6 +24,7 @@ import noteRouter from './routes/noteRoutes';
 import galleryRouter from './routes/galleryRoutes';
 import announceRouter from './routes/announceRoutes';
 import paymentRouter from './routes/paymentRoutes';
+import { sendRenewalReminders } from './services/renewalReminderService';
 import { globalErrorHandler } from './utils/errorHandler';
 
 const app = express();
@@ -101,6 +102,39 @@ app.use('/uploads', express.static(path.join(__dirname, '../src/uploads')));
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// ─── Cron Endpoint: Renewal Reminders ────────────────────────────────
+// Hit this daily via external cron (e.g. cron-job.org, Render cron, etc.)
+// Protected by a simple secret to prevent abuse
+app.get('/api/cron/renewal-reminders', async (req, res) => {
+    const secret = req.query.secret || req.headers['x-cron-secret'];
+    if (secret !== (process.env.CRON_SECRET || 'kkfi-cron-secret-2024')) {
+        return res.status(401).json({ status: 'fail', message: 'Invalid cron secret' });
+    }
+    try {
+        const result = await sendRenewalReminders();
+        res.status(200).json({ status: 'success', data: result });
+    } catch (err) {
+        console.error('[CRON] Renewal reminder error:', err);
+        res.status(500).json({ status: 'error', message: 'Failed to send reminders' });
+    }
+});
+
+// ─── Daily Timer: Auto send renewal reminders ────────────────────────
+// Runs once every 24 hours while the server is up
+let _reminderInterval: NodeJS.Timeout | null = null;
+function startRenewalReminderScheduler() {
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+    // Run once on startup (delayed 60s to let things settle)
+    setTimeout(() => {
+        sendRenewalReminders().catch(err => console.error('[CRON] Auto reminder error:', err));
+    }, 60_000);
+    // Then run every 24 hours
+    _reminderInterval = setInterval(() => {
+        sendRenewalReminders().catch(err => console.error('[CRON] Auto reminder error:', err));
+    }, TWENTY_FOUR_HOURS);
+}
+startRenewalReminderScheduler();
 
 // Global Error Handler
 app.use(globalErrorHandler);

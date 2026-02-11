@@ -4,6 +4,60 @@ import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { sendBeltPromotionEmail } from '../services/emailService';
 
+// ─── Public Belt / Membership Verification ────────────────────────────
+export const publicVerify = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { membershipNumber } = req.params;
+
+    if (!membershipNumber) {
+        return next(new AppError('Membership number is required', 400));
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { membershipNumber },
+        select: {
+            name: true,
+            membershipNumber: true,
+            membershipStatus: true,
+            membershipStartDate: true,
+            membershipEndDate: true,
+            currentBeltRank: true,
+            role: true,
+            profilePhotoUrl: true,
+            dojo: { select: { name: true, city: true } },
+            beltHistory: {
+                orderBy: { promotionDate: 'desc' },
+                take: 1,
+                select: { newBelt: true, promotionDate: true },
+            },
+        },
+    });
+
+    if (!user) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'No member found with this membership number',
+        });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            member: {
+                name: user.name,
+                membershipNumber: user.membershipNumber,
+                membershipStatus: user.membershipStatus,
+                membershipStartDate: user.membershipStartDate,
+                membershipEndDate: user.membershipEndDate,
+                currentBeltRank: user.currentBeltRank,
+                role: user.role,
+                profilePhotoUrl: user.profilePhotoUrl,
+                dojo: user.dojo,
+                lastPromotion: user.beltHistory[0] || null,
+            },
+        },
+    });
+});
+
 // Helper to get belt rank value (higher is better)
 const getBeltValue = (belt: string) => {
     const belts = ['White', 'Orange', 'Blue', 'Yellow', 'Green', 'Brown', 'Black'];

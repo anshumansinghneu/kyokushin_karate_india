@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle } from "lucide-react";
+import { Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle, Receipt } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { getUserProfileImage } from "@/lib/imageUtils";
@@ -70,9 +70,11 @@ export default function Navbar() {
     const navLinks = [
         { name: "Dojos", href: "/dojos" },
         { name: "Events", href: "/events" },
+        { name: "Calendar", href: "/calendar" },
         { name: "Sponsors", href: "/sponsors" },
         { name: "Low Kick", href: "/low-kick", icon: "/india-flag.png" },
         { name: "Gallery", href: "/gallery" },
+        { name: "Verify", href: "/verify" },
     ];
 
     return (
@@ -164,6 +166,13 @@ export default function Navbar() {
                                             >
                                                 <UserCircle className="w-4 h-4" />
                                                 Profile
+                                            </Link>
+                                            <Link
+                                                href="/payments"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                                            >
+                                                <Receipt className="w-4 h-4" />
+                                                Payments
                                             </Link>
                                         </div>
                                         <div className="border-t border-white/10 py-1">
@@ -263,6 +272,9 @@ export default function Navbar() {
                                     )}
                                     <Link href="/profile" className="flex items-center gap-3 text-lg font-bold uppercase tracking-wider text-white hover:text-primary py-3 px-4 rounded-lg hover:bg-white/5 transition-colors">
                                         <UserCircle className="w-5 h-5" /> Profile
+                                    </Link>
+                                    <Link href="/payments" className="flex items-center gap-3 text-lg font-bold uppercase tracking-wider text-white hover:text-primary py-3 px-4 rounded-lg hover:bg-white/5 transition-colors">
+                                        <Receipt className="w-5 h-5" /> Payments
                                     </Link>
                                     <button
                                         onClick={() => { logout(); router.push('/'); }}

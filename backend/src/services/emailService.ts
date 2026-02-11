@@ -431,3 +431,38 @@ ${btn('Reset Password', resetUrl)}
     const text = `Osu ${name},\n\nReset your password: ${resetUrl}\n\nThis link expires in 1 hour.\n\nOsu!`;
     await send(email, subject, html, text);
 };
+
+// ── Membership Renewal Reminder ─────────────────────────────
+export const sendMembershipRenewalEmail = async (
+    email: string,
+    name: string,
+    daysLeft: number,
+    expiryDate: string
+) => {
+    const SITE_URL = getSiteUrl();
+    const urgency = daysLeft <= 7 ? '🚨 URGENT' : daysLeft <= 15 ? '⚠️ Important' : '📬 Reminder';
+    const urgencyColor = daysLeft <= 7 ? '#dc2626' : daysLeft <= 15 ? '#f59e0b' : '#3b82f6';
+
+    const subject = `${urgency}: Your KKFI Membership expires ${daysLeft === 0 ? 'today' : `in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`}!`;
+    const html = wrapHtml(subject, `
+<h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Membership Renewal</h2>
+<p>Osu ${name},</p>
+<p>Your KKFI membership is ${daysLeft === 0 ? '<strong style="color:#dc2626;">expiring today</strong>' : `expiring in <strong style="color:${urgencyColor};">${daysLeft} day${daysLeft > 1 ? 's' : ''}</strong>`}.</p>
+
+<table style="margin:20px 0;background:#222;border-radius:12px;padding:20px;width:100%;text-align:center;">
+<tr><td>
+  <p style="margin:0;color:#888;font-size:12px;">EXPIRY DATE</p>
+  <p style="margin:8px 0 0;color:${urgencyColor};font-size:24px;font-weight:800;">${expiryDate}</p>
+</td></tr>
+</table>
+
+<p>To continue enjoying all KKFI benefits — event access, belt promotions, and training records — please renew your membership before it expires.</p>
+<p style="margin:16px 0;"><strong style="color:#fff;">Renewal Fee:</strong> ₹250 + 18% GST = <strong style="color:#22c55e;">₹295</strong></p>
+
+${btn('Renew Now – ₹295', SITE_URL + '/renew-membership')}
+
+<p style="color:#888;font-size:13px;">If your membership expires, your account will be temporarily blocked until renewal is completed.</p>
+`);
+    const text = `Osu ${name},\n\nYour KKFI membership expires ${daysLeft === 0 ? 'today' : `in ${daysLeft} days`} (${expiryDate}).\n\nRenew at: ${SITE_URL}/renew-membership\n\nFee: ₹295 (₹250 + GST)\n\nOsu!`;
+    await send(email, subject, html, text);
+};

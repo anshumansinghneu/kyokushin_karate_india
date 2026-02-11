@@ -9,6 +9,7 @@ import {
     getMyPayments,
     getAllPayments,
     getPaymentConfig,
+    getPaymentInvoice,
 } from '../controllers/paymentController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
@@ -22,6 +23,7 @@ router.post('/registration/verify', verifyRegistrationPayment);      // Step 2: 
 // ── Protected Routes (login required) ──
 router.use(protect);
 router.get('/my-payments', getMyPayments);                           // User's payment history
+router.get('/invoice/:paymentId', getPaymentInvoice);                // Get invoice data for a payment
 router.post('/renewal/create-order', createRenewalOrder);            // Create renewal order
 router.post('/renewal/verify', verifyRenewalPayment);                // Verify renewal payment
 router.post('/tournament/:eventId/create-order', createTournamentOrder);  // Tournament payment order

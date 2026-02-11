@@ -696,3 +696,67 @@ export const getPaymentConfig = catchAsync(async (req: Request, res: Response, n
         },
     });
 });
+
+// ─── Get Invoice/Receipt Data for a Payment ─────────────────────────────
+export const getPaymentInvoice = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // @ts-ignore
+    const currentUser = req.user;
+    const { paymentId } = req.params;
+
+    const payment = await prisma.payment.findUnique({
+        where: { id: paymentId },
+        include: {
+            user: {
+                select: {
+                    id: true, name: true, email: true, phone: true,
+                    membershipNumber: true, city: true, state: true,
+                    dojo: { select: { name: true, city: true } },
+                },
+            },
+            event: {
+                select: { id: true, name: true, type: true, startDate: true, location: true },
+            },
+        },
+    });
+
+    if (!payment) {
+        return next(new AppError('Payment not found', 404));
+    }
+
+    // Only allow the payer or admin to view invoice
+    if (payment.userId !== currentUser.id && currentUser.role !== 'ADMIN') {
+        return next(new AppError('Not authorized to view this invoice', 403));
+    }
+
+    if (payment.status !== 'PAID') {
+        return next(new AppError('Invoice is only available for completed payments', 400));
+    }
+
+    const invoiceNumber = `KKFI-${payment.paidAt ? new Date(payment.paidAt).getFullYear() : new Date().getFullYear()}-${payment.id.slice(0, 8).toUpperCase()}`;
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            invoice: {
+                invoiceNumber,
+                paymentId: payment.id,
+                type: payment.type,
+                amount: payment.amount,
+                taxAmount: payment.taxAmount,
+                totalAmount: payment.totalAmount,
+                currency: payment.currency,
+                razorpayPaymentId: payment.razorpayPaymentId,
+                paidAt: payment.paidAt,
+                description: payment.description,
+                user: payment.user,
+                event: payment.event,
+                organization: {
+                    name: 'Kyokushin Karate Foundation of India',
+                    shortName: 'KKFI',
+                    address: 'India',
+                    gstNote: 'GST @ 18%',
+                },
+            },
+        },
+    });
+});
