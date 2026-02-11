@@ -165,6 +165,9 @@ export const approveRegistration = catchAsync(async (req: Request, res: Response
     // @ts-ignore
     const currentUser = req.user;
 
+    const existing = await prisma.eventRegistration.findUnique({ where: { id: registrationId } });
+    if (!existing) return next(new AppError('Registration not found', 404));
+
     const registration = await prisma.eventRegistration.update({
         where: { id: registrationId },
         data: {
@@ -184,6 +187,9 @@ export const approveRegistration = catchAsync(async (req: Request, res: Response
 
 export const rejectRegistration = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { registrationId } = req.params;
+
+    const existing = await prisma.eventRegistration.findUnique({ where: { id: registrationId } });
+    if (!existing) return next(new AppError('Registration not found', 404));
 
     const registration = await prisma.eventRegistration.update({
         where: { id: registrationId },
@@ -223,14 +229,28 @@ export const bulkApproveRegistrations = catchAsync(async (req: Request, res: Res
     });
 });
 export const updateEvent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const event = await prisma.event.update({
-        where: { id: req.params.id },
-        data: req.body,
-    });
+    // Whitelist allowed fields to prevent mass assignment
+    const allowedFields = ['type', 'name', 'description', 'imageUrl', 'startDate', 'endDate', 'location', 'dojoId', 'registrationDeadline', 'maxParticipants', 'memberFee', 'nonMemberFee', 'categories', 'status'];
+    const data: any = {};
+    for (const key of allowedFields) {
+        if (req.body[key] !== undefined) {
+            if (['startDate', 'endDate', 'registrationDeadline'].includes(key)) {
+                data[key] = new Date(req.body[key]);
+            } else {
+                data[key] = req.body[key];
+            }
+        }
+    }
 
-    if (!event) {
+    const existing = await prisma.event.findUnique({ where: { id: req.params.id } });
+    if (!existing) {
         return next(new AppError('No event found with that ID', 404));
     }
+
+    const event = await prisma.event.update({
+        where: { id: req.params.id },
+        data,
+    });
 
     res.status(200).json({
         status: 'success',
@@ -241,6 +261,17 @@ export const updateEvent = catchAsync(async (req: Request, res: Response, next: 
 });
 
 export const deleteEvent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const existing = await prisma.event.findUnique({
+        where: { id: req.params.id },
+        include: { registrations: { take: 1 } }
+    });
+    if (!existing) {
+        return next(new AppError('No event found with that ID', 404));
+    }
+    if (existing.registrations.length > 0) {
+        return next(new AppError('Cannot delete an event with existing registrations', 400));
+    }
+
     await prisma.event.delete({
         where: { id: req.params.id },
     });

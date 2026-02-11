@@ -501,6 +501,9 @@ export const createTournamentOrder = catchAsync(async (req: Request, res: Respon
 
     // Determine fee
     const baseFee = event.memberFee; // Use memberFee for members
+    if (!baseFee || baseFee <= 0) {
+        return next(new AppError('Event fee is not configured. Please contact the administrator.', 400));
+    }
     const { amount, taxAmount, totalAmount, totalAmountPaise } = calculateTotal(baseFee);
 
     const razorpayOrder = await createRazorpayOrder({

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import api from '@/lib/api';
-import { useRouter } from 'next/navigation';
 
 interface User {
     id: string;
@@ -52,7 +51,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
     isAuthenticated: false,
-    isLoading: true,
+    isLoading: false,
     error: null,
 
     login: async (credentials) => {
@@ -127,17 +126,22 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     logout: () => {
-        localStorage.removeItem('token');
-        set({ user: null, token: null, isAuthenticated: false });
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+        set({ user: null, token: null, isAuthenticated: false, error: null });
     },
 
     checkAuth: async () => {
+        if (typeof window === 'undefined') return;
         const token = localStorage.getItem('token');
         if (!token) {
             set({ isLoading: false });
             return;
         }
 
+        set({ isLoading: true });
         try {
             const response = await api.get('/auth/me');
             set({ user: response.data.data.user, isAuthenticated: true, isLoading: false });

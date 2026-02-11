@@ -65,12 +65,20 @@ export const createProduct = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const updateProduct = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const existing = await prisma.product.findUnique({ where: { id: req.params.id } });
+    if (!existing) return next(new AppError('Product not found', 404));
+
+    // Whitelist allowed fields to prevent mass assignment
+    const allowedFields = ['name', 'description', 'price', 'comparePrice', 'category', 'images', 'sizes', 'stockCount', 'inStock', 'featured', 'isActive'];
+    const data: any = {};
+    for (const key of allowedFields) {
+        if (req.body[key] !== undefined) data[key] = req.body[key];
+    }
+
     const product = await prisma.product.update({
         where: { id: req.params.id },
-        data: req.body,
+        data,
     });
-
-    if (!product) return next(new AppError('Product not found', 404));
 
     res.status(200).json({
         status: 'success',
@@ -110,13 +118,18 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
         if (!product) return next(new AppError(`Product ${item.productId} not found`, 404));
         if (!product.inStock) return next(new AppError(`${product.name} is out of stock`, 400));
 
-        const itemTotal = product.price * (item.quantity || 1);
+        const qty = item.quantity || 1;
+        if (qty > product.stockCount) {
+            return next(new AppError(`Only ${product.stockCount} units of ${product.name} are available`, 400));
+        }
+
+        const itemTotal = product.price * qty;
         totalAmount += itemTotal;
 
         orderItems.push({
             productId: item.productId,
             size: item.size,
-            quantity: item.quantity || 1,
+            quantity: qty,
             price: product.price,
         });
     }

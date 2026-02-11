@@ -44,7 +44,7 @@ app.use(cors({
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            callback(null, true); // Allow all in development, restrict in production if needed
+            callback(new Error('Origin not allowed by CORS'));
         }
     },
     credentials: true,
@@ -76,9 +76,13 @@ const apiLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+// Apply rate limiters
+app.use('/api/auth', authLimiter);
+app.use('/api', apiLimiter);
+
 // Routes
 app.use('/api/setup', setupRouter);  // Admin setup (one-time use)
-app.use('/api/auth', authRouter);  // No rate limit for testing
+app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
 app.use('/api/dojos', dojoRouter);
 app.use('/api/belts', beltRouter);
