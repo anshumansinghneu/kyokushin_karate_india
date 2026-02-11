@@ -8,7 +8,7 @@ import { Server } from 'socket.io';
 import app from './app';
 import runMigration from './runMigration';
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
 const server = http.createServer(app);
 

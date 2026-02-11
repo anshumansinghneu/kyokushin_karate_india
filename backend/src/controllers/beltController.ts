@@ -68,7 +68,7 @@ export const publicVerify = catchAsync(async (req: Request, res: Response, next:
                 experience: {
                     years: experienceYears,
                     months: experienceMonths,
-                    display: experienceYears > 0 
+                    display: experienceYears > 0
                         ? `${experienceYears} yr${experienceYears > 1 ? 's' : ''}${experienceMonths > 0 ? ` ${experienceMonths} mo` : ''}`
                         : `${experienceMonths} mo`,
                 },

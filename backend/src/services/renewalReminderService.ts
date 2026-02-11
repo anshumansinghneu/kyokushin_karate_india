@@ -7,7 +7,7 @@ const REMINDER_DAYS = [30, 15, 7, 3, 1, 0];
 /**
  * Check all active members and send renewal reminders
  * for memberships expiring within the configured windows.
- * 
+ *
  * Call this daily via cron or a scheduled endpoint.
  */
 export async function sendRenewalReminders(): Promise<{
