@@ -24,37 +24,6 @@ export const globalErrorHandler = (
     err.statusCode = err.statusCode || 500;
     err.status = err.status || 'error';
 
-    // Handle Prisma errors
-    if (err.code === 'P2002') {
-        err.statusCode = 409;
-        err.status = 'fail';
-        err.message = 'A record with this value already exists.';
-        err.isOperational = true;
-    } else if (err.code === 'P2025') {
-        err.statusCode = 404;
-        err.status = 'fail';
-        err.message = 'Record not found.';
-        err.isOperational = true;
-    } else if (err.code === 'P2003') {
-        err.statusCode = 409;
-        err.status = 'fail';
-        err.message = 'Cannot delete: this record is referenced by other data.';
-        err.isOperational = true;
-    }
-
-    // Handle JWT errors
-    if (err.name === 'JsonWebTokenError') {
-        err.statusCode = 401;
-        err.status = 'fail';
-        err.message = 'Invalid token. Please log in again.';
-        err.isOperational = true;
-    } else if (err.name === 'TokenExpiredError') {
-        err.statusCode = 401;
-        err.status = 'fail';
-        err.message = 'Your session has expired. Please log in again.';
-        err.isOperational = true;
-    }
-
     if (process.env.NODE_ENV === 'development') {
         res.status(err.statusCode).json({
             status: err.status,

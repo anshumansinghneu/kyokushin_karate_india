@@ -74,12 +74,10 @@ export default function RegisterPage() {
         fetchLocations();
 
         // Load Razorpay checkout script
-        if (!document.querySelector('script[src*="checkout.razorpay.com"]')) {
-            const script = document.createElement('script');
-            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-            script.async = true;
-            document.body.appendChild(script);
-        }
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
 
         // Fetch payment config
         const fetchPaymentConfig = async () => {
@@ -99,7 +97,7 @@ export default function RegisterPage() {
         fetchPaymentConfig();
 
         return () => {
-            // Script cleanup not needed — shared across pages
+            document.body.removeChild(script);
         };
     }, []);
 

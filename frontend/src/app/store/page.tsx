@@ -102,14 +102,12 @@ export default function StorePage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true);
       try {
         const params = category !== "ALL" ? `?category=${category}` : "";
         const res = await api.get(`/merch/products${params}`);
-        setProducts(res.data?.data?.products ?? []);
+        setProducts(res.data.data.products);
       } catch (err) {
         console.error("Failed to fetch products", err);
-        setProducts([]);
       } finally {
         setLoading(false);
       }

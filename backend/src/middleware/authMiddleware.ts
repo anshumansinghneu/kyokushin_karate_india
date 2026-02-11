@@ -31,14 +31,10 @@ export const protect = catchAsync(async (req: Request, res: Response, next: Next
         currentUser.membershipEndDate &&
         new Date(currentUser.membershipEndDate) < new Date()
     ) {
-        try {
-            await prisma.user.update({
-                where: { id: currentUser.id },
-                data: { membershipStatus: 'EXPIRED' },
-            });
-        } catch (e) {
-            console.error('Failed to auto-expire membership:', e);
-        }
+        await prisma.user.update({
+            where: { id: currentUser.id },
+            data: { membershipStatus: 'EXPIRED' },
+        });
         currentUser.membershipStatus = 'EXPIRED';
     }
 
@@ -51,10 +47,6 @@ export const protect = catchAsync(async (req: Request, res: Response, next: Next
 export const requireActiveMembership = (req: Request, res: Response, next: NextFunction) => {
     // @ts-ignore
     const user = req.user;
-
-    if (!user) {
-        return next(new AppError('You must be logged in to access this resource', 401));
-    }
 
     // Admins bypass membership check
     if (user.role === 'ADMIN') return next();

@@ -70,15 +70,7 @@ export const verifyRazorpaySignature = (
         .update(`${orderId}|${paymentId}`)
         .digest('hex');
 
-    // Use timing-safe comparison to prevent timing attacks
-    try {
-        return crypto.timingSafeEqual(
-            Buffer.from(expectedSignature, 'utf8'),
-            Buffer.from(signature, 'utf8')
-        );
-    } catch {
-        return false; // Different lengths
-    }
+    return expectedSignature === signature;
 };
 
 // Fetch payment details from Razorpay

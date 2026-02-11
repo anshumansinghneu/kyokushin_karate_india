@@ -286,11 +286,11 @@ export default function StudentDashboard({ user }: { user: any }) {
                                                         result.medal === 'BRONZE' ? 'bg-orange-600' : 'bg-gray-700'
                                                     }`} />
                                                 <div>
-                                                    <h4 className="text-sm font-bold text-white">{result.event?.name || 'Unknown Event'}</h4>
+                                                    <h4 className="text-sm font-bold text-white">{result.event.name}</h4>
                                                     <p className="text-xs text-gray-500">{result.categoryName}</p>
                                                 </div>
                                             </div>
-                                            <span className="text-sm font-black text-white">#{result.finalRank ?? '—'}</span>
+                                            <span className="text-sm font-black text-white">#{result.finalRank}</span>
                                         </div>
                                     ))}
                                     {tournamentResults.length === 0 && <p className="text-gray-500 text-sm text-center py-4">No achievements yet.</p>}

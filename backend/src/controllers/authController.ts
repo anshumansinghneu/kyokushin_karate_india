@@ -223,15 +223,10 @@ export const getMe = catchAsync(async (req: Request, res: Response, next: NextFu
         }
     });
 
-    if (!user) return next(new AppError('User not found', 404));
-
-    // Don't leak password hash
-    const { passwordHash, ...safeUser } = user;
-
     res.status(200).json({
         status: 'success',
         data: {
-            user: safeUser,
+            user,
         },
     });
 });

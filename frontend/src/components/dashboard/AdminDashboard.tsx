@@ -159,17 +159,14 @@ export default function AdminDashboard({ user }: { user: any }) {
                                         <Button
                                             className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
                                             onClick={() => {
-                                                // CSV-safe escaping: wrap in quotes and escape inner quotes
-                                                const esc = (v: string) => `"${String(v ?? '').replace(/"/g, '""')}"`;
                                                 const headers = "Name,Email,Role,Status\n";
-                                                const rows = stats.users.map((u: any) => `${esc(u.name)},${esc(u.email)},${esc(u.role)},${esc(u.membershipStatus)}`).join("\n");
+                                                const rows = stats.users.map((u: any) => `${u.name},${u.email},${u.role},${u.membershipStatus}`).join("\n");
                                                 const blob = new Blob([headers + rows], { type: "text/csv" });
                                                 const url = window.URL.createObjectURL(blob);
                                                 const a = document.createElement("a");
                                                 a.href = url;
                                                 a.download = "users_report.csv";
                                                 a.click();
-                                                window.URL.revokeObjectURL(url);
                                             }}
                                         >
                                             <BarChart className="w-4 h-4 mr-2" /> Export Report

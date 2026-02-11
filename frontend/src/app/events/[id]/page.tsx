@@ -284,7 +284,7 @@ export default function EventDetailPage() {
                                 </div>
                                 <div className="glass-card p-4 flex-1 flex justify-between items-center">
                                     <span className="font-bold text-white">End Time</span>
-                                    <span className="text-sm font-mono text-gray-400">{event.endDate ? new Date(event.endDate).toLocaleTimeString() : 'TBD'}</span>
+                                    <span className="text-sm font-mono text-gray-400">{new Date(event.endDate).toLocaleTimeString()}</span>
                                 </div>
                             </div>
                         </div>
@@ -303,7 +303,7 @@ export default function EventDetailPage() {
                             <>
                                 <div className="text-center mb-8">
                                     <p className="text-gray-400 text-sm uppercase tracking-wider mb-2">Registration Fee</p>
-                                    <p className="text-5xl font-black text-white">₹{event.memberFee ?? 'TBD'}</p>
+                                    <p className="text-5xl font-black text-white">₹{event.memberFee}</p>
                                 </div>
 
                                 <div className="space-y-4 mb-8">
@@ -317,11 +317,11 @@ export default function EventDetailPage() {
                                     </div>
                                 </div>
 
-                                <Button onClick={handleRegister} disabled={event.registrationDeadline && new Date() > new Date(event.registrationDeadline)} className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    {event.registrationDeadline && new Date() > new Date(event.registrationDeadline) ? 'Registration Closed' : 'Register Now'}
+                                <Button onClick={handleRegister} className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20">
+                                    Register Now
                                 </Button>
                                 <p className="text-center text-xs text-gray-500 mt-4">
-                                    {event.registrationDeadline ? `Registration closes on ${new Date(event.registrationDeadline).toLocaleDateString()}` : 'Registration deadline TBD'}
+                                    Registration closes on {new Date(event.registrationDeadline).toLocaleDateString()}
                                 </p>
                             </>
                         ) : (
