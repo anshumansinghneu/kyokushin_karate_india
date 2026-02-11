@@ -378,7 +378,7 @@ export const createRenewalOrder = catchAsync(async (req: Request, res: Response,
 
     const razorpayOrder = await createRazorpayOrder({
         amount: totalAmountPaise,
-        receipt: `renew_${currentUser.id}_${Date.now()}`,
+        receipt: `rnw_${currentUser.id.slice(0,8)}_${Date.now()}`,
         notes: {
             type: 'RENEWAL',
             userId: currentUser.id,
@@ -505,7 +505,7 @@ export const createTournamentOrder = catchAsync(async (req: Request, res: Respon
 
     const razorpayOrder = await createRazorpayOrder({
         amount: totalAmountPaise,
-        receipt: `event_${eventId}_${currentUser.id}_${Date.now()}`,
+        receipt: `evt_${eventId.slice(0,8)}_${Date.now()}`,
         notes: {
             type: 'TOURNAMENT',
             eventId,

@@ -124,7 +124,7 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
     // Create Razorpay order
     const razorpayOrder = await createRazorpayOrder({
         amount: Math.round(totalAmount * 100), // paise
-        receipt: `merch_${userId}_${Date.now()}`,
+        receipt: `mch_${userId.slice(0,8)}_${Date.now()}`,
         notes: {
             type: 'MERCHANDISE',
             userId,

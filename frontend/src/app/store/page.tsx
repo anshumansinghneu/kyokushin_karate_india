@@ -183,32 +183,55 @@ export default function StorePage() {
       }));
 
       // Step 1: Create order with Razorpay
-      const res = await api.post("/merch/orders", {
-        items,
-        shippingName: shipping.name,
-        shippingPhone: shipping.phone,
-        shippingAddress: shipping.address,
-        shippingCity: shipping.city,
-        shippingState: shipping.state,
-        shippingPincode: shipping.pincode,
-      });
-
-      const { razorpayOrderId, amount, currency, keyId } = res.data.data;
-
-      if (!window.Razorpay) {
-        await new Promise<void>((resolve, reject) => {
-          const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
-          if (existing) {
-            existing.addEventListener('load', () => resolve());
-            existing.addEventListener('error', () => reject(new Error('Failed to load payment gateway')));
-            setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
-          } else {
-            reject(new Error('Payment gateway script not found'));
-          }
+      let razorpayOrderId: string, amount: number, currency: string, keyId: string;
+      try {
+        const res = await api.post("/merch/orders", {
+          items,
+          shippingName: shipping.name,
+          shippingPhone: shipping.phone,
+          shippingAddress: shipping.address,
+          shippingCity: shipping.city,
+          shippingState: shipping.state,
+          shippingPincode: shipping.pincode,
         });
+        ({ razorpayOrderId, amount, currency, keyId } = res.data.data);
+      } catch (apiErr: any) {
+        const msg = apiErr.response?.data?.message || apiErr.message || "Failed to create order";
+        console.error("Create order failed:", msg, apiErr.response?.status);
+        showToast(msg, "error");
+        setCheckingOut(false);
+        return;
+      }
+
+      // Step 2: Load Razorpay SDK if needed
+      if (!window.Razorpay) {
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const existing = document.querySelector('script[src*="checkout.razorpay.com"]') as HTMLScriptElement;
+            if (existing) {
+              if (window.Razorpay) { resolve(); return; }
+              existing.addEventListener('load', () => resolve());
+              existing.addEventListener('error', () => reject(new Error('Failed to load payment gateway')));
+              setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
+            } else {
+              const s = document.createElement('script');
+              s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+              s.onload = () => resolve();
+              s.onerror = () => reject(new Error('Failed to load payment gateway'));
+              document.body.appendChild(s);
+              setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
+            }
+          });
+        } catch (scriptErr: any) {
+          showToast(scriptErr.message, "error");
+          setCheckingOut(false);
+          return;
+        }
       }
       if (!window.Razorpay) {
-        throw new Error("Payment gateway not loaded. Please refresh.");
+        showToast("Payment gateway not loaded. Please refresh.", "error");
+        setCheckingOut(false);
+        return;
       }
 
       // Step 2: Open Razorpay
@@ -259,7 +282,8 @@ export default function StorePage() {
       });
       razorpay.open();
     } catch (err: any) {
-      showToast(err.response?.data?.message || "Failed to create order", "error");
+      console.error("Checkout flow error:", err);
+      showToast(err.response?.data?.message || err.message || "Failed to create order", "error");
       setCheckingOut(false);
     }
   };

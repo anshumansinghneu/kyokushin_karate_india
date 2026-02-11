@@ -62,28 +62,50 @@ export default function EventDetailPage() {
     };
 
     const handlePayment = async () => {
+        setPaymentProcessing(true);
         try {
-            setPaymentProcessing(true);
-
             // Step 1: Create Razorpay order via backend
-            const orderRes = await api.post(`/payments/tournament/${id}/create-order`);
-            const orderData = orderRes.data.data;
+            let orderData: any;
+            try {
+                const orderRes = await api.post(`/payments/tournament/${id}/create-order`);
+                orderData = orderRes.data.data;
+            } catch (apiErr: any) {
+                const msg = apiErr.response?.data?.message || apiErr.message || "Failed to create payment order";
+                console.error("Create order failed:", msg, apiErr.response?.status);
+                showToast(msg, "error");
+                setPaymentProcessing(false);
+                return;
+            }
 
-            // Step 2: Open Razorpay checkout — wait for script if not yet loaded
+            // Step 2: Load Razorpay SDK if needed
             if (!window.Razorpay) {
-                await new Promise<void>((resolve, reject) => {
-                    const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
-                    if (existing) {
-                        existing.addEventListener('load', () => resolve());
-                        existing.addEventListener('error', () => reject(new Error('Failed to load payment gateway')));
-                        setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
-                    } else {
-                        reject(new Error('Payment gateway script not found'));
-                    }
-                });
+                try {
+                    await new Promise<void>((resolve, reject) => {
+                        const existing = document.querySelector('script[src*="checkout.razorpay.com"]') as HTMLScriptElement;
+                        if (existing) {
+                            if (window.Razorpay) { resolve(); return; }
+                            existing.addEventListener('load', () => resolve());
+                            existing.addEventListener('error', () => reject(new Error('Failed to load payment gateway')));
+                            setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
+                        } else {
+                            const s = document.createElement('script');
+                            s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                            s.onload = () => resolve();
+                            s.onerror = () => reject(new Error('Failed to load payment gateway'));
+                            document.body.appendChild(s);
+                            setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
+                        }
+                    });
+                } catch (scriptErr: any) {
+                    showToast(scriptErr.message, "error");
+                    setPaymentProcessing(false);
+                    return;
+                }
             }
             if (!window.Razorpay) {
-                throw new Error("Payment gateway not loaded. Please refresh and try again.");
+                showToast("Payment gateway not loaded. Please refresh and try again.", "error");
+                setPaymentProcessing(false);
+                return;
             }
 
             const options = {
@@ -138,9 +160,9 @@ export default function EventDetailPage() {
             razorpay.open();
 
         } catch (error: any) {
-            console.error("Registration failed", error);
+            console.error("Payment flow error:", error);
             setPaymentProcessing(false);
-            showToast(error.response?.data?.message || "Registration failed. Please try again.", "error");
+            showToast(error.response?.data?.message || error.message || "Registration failed. Please try again.", "error");
         }
     };
 
