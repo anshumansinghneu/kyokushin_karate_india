@@ -126,12 +126,12 @@ export default function DojoListPage() {
 
             <div className="container mx-auto px-4 py-24 relative z-10">
                 {/* Header */}
-                <div className="text-center mb-20">
+                <div className="text-center mb-10 md:mb-20">
                     <motion.h1
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="text-6xl md:text-8xl font-black tracking-tighter mb-6"
+                        className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter mb-6"
                     >
                         FIND YOUR <span className="text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-900">DOJO</span>
                     </motion.h1>
@@ -150,7 +150,7 @@ export default function DojoListPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="sticky top-8 z-50 max-w-2xl mx-auto mb-24"
+                    className="sticky top-8 z-50 max-w-2xl mx-auto mb-12 md:mb-24"
                 >
                     <div className="relative group">
                         <div className="absolute inset-0 bg-red-600/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -217,7 +217,7 @@ export default function DojoListPage() {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.9 }}
                                         transition={{ delay: index * 0.1 }}
-                                        className="group relative h-[500px] rounded-3xl overflow-hidden cursor-pointer bg-zinc-900 border border-white/5 hover:border-red-600/50 transition-all duration-500 hover:shadow-2xl hover:shadow-red-900/20"
+                                        className="group relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden cursor-pointer bg-zinc-900 border border-white/5 hover:border-red-600/50 transition-all duration-500 hover:shadow-2xl hover:shadow-red-900/20"
                                     >
                                         {/* Background Image */}
                                         <div className="absolute inset-0">

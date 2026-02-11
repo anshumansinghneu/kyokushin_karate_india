@@ -312,7 +312,7 @@ export default function ProfilePage() {
                                 />
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="absolute bottom-0 right-0 p-2 bg-primary rounded-full text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/80"
+                                    className="absolute bottom-0 right-0 p-2 bg-primary rounded-full text-white shadow-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-primary/80"
                                 >
                                     <Camera className="w-4 h-4" />
                                 </button>

@@ -134,8 +134,8 @@ export default function AdminDashboard({ user }: { user: any }) {
             </motion.div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-y-auto h-[80vh] relative">
-                <div className="p-8 lg:p-10">
+            <div className="flex-1 overflow-y-auto min-h-[80vh] lg:h-[80vh] relative">
+                <div className="pt-16 lg:pt-0 p-4 md:p-8 lg:p-10">
                     {/* Global Search */}
                     <div className="mb-8">
                         <GlobalSearch onResultClick={(userId) => setSelectedStudentId(userId)} />
@@ -150,7 +150,7 @@ export default function AdminDashboard({ user }: { user: any }) {
                                 transition={{ duration: 0.2 }}
                                 className="space-y-8"
                             >
-                                <div className="flex justify-between items-end">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                                     <div>
                                         <h1 className="text-3xl font-black text-white mb-2">Dashboard Overview</h1>
                                         <p className="text-gray-400">Welcome back, Shihan. Here's what's happening today.</p>

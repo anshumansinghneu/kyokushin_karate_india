@@ -196,7 +196,7 @@ export default function LivePage() {
         </div>
 
         {/* Stats Bar */}
-        <div className="grid grid-cols-3 gap-4 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
           <div className="glass-card p-4 text-center">
             <Radio className="w-5 h-5 text-red-500 mx-auto mb-1" />
             <p className="text-2xl font-black">{liveMatches.length}</p>
@@ -314,14 +314,14 @@ export default function LivePage() {
                           <Trophy className="w-5 h-5 text-yellow-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-1">
                             <span>{result.bracket?.event?.name}</span>
                             <span>•</span>
                             <span>{result.bracket?.categoryName}</span>
                             <span>•</span>
                             <span>{result.roundName}</span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="text-white font-bold">{winnerName}</span>
                             <span className="text-green-500 font-mono font-bold">{winnerScore}</span>
                             <span className="text-gray-600">-</span>

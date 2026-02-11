@@ -69,6 +69,21 @@ export default function GalleryPage() {
         return () => window.removeEventListener("keydown", handleKey);
     }, [lightboxIndex, items.length]);
 
+    // Touch swipe for lightbox
+    const touchStartX = useRef<number | null>(null);
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+    }, []);
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+        if (touchStartX.current === null || lightboxIndex === null) return;
+        const diff = touchStartX.current - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0 && lightboxIndex < items.length - 1) setLightboxIndex(lightboxIndex + 1);
+            if (diff < 0 && lightboxIndex > 0) setLightboxIndex(lightboxIndex - 1);
+        }
+        touchStartX.current = null;
+    }, [lightboxIndex, items.length]);
+
     // Lock body scroll when lightbox is open
     useEffect(() => {
         if (lightboxIndex !== null) {
@@ -374,6 +389,8 @@ export default function GalleryPage() {
                             exit={{ opacity: 0 }}
                             className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
                             onClick={() => setLightboxIndex(null)}
+                            onTouchStart={handleTouchStart}
+                            onTouchEnd={handleTouchEnd}
                         >
                             {/* Close button */}
                             <button

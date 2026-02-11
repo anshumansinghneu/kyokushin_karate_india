@@ -715,7 +715,7 @@ export default function StorePage() {
                           rows={2}
                           className="w-full px-4 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none resize-none"
                         />
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           <input
                             type="text"
                             placeholder="City"

@@ -102,9 +102,9 @@ export default function Home() {
           />
 
           {/* PHILOSOPHY SECTION (Parallax) */}
-          <section className="py-32 relative">
+          <section className="py-16 md:py-32 relative">
             <div className="container mx-auto px-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
                 <motion.div
                   initial={{ opacity: 0, x: -50 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -146,8 +146,8 @@ export default function Home() {
                     </div>
                   </div>
                   {/* Decorative elements */}
-                  <div className="absolute -top-10 -right-10 w-40 h-40 border border-red-600/20 rounded-full animate-spin-slow" />
-                  <div className="absolute -bottom-10 -left-10 w-60 h-60 border border-white/5 rounded-full animate-reverse-spin" />
+                  <div className="absolute -top-10 -right-10 w-40 h-40 border border-red-600/20 rounded-full animate-spin-slow hidden md:block" />
+                  <div className="absolute -bottom-10 -left-10 w-60 h-60 border border-white/5 rounded-full animate-reverse-spin hidden md:block" />
                 </motion.div>
               </div>
             </div>
@@ -198,7 +198,7 @@ export default function Home() {
 
           {/* LATEST NEWS SECTION - only render when there are blog posts */}
           {latestBlogs.length > 0 && (
-            <section className="py-24 bg-black relative">
+            <section className="py-16 md:py-24 bg-black relative">
               <div className="container mx-auto px-4">
                 <div className="flex justify-between items-end mb-12">
                   <h2 className="text-3xl md:text-5xl font-black tracking-tighter">
@@ -235,7 +235,7 @@ export default function Home() {
 
           {/* MEDIA SECTION - only render when there are media mentions */}
           {mediaMentions.length > 0 && (
-            <section className="py-24 bg-zinc-950 relative">
+            <section className="py-16 md:py-24 bg-zinc-950 relative">
               <div className="container mx-auto px-4">
                 <div className="flex justify-between items-end mb-12">
                   <h2 className="text-3xl md:text-5xl font-black tracking-tighter">

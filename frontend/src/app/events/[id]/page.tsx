@@ -297,7 +297,7 @@ export default function EventDetailPage() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="glass-card p-8 sticky top-8"
+                        className="glass-card p-4 sm:p-8 sticky top-8"
                     >
                         {!isRegistering ? (
                             <>

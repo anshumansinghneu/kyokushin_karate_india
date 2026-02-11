@@ -97,11 +97,11 @@ export default function StudentDashboard({ user }: { user: any }) {
             <motion.div variants={itemVariants} className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-b border-white/10 pb-6">
                 <div>
                     <p className="text-gray-400 text-sm uppercase tracking-widest font-bold mb-1">Dojo Dashboard</p>
-                    <h1 className="text-5xl font-black text-white tracking-tight">
+                    <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight">
                         OSU, <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">{user?.name?.split(' ')[0]}</span>
                     </h1>
                 </div>
-                <div className="flex gap-3 items-center">
+                <div className="flex flex-wrap gap-2 md:gap-3 items-center">
                     <Button
                         onClick={() => setActiveTab('overview')}
                         className={`backdrop-blur-sm border ${activeTab === 'overview' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}

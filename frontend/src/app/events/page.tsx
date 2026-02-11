@@ -51,7 +51,7 @@ export default function EventsPage() {
                         <motion.h1
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="text-5xl md:text-7xl font-black tracking-tighter mb-2"
+                            className="text-3xl md:text-5xl font-black tracking-tighter mb-2"
                         >
                             UPCOMING <span className="text-transparent stroke-text" style={{ WebkitTextStroke: '2px #3b82f6' }}>EVENTS</span>
                         </motion.h1>
@@ -59,7 +59,7 @@ export default function EventsPage() {
                     </div>
 
                     {/* Filter Tabs */}
-                    <div className="flex p-1 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
+                    <div className="flex p-1 bg-white/5 rounded-full border border-white/10 backdrop-blur-md overflow-x-auto">
                         {["ALL", "TOURNAMENT", "CAMP"].map((tab) => (
                             <button
                                 key={tab}
@@ -91,7 +91,7 @@ export default function EventsPage() {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: index * 0.1 }}
-                                    className="group relative h-[300px] rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-primary/50 transition-colors"
+                                    className="group relative min-h-[280px] md:h-[300px] rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-primary/50 transition-colors"
                                 >
                                     {/* Background Image */}
                                     <div className="absolute inset-0 bg-gray-900">
@@ -106,7 +106,7 @@ export default function EventsPage() {
                                     </div>
 
                                     {/* Content */}
-                                    <div className="absolute inset-0 p-8 flex flex-col justify-between">
+                                    <div className="absolute inset-0 p-4 sm:p-8 flex flex-col justify-between">
                                         <div className="flex justify-between items-start">
                                             <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${event.type === 'TOURNAMENT'
                                                 ? 'bg-red-500/20 text-red-400 border-red-500/20'
@@ -121,8 +121,8 @@ export default function EventsPage() {
                                         </div>
 
                                         <div>
-                                            <h3 className="text-3xl font-bold text-white mb-2 group-hover:text-primary transition-colors">{event.name}</h3>
-                                            <div className="flex items-center gap-4 text-gray-400 text-sm mb-6">
+                                            <h3 className="text-xl sm:text-3xl font-bold text-white mb-2 group-hover:text-primary transition-colors">{event.name}</h3>
+                                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-400 text-sm mb-6">
                                                 <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {event.location}</span>
                                                 <span className="w-1 h-1 rounded-full bg-gray-600" />
                                                 <span className="text-white font-bold">₹{event.memberFee}</span>

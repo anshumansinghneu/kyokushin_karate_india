@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Receipt, Download, IndianRupee, Calendar, CheckCircle, XCircle, Clock, FileText } from 'lucide-react';
 import api from '@/lib/api';
-import Navbar from '@/components/Navbar';
 
 interface Payment {
     id: string;
@@ -213,8 +212,7 @@ export default function PaymentHistoryPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white">
-            <Navbar />
-            <div className="max-w-4xl mx-auto px-4 pt-28 pb-16">
+            <div className="max-w-4xl mx-auto px-4 pt-4 pb-16">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -250,7 +248,7 @@ export default function PaymentHistoryPage() {
                                     transition={{ delay: i * 0.05 }}
                                     className="glass-card p-5 hover:bg-white/5 transition-colors"
                                 >
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <div className="flex items-center gap-4">
                                             <div className="p-2.5 bg-white/5 rounded-xl border border-white/10">
                                                 <FileText className="w-5 h-5 text-gray-400" />
