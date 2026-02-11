@@ -1,8 +1,8 @@
 'use client';
 
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
-import { Shield, Sparkles, Download, Share2 } from "lucide-react";
-import { useState, useRef, useCallback } from "react";
+import { Download, Share2, Flame } from "lucide-react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -16,20 +16,38 @@ interface MembershipCardProps {
         currentBeltRank?: string;
         profilePhotoUrl?: string;
         role?: string;
+        createdAt?: string;
         dojo?: { name: string; city?: string } | null;
     };
     showDownload?: boolean;
 }
 
-const BELT_COLORS: Record<string, string> = {
-    White: '#ffffff',
-    Orange: '#f97316',
-    Blue: '#3b82f6',
-    Yellow: '#eab308',
-    Green: '#22c55e',
-    Brown: '#92400e',
-    Black: '#000000',
+const BELT_THEMES: Record<string, { accent: string; glow: string }> = {
+    White:  { accent: '#e5e5e5', glow: 'rgba(255,255,255,0.25)' },
+    Orange: { accent: '#f97316', glow: 'rgba(249,115,22,0.35)' },
+    Blue:   { accent: '#3b82f6', glow: 'rgba(59,130,246,0.35)' },
+    Yellow: { accent: '#eab308', glow: 'rgba(234,179,8,0.35)' },
+    Green:  { accent: '#22c55e', glow: 'rgba(34,197,94,0.35)' },
+    Brown:  { accent: '#92400e', glow: 'rgba(146,64,14,0.35)' },
+    Black:  { accent: '#dc2626', glow: 'rgba(220,38,38,0.35)' },
 };
+
+const ROLE_TITLES: Record<string, string> = {
+    ADMIN: 'SHIHAN',
+    INSTRUCTOR: 'SENSEI',
+    STUDENT: 'KARATEKA',
+};
+
+function calculateExperience(startDate?: string, createdAt?: string) {
+    const date = startDate || createdAt;
+    if (!date) return { years: 0, months: 0, display: 'New' };
+    const ms = Date.now() - new Date(date).getTime();
+    const totalMonths = Math.floor(ms / (30.44 * 24 * 60 * 60 * 1000));
+    const years = Math.floor(totalMonths / 12);
+    const months = totalMonths % 12;
+    if (years > 0) return { years, months, display: `${years}+ yr${years > 1 ? 's' : ''}` };
+    return { years: 0, months, display: months > 0 ? `${months} mo` : 'New' };
+}
 
 export default function MembershipCard({ user, showDownload = true }: MembershipCardProps) {
     const [isDownloading, setIsDownloading] = useState(false);
@@ -39,27 +57,23 @@ export default function MembershipCard({ user, showDownload = true }: Membership
     const y = useMotionValue(0);
     const mouseXSpring = useSpring(x);
     const mouseYSpring = useSpring(y);
-    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["12.5deg", "-12.5deg"]);
-    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-12.5deg", "12.5deg"]);
+    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["8deg", "-8deg"]);
+    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-8deg", "8deg"]);
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
-        const xPct = e.clientX / rect.width - 0.5;
-        const yPct = e.clientY / rect.height - 0.5;
-        x.set(xPct);
-        y.set(yPct);
+        x.set((e.clientX - rect.left) / rect.width - 0.5);
+        y.set((e.clientY - rect.top) / rect.height - 0.5);
     };
-
     const handleMouseLeave = () => { x.set(0); y.set(0); };
 
-    const membershipStatus = user?.membershipStatus || 'PENDING';
-    const statusColors: Record<string, string> = {
-        ACTIVE: 'from-green-500 to-emerald-600',
-        PENDING: 'from-yellow-500 to-orange-600',
-        EXPIRED: 'from-gray-500 to-gray-700',
-        SUSPENDED: 'from-red-500 to-red-700',
-        REJECTED: 'from-red-500 to-red-700',
-    };
+    const belt = user?.currentBeltRank || 'White';
+    const theme = BELT_THEMES[belt] || BELT_THEMES.White;
+    const roleTitle = ROLE_TITLES[user?.role || 'STUDENT'] || 'KARATEKA';
+    const experience = useMemo(
+        () => calculateExperience(user?.membershipStartDate, user?.createdAt),
+        [user?.membershipStartDate, user?.createdAt]
+    );
 
     const verifyUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/verify/${user?.membershipNumber || ''}`
@@ -69,9 +83,6 @@ export default function MembershipCard({ user, showDownload = true }: Membership
         ? new Date(user.membershipEndDate).toLocaleDateString('en-IN', { month: '2-digit', year: '2-digit' })
         : '--/--';
 
-    const beltColor = BELT_COLORS[user?.currentBeltRank || 'White'] || '#ffffff';
-
-    // ─── Download as PNG ──────────────────────────────────────────
     const handleDownload = useCallback(async () => {
         if (!cardRef.current) return;
         setIsDownloading(true);
@@ -84,7 +95,7 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                 logging: false,
             });
             const link = document.createElement('a');
-            link.download = `KKFI-Card-${user?.membershipNumber || 'PENDING'}.png`;
+            link.download = `KKFI-${user?.membershipNumber || 'Card'}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         } catch (err) {
@@ -94,172 +105,162 @@ export default function MembershipCard({ user, showDownload = true }: Membership
         }
     }, [user?.membershipNumber]);
 
-    // ─── Share ────────────────────────────────────────────────────
     const handleShare = useCallback(async () => {
         if (navigator.share && verifyUrl) {
             await navigator.share({
                 title: `KKFI Membership - ${user?.name}`,
                 text: `Verify my KKFI membership: ${user?.membershipNumber}`,
                 url: verifyUrl,
-            }).catch(() => {});
+            }).catch(() => { });
         }
     }, [user?.name, user?.membershipNumber, verifyUrl]);
 
     return (
         <div className="w-full max-w-2xl mx-auto">
-            {/* Interactive 3D wrapper */}
-            <div className="perspective-1000">
+            <div style={{ perspective: '1200px' }}>
                 <motion.div
                     style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
                     onMouseMove={handleMouseMove}
                     onMouseLeave={handleMouseLeave}
-                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    initial={{ opacity: 0, scale: 0.92, y: 30 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
-                    className="cursor-pointer"
+                    transition={{ duration: 0.7, ease: [0.19, 1, 0.22, 1] }}
+                    className="cursor-pointer group"
                 >
-                    {/* Static card for screenshot */}
                     <div
                         ref={cardRef}
-                        className="relative aspect-[1.586/1] rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden"
+                        className="relative aspect-[1.6/1] rounded-2xl overflow-hidden"
+                        style={{ boxShadow: `0 30px 80px -20px ${theme.glow}, 0 0 0 1px rgba(255,255,255,0.08)` }}
                     >
-                        {/* Background */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-zinc-900 border-2 border-white/20">
-                            <div className="absolute inset-0 bg-gradient-to-br from-red-950/30 via-black to-orange-950/30" />
-                            <div className="absolute inset-0 opacity-10">
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
-                            </div>
-                            {/* Top accent */}
-                            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${statusColors[membershipStatus] || statusColors.PENDING}`} />
-                            {/* Belt color stripe */}
-                            <div
-                                className="absolute bottom-0 left-0 right-0 h-1.5 opacity-80"
-                                style={{ background: `linear-gradient(90deg, ${beltColor}, ${beltColor}88, ${beltColor})` }}
-                            />
-                        </div>
+                        {/* ── Background layers ── */}
+                        <div className="absolute inset-0 bg-[#080808]" />
+                        {/* Noise texture */}
+                        <div
+                            className="absolute inset-0 opacity-[0.025]"
+                            style={{
+                                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
+                            }}
+                        />
+                        {/* Diagonal light streak */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-transparent" />
+                        {/* Corner radial glows */}
+                        <div
+                            className="absolute top-0 right-0 w-48 h-48 opacity-15"
+                            style={{ background: `radial-gradient(circle at top right, ${theme.accent}, transparent 70%)` }}
+                        />
+                        <div
+                            className="absolute bottom-0 left-0 w-64 h-48 opacity-10"
+                            style={{ background: `radial-gradient(circle at bottom left, ${theme.accent}, transparent 70%)` }}
+                        />
 
-                        {/* Card Content */}
-                        <div className="relative h-full p-6 sm:p-8 flex flex-col justify-between z-10">
-                            {/* Header */}
+                        {/* Top accent line */}
+                        <div
+                            className="absolute top-0 left-0 right-0 h-[3px]"
+                            style={{ background: `linear-gradient(90deg, transparent 5%, ${theme.accent}, transparent 95%)` }}
+                        />
+
+                        {/* ── Card content ── */}
+                        <div className="relative h-full p-5 sm:p-6 flex flex-col justify-between z-10">
+                            {/* Header row */}
                             <div className="flex justify-between items-start">
-                                <div className="flex items-center gap-3 sm:gap-4">
+                                <div className="flex items-center gap-2.5">
                                     <div className="relative">
-                                        <div className="absolute inset-0 bg-red-500 blur-xl opacity-30" />
-                                        <div className="relative bg-gradient-to-br from-zinc-800 to-zinc-900 p-2.5 sm:p-3 rounded-2xl border border-white/20">
-                                            <Image
-                                                src="/kkfi-logo.avif"
-                                                alt="KKFI Logo"
-                                                width={40}
-                                                height={40}
-                                                className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
-                                            />
+                                        <div className="absolute -inset-1 rounded-xl opacity-30 blur-md" style={{ background: theme.accent }} />
+                                        <div className="relative bg-black/80 p-1.5 sm:p-2 rounded-xl border border-white/10">
+                                            <Image src="/kkfi-logo.avif" alt="KKFI" width={32} height={32} className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
                                         </div>
                                     </div>
                                     <div>
-                                        <h3 className="text-lg sm:text-2xl font-black tracking-tight uppercase leading-none mb-1">
-                                            <span className="text-white">KYOKUSHIN KARATE</span>
-                                        </h3>
-                                        <p className="text-xs sm:text-sm font-bold tracking-wider">
-                                            <span className="bg-gradient-to-r from-orange-500 via-white to-green-500 bg-clip-text text-transparent">
-                                                FOUNDATION OF INDIA
-                                            </span>
+                                        <h3 className="text-xs sm:text-base font-black tracking-[0.02em] text-white leading-none">KYOKUSHIN KARATE</h3>
+                                        <p className="text-[8px] sm:text-[9px] font-bold tracking-[0.2em] mt-0.5">
+                                            <span className="bg-gradient-to-r from-orange-400 via-white to-green-400 bg-clip-text text-transparent">FOUNDATION OF INDIA</span>
                                         </p>
                                     </div>
                                 </div>
-                                <div className="text-right bg-white/5 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-xl border border-white/10">
-                                    <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Membership ID</p>
-                                    <p className={`text-sm sm:text-base font-bold tracking-wider bg-gradient-to-r ${statusColors[membershipStatus] || statusColors.PENDING} bg-clip-text text-transparent`}>
-                                        {user?.membershipNumber || "PENDING"}
-                                    </p>
+                                <div className="bg-white/[0.05] backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-white/[0.08]">
+                                    <p className="text-[7px] sm:text-[8px] font-bold text-gray-500 uppercase tracking-[0.15em] mb-0.5">ID</p>
+                                    <p className="text-[10px] sm:text-xs font-black tracking-wider text-white">{user?.membershipNumber || "PENDING"}</p>
                                 </div>
                             </div>
 
-                            {/* Middle - User Info */}
-                            <div className="flex items-end justify-between mt-auto">
-                                <div className="flex-1">
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 sm:mb-2 flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full bg-gradient-to-r from-orange-500 to-green-500" />
-                                        {user?.role === 'INSTRUCTOR' ? 'Instructor' : user?.role === 'ADMIN' ? 'Admin' : 'Student'} Name
-                                    </p>
-                                    <h2 className="text-xl sm:text-3xl font-black text-white uppercase tracking-tight mb-4 sm:mb-6 drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">
-                                        {user?.name}
-                                    </h2>
+                            {/* Name + role */}
+                            <div className="my-auto pt-1">
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: theme.accent }} />
+                                    <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: theme.accent }}>
+                                        {roleTitle}
+                                    </span>
+                                </div>
+                                <h2 className="text-lg sm:text-[28px] font-black text-white uppercase tracking-tight leading-[1.1]">
+                                    {user?.name}
+                                </h2>
+                            </div>
 
-                                    <div className="grid grid-cols-3 gap-3 sm:gap-6">
-                                        <div className="bg-white/5 backdrop-blur-sm p-2 sm:p-3 rounded-xl border border-white/10">
-                                            <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Rank</p>
-                                            <p className="text-xs sm:text-sm font-black drop-shadow-md" style={{ color: beltColor === '#ffffff' ? '#e5e5e5' : beltColor }}>
-                                                {user?.currentBeltRank || "White"} Belt
-                                            </p>
+                            {/* Bottom stats row */}
+                            <div className="flex items-end justify-between gap-2">
+                                <div className="flex gap-1.5 sm:gap-2 flex-1 min-w-0">
+                                    {[
+                                        { label: 'Rank', value: belt, dot: true },
+                                        { label: 'Dojo', value: user?.dojo?.name || 'HQ' },
+                                        { label: 'Exp', value: experience.display, icon: true },
+                                        { label: 'Valid', value: validThru },
+                                    ].map((item, i) => (
+                                        <div key={i} className="flex-1 min-w-0 bg-white/[0.04] rounded-lg p-1.5 sm:p-2 border border-white/[0.05]">
+                                            <p className="text-[6px] sm:text-[7px] font-bold text-gray-500 uppercase tracking-[0.12em] mb-0.5">{item.label}</p>
+                                            <div className="flex items-center gap-1">
+                                                {item.dot && (
+                                                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full flex-shrink-0" style={{ background: theme.accent }} />
+                                                )}
+                                                {item.icon && (
+                                                    <Flame className="w-2.5 h-2.5 flex-shrink-0" style={{ color: theme.accent }} />
+                                                )}
+                                                <span className="text-[9px] sm:text-[11px] font-black text-white truncate">{item.value}</span>
+                                            </div>
                                         </div>
-                                        <div className="bg-white/5 backdrop-blur-sm p-2 sm:p-3 rounded-xl border border-white/10">
-                                            <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Dojo</p>
-                                            <p className="text-[10px] sm:text-xs font-bold text-white drop-shadow-md line-clamp-2">{user?.dojo?.name || "Unassigned"}</p>
-                                        </div>
-                                        <div className="bg-white/5 backdrop-blur-sm p-2 sm:p-3 rounded-xl border border-white/10">
-                                            <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Valid Thru</p>
-                                            <p className="text-xs sm:text-sm font-black text-white drop-shadow-md">{validThru}</p>
-                                        </div>
-                                    </div>
+                                    ))}
                                 </div>
 
                                 {/* QR Code */}
-                                <div className="relative group ml-4">
-                                    <div className="absolute inset-0 bg-white blur-lg opacity-20 group-hover:opacity-30 transition-opacity rounded-2xl" />
-                                    <div className="relative bg-white p-2 sm:p-3 rounded-2xl shadow-2xl border-2 border-white/50">
+                                <div className="flex-shrink-0">
+                                    <div className="bg-white p-1 sm:p-1.5 rounded-lg shadow-xl ring-1 ring-black/10">
                                         {user?.membershipNumber ? (
                                             <QRCodeSVG
                                                 value={verifyUrl || user.membershipNumber}
-                                                size={64}
+                                                size={48}
                                                 bgColor="#ffffff"
-                                                fgColor="#000000"
+                                                fgColor="#0a0a0a"
                                                 level="M"
                                                 includeMargin={false}
                                             />
                                         ) : (
-                                            <div className="w-16 h-16 flex items-center justify-center text-gray-400 text-[10px]">
-                                                PENDING
-                                            </div>
+                                            <div className="w-12 h-12 flex items-center justify-center text-gray-400 text-[7px] font-bold">PENDING</div>
                                         )}
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Status Bar at bottom */}
-                        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-6 py-2.5 bg-black/60 backdrop-blur-md border-t border-white/10">
-                            <div className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full animate-pulse bg-gradient-to-r ${statusColors[membershipStatus] || statusColors.PENDING}`} />
-                                <span className="text-[10px] sm:text-xs font-bold text-gray-300 uppercase tracking-wider">
-                                    Status: {membershipStatus}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-gray-400">
-                                <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
-                                <span className="text-[10px] sm:text-xs font-medium">
-                                    {membershipStatus === 'ACTIVE' ? 'Verified Member' : 'Verification Pending'}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Glow on hover */}
-                        <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 via-white to-green-500 rounded-3xl opacity-0 hover:opacity-20 blur-2xl transition-opacity duration-500 -z-10" />
+                        {/* Bottom accent line */}
+                        <div
+                            className="absolute bottom-0 left-0 right-0 h-[2px]"
+                            style={{ background: `linear-gradient(90deg, transparent, ${theme.accent}55, transparent)` }}
+                        />
                     </div>
                 </motion.div>
             </div>
 
-            {/* Download & Share Buttons */}
+            {/* Action buttons */}
             {showDownload && (
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="flex gap-3 justify-center mt-6"
+                    transition={{ delay: 0.5 }}
+                    className="flex gap-3 justify-center mt-5"
                 >
                     <button
                         onClick={handleDownload}
                         disabled={isDownloading}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-sm font-semibold transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] rounded-xl text-white text-sm font-semibold transition-all duration-200 disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
                     >
                         <Download className="w-4 h-4" />
                         {isDownloading ? 'Saving...' : 'Download Card'}
@@ -267,10 +268,9 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                     {typeof navigator !== 'undefined' && 'share' in navigator && (
                         <button
                             onClick={handleShare}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-sm font-semibold transition-all"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] rounded-xl text-white text-sm font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                         >
-                            <Share2 className="w-4 h-4" />
-                            Share
+                            <Share2 className="w-4 h-4" />Share
                         </button>
                     )}
                 </motion.div>

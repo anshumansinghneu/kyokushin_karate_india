@@ -23,10 +23,12 @@ export const publicVerify = catchAsync(async (req: Request, res: Response, next:
             currentBeltRank: true,
             role: true,
             profilePhotoUrl: true,
+            createdAt: true,
+            city: true,
+            state: true,
             dojo: { select: { name: true, city: true } },
             beltHistory: {
                 orderBy: { promotionDate: 'desc' },
-                take: 1,
                 select: { newBelt: true, promotionDate: true },
             },
         },
@@ -38,6 +40,12 @@ export const publicVerify = catchAsync(async (req: Request, res: Response, next:
             message: 'No member found with this membership number',
         });
     }
+
+    // Calculate experience in years
+    const startDate = user.membershipStartDate || user.createdAt;
+    const experienceMs = Date.now() - new Date(startDate).getTime();
+    const experienceYears = Math.floor(experienceMs / (365.25 * 24 * 60 * 60 * 1000));
+    const experienceMonths = Math.floor((experienceMs % (365.25 * 24 * 60 * 60 * 1000)) / (30.44 * 24 * 60 * 60 * 1000));
 
     res.status(200).json({
         status: 'success',
@@ -51,8 +59,19 @@ export const publicVerify = catchAsync(async (req: Request, res: Response, next:
                 currentBeltRank: user.currentBeltRank,
                 role: user.role,
                 profilePhotoUrl: user.profilePhotoUrl,
+                city: user.city,
+                state: user.state,
                 dojo: user.dojo,
                 lastPromotion: user.beltHistory[0] || null,
+                beltHistory: user.beltHistory,
+                totalPromotions: user.beltHistory.length,
+                experience: {
+                    years: experienceYears,
+                    months: experienceMonths,
+                    display: experienceYears > 0 
+                        ? `${experienceYears} yr${experienceYears > 1 ? 's' : ''}${experienceMonths > 0 ? ` ${experienceMonths} mo` : ''}`
+                        : `${experienceMonths} mo`,
+                },
             },
         },
     });

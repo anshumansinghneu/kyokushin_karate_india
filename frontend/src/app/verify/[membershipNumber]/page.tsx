@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Shield, CheckCircle, XCircle, Search, Award, Calendar, MapPin, AlertTriangle } from 'lucide-react';
+import { Shield, CheckCircle, XCircle, Search, Award, Calendar, MapPin, AlertTriangle, Flame, TrendingUp } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -18,6 +18,12 @@ interface VerifiedMember {
     profilePhotoUrl?: string;
     dojo?: { name: string; city: string } | null;
     lastPromotion?: { newBelt: string; promotionDate: string } | null;
+    experience?: { years: number; months: number; display: string };
+    totalPromotions?: number;
+    city?: string;
+    state?: string;
+    createdAt?: string;
+    beltHistory?: { newBelt: string; promotionDate: string }[];
 }
 
 const BELT_COLORS: Record<string, string> = {
@@ -212,7 +218,7 @@ export default function VerifyPage() {
                                     </div>
 
                                     {/* Info Grid */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
+                                    <div className="grid grid-cols-2 gap-4 mt-6">
                                         {/* Belt Rank */}
                                         <div className="p-4 bg-white/5 rounded-xl border border-white/10">
                                             <div className="flex items-center gap-2 mb-2">
@@ -250,9 +256,31 @@ export default function VerifyPage() {
                                             </div>
                                         )}
 
+                                        {/* Experience */}
+                                        {member.experience && (
+                                            <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Flame className="w-4 h-4 text-orange-400" />
+                                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Experience</span>
+                                                </div>
+                                                <p className="font-bold text-white text-sm">{member.experience.display}</p>
+                                            </div>
+                                        )}
+
+                                        {/* Total Promotions */}
+                                        {typeof member.totalPromotions === 'number' && member.totalPromotions > 0 && (
+                                            <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <TrendingUp className="w-4 h-4 text-gray-400" />
+                                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Promotions</span>
+                                                </div>
+                                                <p className="font-bold text-white text-sm">{member.totalPromotions} Belt Promotion{member.totalPromotions > 1 ? 's' : ''}</p>
+                                            </div>
+                                        )}
+
                                         {/* Last Promotion */}
                                         {member.lastPromotion && (
-                                            <div className="p-4 bg-white/5 rounded-xl border border-white/10 col-span-2 sm:col-span-1">
+                                            <div className="p-4 bg-white/5 rounded-xl border border-white/10">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <Award className="w-4 h-4 text-gray-400" />
                                                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Last Promotion</span>
