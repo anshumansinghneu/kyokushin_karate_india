@@ -93,6 +93,8 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                 scale: 3,
                 useCORS: true,
                 logging: false,
+                width: cardRef.current.scrollWidth,
+                height: cardRef.current.scrollHeight,
             });
             const link = document.createElement('a');
             link.download = `KKFI-${user?.membershipNumber || 'Card'}.png`;
@@ -129,8 +131,11 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                 >
                     <div
                         ref={cardRef}
-                        className="relative aspect-[1.6/1] rounded-2xl overflow-hidden"
-                        style={{ boxShadow: `0 30px 80px -20px ${theme.glow}, 0 0 0 1px rgba(255,255,255,0.08)` }}
+                        className="relative rounded-2xl overflow-hidden"
+                        style={{
+                            aspectRatio: '1.6 / 1',
+                            boxShadow: `0 30px 80px -20px ${theme.glow}, 0 0 0 1px rgba(255,255,255,0.08)`,
+                        }}
                     >
                         {/* ── Background layers ── */}
                         <div className="absolute inset-0 bg-[#080808]" />
@@ -184,15 +189,15 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                             </div>
 
                             {/* Name + role */}
-                            <div className="my-auto pt-1">
+                            <div className="flex-1 flex flex-col justify-center min-h-0">
                                 <div className="flex items-center gap-1.5 mb-0.5">
                                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: theme.accent }} />
                                     <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: theme.accent }}>
                                         {roleTitle}
                                     </span>
                                 </div>
-                                <h2 className="text-lg sm:text-[28px] font-black text-white uppercase tracking-tight leading-[1.1]">
-                                    {user?.name}
+                                <h2 className="text-base sm:text-2xl font-black text-white uppercase tracking-tight leading-[1.1]">
+                                    {roleTitle !== 'KARATEKA' ? `${roleTitle} ` : ''}{user?.name}
                                 </h2>
                             </div>
 

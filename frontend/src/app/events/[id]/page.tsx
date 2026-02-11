@@ -6,7 +6,6 @@ import { Calendar, MapPin, Clock, Shield, CheckCircle, AlertCircle, ArrowLeft, L
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
-import Script from "next/script";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
@@ -40,6 +39,14 @@ export default function EventDetailPage() {
             }
         };
         if (id) fetchEvent();
+
+        // Load Razorpay checkout script
+        if (!document.querySelector('script[src*="checkout.razorpay.com"]')) {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.async = true;
+            document.body.appendChild(script);
+        }
     }, [id]);
 
     const handleRegister = () => {
@@ -62,7 +69,19 @@ export default function EventDetailPage() {
             const orderRes = await api.post(`/payments/tournament/${id}/create-order`);
             const orderData = orderRes.data.data;
 
-            // Step 2: Open Razorpay checkout
+            // Step 2: Open Razorpay checkout — wait for script if not yet loaded
+            if (!window.Razorpay) {
+                await new Promise<void>((resolve, reject) => {
+                    const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
+                    if (existing) {
+                        existing.addEventListener('load', () => resolve());
+                        existing.addEventListener('error', () => reject(new Error('Failed to load payment gateway')));
+                        setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
+                    } else {
+                        reject(new Error('Payment gateway script not found'));
+                    }
+                });
+            }
             if (!window.Razorpay) {
                 throw new Error("Payment gateway not loaded. Please refresh and try again.");
             }
@@ -133,7 +152,6 @@ export default function EventDetailPage() {
 
     return (
         <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
-            <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
             {/* Hero Section */}
             <div className="relative h-[50vh] w-full">
                 <div className="absolute inset-0">

@@ -18,7 +18,6 @@ import {
   Phone,
   User as UserIcon,
 } from "lucide-react";
-import Script from "next/script";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
@@ -90,6 +89,16 @@ export default function StorePage() {
       }));
     }
   }, [user]);
+
+  // Load Razorpay checkout script
+  useEffect(() => {
+    if (!document.querySelector('script[src*="checkout.razorpay.com"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -187,6 +196,18 @@ export default function StorePage() {
       const { razorpayOrderId, amount, currency, keyId } = res.data.data;
 
       if (!window.Razorpay) {
+        await new Promise<void>((resolve, reject) => {
+          const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
+          if (existing) {
+            existing.addEventListener('load', () => resolve());
+            existing.addEventListener('error', () => reject(new Error('Failed to load payment gateway')));
+            setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
+          } else {
+            reject(new Error('Payment gateway script not found'));
+          }
+        });
+      }
+      if (!window.Razorpay) {
         throw new Error("Payment gateway not loaded. Please refresh.");
       }
 
@@ -245,7 +266,6 @@ export default function StorePage() {
 
   return (
     <div className="min-h-screen bg-black text-white pt-28 pb-20">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
