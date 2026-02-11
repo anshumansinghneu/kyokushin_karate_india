@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import SplashScreen from "@/components/SplashScreen";
-import { ArrowRight, MapPin, Calendar, ChevronRight } from "lucide-react";
+import { ArrowRight, MapPin, Calendar, ChevronRight, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 import HeroSectionV2 from "@/components/HeroSectionV2";
 import LeadershipSection from "@/components/LeadershipSection";
 import MonthlyChampions from "@/components/MonthlyChampions";
@@ -26,6 +27,7 @@ export default function Home() {
   const [latestBlogs, setLatestBlogs] = useState<any[]>([]);
   const [mediaMentions, setMediaMentions] = useState<any[]>([]);
   const [content, setContent] = useState<Record<string, any>>({});
+  const { isAuthenticated } = useAuthStore();
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -303,6 +305,31 @@ export default function Home() {
 
           {/* TESTIMONIALS */}
           <TestimonialsSection />
+
+          {/* STORE SECTION - Only for logged-in users */}
+          {isAuthenticated && (
+            <section className="py-24 bg-black relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-transparent" />
+              <div className="container mx-auto px-4 relative z-10">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8 p-8 md:p-12 rounded-3xl border border-white/10 bg-zinc-900/50 backdrop-blur-sm">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 rounded-2xl bg-red-600/20 flex items-center justify-center border border-red-600/30">
+                      <ShoppingBag className="w-8 h-8 text-red-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight">KKFI STORE</h3>
+                      <p className="text-gray-400 mt-1">Official gi, belts, equipment & merchandise</p>
+                    </div>
+                  </div>
+                  <Link href="/store">
+                    <Button className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-full px-8 py-6 text-lg transition-transform hover:scale-105 flex items-center gap-2">
+                      Shop Now <ArrowRight className="w-5 h-5" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* CTA SECTION */}
           <section className="py-32 relative overflow-hidden flex items-center justify-center">

@@ -28,6 +28,8 @@ export default function Footer() {
                             <li><Link href="/dojos" className="hover:text-primary transition-colors">Find a Dojo</Link></li>
                             <li><Link href="/events" className="hover:text-primary transition-colors">Upcoming Events</Link></li>
                             <li><Link href="/gallery" className="hover:text-primary transition-colors">Photo Gallery</Link></li>
+                            <li><Link href="/syllabus" className="hover:text-primary transition-colors">Training Syllabus</Link></li>
+                            <li><Link href="/calendar" className="hover:text-primary transition-colors">Calendar</Link></li>
                             <li><Link href="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
                         </ul>
                     </div>
