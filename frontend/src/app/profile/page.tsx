@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X } from "lucide-react";
+import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X, Download } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { getUserProfileImage } from "@/lib/imageUtils";
@@ -163,6 +163,94 @@ export default function ProfilePage() {
         }
     };
 
+    const handleDownloadCard = async () => {
+        const { jsPDF } = await import("jspdf");
+        const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: [86, 54] });
+
+        // Card background
+        doc.setFillColor(15, 15, 15);
+        doc.rect(0, 0, 86, 54, "F");
+
+        // Red accent top bar
+        doc.setFillColor(220, 38, 38);
+        doc.rect(0, 0, 86, 1.5, "F");
+
+        // Org name
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7);
+        doc.setTextColor(255, 255, 255);
+        doc.text("KYOKUSHIN KARATE", 5, 7);
+        doc.setFontSize(4.5);
+        doc.setTextColor(220, 38, 38);
+        doc.text("FOUNDATION OF INDIA", 5, 10);
+
+        // Membership ID top right
+        doc.setFontSize(4);
+        doc.setTextColor(150, 150, 150);
+        doc.text("MEMBERSHIP ID", 81, 6, { align: "right" });
+        doc.setFontSize(5.5);
+        doc.setTextColor(220, 38, 38);
+        doc.text(user?.membershipNumber || "PENDING", 81, 9.5, { align: "right" });
+
+        // Divider
+        doc.setDrawColor(50, 50, 50);
+        doc.setLineWidth(0.2);
+        doc.line(5, 13, 81, 13);
+
+        // Member name
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(255, 255, 255);
+        doc.text((user?.name || "Member").toUpperCase(), 5, 20);
+
+        // Info fields
+        const fields = [
+            { label: "RANK", value: user?.currentBeltRank || "White Belt" },
+            { label: "DOJO", value: user?.dojo?.name || "Main Dojo" },
+            { label: "STATUS", value: user?.membershipStatus || "PENDING" },
+        ];
+
+        let xPos = 5;
+        fields.forEach((f) => {
+            doc.setFontSize(3.5);
+            doc.setTextColor(120, 120, 120);
+            doc.text(f.label, xPos, 26);
+            doc.setFontSize(5);
+            doc.setTextColor(255, 255, 255);
+            doc.text(f.value, xPos, 29.5);
+            xPos += 26;
+        });
+
+        // Bottom bar
+        doc.setFillColor(25, 25, 25);
+        doc.rect(0, 44, 86, 10, "F");
+        doc.setDrawColor(50, 50, 50);
+        doc.line(0, 44, 86, 44);
+
+        // Status dot + text
+        const statusColor = user?.membershipStatus === "ACTIVE" ? [34, 197, 94] : user?.membershipStatus === "PENDING" ? [234, 179, 8] : [239, 68, 68];
+        doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+        doc.circle(7, 49.5, 1, "F");
+        doc.setFontSize(3.5);
+        doc.setTextColor(180, 180, 180);
+        doc.text(`STATUS: ${user?.membershipStatus || "PENDING"}`, 10, 50);
+
+        // Website
+        doc.setTextColor(120, 120, 120);
+        doc.setFontSize(3);
+        doc.text("kyokushin-karate-india.vercel.app", 81, 50, { align: "right" });
+
+        // Indian flag stripe at very bottom
+        doc.setFillColor(255, 153, 51);
+        doc.rect(0, 53, 28.67, 1, "F");
+        doc.setFillColor(255, 255, 255);
+        doc.rect(28.67, 53, 28.67, 1, "F");
+        doc.setFillColor(19, 136, 8);
+        doc.rect(57.34, 53, 28.66, 1, "F");
+
+        doc.save(`KKFI_Card_${user?.membershipNumber || "member"}.pdf`);
+    };
+
     // Show loading while checking auth
     if (authLoading) {
         return (
@@ -254,6 +342,15 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Download Membership Card */}
+                        <Button
+                            onClick={handleDownloadCard}
+                            className="w-full mt-4 h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-900/20 hover:shadow-red-900/40 transition-all flex items-center justify-center gap-2"
+                        >
+                            <Download className="w-4 h-4" />
+                            Download Membership Card
+                        </Button>
                     </motion.div>
 
                     {/* Right Column: Details & History */}

@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
-import { sendRegistrationEmail, sendNewApplicantEmail } from '../services/emailService';
+import { sendRegistrationEmail, sendNewApplicantEmail, sendPasswordResetEmail } from '../services/emailService';
 
 const signToken = (id: string) => {
     return jwt.sign({ id }, process.env.JWT_SECRET!, {
@@ -228,4 +229,73 @@ export const getMe = catchAsync(async (req: Request, res: Response, next: NextFu
             user,
         },
     });
+});
+
+// ── Password Reset ─────────────────────────────────────────
+
+// In-memory store for reset tokens (key: hashedToken → { userId, expires })
+// In production you'd use a DB table, but this is simple and effective for moderate scale
+const resetTokens = new Map<string, { userId: string; expires: Date }>();
+
+export const forgotPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+    if (!email) return next(new AppError('Please provide an email address', 400));
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Always return success to prevent email enumeration
+    if (!user) {
+        return res.status(200).json({
+            status: 'success',
+            message: 'If that email is registered, a reset link has been sent.',
+        });
+    }
+
+    // Generate token
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    resetTokens.set(hashedToken, { userId: user.id, expires });
+
+    // Clean up old tokens (older than 2 hours)
+    for (const [key, val] of resetTokens.entries()) {
+        if (val.expires < new Date()) resetTokens.delete(key);
+    }
+
+    // Send email with raw token (user will send it back, we hash to compare)
+    await sendPasswordResetEmail(user.email, user.name, rawToken);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'If that email is registered, a reset link has been sent.',
+    });
+});
+
+export const resetPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { token, password } = req.body;
+    if (!token || !password) return next(new AppError('Token and password are required', 400));
+
+    if (password.length < 8) return next(new AppError('Password must be at least 8 characters', 400));
+    const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+    if (!specialCharRegex.test(password)) return next(new AppError('Password must contain at least one special character', 400));
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const stored = resetTokens.get(hashedToken);
+
+    if (!stored || stored.expires < new Date()) {
+        resetTokens.delete(hashedToken);
+        return next(new AppError('Token is invalid or has expired', 400));
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const user = await prisma.user.update({
+        where: { id: stored.userId },
+        data: { passwordHash: hashedPassword },
+    });
+
+    // Invalidate the token
+    resetTokens.delete(hashedToken);
+
+    createSendToken(user, 200, res);
 });

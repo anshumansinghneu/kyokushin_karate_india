@@ -181,6 +181,47 @@ export const approveRegistration = catchAsync(async (req: Request, res: Response
         },
     });
 });
+
+export const rejectRegistration = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { registrationId } = req.params;
+
+    const registration = await prisma.eventRegistration.update({
+        where: { id: registrationId },
+        data: {
+            approvalStatus: 'REJECTED',
+        }
+    });
+
+    res.status(200).json({
+        status: 'success',
+        data: { registration },
+    });
+});
+
+export const bulkApproveRegistrations = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { registrationIds } = req.body;
+    // @ts-ignore
+    const currentUser = req.user;
+
+    if (!registrationIds || !Array.isArray(registrationIds) || registrationIds.length === 0) {
+        return next(new AppError('Please provide an array of registration IDs', 400));
+    }
+
+    const result = await prisma.eventRegistration.updateMany({
+        where: { id: { in: registrationIds } },
+        data: {
+            approvalStatus: 'APPROVED',
+            approvedBy: currentUser.id,
+            approvedAt: new Date()
+        }
+    });
+
+    res.status(200).json({
+        status: 'success',
+        message: `${result.count} registrations approved`,
+        data: { count: result.count },
+    });
+});
 export const updateEvent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const event = await prisma.event.update({
         where: { id: req.params.id },
@@ -220,8 +261,15 @@ export const getEventRegistrations = catchAsync(async (req: Request, res: Respon
                     name: true,
                     email: true,
                     phone: true,
+                    dateOfBirth: true,
+                    weight: true,
+                    height: true,
+                    city: true,
+                    state: true,
                     currentBeltRank: true,
                     membershipNumber: true,
+                    membershipStatus: true,
+                    profilePhotoUrl: true,
                     dojo: {
                         select: {
                             name: true,

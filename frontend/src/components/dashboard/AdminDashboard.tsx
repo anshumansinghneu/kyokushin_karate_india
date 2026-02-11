@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, MapPin, Calendar, Settings, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award } from "lucide-react";
+import { Shield, Users, MapPin, Calendar, Settings, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -20,11 +20,12 @@ import BeltApprovalsView from "./BeltApprovalsView";
 import TournamentManager from "./TournamentManager";
 import GlobalSearch from "./GlobalSearch";
 import StudentDetailView from "./StudentDetailView";
+import AnnouncementManager from './AnnouncementManager';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function AdminDashboard({ user }: { user: any }) {
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'content' | 'belt-verifications' | 'belt-promotions' | 'tournaments'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'content' | 'belt-verifications' | 'belt-promotions' | 'tournaments' | 'announcements'>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
     const { logout } = useAuthStore();
@@ -71,6 +72,7 @@ export default function AdminDashboard({ user }: { user: any }) {
         { id: 'blogs', label: 'Blogs', icon: FileText },
         { id: 'media', label: 'Media', icon: Newspaper },
         { id: 'recognition', label: 'Monthly Recognition', icon: Trophy },
+        { id: 'announcements', label: 'Announcements', icon: Megaphone },
     ];
 
     return (
@@ -219,6 +221,7 @@ export default function AdminDashboard({ user }: { user: any }) {
                         {activeTab === 'blogs' && <motion.div key="blogs" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><BlogManager /></motion.div>}
                         {activeTab === 'media' && <motion.div key="media" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><MediaManager /></motion.div>}
                         {activeTab === 'recognition' && <motion.div key="recognition" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><RecognitionManager /></motion.div>}
+                        {activeTab === 'announcements' && <motion.div key="announcements" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><AnnouncementManager /></motion.div>}
                     </AnimatePresence>
                 </div>
             </div>

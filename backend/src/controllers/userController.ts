@@ -260,8 +260,10 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
         });
 
         // Notify Admin about Instructor Approval
-        // In a real app, we'd fetch Admin email. For now, mock it.
-        await sendInstructorApprovalEmail('admin@kyokushin.com', userToApprove.name, currentUser.name);
+        const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
+        if (admin) {
+            await sendInstructorApprovalEmail(admin.email, userToApprove.name, currentUser.name);
+        }
 
         res.status(200).json({
             status: 'success',

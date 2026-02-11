@@ -30,6 +30,16 @@ const getRoundName = (roundNumber: number, totalRounds: number): string => {
     return `Round ${roundNumber}`;
 };
 
+// Progress callback type for streaming updates
+export type ProgressCallback = (event: {
+    phase: string;
+    message: string;
+    current: number;
+    total: number;
+    categoryName?: string;
+    detail?: string;
+}) => void;
+
 export const TournamentService = {
     /**
      * Generates single-elimination brackets with proper bye distribution.
@@ -39,9 +49,15 @@ export const TournamentService = {
      * 2. Place BYEs so top seeds face them (spread evenly)
      * 3. Create all rounds, auto-advance bye winners
      */
-    async generateBrackets(eventId: string) {
+    async generateBrackets(eventId: string, onProgress?: ProgressCallback) {
+        const emit = onProgress || (() => {});
+
+        emit({ phase: 'init', message: 'Starting bracket generation...', current: 0, total: 100 });
+
         const event = await prisma.event.findUnique({ where: { id: eventId } });
         if (!event) throw new AppError('Event not found', 404);
+
+        emit({ phase: 'cleanup', message: 'Clearing existing brackets...', current: 5, total: 100 });
 
         // Delete existing brackets for this event (allow re-generation)
         const existingBrackets = await prisma.tournamentBracket.findMany({
@@ -54,6 +70,8 @@ export const TournamentService = {
             await prisma.tournamentBracket.deleteMany({ where: { eventId } });
         }
 
+        emit({ phase: 'fetch', message: 'Fetching approved participants...', current: 10, total: 100 });
+
         // 1. Get all approved registrations
         const registrations = await prisma.eventRegistration.findMany({
             where: { eventId, approvalStatus: 'APPROVED' },
@@ -64,6 +82,8 @@ export const TournamentService = {
             throw new AppError('No approved participants found', 400);
         }
 
+        emit({ phase: 'fetch', message: `Found ${registrations.length} approved participants`, current: 15, total: 100 });
+
         // 2. Group by Category
         const categories = new Map<string, typeof registrations>();
         registrations.forEach((reg) => {
@@ -73,11 +93,26 @@ export const TournamentService = {
         });
 
         const generatedBrackets = [];
+        const totalCategories = categories.size;
+        let categoryIndex = 0;
+
+        emit({ phase: 'categories', message: `Processing ${totalCategories} categories...`, current: 20, total: 100 });
 
         // 3. Process each category
         for (const [categoryKey, participants] of categories) {
             const [age, weight, belt] = categoryKey.split('|');
             const categoryName = `${age}, ${weight}, ${belt}`;
+
+            categoryIndex++;
+            const categoryProgress = 20 + Math.round((categoryIndex / totalCategories) * 75);
+            emit({
+                phase: 'building',
+                message: `Building bracket ${categoryIndex}/${totalCategories}`,
+                current: categoryProgress,
+                total: 100,
+                categoryName,
+                detail: `${participants.length} fighters · ${age} · ${weight} · ${belt}`
+            });
 
             // Sort/Seed Participants — highest belt rank first (best player = seed #1)
             participants.sort((a, b) => {
@@ -249,6 +284,8 @@ export const TournamentService = {
 
             generatedBrackets.push(bracket);
         }
+
+        emit({ phase: 'done', message: `✓ ${generatedBrackets.length} brackets created successfully!`, current: 100, total: 100 });
 
         return generatedBrackets;
     },

@@ -1,5 +1,5 @@
 import express from 'express';
-import { generateBrackets, getBrackets, getTournamentStatistics, updateBracketStatus } from '../controllers/tournamentController';
+import { generateBrackets, generateBracketsStream, getBrackets, getTournamentStatistics, updateBracketStatus } from '../controllers/tournamentController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -10,6 +10,7 @@ router.get('/:eventId/statistics', getTournamentStatistics);
 router.use(protect);
 
 router.post('/:eventId/generate', restrictTo('ADMIN'), generateBrackets);
+router.get('/:eventId/generate/stream', restrictTo('ADMIN'), generateBracketsStream);
 router.patch('/brackets/:bracketId/status', restrictTo('ADMIN'), updateBracketStatus);
 router.get('/:eventId', getBrackets);
 

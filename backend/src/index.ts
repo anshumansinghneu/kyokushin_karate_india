@@ -1,10 +1,12 @@
 import dotenv from 'dotenv';
+// Load env vars BEFORE any other imports so services (emailService, etc.)
+// see SMTP_* and other config at module-load time.
+dotenv.config();
+
 import http from 'http';
 import { Server } from 'socket.io';
 import app from './app';
 import runMigration from './runMigration';
-
-dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 
