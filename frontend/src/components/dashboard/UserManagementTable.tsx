@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Trash2, CheckCircle, XCircle, MoreVertical, Shield, User, Users, Edit2, Save, X, Pencil, Mail, Calendar, UserPlus, Eye } from "lucide-react";
+import { Search, Trash2, CheckCircle, XCircle, MoreVertical, Shield, User, Users, Edit2, Save, X, Pencil, Mail, Calendar, UserPlus, Eye, ChevronLeft, ChevronRight, IndianRupee } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,9 @@ export default function UserManagementTable() {
     const [search, setSearch] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const pageSize = 20;
+    const [payments, setPayments] = useState<Record<string, any>>({});
 
     // Edit Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -57,13 +60,23 @@ export default function UserManagementTable() {
     const fetchUsers = async () => {
         setIsLoading(true);
         try {
-            const [usersRes, dojosRes] = await Promise.all([
+            const [usersRes, dojosRes, paymentsRes] = await Promise.all([
                 api.get('/users'),
-                api.get('/dojos')
+                api.get('/dojos'),
+                api.get('/payments/all').catch(() => ({ data: { data: { payments: [] } } }))
             ]);
             setUsers(usersRes.data.data.users);
             setFilteredUsers(usersRes.data.data.users);
             setDojos(dojosRes.data.data.dojos);
+
+            // Build payment lookup by userId (latest payment)
+            const paymentMap: Record<string, any> = {};
+            (paymentsRes.data.data.payments || []).forEach((p: any) => {
+                if (!paymentMap[p.user?.id] || new Date(p.createdAt) > new Date(paymentMap[p.user.id].createdAt)) {
+                    paymentMap[p.user.id] = p;
+                }
+            });
+            setPayments(paymentMap);
         } catch (error) {
             console.error("Failed to fetch data", error);
         } finally {
@@ -83,7 +96,11 @@ export default function UserManagementTable() {
             (user.dojo?.name || "").toLowerCase().includes(lowerSearch)
         );
         setFilteredUsers(filtered);
+        setPage(1);
     }, [search, users]);
+
+    const totalPages = Math.ceil(filteredUsers.length / pageSize);
+    const paginatedUsers = filteredUsers.slice((page - 1) * pageSize, page * pageSize);
 
     const handleApprove = async (id: string) => {
         try {
@@ -285,12 +302,13 @@ export default function UserManagementTable() {
                             <th className="py-3 px-4 hidden lg:table-cell">Dojo</th>
                             <th className="py-3 px-4 hidden sm:table-cell">Belt</th>
                             <th className="py-3 px-4">Status</th>
+                            <th className="py-3 px-4 hidden xl:table-cell">Payment</th>
                             <th className="py-3 px-4 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="text-sm text-gray-300">
                         <AnimatePresence>
-                            {filteredUsers.map((user) => (
+                            {paginatedUsers.map((user) => (
                                 <motion.tr
                                     key={user.id}
                                     initial={{ opacity: 0, y: 10 }}
@@ -337,6 +355,21 @@ export default function UserManagementTable() {
                                             </span>
                                         )}
                                     </td>
+                                    <td className="py-3 px-4 hidden xl:table-cell">
+                                        {(() => {
+                                            const p = payments[user.id];
+                                            if (!p) return <span className="text-xs text-gray-600 italic">No payment</span>;
+                                            const isPaid = p.status === 'captured' || p.status === 'CAPTURED';
+                                            return (
+                                                <div>
+                                                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${isPaid ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                                        {isPaid ? '₹' + (p.amount / 100) : p.status.toUpperCase()}
+                                                    </span>
+                                                    <p className="text-[10px] text-gray-500 mt-1">{new Date(p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</p>
+                                                </div>
+                                            );
+                                        })()}
+                                    </td>
                                     <td className="py-3 px-4 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <Button variant="ghost" className="h-8 w-8 p-0 text-purple-400 hover:bg-purple-500/20" onClick={() => setSelectedStudentId(user.id)} title="View Details">
@@ -363,9 +396,9 @@ export default function UserManagementTable() {
                                 </motion.tr>
                             ))}
                         </AnimatePresence>
-                        {filteredUsers.length === 0 && !isLoading && (
+                        {paginatedUsers.length === 0 && !isLoading && (
                             <tr>
-                                <td colSpan={6} className="py-8 text-center text-gray-500">
+                                <td colSpan={7} className="py-8 text-center text-gray-500">
                                     No users found.
                                 </td>
                             </tr>
@@ -373,6 +406,36 @@ export default function UserManagementTable() {
                     </tbody>
                 </table>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
+                    <p className="text-sm text-gray-400">
+                        Showing {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, filteredUsers.length)} of {filteredUsers.length} users
+                    </p>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="ghost"
+                            className="h-8 px-3 text-gray-400 hover:text-white"
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                        >
+                            <ChevronLeft className="w-4 h-4 mr-1" /> Prev
+                        </Button>
+                        <span className="flex items-center px-3 text-sm text-gray-400">
+                            Page {page} of {totalPages}
+                        </span>
+                        <Button
+                            variant="ghost"
+                            className="h-8 px-3 text-gray-400 hover:text-white"
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages}
+                        >
+                            Next <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* Edit User Modal */}
             <Portal>

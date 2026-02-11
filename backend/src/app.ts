@@ -98,7 +98,10 @@ app.use('/api', noteRouter);  // Notes and profile views
 // Serve static files (uploads)
 app.use('/uploads', express.static(path.join(__dirname, '../src/uploads')));
 
-// Health Check
+// Health Check (root + /health for Render deploy health check)
+app.get('/', (req, res) => {
+    res.status(200).json({ status: 'ok', service: 'KKFI API', timestamp: new Date().toISOString() });
+});
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });

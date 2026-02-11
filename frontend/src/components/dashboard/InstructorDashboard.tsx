@@ -48,6 +48,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
     const handleApprove = async (id: string) => {
         try {
             await api.patch(`/users/${id}/approve`);
+            showToast("Student approved successfully!", "success");
             // Refresh data
             const [studentsRes, pendingRes] = await Promise.all([
                 api.get('/users'),
@@ -57,6 +58,24 @@ export default function InstructorDashboard({ user }: { user: any }) {
             setPendingStudents(pendingRes.data.data.users);
         } catch (error) {
             console.error("Failed to approve student", error);
+            showToast("Failed to approve student", "error");
+        }
+    };
+
+    const handleReject = async (id: string) => {
+        try {
+            await api.patch(`/users/${id}/reject`);
+            showToast("Student rejected", "success");
+            // Refresh data
+            const [studentsRes, pendingRes] = await Promise.all([
+                api.get('/users'),
+                api.get('/users?status=PENDING')
+            ]);
+            setStudents(studentsRes.data.data.users);
+            setPendingStudents(pendingRes.data.data.users);
+        } catch (error) {
+            console.error("Failed to reject student", error);
+            showToast("Failed to reject student", "error");
         }
     };
 
@@ -205,7 +224,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApprove(student.id)}>Approve</Button>
-                                            <Button size="sm" variant="outline" className="h-8 border-red-500/50 text-red-500 hover:bg-red-950">Reject</Button>
+                                            <Button size="sm" variant="outline" className="h-8 border-red-500/50 text-red-500 hover:bg-red-950" onClick={() => handleReject(student.id)}>Reject</Button>
                                         </div>
                                     </div>
                                 ))}

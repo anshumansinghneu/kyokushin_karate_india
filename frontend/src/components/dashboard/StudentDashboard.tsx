@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Trophy, Activity, ChevronRight, User, CheckCircle, Clock, Zap, MapPin, FileText, Edit } from "lucide-react";
+import { Calendar, Trophy, Activity, ChevronRight, User, CheckCircle, Clock, Zap, MapPin, FileText, Edit, CreditCard, CalendarDays, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -158,9 +158,29 @@ export default function StudentDashboard({ user }: { user: any }) {
                                 <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Status</p>
                             </div>
                         </motion.div>
-                    </div>
 
-                    {/* Middle/Right Column: Main Content (8 cols) */}
+                        {/* Quick Links */}
+                        <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3">
+                            <Link href="/payments" className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-green-500/30 transition-all hover:scale-[1.02]">
+                                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center mb-2 group-hover:bg-green-500/20 transition-colors">
+                                    <CreditCard className="w-5 h-5 text-green-500" />
+                                </div>
+                                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Payments</p>
+                            </Link>
+                            <Link href="/calendar" className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-purple-500/30 transition-all hover:scale-[1.02]">
+                                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mb-2 group-hover:bg-purple-500/20 transition-colors">
+                                    <CalendarDays className="w-5 h-5 text-purple-500" />
+                                </div>
+                                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Calendar</p>
+                            </Link>
+                            <Link href="/verify" className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-cyan-500/30 transition-all hover:scale-[1.02]">
+                                <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center mb-2 group-hover:bg-cyan-500/20 transition-colors">
+                                    <ShieldCheck className="w-5 h-5 text-cyan-500" />
+                                </div>
+                                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Verify</p>
+                            </Link>
+                        </motion.div>
+                    </div>
                     <div className="lg:col-span-8 space-y-8">
 
                         {/* Next Event Hero Card */}

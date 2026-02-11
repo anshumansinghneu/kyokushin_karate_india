@@ -19,7 +19,6 @@ export default function DashboardPage() {
     }, []);
 
     useEffect(() => {
-        // Only redirect if we are done loading and still not authenticated
         if (!isLoading && !isAuthenticated) {
             router.push("/login");
         }
