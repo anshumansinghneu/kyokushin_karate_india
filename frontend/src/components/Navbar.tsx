@@ -4,15 +4,17 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle, Receipt } from "lucide-react";
+import { Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle, Receipt, Radio, ShoppingBag } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { getUserProfileImage } from "@/lib/imageUtils";
+import api from "@/lib/api";
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [hasLiveMatches, setHasLiveMatches] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const pathname = usePathname();
     const router = useRouter();
@@ -22,6 +24,21 @@ export default function Navbar() {
     useEffect(() => {
         checkAuth();
     }, [checkAuth]);
+
+    // Check for live matches periodically
+    useEffect(() => {
+        const checkLive = async () => {
+            try {
+                const res = await api.get("/matches/live");
+                setHasLiveMatches(res.data.data.matches.length > 0);
+            } catch {
+                setHasLiveMatches(false);
+            }
+        };
+        checkLive();
+        const interval = setInterval(checkLive, 30000); // Poll every 30s
+        return () => clearInterval(interval);
+    }, []);
 
     // Handle scroll effect
     useEffect(() => {
@@ -74,7 +91,8 @@ export default function Navbar() {
         { name: "Low Kick", href: "/low-kick", icon: "/india-flag.png" },
         { name: "Gallery", href: "/gallery" },
         { name: "Instructors", href: "/instructors" },
-        { name: "Live", href: "/live" },
+        { name: "Merchandise", href: "/store" },
+        ...(hasLiveMatches ? [{ name: "Live", href: "/live", live: true }] : []),
         { name: "Verify", href: "/verify" },
     ];
 
@@ -98,8 +116,9 @@ export default function Navbar() {
                             className={`text-xs lg:text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-2 ${pathname === link.href ? "text-primary" : "text-gray-300 hover:text-white"
                                 }`}
                         >
+                            {'live' in link && link.live && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
                             {link.name}
-                            {link.icon && <img src={link.icon} alt="Flag" className="h-4 w-auto rounded-sm" />}
+                            {'icon' in link && link.icon && <img src={link.icon as string} alt="Flag" className="h-4 w-auto rounded-sm" />}
                         </Link>
                     ))}
 
@@ -242,8 +261,11 @@ export default function Navbar() {
                                             href={link.href}
                                             className="flex items-center justify-between text-xl font-bold uppercase tracking-wider text-white hover:text-primary active:text-primary transition-colors py-4 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 border-b border-white/5"
                                         >
-                                            <span>{link.name}</span>
-                                            {link.icon && <img src={link.icon} alt="Flag" className="h-5 w-auto rounded-sm" />}
+                                            <span className="flex items-center gap-2">
+                                                {'live' in link && link.live && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+                                                {link.name}
+                                            </span>
+                                            {'icon' in link && link.icon && <img src={link.icon as string} alt="Flag" className="h-5 w-auto rounded-sm" />}
                                         </Link>
                                     </motion.div>
                                 ))}

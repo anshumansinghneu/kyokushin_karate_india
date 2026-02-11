@@ -107,9 +107,9 @@ export default function PaymentManagement() {
         if (search) {
             const lowerSearch = search.toLowerCase();
             filtered = filtered.filter(p =>
-                p.user.name.toLowerCase().includes(lowerSearch) ||
-                p.user.email.toLowerCase().includes(lowerSearch) ||
-                (p.user.membershipNumber || "").toLowerCase().includes(lowerSearch) ||
+                (p.user?.name || '').toLowerCase().includes(lowerSearch) ||
+                (p.user?.email || '').toLowerCase().includes(lowerSearch) ||
+                (p.user?.membershipNumber || "").toLowerCase().includes(lowerSearch) ||
                 (p.razorpayPaymentId || "").toLowerCase().includes(lowerSearch)
             );
         }
@@ -127,7 +127,7 @@ export default function PaymentManagement() {
     const handleExportCSV = () => {
         const headers = "Date,Name,Email,Membership #,Type,Amount,Status,Razorpay ID\n";
         const rows = filteredPayments.map(p =>
-            `${formatDate(p.createdAt)},${p.user.name},${p.user.email},${p.user.membershipNumber || 'N/A'},${p.type},${(p.amount / 100).toFixed(2)},${p.status},${p.razorpayPaymentId || 'N/A'}`
+            `${formatDate(p.createdAt)},${p.user?.name || 'Unknown'},${p.user?.email || 'N/A'},${p.user?.membershipNumber || 'N/A'},${p.type},${(p.amount / 100).toFixed(2)},${p.status},${p.razorpayPaymentId || 'N/A'}`
         ).join("\n");
         const blob = new Blob([headers + rows], { type: "text/csv" });
         const url = window.URL.createObjectURL(blob);
@@ -296,8 +296,8 @@ export default function PaymentManagement() {
                                             </td>
                                             <td className="py-3 px-4">
                                                 <div>
-                                                    <p className="font-bold text-white">{payment.user.name}</p>
-                                                    <p className="text-xs text-gray-500">{payment.user.membershipNumber || payment.user.email}</p>
+                                                    <p className="font-bold text-white">{payment.user?.name || 'Unknown'}</p>
+                                                    <p className="text-xs text-gray-500">{payment.user?.membershipNumber || payment.user?.email || '—'}</p>
                                                 </div>
                                             </td>
                                             <td className="py-3 px-4 hidden md:table-cell">

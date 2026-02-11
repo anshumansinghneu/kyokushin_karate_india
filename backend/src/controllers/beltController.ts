@@ -477,20 +477,26 @@ export const getEligibleStudents = catchAsync(async (req: Request, res: Response
         }
     });
 
-    // Get latest promotion date for each student
-    const studentsWithEligibility = await Promise.all(students.map(async (student) => {
-        const lastPromotion = await prisma.beltHistory.findFirst({
-            where: { studentId: student.id },
-            orderBy: { promotionDate: 'desc' },
-            select: {
-                promotionDate: true,
-                newBelt: true
-            }
-        });
+    // Get latest promotion date for each student using a single query
+    const allBeltHistories = await prisma.beltHistory.findMany({
+        where: { studentId: { in: students.map(s => s.id) } },
+        orderBy: { promotionDate: 'desc' },
+        select: { studentId: true, promotionDate: true, newBelt: true },
+    });
 
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    // Build a map: studentId -> latest promotion
+    const latestPromotionMap = new Map<string, { promotionDate: Date; newBelt: string }>();
+    for (const bh of allBeltHistories) {
+        if (!latestPromotionMap.has(bh.studentId)) {
+            latestPromotionMap.set(bh.studentId, { promotionDate: bh.promotionDate, newBelt: bh.newBelt });
+        }
+    }
 
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const studentsWithEligibility = students.map((student) => {
+        const lastPromotion = latestPromotionMap.get(student.id);
         const lastPromotionDate = lastPromotion?.promotionDate || student.createdAt;
         const isEligible = new Date(lastPromotionDate) <= sixMonthsAgo;
 
@@ -508,7 +514,7 @@ export const getEligibleStudents = catchAsync(async (req: Request, res: Response
             isEligible,
             nextEligibleDate: isEligible ? null : nextEligibleDate
         };
-    }));
+    });
 
     res.status(200).json({
         status: 'success',

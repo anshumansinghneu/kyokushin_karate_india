@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Radio, Trophy, Users, Zap, RefreshCw } from "lucide-react";
+import { Radio, Trophy, Users, Zap, RefreshCw, Award } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import api from "@/lib/api";
 import Link from "next/link";
@@ -21,8 +21,31 @@ interface LiveMatch {
   status: string;
 }
 
+interface RecentResult {
+  id: string;
+  fighterA: { id: string; name: string; currentBeltRank: string };
+  fighterB: { id: string; name: string; currentBeltRank: string };
+  fighterAScore: number;
+  fighterBScore: number;
+  winnerId: string;
+  roundName: string;
+  completedAt: string;
+  bracket?: { categoryName: string; event?: { name: string } };
+}
+
+interface Champion {
+  category: string;
+  weight: string;
+  belt: string;
+  winner: { id: string; name: string; beltRank: string; photo: string | null; dojo: string | null };
+  score: string;
+}
+
 export default function LivePage() {
   const [liveMatches, setLiveMatches] = useState<LiveMatch[]>([]);
+  const [recentResults, setRecentResults] = useState<RecentResult[]>([]);
+  const [champions, setChampions] = useState<Champion[]>([]);
+  const [tournamentName, setTournamentName] = useState<string>("");
   const [socket, setSocket] = useState<Socket | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -30,21 +53,38 @@ export default function LivePage() {
   useEffect(() => {
     const fetchLive = async () => {
       try {
-        const res = await api.get("/matches/live");
-        const matches = res.data.data.matches.map((m: any) => ({
-          id: m.id,
-          fighterAName: m.fighterAName || m.fighterA?.name || "TBD",
-          fighterBName: m.fighterBName || m.fighterB?.name || "TBD",
-          fighterAScore: m.fighterAScore || 0,
-          fighterBScore: m.fighterBScore || 0,
-          roundName: m.roundName,
-          matchNumber: m.matchNumber,
-          categoryName: m.bracket?.categoryName,
-          eventName: m.bracket?.event?.name,
-          eventId: m.bracket?.event?.id,
-          status: m.status,
-        }));
-        setLiveMatches(matches);
+        const [liveRes, resultsRes, champRes] = await Promise.allSettled([
+          api.get("/matches/live"),
+          api.get("/matches/results/recent?limit=10"),
+          api.get("/matches/results/champions"),
+        ]);
+
+        if (liveRes.status === 'fulfilled') {
+          const matches = liveRes.value.data.data.matches.map((m: any) => ({
+            id: m.id,
+            fighterAName: m.fighterAName || m.fighterA?.name || "TBD",
+            fighterBName: m.fighterBName || m.fighterB?.name || "TBD",
+            fighterAScore: m.fighterAScore || 0,
+            fighterBScore: m.fighterBScore || 0,
+            roundName: m.roundName,
+            matchNumber: m.matchNumber,
+            categoryName: m.bracket?.categoryName,
+            eventName: m.bracket?.event?.name,
+            eventId: m.bracket?.event?.id,
+            status: m.status,
+          }));
+          setLiveMatches(matches);
+        }
+
+        if (resultsRes.status === 'fulfilled') {
+          setRecentResults(resultsRes.value.data.data.matches || []);
+        }
+
+        if (champRes.status === 'fulfilled') {
+          const data = champRes.value.data.data;
+          setChampions(data.champions || []);
+          setTournamentName(data.tournament?.name || "");
+        }
       } catch (err) {
         console.error("Failed to fetch live matches", err);
       } finally {
@@ -193,18 +233,113 @@ export default function LivePage() {
             ))}
           </div>
         ) : liveMatches.length === 0 ? (
-          <div className="text-center py-24">
-            <Trophy className="w-16 h-16 mx-auto mb-6 text-zinc-700" />
-            <h3 className="text-2xl font-bold mb-2">No Live Matches</h3>
-            <p className="text-gray-500 mb-8">
-              Check back during tournament events for real-time scoring
-            </p>
-            <Link
-              href="/events"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold transition-colors"
-            >
-              View Upcoming Events
-            </Link>
+          <div className="space-y-8">
+            {/* Last Tournament Champions */}
+            {champions.length > 0 ? (
+              <div>
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 mb-4">
+                    <Trophy className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm font-bold text-yellow-500 uppercase tracking-widest">Tournament Champions</span>
+                  </div>
+                  <h3 className="text-3xl md:text-4xl font-black text-white mb-2">{tournamentName}</h3>
+                  <p className="text-gray-500">No live matches right now. Here are the champions from the last tournament.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {champions.map((champ, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="bg-gradient-to-b from-yellow-500/5 to-transparent border border-yellow-500/20 rounded-2xl p-6 text-center relative overflow-hidden group hover:border-yellow-500/40 transition-colors"
+                    >
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-24 bg-yellow-500/10 rounded-full blur-3xl" />
+                      <div className="relative">
+                        <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
+                        <h4 className="text-lg font-black text-white mb-1">{champ.winner.name}</h4>
+                        <p className="text-sm text-gray-400 mb-3">{champ.winner.dojo || "Independent"}</p>
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">
+                            {champ.category}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 font-mono">
+                          Final Score: {champ.score}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Trophy className="w-16 h-16 mx-auto mb-6 text-zinc-700" />
+                <h3 className="text-2xl font-bold mb-2">No Live Matches</h3>
+                <p className="text-gray-500 mb-8">
+                  Check back during tournament events for real-time scoring
+                </p>
+                <Link
+                  href="/events"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold transition-colors"
+                >
+                  View Upcoming Events
+                </Link>
+              </div>
+            )}
+
+            {/* Recent Results */}
+            {recentResults.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Award className="w-5 h-5 text-yellow-500" />
+                  Recent Results
+                </h3>
+                <div className="space-y-3">
+                  {recentResults.map((result) => {
+                    const winnerName = result.winnerId === result.fighterA?.id ? result.fighterA.name : result.fighterB.name;
+                    const loserName = result.winnerId === result.fighterA?.id ? result.fighterB.name : result.fighterA.name;
+                    const winnerScore = result.winnerId === result.fighterA?.id ? result.fighterAScore : result.fighterBScore;
+                    const loserScore = result.winnerId === result.fighterA?.id ? result.fighterBScore : result.fighterAScore;
+
+                    return (
+                      <motion.div
+                        key={result.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-zinc-900 border border-white/10 rounded-xl p-4 flex items-center gap-4"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
+                          <Trophy className="w-5 h-5 text-yellow-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                            <span>{result.bracket?.event?.name}</span>
+                            <span>•</span>
+                            <span>{result.bracket?.categoryName}</span>
+                            <span>•</span>
+                            <span>{result.roundName}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-bold">{winnerName}</span>
+                            <span className="text-green-500 font-mono font-bold">{winnerScore}</span>
+                            <span className="text-gray-600">-</span>
+                            <span className="text-red-400 font-mono font-bold">{loserScore}</span>
+                            <span className="text-gray-400">{loserName}</span>
+                          </div>
+                        </div>
+                        {result.completedAt && (
+                          <span className="text-[10px] text-gray-600 flex-shrink-0">
+                            {new Date(result.completedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

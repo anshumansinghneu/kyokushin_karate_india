@@ -13,12 +13,21 @@ import {
   Package,
   Tag,
   ChevronRight,
+  Loader2,
+  MapPin,
+  Phone,
+  User as UserIcon,
 } from "lucide-react";
+import Script from "next/script";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+
+declare global {
+  interface Window { Razorpay: any; }
+}
 
 interface Product {
   id: string;
@@ -56,9 +65,31 @@ export default function StorePage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
+  const [showShipping, setShowShipping] = useState(false);
+  const [shipping, setShipping] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
 
   const { user, isAuthenticated } = useAuthStore();
   const { showToast } = useToast();
+
+  // Pre-fill shipping from user
+  useEffect(() => {
+    if (user) {
+      setShipping((s) => ({
+        ...s,
+        name: s.name || user.name || "",
+        phone: s.phone || user.phone || "",
+        city: s.city || user.city || "",
+        state: s.state || user.state || "",
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -128,6 +159,12 @@ export default function StorePage() {
     }
     if (cart.length === 0) return;
 
+    // Validate shipping
+    if (!shipping.name || !shipping.phone || !shipping.address || !shipping.city || !shipping.state || !shipping.pincode) {
+      showToast("Please fill in all shipping details", "error");
+      return;
+    }
+
     setCheckingOut(true);
     try {
       const items = cart.map((i) => ({
@@ -136,19 +173,79 @@ export default function StorePage() {
         quantity: i.quantity,
       }));
 
-      await api.post("/merch/orders", { items });
-      showToast("Order placed successfully! We'll contact you for shipping details.", "success");
-      setCart([]);
-      setCartOpen(false);
+      // Step 1: Create order with Razorpay
+      const res = await api.post("/merch/orders", {
+        items,
+        shippingName: shipping.name,
+        shippingPhone: shipping.phone,
+        shippingAddress: shipping.address,
+        shippingCity: shipping.city,
+        shippingState: shipping.state,
+        shippingPincode: shipping.pincode,
+      });
+
+      const { razorpayOrderId, amount, currency, keyId } = res.data.data;
+
+      if (!window.Razorpay) {
+        throw new Error("Payment gateway not loaded. Please refresh.");
+      }
+
+      // Step 2: Open Razorpay
+      const options = {
+        key: keyId,
+        amount: Math.round(amount * 100),
+        currency: currency || "INR",
+        name: "KKFI Store",
+        description: `Merchandise Order (${cart.length} items)`,
+        order_id: razorpayOrderId,
+        prefill: {
+          name: shipping.name,
+          email: user?.email || "",
+          contact: shipping.phone,
+        },
+        notes: { type: "merchandise" },
+        theme: { color: "#DC2626" },
+        modal: {
+          ondismiss: () => {
+            setCheckingOut(false);
+            showToast("Payment cancelled", "error");
+          },
+        },
+        handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
+          // Step 3: Verify payment
+          try {
+            await api.post("/merch/orders/verify", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            showToast("Order confirmed! Check your email for details.", "success");
+            setCart([]);
+            setCartOpen(false);
+            setShowShipping(false);
+          } catch (err: any) {
+            showToast(err.response?.data?.message || "Payment verification failed", "error");
+          } finally {
+            setCheckingOut(false);
+          }
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.on("payment.failed", (resp: any) => {
+        setCheckingOut(false);
+        showToast(`Payment failed: ${resp.error?.description || "Please try again"}`, "error");
+      });
+      razorpay.open();
     } catch (err: any) {
-      showToast(err.response?.data?.message || "Failed to place order", "error");
-    } finally {
+      showToast(err.response?.data?.message || "Failed to create order", "error");
       setCheckingOut(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-black text-white pt-28 pb-20">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
@@ -530,16 +627,92 @@ export default function StorePage() {
                         ₹{cartTotal.toLocaleString()}
                       </span>
                     </div>
-                    <Button
-                      onClick={handleCheckout}
-                      disabled={checkingOut}
-                      className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-6 rounded-xl text-lg"
-                    >
-                      {checkingOut ? "Placing Order..." : "Place Order"}
-                    </Button>
-                    <p className="text-xs text-gray-500 text-center">
-                      Payment details will be shared via email/WhatsApp
-                    </p>
+
+                    {!showShipping ? (
+                      <Button
+                        onClick={() => {
+                          if (!isAuthenticated) {
+                            showToast("Please login to place an order", "error");
+                            return;
+                          }
+                          setShowShipping(true);
+                        }}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-6 rounded-xl text-lg"
+                      >
+                        Proceed to Checkout
+                      </Button>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Shipping Details</p>
+                        <div className="relative">
+                          <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                          <input
+                            type="text"
+                            placeholder="Full Name"
+                            value={shipping.name}
+                            onChange={(e) => setShipping({ ...shipping, name: e.target.value })}
+                            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none"
+                          />
+                        </div>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                          <input
+                            type="tel"
+                            placeholder="Phone"
+                            value={shipping.phone}
+                            onChange={(e) => setShipping({ ...shipping, phone: e.target.value })}
+                            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none"
+                          />
+                        </div>
+                        <textarea
+                          placeholder="Full Address"
+                          value={shipping.address}
+                          onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
+                          rows={2}
+                          className="w-full px-4 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none resize-none"
+                        />
+                        <div className="grid grid-cols-3 gap-2">
+                          <input
+                            type="text"
+                            placeholder="City"
+                            value={shipping.city}
+                            onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
+                            className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none"
+                          />
+                          <input
+                            type="text"
+                            placeholder="State"
+                            value={shipping.state}
+                            onChange={(e) => setShipping({ ...shipping, state: e.target.value })}
+                            className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none"
+                          />
+                          <input
+                            type="text"
+                            placeholder="PIN Code"
+                            value={shipping.pincode}
+                            onChange={(e) => setShipping({ ...shipping, pincode: e.target.value })}
+                            className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none"
+                          />
+                        </div>
+                        <Button
+                          onClick={handleCheckout}
+                          disabled={checkingOut}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 rounded-xl text-lg"
+                        >
+                          {checkingOut ? (
+                            <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Processing...</>
+                          ) : (
+                            `Pay ₹${cartTotal.toLocaleString()}`
+                          )}
+                        </Button>
+                        <button
+                          onClick={() => setShowShipping(false)}
+                          className="w-full text-center text-sm text-gray-500 hover:text-white transition-colors"
+                        >
+                          Back to Cart
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </motion.div>

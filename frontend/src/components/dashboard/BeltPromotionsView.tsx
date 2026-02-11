@@ -262,7 +262,7 @@ export default function BeltPromotionsView() {
                                 key={student.id}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.03 }}
+                                transition={{ delay: Math.min(index * 0.03, 0.5) }}
                                 className={`glass-card p-6 hover:bg-white/10 transition-all group ${isSelected ? 'ring-2 ring-primary' : ''}`}
                             >
                                 <div className="flex items-start gap-6">
@@ -314,7 +314,7 @@ export default function BeltPromotionsView() {
                                             </div>
 
                                             <p className="text-sm text-gray-400 mb-4">
-                                                {student.dojo.name} • {student.daysSincePromotion} days since last promotion
+                                                {student.dojo?.name || 'No Dojo'} • {student.daysSincePromotion} days since last promotion
                                                 {!student.isEligible && student.nextEligibleDate && (
                                                     <> • Eligible: {new Date(student.nextEligibleDate).toLocaleDateString()}</>
                                                 )}

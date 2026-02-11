@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import SplashScreen from "@/components/SplashScreen";
-import { ArrowRight, MapPin, Calendar, ChevronRight, ShoppingBag } from "lucide-react";
+import { ArrowRight, MapPin, Calendar, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
@@ -27,6 +27,7 @@ export default function Home() {
   const [latestBlogs, setLatestBlogs] = useState<any[]>([]);
   const [mediaMentions, setMediaMentions] = useState<any[]>([]);
   const [content, setContent] = useState<Record<string, any>>({});
+  const [newEventFlash, setNewEventFlash] = useState<Event | null>(null);
   const { isAuthenticated } = useAuthStore();
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -46,7 +47,14 @@ export default function Home() {
       const [eventsRes, contentRes, blogsRes, mediaRes] = results;
 
       if (eventsRes.status === 'fulfilled') {
-        setFeaturedEvents(eventsRes.value.data.data.events.slice(0, 5));
+        const events = eventsRes.value.data.data.events.slice(0, 5);
+        setFeaturedEvents(events);
+        // Show flash notification for the newest event (only once per session)
+        if (events.length > 0 && !sessionStorage.getItem('event_flash_shown')) {
+          setNewEventFlash(events[0]);
+          sessionStorage.setItem('event_flash_shown', 'true');
+          setTimeout(() => setNewEventFlash(null), 5000);
+        }
       } else {
         console.error("Failed to fetch events", eventsRes.reason);
       }
@@ -151,181 +159,110 @@ export default function Home() {
           {/* MONTHLY CHAMPIONS */}
           <MonthlyChampions />
 
-          {/* FEATURED EVENTS CAROUSEL */}
-          <section className="py-32 bg-zinc-950 relative overflow-hidden">
-            {/* Background Texture */}
-            <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'url("/noise.png")' }} />
-
-            <div className="container mx-auto px-4 relative z-10">
-              <div className="flex justify-between items-end mb-16">
-                <div>
-                  <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">
-                    UPCOMING <span className="text-red-600">BATTLES</span>
-                  </h2>
-                  <p className="text-gray-400">Witness the strength. Join the fight.</p>
-                </div>
-                <Link href="/events" className="hidden md:flex items-center gap-2 text-white hover:text-red-500 transition-colors group">
-                  View All Events <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-
-              <div className="flex overflow-x-auto pb-12 gap-6 snap-x snap-mandatory scrollbar-hide">
-                {featuredEvents.length > 0 ? (
-                  featuredEvents.map((event, index) => (
-                    <motion.div
-                      key={event.id}
-                      initial={{ opacity: 0, x: 50 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.1 }}
-                      className="min-w-[300px] md:min-w-[400px] snap-center"
+          {/* NEW EVENT FLASH NOTIFICATION */}
+          <AnimatePresence>
+            {newEventFlash && (
+              <motion.div
+                initial={{ y: -100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -100, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-[90vw] max-w-lg"
+              >
+                <Link href={`/events/${newEventFlash.id}`}>
+                  <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-700 rounded-2xl p-4 shadow-2xl shadow-red-900/40 border border-red-500/30 flex items-center gap-4 cursor-pointer hover:scale-[1.02] transition-transform">
+                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/70 text-xs font-bold uppercase tracking-widest">New Event</p>
+                      <p className="text-white font-black text-lg truncate">{newEventFlash.name}</p>
+                      <p className="text-white/60 text-xs flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3" /> {newEventFlash.location || "Location TBA"} • {new Date(newEventFlash.startDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setNewEventFlash(null); }}
+                      className="p-1 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-colors flex-shrink-0"
                     >
-                      <Link href={`/events/${event.id}`}>
-                        <div className="group relative h-[500px] bg-zinc-900 rounded-3xl overflow-hidden border border-white/5 hover:border-red-600/50 transition-all duration-500">
-                          {/* Date Badge */}
-                          <div className="absolute top-6 left-6 z-20 bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-3 text-center min-w-[70px]">
-                            <span className="block text-xs font-bold text-red-500 uppercase">
-                              {new Date(event.startDate).toLocaleString('default', { month: 'short' })}
-                            </span>
-                            <span className="block text-2xl font-black text-white">
-                              {new Date(event.startDate).getDate()}
-                            </span>
-                          </div>
-
-                          {/* Default Event Background */}
-                          <div className="absolute inset-0 bg-zinc-800">
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10" />
-                            <div className={`absolute inset-0 bg-gradient-to-br ${event.type === 'TOURNAMENT' ? 'from-red-900/40 via-zinc-900 to-black' : event.type === 'CAMP' ? 'from-green-900/40 via-zinc-900 to-black' : 'from-blue-900/40 via-zinc-900 to-black'}`} />
-                            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-[0.07]">
-                              <svg viewBox="0 0 100 100" className="w-32 h-32" fill="currentColor">
-                                <text x="50" y="55" textAnchor="middle" dominantBaseline="middle" fontSize="28" fontWeight="900" className="text-white">OSU</text>
-                                <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="2" fill="none" />
-                              </svg>
-                            </div>
-                            <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-transparent" />
-                          </div>
-
-                          {/* Content */}
-                          <div className="absolute bottom-0 left-0 right-0 p-8 z-20 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                            <span className="inline-block px-3 py-1 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider mb-3">
-                              {event.type}
-                            </span>
-                            <h3 className="text-2xl font-bold text-white mb-2 leading-tight group-hover:text-red-500 transition-colors">
-                              {event.name}
-                            </h3>
-                            <div className="flex items-center gap-2 text-gray-400 mb-6">
-                              <MapPin className="w-4 h-4" />
-                              <span className="text-sm">{event.location || "Location TBA"}</span>
-                            </div>
-
-                            <div className="flex items-center gap-2 text-sm font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-                              REGISTER NOW <ChevronRight className="w-4 h-4 text-red-500" />
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="w-full py-20 text-center border border-dashed border-white/10 rounded-3xl">
-                    <p className="text-gray-500">No upcoming events scheduled.</p>
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                )}
-              </div>
-            </div>
-          </section>
-
-          {/* LATEST NEWS SECTION */}
-          <section className="py-24 bg-black relative">
-            <div className="container mx-auto px-4">
-              <div className="flex justify-between items-end mb-12">
-                <h2 className="text-3xl md:text-5xl font-black tracking-tighter">
-                  DOJO <span className="text-red-600">CHRONICLES</span>
-                </h2>
-                <Link href="/blog" className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-                  Read All <ArrowRight className="w-4 h-4" />
                 </Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {latestBlogs.map((post) => (
-                  <Link href={`/blog/${post.slug}`} key={post.id} className="group">
-                    <article className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 hover:border-red-600/50 transition-all duration-300 h-full flex flex-col">
-                      <div className="aspect-video bg-zinc-800 relative overflow-hidden">
-                        {post.imageUrl ? (
-                          <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-700 font-bold">NO IMAGE</div>
-                        )}
-                      </div>
-                      <div className="p-6 flex-1 flex flex-col">
-                        <div className="text-xs text-gray-500 mb-2">{new Date(post.publishedAt).toLocaleDateString()}</div>
-                        <h3 className="text-xl font-bold mb-2 group-hover:text-red-500 transition-colors line-clamp-2">{post.title}</h3>
-                        <p className="text-gray-400 text-sm line-clamp-3 mb-4 flex-1">{post.excerpt}</p>
-                        <span className="text-red-500 text-xs font-bold uppercase tracking-wider">Read More</span>
-                      </div>
-                    </article>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* MEDIA SECTION */}
-          <section className="py-24 bg-zinc-950 relative">
-            <div className="container mx-auto px-4">
-              <div className="flex justify-between items-end mb-12">
-                <h2 className="text-3xl md:text-5xl font-black tracking-tighter">
-                  IN THE <span className="text-red-600">MEDIA</span>
-                </h2>
-                <Link href="/media" className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-                  View All <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {mediaMentions.map((post) => (
-                  <a href={post.externalLink} target="_blank" rel="noopener noreferrer" key={post.id} className="group block">
-                    <article className="bg-black rounded-2xl overflow-hidden border border-white/10 hover:border-red-600/50 transition-all duration-300 h-full">
-                      <div className="aspect-[2/1] bg-zinc-900 relative overflow-hidden">
-                        {post.imageUrl ? (
-                          <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-700 font-bold">MEDIA</div>
-                        )}
-                      </div>
-                      <div className="p-6">
-                        <div className="text-xs font-bold text-red-500 uppercase tracking-wider mb-2">{post.sourceName}</div>
-                        <h3 className="text-lg font-bold mb-1 group-hover:text-red-500 transition-colors">{post.title}</h3>
-                      </div>
-                    </article>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* TESTIMONIALS */}
+          {/* TESTIMONIALS / SUCCESS STORIES - moved up */}
           <TestimonialsSection />
 
-          {/* STORE SECTION - Only for logged-in users */}
-          {isAuthenticated && (
-            <section className="py-24 bg-black relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-transparent to-transparent" />
-              <div className="container mx-auto px-4 relative z-10">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-8 p-8 md:p-12 rounded-3xl border border-white/10 bg-zinc-900/50 backdrop-blur-sm">
-                  <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-2xl bg-red-600/20 flex items-center justify-center border border-red-600/30">
-                      <ShoppingBag className="w-8 h-8 text-red-500" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight">KKFI STORE</h3>
-                      <p className="text-gray-400 mt-1">Official gi, belts, equipment & merchandise</p>
-                    </div>
-                  </div>
-                  <Link href="/store">
-                    <Button className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-full px-8 py-6 text-lg transition-transform hover:scale-105 flex items-center gap-2">
-                      Shop Now <ArrowRight className="w-5 h-5" />
-                    </Button>
+          {/* LATEST NEWS SECTION - only render when there are blog posts */}
+          {latestBlogs.length > 0 && (
+            <section className="py-24 bg-black relative">
+              <div className="container mx-auto px-4">
+                <div className="flex justify-between items-end mb-12">
+                  <h2 className="text-3xl md:text-5xl font-black tracking-tighter">
+                    DOJO <span className="text-red-600">CHRONICLES</span>
+                  </h2>
+                  <Link href="/blog" className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                    Read All <ArrowRight className="w-4 h-4" />
                   </Link>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {latestBlogs.map((post) => (
+                    <Link href={`/blog/${post.slug}`} key={post.id} className="group">
+                      <article className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 hover:border-red-600/50 transition-all duration-300 h-full flex flex-col">
+                        <div className="aspect-video bg-zinc-800 relative overflow-hidden">
+                          {post.imageUrl ? (
+                            <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-700 font-bold">NO IMAGE</div>
+                          )}
+                        </div>
+                        <div className="p-6 flex-1 flex flex-col">
+                          <div className="text-xs text-gray-500 mb-2">{new Date(post.publishedAt).toLocaleDateString()}</div>
+                          <h3 className="text-xl font-bold mb-2 group-hover:text-red-500 transition-colors line-clamp-2">{post.title}</h3>
+                          <p className="text-gray-400 text-sm line-clamp-3 mb-4 flex-1">{post.excerpt}</p>
+                          <span className="text-red-500 text-xs font-bold uppercase tracking-wider">Read More</span>
+                        </div>
+                      </article>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* MEDIA SECTION - only render when there are media mentions */}
+          {mediaMentions.length > 0 && (
+            <section className="py-24 bg-zinc-950 relative">
+              <div className="container mx-auto px-4">
+                <div className="flex justify-between items-end mb-12">
+                  <h2 className="text-3xl md:text-5xl font-black tracking-tighter">
+                    IN THE <span className="text-red-600">MEDIA</span>
+                  </h2>
+                  <Link href="/media" className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                    View All <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {mediaMentions.map((post) => (
+                    <a href={post.externalLink} target="_blank" rel="noopener noreferrer" key={post.id} className="group block">
+                      <article className="bg-black rounded-2xl overflow-hidden border border-white/10 hover:border-red-600/50 transition-all duration-300 h-full">
+                        <div className="aspect-[2/1] bg-zinc-900 relative overflow-hidden">
+                          {post.imageUrl ? (
+                            <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-700 font-bold">MEDIA</div>
+                          )}
+                        </div>
+                        <div className="p-6">
+                          <div className="text-xs font-bold text-red-500 uppercase tracking-wider mb-2">{post.sourceName}</div>
+                          <h3 className="text-lg font-bold mb-1 group-hover:text-red-500 transition-colors">{post.title}</h3>
+                        </div>
+                      </article>
+                    </a>
+                  ))}
                 </div>
               </div>
             </section>

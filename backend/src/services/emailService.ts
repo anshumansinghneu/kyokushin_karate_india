@@ -466,3 +466,70 @@ ${btn('Renew Now – ₹295', SITE_URL + '/renew-membership')}
     const text = `Osu ${name},\n\nYour KKFI membership expires ${daysLeft === 0 ? 'today' : `in ${daysLeft} days`} (${expiryDate}).\n\nRenew at: ${SITE_URL}/renew-membership\n\nFee: ₹295 (₹250 + GST)\n\nOsu!`;
     await send(email, subject, html, text);
 };
+
+// ── Order Confirmation Email ─────────────────────────────────────────
+export const sendOrderConfirmationEmail = async (
+    email: string,
+    name: string,
+    orderId: string,
+    items: { name: string; size: string; quantity: number; price: number }[],
+    totalAmount: number,
+    paymentId: string
+) => {
+    const SITE_URL = getSiteUrl();
+    const orderRef = `KKFI-ORD-${orderId.slice(0, 8).toUpperCase()}`;
+
+    const itemRows = items.map(i => `
+    <tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #333;color:#ccc;font-size:13px;">${i.name}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #333;color:#888;font-size:13px;text-align:center;">${i.size}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #333;color:#888;font-size:13px;text-align:center;">${i.quantity}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #333;color:#fff;font-size:13px;text-align:right;font-weight:600;">₹${(i.price * i.quantity).toLocaleString()}</td>
+    </tr>
+    `).join('');
+
+    const subject = `Order Confirmed – ${orderRef} 🛍️`;
+    const html = wrapHtml(subject, `
+<div style="text-align:center;margin-bottom:24px;">
+  <div style="display:inline-block;background:#14532d;border:2px solid #22c55e;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:28px;margin-bottom:8px;">✅</div>
+  <h2 style="color:#fff;margin:8px 0 4px;font-size:22px;font-weight:800;">Order Confirmed!</h2>
+  <p style="color:#22c55e;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:0;">Payment Successful</p>
+</div>
+
+<p>Hi <strong style="color:#fff;">${name}</strong>, your KKFI Store order has been confirmed and is being processed.</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:#1f1f1f;border-radius:12px;border:1px solid #333;overflow:hidden;">
+<tr><td style="padding:16px 20px;border-bottom:1px solid #333;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td><p style="margin:0;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Order ID</p><p style="margin:4px 0 0;color:#fff;font-weight:700;">${orderRef}</p></td>
+      <td style="text-align:right;"><p style="margin:0;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Payment ID</p><p style="margin:4px 0 0;color:#22c55e;font-weight:700;font-size:12px;">${paymentId}</p></td>
+    </tr>
+  </table>
+</td></tr>
+<tr><td style="padding:0;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr style="background:#171717;">
+      <td style="padding:10px 12px;color:#666;font-size:11px;font-weight:700;text-transform:uppercase;">Item</td>
+      <td style="padding:10px 12px;color:#666;font-size:11px;font-weight:700;text-transform:uppercase;text-align:center;">Size</td>
+      <td style="padding:10px 12px;color:#666;font-size:11px;font-weight:700;text-transform:uppercase;text-align:center;">Qty</td>
+      <td style="padding:10px 12px;color:#666;font-size:11px;font-weight:700;text-transform:uppercase;text-align:right;">Amount</td>
+    </tr>
+    ${itemRows}
+    <tr>
+      <td colspan="3" style="padding:12px;color:#fff;font-weight:700;text-align:right;border-top:2px solid #333;">Total</td>
+      <td style="padding:12px;color:#dc2626;font-weight:800;font-size:18px;text-align:right;border-top:2px solid #333;">₹${totalAmount.toLocaleString()}</td>
+    </tr>
+  </table>
+</td></tr>
+</table>
+
+<p style="color:#ccc;font-size:13px;">We'll notify you when your order is ready for pickup or shipped.</p>
+
+${btn('View My Orders', SITE_URL + '/dashboard')}
+
+<p style="color:#888;font-size:13px;">Osu! 🥋</p>
+`);
+    const text = `Order Confirmed!\n\nOrder: ${orderRef}\nPayment: ${paymentId}\nTotal: ₹${totalAmount}\n\nItems:\n${items.map(i => `- ${i.name} (${i.size}) x${i.quantity} = ₹${i.price * i.quantity}`).join('\n')}\n\nOsu!`;
+    await send(email, subject, html, text);
+};

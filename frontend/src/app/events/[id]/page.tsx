@@ -2,13 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, MapPin, Clock, Shield, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
+import { Calendar, MapPin, Clock, Shield, CheckCircle, AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
+import Script from "next/script";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
+
+declare global {
+    interface Window { Razorpay: any; }
+}
 
 export default function EventDetailPage() {
     const { id } = useParams();
@@ -18,6 +23,7 @@ export default function EventDetailPage() {
     const [loading, setLoading] = useState(true);
     const [isRegistering, setIsRegistering] = useState(false);
     const [registrationStep, setRegistrationStep] = useState(1);
+    const [paymentProcessing, setPaymentProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [eventType, setEventType] = useState<string>("");
 
@@ -50,17 +56,71 @@ export default function EventDetailPage() {
 
     const handlePayment = async () => {
         try {
-            // Send default/null values for category since we removed selection
-            await api.post(`/events/${id}/register`, {
-                categoryAge: null,
-                categoryWeight: null,
-                categoryBelt: null,
-                eventType,
+            setPaymentProcessing(true);
+
+            // Step 1: Create Razorpay order via backend
+            const orderRes = await api.post(`/payments/tournament/${id}/create-order`);
+            const orderData = orderRes.data.data;
+
+            // Step 2: Open Razorpay checkout
+            if (!window.Razorpay) {
+                throw new Error("Payment gateway not loaded. Please refresh and try again.");
+            }
+
+            const options = {
+                key: orderData.keyId,
+                amount: Math.round(orderData.totalAmount * 100),
+                currency: orderData.currency || "INR",
+                name: "Kyokushin Karate India",
+                description: `Event Registration - ${orderData.eventName || event.name}`,
+                order_id: orderData.orderId,
+                prefill: {
+                    name: user?.name || "",
+                    email: user?.email || "",
+                    contact: user?.phone || "",
+                },
+                notes: { type: "tournament_registration", eventId: id },
+                theme: { color: "#DC2626" },
+                modal: {
+                    ondismiss: () => {
+                        setPaymentProcessing(false);
+                        showToast("Payment cancelled.", "error");
+                    },
+                },
+                handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
+                    // Step 3: Verify payment & complete registration
+                    try {
+                        await api.post("/payments/tournament/verify", {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            eventType,
+                            categoryAge: null,
+                            categoryWeight: null,
+                            categoryBelt: null,
+                        });
+                        setRegistrationStep(3);
+                        showToast("Registration successful! Payment verified.", "success");
+                    } catch (err: any) {
+                        console.error("Payment verification failed", err);
+                        showToast(err.response?.data?.message || "Payment verification failed.", "error");
+                    } finally {
+                        setPaymentProcessing(false);
+                    }
+                },
+            };
+
+            const razorpay = new window.Razorpay(options);
+            razorpay.on("payment.failed", (response: any) => {
+                console.error("Payment failed:", response.error);
+                setPaymentProcessing(false);
+                showToast(`Payment failed: ${response.error?.description || "Please try again."}`, "error");
             });
-            setRegistrationStep(3); // Success step
-            showToast("Registration successful!", "success");
+            razorpay.open();
+
         } catch (error: any) {
             console.error("Registration failed", error);
+            setPaymentProcessing(false);
             showToast(error.response?.data?.message || "Registration failed. Please try again.", "error");
         }
     };
@@ -73,6 +133,7 @@ export default function EventDetailPage() {
 
     return (
         <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
+            <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
             {/* Hero Section */}
             <div className="relative h-[50vh] w-full">
                 <div className="absolute inset-0">
@@ -275,8 +336,8 @@ export default function EventDetailPage() {
                                                 <span className="text-xl font-bold text-primary">₹{event.memberFee}</span>
                                             </div>
                                         </div>
-                                        <Button onClick={handlePayment} className="w-full bg-green-600 hover:bg-green-700">
-                                            Confirm & Pay
+                                        <Button onClick={handlePayment} disabled={paymentProcessing} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50">
+                                            {paymentProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</> : 'Confirm & Pay'}
                                         </Button>
                                         <Button variant="ghost" onClick={() => setRegistrationStep(1)} className="w-full mt-2">
                                             Back
@@ -284,13 +345,13 @@ export default function EventDetailPage() {
                                     </motion.div>
                                 )}
 
-                                {registrationStep === 2 && (
+                                {registrationStep === 3 && (
                                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-8">
                                         <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
                                             <CheckCircle className="w-8 h-8 text-green-500" />
                                         </div>
                                         <h3 className="text-2xl font-bold text-white mb-2">Registration Successful!</h3>
-                                        <p className="text-gray-400 mb-6">Your spot has been confirmed. Good luck!</p>
+                                        <p className="text-gray-400 mb-6">Payment verified. Your spot has been confirmed. Good luck!</p>
                                         <Link href="/dashboard">
                                             <Button className="w-full">Go to Dashboard</Button>
                                         </Link>

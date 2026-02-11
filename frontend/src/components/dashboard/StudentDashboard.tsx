@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Trophy, Activity, ChevronRight, User, CheckCircle, Clock, Zap, MapPin, FileText, Edit, CreditCard, CalendarDays, ShieldCheck } from "lucide-react";
+import { Calendar, Trophy, Activity, ChevronRight, User, CheckCircle, Clock, Zap, MapPin, FileText, Edit, CreditCard, CalendarDays, ShieldCheck, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import BlogSubmission from "./BlogSubmission";
 import FightRecordCard from "./FightRecordCard";
 import ProfileCompletionBar from "@/components/ui/ProfileCompletionBar";
 import OnboardingTour from "@/components/ui/OnboardingTour";
+import MyOrders from "./MyOrders";
 
 export default function StudentDashboard({ user }: { user: any }) {
     const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
@@ -83,7 +84,7 @@ export default function StudentDashboard({ user }: { user: any }) {
         visible: { opacity: 1, y: 0 }
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'blogs' | 'submit'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'blogs' | 'submit' | 'orders'>('overview');
 
     return (
         <motion.div
@@ -118,6 +119,12 @@ export default function StudentDashboard({ user }: { user: any }) {
                         className={`backdrop-blur-sm border ${activeTab === 'submit' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
                     >
                         <Edit className="w-4 h-4 mr-2" /> Write Blog
+                    </Button>
+                    <Button
+                        onClick={() => setActiveTab('orders')}
+                        className={`backdrop-blur-sm border ${activeTab === 'orders' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
+                    >
+                        <ShoppingBag className="w-4 h-4 mr-2" /> My Orders
                     </Button>
                 </div>
             </motion.div>
@@ -303,6 +310,12 @@ export default function StudentDashboard({ user }: { user: any }) {
             {activeTab === 'submit' && (
                 <motion.div variants={itemVariants}>
                     <BlogSubmission />
+                </motion.div>
+            )}
+
+            {activeTab === 'orders' && (
+                <motion.div variants={itemVariants}>
+                    <MyOrders />
                 </motion.div>
             )}
 

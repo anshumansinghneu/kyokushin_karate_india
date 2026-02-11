@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
+import { createRazorpayOrder, verifyRazorpaySignature } from '../services/paymentService';
+import { sendOrderConfirmationEmail } from '../services/emailService';
 
 // ========== PUBLIC ENDPOINTS ==========
 
@@ -90,6 +92,7 @@ export const deleteProduct = catchAsync(async (req: Request, res: Response) => {
 
 // ========== ORDER ENDPOINTS ==========
 
+// Step 1: Create order & Razorpay payment
 export const createOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user.id;
     const { items, shippingName, shippingPhone, shippingAddress, shippingCity, shippingState, shippingPincode, notes } = req.body;
@@ -118,10 +121,23 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
         });
     }
 
+    // Create Razorpay order
+    const razorpayOrder = await createRazorpayOrder({
+        amount: Math.round(totalAmount * 100), // paise
+        receipt: `merch_${userId}_${Date.now()}`,
+        notes: {
+            type: 'MERCHANDISE',
+            userId,
+            itemCount: String(items.length),
+        },
+    });
+
+    // Create the merch order in DB with PENDING status
     const order = await prisma.merchOrder.create({
         data: {
             userId,
             totalAmount,
+            razorpayOrderId: razorpayOrder.id,
             shippingName,
             shippingPhone,
             shippingAddress,
@@ -129,6 +145,7 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
             shippingState,
             shippingPincode,
             notes,
+            status: 'PENDING',
             items: {
                 create: orderItems,
             },
@@ -140,7 +157,92 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
 
     res.status(201).json({
         status: 'success',
-        data: { order },
+        data: {
+            order,
+            razorpayOrderId: razorpayOrder.id,
+            amount: totalAmount,
+            currency: 'INR',
+            keyId: process.env.RAZORPAY_KEY_ID,
+        },
+    });
+});
+
+// Step 2: Verify Razorpay payment
+export const verifyMerchPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user.id;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+        return next(new AppError('Missing payment verification data', 400));
+    }
+
+    const isValid = verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+    if (!isValid) {
+        return next(new AppError('Payment verification failed', 400));
+    }
+
+    const order = await prisma.merchOrder.findFirst({
+        where: { razorpayOrderId: razorpay_order_id, userId },
+        include: {
+            items: { include: { product: true } },
+            user: { select: { name: true, email: true, phone: true } },
+        },
+    });
+
+    if (!order) {
+        return next(new AppError('Order not found', 404));
+    }
+
+    if (order.razorpayPaymentId) {
+        return next(new AppError('Payment already verified', 400));
+    }
+
+    // Update order with payment info and set to CONFIRMED
+    const updatedOrder = await prisma.merchOrder.update({
+        where: { id: order.id },
+        data: {
+            razorpayPaymentId: razorpay_payment_id,
+            status: 'CONFIRMED',
+        },
+        include: {
+            items: { include: { product: true } },
+            user: { select: { name: true, email: true, phone: true } },
+        },
+    });
+
+    // Decrease stock counts
+    for (const item of updatedOrder.items) {
+        await prisma.product.update({
+            where: { id: item.productId },
+            data: {
+                stockCount: { decrement: item.quantity },
+            },
+        });
+    }
+
+    // Send confirmation email
+    try {
+        await sendOrderConfirmationEmail(
+            updatedOrder.user.email,
+            updatedOrder.user.name,
+            updatedOrder.id,
+            updatedOrder.items.map(i => ({
+                name: i.product.name,
+                size: i.size || 'One Size',
+                quantity: i.quantity,
+                price: i.price,
+            })),
+            updatedOrder.totalAmount,
+            razorpay_payment_id
+        );
+    } catch (emailErr) {
+        console.error('Failed to send order confirmation email:', emailErr);
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Payment verified! Order confirmed.',
+        data: { order: updatedOrder },
     });
 });
 

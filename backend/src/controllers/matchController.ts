@@ -21,6 +21,90 @@ export const getLiveMatches = catchAsync(async (req: Request, res: Response, nex
     });
 });
 
+// Get recently completed matches (for showing winners when no live matches)
+export const getRecentResults = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const limit = Math.min(Number(req.query.limit) || 10, 50);
+    const matches = await prisma.match.findMany({
+        where: { status: 'COMPLETED', winnerId: { not: null } },
+        include: {
+            fighterA: { select: { id: true, name: true, currentBeltRank: true, dojo: { select: { name: true } } } },
+            fighterB: { select: { id: true, name: true, currentBeltRank: true, dojo: { select: { name: true } } } },
+            bracket: { select: { categoryName: true, event: { select: { id: true, name: true } } } }
+        },
+        orderBy: { completedAt: 'desc' },
+        take: limit,
+    });
+
+    res.status(200).json({
+        status: 'success',
+        data: { matches }
+    });
+});
+
+// Get champions (final match winners) from the last tournament
+export const getLastTournamentChampions = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // Find the most recent tournament event that has completed matches
+    const lastTournamentMatch = await prisma.match.findFirst({
+        where: { status: 'COMPLETED', winnerId: { not: null } },
+        include: { bracket: { select: { event: { select: { id: true, name: true, startDate: true } } } } },
+        orderBy: { completedAt: 'desc' },
+    });
+
+    if (!lastTournamentMatch?.bracket?.event) {
+        return res.status(200).json({ status: 'success', data: { tournament: null, champions: [] } });
+    }
+
+    const eventId = lastTournamentMatch.bracket.event.id;
+    const tournament = lastTournamentMatch.bracket.event;
+
+    // Get all brackets for this tournament
+    const brackets = await prisma.tournamentBracket.findMany({
+        where: { eventId },
+        select: { id: true, categoryName: true, categoryWeight: true, categoryBelt: true },
+    });
+
+    // For each bracket, find the final match (no nextMatchId) that is completed
+    const champions = [];
+    for (const bracket of brackets) {
+        const finalMatch = await prisma.match.findFirst({
+            where: {
+                bracketId: bracket.id,
+                nextMatchId: null,
+                status: 'COMPLETED',
+                winnerId: { not: null },
+            },
+            include: {
+                fighterA: { select: { id: true, name: true, currentBeltRank: true, profilePhotoUrl: true, dojo: { select: { name: true } } } },
+                fighterB: { select: { id: true, name: true, currentBeltRank: true, profilePhotoUrl: true, dojo: { select: { name: true } } } },
+            },
+        });
+
+        if (finalMatch && finalMatch.winnerId) {
+            const winner = finalMatch.winnerId === finalMatch.fighterAId ? finalMatch.fighterA : finalMatch.fighterB;
+            if (winner) {
+                champions.push({
+                    category: bracket.categoryName,
+                    weight: bracket.categoryWeight,
+                    belt: bracket.categoryBelt,
+                    winner: {
+                        id: winner.id,
+                        name: winner.name,
+                        beltRank: winner.currentBeltRank,
+                        photo: winner.profilePhotoUrl,
+                        dojo: winner.dojo?.name || null,
+                    },
+                    score: `${finalMatch.fighterAScore} - ${finalMatch.fighterBScore}`,
+                });
+            }
+        }
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: { tournament, champions },
+    });
+});
+
 export const getMatch = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const match = await prisma.match.findUnique({
         where: { id: req.params.id },
