@@ -10,6 +10,7 @@ import api from "@/lib/api";
 import HeroSectionV2 from "@/components/HeroSectionV2";
 import LeadershipSection from "@/components/LeadershipSection";
 import MonthlyChampions from "@/components/MonthlyChampions";
+import TestimonialsSection from "@/components/TestimonialsSection";
 
 interface Event {
   id: string;
@@ -299,6 +300,9 @@ export default function Home() {
               </div>
             </div>
           </section>
+
+          {/* TESTIMONIALS */}
+          <TestimonialsSection />
 
           {/* CTA SECTION */}
           <section className="py-32 relative overflow-hidden flex items-center justify-center">

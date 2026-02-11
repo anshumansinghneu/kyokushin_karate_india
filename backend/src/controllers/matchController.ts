@@ -4,6 +4,23 @@ import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { io } from '../index'; // We need to export io from index.ts
 
+export const getLiveMatches = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const matches = await prisma.match.findMany({
+        where: { status: 'LIVE' },
+        include: {
+            fighterA: { select: { name: true, currentBeltRank: true, dojo: { select: { name: true } } } },
+            fighterB: { select: { name: true, currentBeltRank: true, dojo: { select: { name: true } } } },
+            bracket: { select: { categoryName: true, event: { select: { id: true, name: true } } } }
+        },
+        orderBy: { startedAt: 'desc' }
+    });
+
+    res.status(200).json({
+        status: 'success',
+        data: { matches }
+    });
+});
+
 export const getMatch = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const match = await prisma.match.findUnique({
         where: { id: req.params.id },

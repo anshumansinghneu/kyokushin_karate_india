@@ -23,12 +23,22 @@ const LiveMatchViewer: React.FC = () => {
         // Initial fetch of live matches
         const fetchLiveMatches = async () => {
             try {
-                // We need an endpoint for live matches, or filter from all matches.
-                // For now, let's assume we can get them or just wait for socket events.
-                // Ideally: GET /matches?status=LIVE
-                // Mocking initial state or waiting for updates.
+                const res = await api.get('/matches/live');
+                const matches = res.data.data.matches.map((m: any) => ({
+                    id: m.id,
+                    fighterAName: m.fighterAName || m.fighterA?.name || 'TBD',
+                    fighterBName: m.fighterBName || m.fighterB?.name || 'TBD',
+                    status: m.status,
+                    roundName: m.roundName,
+                    matchNumber: m.matchNumber,
+                    fighterAScore: m.fighterAScore || 0,
+                    fighterBScore: m.fighterBScore || 0,
+                    categoryName: m.bracket?.categoryName,
+                    eventName: m.bracket?.event?.name,
+                }));
+                setLiveMatches(matches);
             } catch (err) {
-                console.error(err);
+                console.error('Failed to fetch live matches', err);
             }
         };
 

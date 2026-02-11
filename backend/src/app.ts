@@ -24,6 +24,7 @@ import noteRouter from './routes/noteRoutes';
 import galleryRouter from './routes/galleryRoutes';
 import announceRouter from './routes/announceRoutes';
 import paymentRouter from './routes/paymentRoutes';
+import merchRouter from './routes/merchRoutes';
 import { sendRenewalReminders } from './services/renewalReminderService';
 import { globalErrorHandler } from './utils/errorHandler';
 
@@ -93,6 +94,7 @@ app.use('/api/recognitions', recognitionRouter);
 app.use('/api/gallery', galleryRouter);
 app.use('/api/announcements', announceRouter);
 app.use('/api/payments', paymentRouter);  // Payment & UPI integration
+app.use('/api/merch', merchRouter);  // Merchandise store
 app.use('/api', noteRouter);  // Notes and profile views
 
 // Serve static files (uploads)

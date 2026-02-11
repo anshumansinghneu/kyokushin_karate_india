@@ -130,3 +130,57 @@ export const getResults = catchAsync(async (req: Request, res: Response, next: N
         },
     });
 });
+
+// ─── Fight Record for a User ──────────────────────────────────────────
+export const getFightRecord = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+
+    const results = await prisma.tournamentResult.findMany({
+        where: { userId },
+        include: {
+            event: { select: { name: true, startDate: true } },
+        },
+        orderBy: { event: { startDate: 'desc' } },
+    });
+
+    let totalMatches = 0;
+    let wins = 0;
+    let losses = 0;
+    const medals = { gold: 0, silver: 0, bronze: 0 };
+
+    const mapped = results.map(r => {
+        const mw = r.matchesWon || 0;
+        const ml = r.matchesLost || 0;
+        totalMatches += mw + ml;
+        wins += mw;
+        losses += ml;
+        if (r.medal === 'GOLD') medals.gold++;
+        else if (r.medal === 'SILVER') medals.silver++;
+        else if (r.medal === 'BRONZE') medals.bronze++;
+
+        return {
+            id: r.id,
+            eventName: (r as any).event?.name || 'Unknown',
+            eventDate: (r as any).event?.startDate || null,
+            categoryName: r.categoryName,
+            finalRank: r.finalRank,
+            medal: r.medal,
+            totalMatches: mw + ml,
+            matchesWon: mw,
+            matchesLost: ml,
+        };
+    });
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            totalMatches,
+            wins,
+            losses,
+            draws: 0,
+            winRate: totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0,
+            medals,
+            results: mapped,
+        },
+    });
+});

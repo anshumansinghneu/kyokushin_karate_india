@@ -7,6 +7,8 @@ import Footer from "@/components/Footer";
 import ScrollProgress from "@/components/ScrollProgress";
 import StructuredData from "@/components/StructuredData";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import MobileBottomNav from "@/components/ui/MobileBottomNav";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -82,14 +84,17 @@ export default function RootLayout({
     <html lang="en">
       <body className={cn(montserrat.variable, "min-h-screen bg-black font-sans antialiased")}>
         <StructuredData />
+        <ThemeProvider>
         <ToastProvider>
           <ScrollProgress />
           <Navbar />
-          <main className="min-h-screen pt-24">
+          <main className="min-h-screen pt-24 pb-20 md:pb-0">
             {children}
           </main>
           <Footer />
+          <MobileBottomNav />
         </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

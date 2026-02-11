@@ -166,6 +166,7 @@ model User {
   notesReceived         StudentNote[]    @relation("StudentNotes")
   notesAuthored         StudentNote[]    @relation("AuthoredNotes")
   payments              Payment[]
+  merchOrders           MerchOrder[]
 
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
@@ -181,6 +182,8 @@ model Dojo {
   address      String?
   contactEmail String?
   contactPhone String?
+  latitude     Float?
+  longitude    Float?
 
   instructors  User[] // Ideally filtered by role in app logic, but relation exists via User.dojoId
 
@@ -565,4 +568,69 @@ model StudentNote {
 
   @@index([studentId])
   @@index([createdBy])
+}
+
+// ========== MERCHANDISE STORE ==========
+
+model Product {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?  @db.Text
+  price         Float
+  comparePrice  Float?   // Original price for showing discount
+  category      String   @default("APPAREL") // APPAREL, EQUIPMENT, ACCESSORIES
+  images        String[] // Array of image URLs
+  sizes         String[] // S, M, L, XL, etc.
+  inStock       Boolean  @default(true)
+  stockCount    Int      @default(0)
+  featured      Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  orderItems    MerchOrderItem[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model MerchOrder {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  items           MerchOrderItem[]
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  razorpayOrderId String?
+  razorpayPaymentId String?
+  shippingName    String?
+  shippingPhone   String?
+  shippingAddress String?  @db.Text
+  shippingCity    String?
+  shippingState   String?
+  shippingPincode String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model MerchOrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     MerchOrder @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  size      String?
+  quantity  Int      @default(1)
+  price     Float    // Price at time of purchase
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
 }

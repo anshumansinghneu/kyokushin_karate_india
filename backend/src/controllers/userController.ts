@@ -652,3 +652,31 @@ export const getUserFullProfile = catchAsync(async (req: Request, res: Response,
         }
     });
 });
+
+// ─── Public Instructor Profiles ────────────────────────────────────────
+export const getPublicInstructors = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const instructors = await prisma.user.findMany({
+        where: {
+            role: 'INSTRUCTOR',
+            isInstructorApproved: true,
+            membershipStatus: 'ACTIVE',
+        },
+        select: {
+            id: true,
+            name: true,
+            currentBeltRank: true,
+            profilePhotoUrl: true,
+            city: true,
+            state: true,
+            membershipNumber: true,
+            createdAt: true,
+            dojo: { select: { name: true, city: true } },
+        },
+        orderBy: { name: 'asc' },
+    });
+
+    res.status(200).json({
+        status: 'success',
+        data: { instructors },
+    });
+});

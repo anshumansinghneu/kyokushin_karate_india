@@ -8,6 +8,7 @@ import { Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCirc
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { getUserProfileImage } from "@/lib/imageUtils";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
@@ -74,6 +75,10 @@ export default function Navbar() {
         { name: "Sponsors", href: "/sponsors" },
         { name: "Low Kick", href: "/low-kick", icon: "/india-flag.png" },
         { name: "Gallery", href: "/gallery" },
+        { name: "Syllabus", href: "/syllabus" },
+        { name: "Instructors", href: "/instructors" },
+        { name: "Store", href: "/store" },
+        { name: "Live", href: "/live" },
         { name: "Verify", href: "/verify" },
     ];
 
@@ -101,6 +106,8 @@ export default function Navbar() {
                             {link.icon && <img src={link.icon} alt="Flag" className="h-4 w-auto rounded-sm" />}
                         </Link>
                     ))}
+
+                    <ThemeToggle />
 
                     {isAuthenticated ? (
                         <div className="relative ml-4" ref={dropdownRef}>

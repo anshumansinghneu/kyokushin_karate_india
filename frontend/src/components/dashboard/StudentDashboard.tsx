@@ -10,6 +10,9 @@ import { useToast } from "@/contexts/ToastContext";
 import MembershipCard from "./MembershipCard";
 import BlogManager from "./BlogManager";
 import BlogSubmission from "./BlogSubmission";
+import FightRecordCard from "./FightRecordCard";
+import ProfileCompletionBar from "@/components/ui/ProfileCompletionBar";
+import OnboardingTour from "@/components/ui/OnboardingTour";
 
 export default function StudentDashboard({ user }: { user: any }) {
     const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
@@ -123,12 +126,17 @@ export default function StudentDashboard({ user }: { user: any }) {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Left Column: Membership & Stats (4 cols) */}
                     <div className="lg:col-span-4 space-y-8">
-                        <motion.div variants={itemVariants}>
+                        <motion.div variants={itemVariants} data-tour="membership-card">
                             <MembershipCard user={user} />
                         </motion.div>
 
+                        {/* Profile Completion */}
+                        <motion.div variants={itemVariants}>
+                            <ProfileCompletionBar user={user} />
+                        </motion.div>
+
                         {/* Quick Stats Grid */}
-                        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
+                        <motion.div variants={itemVariants} data-tour="quick-stats" className="grid grid-cols-2 gap-4">
                             <div className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-red-500/30 transition-colors">
                                 <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center mb-2 group-hover:bg-red-500/20 transition-colors">
                                     <Activity className="w-5 h-5 text-red-500" />
@@ -160,7 +168,7 @@ export default function StudentDashboard({ user }: { user: any }) {
                         </motion.div>
 
                         {/* Quick Links */}
-                        <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3">
+                        <motion.div variants={itemVariants} data-tour="quick-links" className="grid grid-cols-3 gap-3">
                             <Link href="/payments" className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-green-500/30 transition-all hover:scale-[1.02]">
                                 <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center mb-2 group-hover:bg-green-500/20 transition-colors">
                                     <CreditCard className="w-5 h-5 text-green-500" />
@@ -182,6 +190,11 @@ export default function StudentDashboard({ user }: { user: any }) {
                         </motion.div>
                     </div>
                     <div className="lg:col-span-8 space-y-8">
+
+                        {/* Fight Record */}
+                        <motion.div variants={itemVariants}>
+                            <FightRecordCard />
+                        </motion.div>
 
                         {/* Next Event Hero Card */}
                         {nextEvent && (
@@ -292,6 +305,9 @@ export default function StudentDashboard({ user }: { user: any }) {
                     <BlogSubmission />
                 </motion.div>
             )}
+
+            {/* Onboarding Tour */}
+            <OnboardingTour role={user?.role} />
         </motion.div>
     );
 }

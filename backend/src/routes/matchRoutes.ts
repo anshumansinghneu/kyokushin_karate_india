@@ -1,8 +1,11 @@
 import express from 'express';
-import { getMatch, startMatch, endMatch, updateScore } from '../controllers/matchController';
+import { getMatch, getLiveMatches, startMatch, endMatch, updateScore } from '../controllers/matchController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
+
+// Public route - live matches for spectators
+router.get('/live', getLiveMatches);
 
 router.use(protect);
 
