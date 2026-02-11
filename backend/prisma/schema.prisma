@@ -39,6 +39,13 @@ enum PaymentStatus {
   PENDING
   PAID
   FAILED
+  REFUNDED
+}
+
+enum PaymentType {
+  MEMBERSHIP
+  RENEWAL
+  TOURNAMENT
 }
 
 enum ApprovalStatus {
@@ -158,6 +165,7 @@ model User {
   viewedProfiles        ProfileView[]    @relation("ProfileViewer")
   notesReceived         StudentNote[]    @relation("StudentNotes")
   notesAuthored         StudentNote[]    @relation("AuthoredNotes")
+  payments              Payment[]
 
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
@@ -228,6 +236,7 @@ model Event {
   results               TournamentResult[]
   gallery               Gallery[]
   specificVouchers      VoucherCode[]
+  payments              Payment[]
   notifications         Notification[]
 
   createdAt             DateTime    @default(now())
@@ -491,6 +500,42 @@ model BeltVerificationRequest {
   updatedAt       DateTime       @updatedAt
 
   @@index([studentId])
+  @@index([status])
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  type              PaymentType
+  amount            Float         // Base amount (e.g. 250)
+  taxAmount         Float         // GST amount
+  totalAmount       Float         // amount + taxAmount
+  currency          String        @default("INR")
+
+  // Razorpay
+  razorpayOrderId   String        @unique
+  razorpayPaymentId String?
+  razorpaySignature String?
+
+  status            PaymentStatus @default(PENDING)
+
+  // Who paid (null for new registrations before user creation)
+  userId            String?
+  user              User?         @relation(fields: [userId], references: [id])
+
+  // For registration payments - store form data until payment completes
+  registrationData  Json?
+
+  // For event/tournament payments
+  eventId           String?
+  event             Event?        @relation(fields: [eventId], references: [id])
+
+  description       String?
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([razorpayOrderId])
+  @@index([userId])
   @@index([status])
 }
 

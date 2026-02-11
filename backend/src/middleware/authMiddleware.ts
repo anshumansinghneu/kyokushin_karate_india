@@ -24,10 +24,42 @@ export const protect = catchAsync(async (req: Request, res: Response, next: Next
         return next(new AppError('The user belonging to this token does no longer exist.', 401));
     }
 
+    // ── Auto-expire membership if annual period has passed ──
+    if (
+        currentUser.role !== 'ADMIN' &&
+        currentUser.membershipStatus === 'ACTIVE' &&
+        currentUser.membershipEndDate &&
+        new Date(currentUser.membershipEndDate) < new Date()
+    ) {
+        await prisma.user.update({
+            where: { id: currentUser.id },
+            data: { membershipStatus: 'EXPIRED' },
+        });
+        currentUser.membershipStatus = 'EXPIRED';
+    }
+
     // @ts-ignore
     req.user = currentUser;
     next();
 });
+
+// Middleware to require active membership (blocks expired users)
+export const requireActiveMembership = (req: Request, res: Response, next: NextFunction) => {
+    // @ts-ignore
+    const user = req.user;
+
+    // Admins bypass membership check
+    if (user.role === 'ADMIN') return next();
+
+    if (user.membershipStatus === 'EXPIRED') {
+        return next(new AppError(
+            'Your annual membership has expired. Please renew your membership (₹250 + GST) to continue.',
+            403
+        ));
+    }
+
+    next();
+};
 
 export const restrictTo = (...roles: string[]) => {
     return (req: Request, res: Response, next: NextFunction) => {

@@ -41,6 +41,8 @@ interface AuthState {
 
     login: (credentials: any) => Promise<void>;
     register: (data: any) => Promise<void>;
+    registerWithPayment: (data: any) => Promise<{ orderId: string; paymentId: string; amount: number; taxAmount: number; totalAmount: number; keyId: string }>;
+    completeRegistration: (paymentData: any) => Promise<void>;
     logout: () => void;
     checkAuth: () => Promise<void>;
     updateProfile: (data: any) => Promise<void>;
@@ -83,6 +85,41 @@ export const useAuthStore = create<AuthState>((set) => ({
         } catch (error: any) {
             set({
                 error: error.response?.data?.message || 'Registration failed',
+                isLoading: false
+            });
+            throw error;
+        }
+    },
+
+    // Step 1: Create payment order for registration
+    registerWithPayment: async (data) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await api.post('/payments/registration/create-order', data);
+            set({ isLoading: false });
+            return response.data.data;
+        } catch (error: any) {
+            set({
+                error: error.response?.data?.message || 'Failed to create payment order',
+                isLoading: false
+            });
+            throw error;
+        }
+    },
+
+    // Step 2: Verify payment and complete registration
+    completeRegistration: async (paymentData) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await api.post('/payments/registration/verify', paymentData);
+            const { token } = response.data;
+            const { user } = response.data.data;
+
+            localStorage.setItem('token', token);
+            set({ token, user, isAuthenticated: true, isLoading: false });
+        } catch (error: any) {
+            set({
+                error: error.response?.data?.message || 'Payment verification failed',
                 isLoading: false
             });
             throw error;

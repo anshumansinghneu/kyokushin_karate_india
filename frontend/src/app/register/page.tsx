@@ -6,15 +6,24 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, ChevronRight, User, GraduationCap } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, ChevronRight, User, GraduationCap, CreditCard, Shield } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { INDIAN_STATES, CITIES, BELT_RANKS, COUNTRY_CODES } from "@/lib/constants";
 
 const ADMIN_INSTRUCTOR_ID = "42b18481-85ee-49ed-8b3c-dc4f707fe29e"; // Sihan Vasant Kumar Singh
 
+// Razorpay types
+declare global {
+    interface Window {
+        Razorpay: any;
+    }
+}
+
 export default function RegisterPage() {
     const [role, setRole] = useState<"STUDENT" | "INSTRUCTOR">("STUDENT");
+    const [paymentStep, setPaymentStep] = useState<"form" | "paying" | "verifying" | "done">("form");
+    const [paymentInfo, setPaymentInfo] = useState<{ amount: number; taxAmount: number; totalAmount: number } | null>(null);
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -47,10 +56,10 @@ export default function RegisterPage() {
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [age, setAge] = useState<number | null>(null); // Derived age state
 
-    const { register, isLoading, error: authError } = useAuthStore();
+    const { register, registerWithPayment, completeRegistration, isLoading, error: authError } = useAuthStore();
     const router = useRouter();
 
-    // Fetch Locations on Mount
+    // Fetch Locations on Mount + Load Razorpay Script + Fetch Payment Config
     useEffect(() => {
         const fetchLocations = async () => {
             try {
@@ -63,6 +72,33 @@ export default function RegisterPage() {
             }
         };
         fetchLocations();
+
+        // Load Razorpay checkout script
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+
+        // Fetch payment config
+        const fetchPaymentConfig = async () => {
+            try {
+                const res = await api.get('/payments/config');
+                setPaymentInfo({
+                    amount: res.data.data.membershipFee,
+                    taxAmount: res.data.data.taxAmount,
+                    totalAmount: res.data.data.totalAmount,
+                });
+            } catch (err) {
+                console.error("Failed to fetch payment config", err);
+                // Fallback
+                setPaymentInfo({ amount: 250, taxAmount: 45, totalAmount: 295 });
+            }
+        };
+        fetchPaymentConfig();
+
+        return () => {
+            document.body.removeChild(script);
+        };
     }, []);
 
     // Fetch Dojos when City changes
@@ -253,14 +289,12 @@ export default function RegisterPage() {
             // Add instructor-specific fields
             if (role === "INSTRUCTOR") {
                 payload.yearsOfExperience = Number(formData.yearsOfExperience);
-                // Remove student-specific fields
                 delete payload.fatherName;
                 delete payload.fatherPhone;
                 delete payload.beltExamDate;
                 delete payload.beltClaimReason;
-                if (!formData.dojoId) delete payload.dojoId; // Dojo optional for instructors
+                if (!formData.dojoId) delete payload.dojoId;
             } else {
-                // STUDENTS: Include belt verification info if claiming higher belt
                 if (formData.currentBeltRank !== "White") {
                     payload.beltExamDate = formData.beltExamDate;
                     payload.beltClaimReason = formData.beltClaimReason || "";
@@ -268,14 +302,70 @@ export default function RegisterPage() {
                     delete payload.beltExamDate;
                     delete payload.beltClaimReason;
                 }
-                // Remove instructor-specific fields for students
                 delete payload.yearsOfExperience;
             }
 
-            await register(payload);
-            router.push("/dashboard");
+            // ── Step 1: Create Payment Order ──
+            setPaymentStep("paying");
+            const orderData = await registerWithPayment(payload);
+
+            // ── Step 2: Open Razorpay Checkout ──
+            if (!window.Razorpay) {
+                throw new Error("Payment gateway not loaded. Please refresh and try again.");
+            }
+
+            const options = {
+                key: orderData.keyId,
+                amount: Math.round(orderData.totalAmount * 100), // in paise
+                currency: "INR",
+                name: "Kyokushin Karate India",
+                description: "Annual Membership Fee",
+                order_id: orderData.orderId,
+                prefill: {
+                    name: formData.name,
+                    email: formData.email,
+                    contact: formData.phone,
+                },
+                notes: {
+                    type: "membership_registration",
+                },
+                theme: {
+                    color: "#DC2626",
+                },
+                modal: {
+                    ondismiss: () => {
+                        setPaymentStep("form");
+                    },
+                },
+                handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
+                    // ── Step 3: Verify Payment & Create Account ──
+                    try {
+                        setPaymentStep("verifying");
+                        await completeRegistration({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                        });
+                        setPaymentStep("done");
+                        setTimeout(() => router.push("/dashboard"), 1500);
+                    } catch (err) {
+                        setPaymentStep("form");
+                    }
+                },
+            };
+
+            const razorpay = new window.Razorpay(options);
+            razorpay.on("payment.failed", (response: any) => {
+                console.error("Payment failed:", response.error);
+                setPaymentStep("form");
+                useAuthStore.setState({
+                    error: `Payment failed: ${response.error.description || "Please try again"}`,
+                });
+            });
+            razorpay.open();
+
         } catch (err) {
-            // Error handled by store
+            setPaymentStep("form");
         }
     };
 
@@ -737,24 +827,76 @@ export default function RegisterPage() {
                                     </div>
                                 </div>
 
+                                {/* Payment Info Section */}
+                                {paymentInfo && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-6 p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20"
+                                    >
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                                                <CreditCard className="w-4 h-4 text-green-400" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-white">Annual Membership Fee</h4>
+                                                <p className="text-xs text-zinc-400">One-time payment via UPI / Card / Net Banking</p>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1 text-sm">
+                                            <div className="flex justify-between text-zinc-400">
+                                                <span>Membership Fee</span>
+                                                <span>₹{paymentInfo.amount}</span>
+                                            </div>
+                                            <div className="flex justify-between text-zinc-400">
+                                                <span>GST (18%)</span>
+                                                <span>₹{paymentInfo.taxAmount}</span>
+                                            </div>
+                                            <div className="flex justify-between text-white font-bold pt-1 border-t border-white/10">
+                                                <span>Total</span>
+                                                <span className="text-green-400">₹{paymentInfo.totalAmount}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-3 text-xs text-zinc-500">
+                                            <Shield className="w-3 h-3" />
+                                            <span>Secure payment powered by Razorpay • Valid for 1 year</span>
+                                        </div>
+                                    </motion.div>
+                                )}
+
                                 <Button
                                     type="submit"
                                     className="w-full h-12 mt-8 text-base font-bold bg-red-600 hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-red-600/50 rounded-lg"
-                                    disabled={isLoading}
+                                    disabled={isLoading || paymentStep !== "form"}
                                 >
-                                    {isLoading ? (
+                                    {paymentStep === "paying" ? (
                                         <>
                                             <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                            Creating Account...
+                                            Opening Payment...
+                                        </>
+                                    ) : paymentStep === "verifying" ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                            Verifying Payment...
+                                        </>
+                                    ) : paymentStep === "done" ? (
+                                        <>
+                                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                                            Registration Complete!
+                                        </>
+                                    ) : isLoading ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                            Processing...
                                         </>
                                     ) : (
                                         <>
-                                            Complete Registration
+                                            Pay ₹{paymentInfo?.totalAmount || 295} & Register
                                         </>
                                     )}
                                 </Button>
                                 <p className="text-center text-xs text-zinc-500 mt-4">
-                                    By registering, you agree to our Terms of Service
+                                    By registering, you agree to our Terms of Service. Your membership is valid for 1 year from the date of payment.
                                 </p>
                             </form>
                         </motion.div>
