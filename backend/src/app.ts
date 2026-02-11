@@ -61,19 +61,26 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Rate limiting for auth endpoints (prevent brute force)
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // limit each IP to 20 requests per windowMs (increased for testing)
-    message: 'Too many authentication attempts, please try again after 15 minutes',
+    max: 100, // limit each IP to 100 auth requests per windowMs
+    message: { status: 'fail', message: 'Too many authentication attempts, please try again after 15 minutes' },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: (req) => {
+        // Use X-Forwarded-For for proxied deployments (Render, Vercel, etc.)
+        return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
+    },
 });
 
 // General API rate limiting
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later',
+    max: 500, // limit each IP to 500 requests per windowMs
+    message: { status: 'fail', message: 'Too many requests from this IP, please try again later' },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: (req) => {
+        return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
+    },
 });
 
 // Apply rate limiters
