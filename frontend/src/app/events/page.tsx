@@ -6,6 +6,7 @@ import { MapPin, ArrowRight, Calendar, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import KarateLoader from "@/components/KarateLoader";
+import { SkeletonGrid } from "@/components/SkeletonCard";
 
 export default function EventsPage() {
     const [events, setEvents] = useState<any[]>([]);
@@ -45,7 +46,7 @@ export default function EventsPage() {
     return (
         <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
             {/* Background Elements */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_var(--tw-gradient-stops))] from-red-900/20 via-black to-black" />
 
             <div className="container mx-auto px-4 py-12 relative z-10">
                 {/* Header */}
@@ -56,7 +57,7 @@ export default function EventsPage() {
                             animate={{ opacity: 1, y: 0 }}
                             className="text-3xl md:text-5xl font-black tracking-tighter mb-2"
                         >
-                            UPCOMING <span className="text-transparent stroke-text" style={{ WebkitTextStroke: '2px #3b82f6' }}>EVENTS</span>
+                            UPCOMING <span className="text-transparent stroke-text" style={{ WebkitTextStroke: '2px #dc2626' }}>EVENTS</span>
                         </motion.h1>
                         <p className="text-gray-400 text-lg">Compete, Train, Evolve.</p>
                     </div>
@@ -80,9 +81,7 @@ export default function EventsPage() {
 
                 {/* Loading State */}
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-4 h-[50vh]">
-                        <KarateLoader />
-                    </div>
+                    <SkeletonGrid count={4} variant="event" />
                 ) : error ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4">
                         <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
@@ -99,8 +98,8 @@ export default function EventsPage() {
                     </div>
                 ) : filteredEvents.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4">
-                        <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center">
-                            <Calendar className="w-8 h-8 text-blue-400" />
+                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
+                            <Calendar className="w-8 h-8 text-red-400" />
                         </div>
                         <h3 className="text-xl font-bold text-white">No events found</h3>
                         <p className="text-gray-400 text-center">Check back soon for upcoming {filter !== "ALL" ? filter.toLowerCase() + "s" : "events"}</p>
@@ -113,9 +112,10 @@ export default function EventsPage() {
                             return (
                                 <Link href={`/events/${event.id}`} key={event.id}>
                                 <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.1 }}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, amount: 0.2 }}
+                                    transition={{ delay: index * 0.1, duration: 0.5 }}
                                     className="group relative min-h-[280px] md:h-[300px] rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-primary/50 transition-colors active:scale-[0.98]"
                                 >
                                     {/* Background Image */}

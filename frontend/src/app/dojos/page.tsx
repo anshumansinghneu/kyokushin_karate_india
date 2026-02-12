@@ -227,9 +227,10 @@ export default function DojoListPage() {
                                 <Link href={`/dojos/${dojo.id}`} key={dojo.id}>
                                     <motion.div
                                         initial={{ opacity: 0, y: 50 }}
-                                        animate={{ opacity: 1, y: 0 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true, amount: 0.15 }}
                                         exit={{ opacity: 0, scale: 0.9 }}
-                                        transition={{ delay: index * 0.1 }}
+                                        transition={{ delay: index * 0.08, duration: 0.5 }}
                                         className="group relative h-[320px] sm:h-[380px] md:h-[500px] rounded-3xl overflow-hidden cursor-pointer bg-zinc-900 border border-white/5 hover:border-red-600/50 transition-all duration-500 hover:shadow-2xl hover:shadow-red-900/20 active:scale-[0.98]"
                                     >
                                         {/* Background Image */}

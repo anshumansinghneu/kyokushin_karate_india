@@ -397,7 +397,7 @@ export default function GalleryPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
+                            className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center"
                             onClick={() => setLightboxIndex(null)}
                             onTouchStart={handleTouchStart}
                             onTouchEnd={handleTouchEnd}
@@ -405,10 +405,15 @@ export default function GalleryPage() {
                             {/* Close button */}
                             <button
                                 onClick={() => setLightboxIndex(null)}
-                                className="absolute top-6 right-6 text-white/60 hover:text-white z-10"
+                                className="absolute top-6 right-6 text-white/60 hover:text-white z-10 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-all"
                             >
-                                <X className="w-8 h-8" />
+                                <X className="w-6 h-6" />
                             </button>
+
+                            {/* Image counter */}
+                            <div className="absolute top-6 left-6 text-sm text-gray-400 font-mono z-10">
+                                {lightboxIndex + 1} / {items.length}
+                            </div>
 
                             {/* Nav: Previous */}
                             {lightboxIndex > 0 && (
@@ -417,9 +422,9 @@ export default function GalleryPage() {
                                         e.stopPropagation();
                                         setLightboxIndex(lightboxIndex - 1);
                                     }}
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-2 transition-all z-10"
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-3 transition-all z-10"
                                 >
-                                    <ChevronLeft className="w-8 h-8" />
+                                    <ChevronLeft className="w-6 h-6" />
                                 </button>
                             )}
 
@@ -430,27 +435,33 @@ export default function GalleryPage() {
                                         e.stopPropagation();
                                         setLightboxIndex(lightboxIndex + 1);
                                     }}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-2 transition-all z-10"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-3 transition-all z-10"
                                 >
-                                    <ChevronRight className="w-8 h-8" />
+                                    <ChevronRight className="w-6 h-6" />
                                 </button>
                             )}
 
                             {/* Image */}
                             <motion.div
                                 key={currentItem.id}
-                                initial={{ opacity: 0, scale: 0.95 }}
+                                initial={{ opacity: 0, scale: 0.85 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
+                                exit={{ opacity: 0, scale: 0.85 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                 className="max-w-[90vw] max-h-[85vh] flex flex-col items-center"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <img
                                     src={currentItem.imageUrl}
                                     alt={currentItem.caption || "Gallery photo"}
-                                    className="max-w-full max-h-[75vh] object-contain rounded-lg"
+                                    className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl shadow-black/50"
                                 />
-                                <div className="mt-4 text-center">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                    className="mt-4 text-center"
+                                >
                                     {currentItem.caption && (
                                         <p className="text-white font-medium mb-1">{currentItem.caption}</p>
                                     )}
@@ -467,8 +478,26 @@ export default function GalleryPage() {
                                             year: "numeric",
                                         })}
                                     </p>
-                                </div>
+                                </motion.div>
                             </motion.div>
+
+                            {/* Thumbnail strip */}
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 max-w-[90vw] overflow-x-auto pb-1 px-4 scrollbar-hide">
+                                {items.slice(Math.max(0, lightboxIndex - 4), Math.min(items.length, lightboxIndex + 5)).map((item, i) => {
+                                    const realIndex = Math.max(0, lightboxIndex - 4) + i;
+                                    return (
+                                        <button
+                                            key={item.id}
+                                            onClick={(e) => { e.stopPropagation(); setLightboxIndex(realIndex); }}
+                                            className={`w-12 h-12 rounded-md overflow-hidden flex-shrink-0 border-2 transition-all ${
+                                                realIndex === lightboxIndex ? 'border-red-500 opacity-100' : 'border-transparent opacity-40 hover:opacity-70'
+                                            }`}
+                                        >
+                                            <img src={item.imageUrl} alt="" className="w-full h-full object-cover" />
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>

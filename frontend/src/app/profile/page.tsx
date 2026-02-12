@@ -382,6 +382,62 @@ export default function ProfilePage() {
                     </h1>
                 </header>
 
+                {/* Hero Banner */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative mb-8 rounded-2xl overflow-hidden border border-white/5"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-900/60 via-zinc-900/80 to-black" />
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:20px_20px]" />
+                    {/* Belt color stripe */}
+                    <div className={`absolute bottom-0 left-0 right-0 h-1 ${
+                        user?.currentBeltRank === 'Black' ? 'bg-gradient-to-r from-black via-red-600 to-black' :
+                        user?.currentBeltRank === 'Brown' ? 'bg-amber-700' :
+                        user?.currentBeltRank === 'Green' ? 'bg-green-500' :
+                        user?.currentBeltRank === 'Blue' ? 'bg-blue-500' :
+                        user?.currentBeltRank === 'Yellow' ? 'bg-yellow-500' :
+                        user?.currentBeltRank === 'Orange' ? 'bg-orange-500' :
+                        'bg-white/30'
+                    }`} />
+                    <div className="relative z-10 px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-start md:items-center gap-6">
+                        <div className="w-20 h-20 rounded-full border-2 border-red-500/40 overflow-hidden bg-black/50 flex items-center justify-center flex-shrink-0">
+                            {getUserProfileImage(user) ? (
+                                <img src={getUserProfileImage(user)!} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <Shield className="w-10 h-10 text-gray-600" />
+                            )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">{user?.name}</h2>
+                            <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-400">
+                                <span className="flex items-center gap-1.5">
+                                    <Award className="w-4 h-4 text-red-500" />
+                                    {user?.currentBeltRank || "White"} Belt
+                                </span>
+                                {user?.dojo?.name && (
+                                    <span className="flex items-center gap-1.5">
+                                        <MapPin className="w-4 h-4 text-red-500" />
+                                        {user.dojo.name}
+                                    </span>
+                                )}
+                                {user?.membershipNumber && (
+                                    <span className="px-2 py-0.5 rounded bg-white/5 font-mono text-xs text-gray-500">
+                                        #{user.membershipNumber}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider ${
+                            user?.membershipStatus === 'ACTIVE' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                            user?.membershipStatus === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                            'bg-red-500/10 text-red-400 border border-red-500/20'
+                        }`}>
+                            {user?.membershipStatus || "PENDING"}
+                        </div>
+                    </div>
+                </motion.div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Profile Card */}
                     <motion.div

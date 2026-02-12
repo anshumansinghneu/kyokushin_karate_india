@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, GraduationCap, CreditCard, Shield, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, GraduationCap, CreditCard, Shield, Eye, EyeOff, ChevronRight, ChevronLeft } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { INDIAN_STATES, CITIES, BELT_RANKS, COUNTRY_CODES } from "@/lib/constants";
@@ -26,6 +26,8 @@ export default function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [paymentStep, setPaymentStep] = useState<"form" | "paying" | "verifying" | "done">("form");
+    const [step, setStep] = useState(1);
+    const TOTAL_STEPS = 4;
     const [paymentInfo, setPaymentInfo] = useState<{ amount: number; taxAmount: number; totalAmount: number } | null>(null);
     const [formData, setFormData] = useState({
         name: "",
@@ -104,10 +106,6 @@ export default function RegisterPage() {
 
         return () => {
             if (script.parentNode) script.parentNode.removeChild(script);
-        };
-
-        return () => {
-            document.body.removeChild(script);
         };
     }, []);
 
@@ -387,6 +385,41 @@ export default function RegisterPage() {
     // Get available cities based on selected state
     const availableCities = formData.state ? CITIES[formData.state] || [] : [];
 
+    // Step validation
+    const getStepFields = (s: number): string[] => {
+        switch (s) {
+            case 1: return ["name", "email", "phone", "dob"];
+            case 2: return role === "STUDENT"
+                ? ["currentBeltRank", "height", "weight", "fatherName", "fatherPhone", ...(formData.currentBeltRank !== "White" ? ["beltExamDate"] : [])]
+                : ["currentBeltRank", "height", "weight", "yearsOfExperience"];
+            case 3: return role === "STUDENT" ? ["state", "city", "dojoId"] : ["state", "city"];
+            case 4: return ["password", "confirmPassword"];
+            default: return [];
+        }
+    };
+
+    const validateStep = (s: number): boolean => {
+        const fields = getStepFields(s);
+        const newErrors: Record<string, string> = {};
+        fields.forEach(key => {
+            const error = validateField(key, formData[key as keyof typeof formData]);
+            if (error) newErrors[key] = error;
+        });
+        setErrors(prev => ({ ...prev, ...newErrors }));
+        setTouched(prev => ({ ...prev, ...fields.reduce((acc, k) => ({ ...acc, [k]: true }), {}) }));
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const nextStep = () => {
+        if (validateStep(step)) {
+            setStep(prev => Math.min(prev + 1, TOTAL_STEPS));
+        }
+    };
+
+    const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
+
+    const STEP_LABELS = ["Personal", "Training", "Dojo", "Payment"];
+
     return (
         <div className="min-h-screen w-full flex relative overflow-hidden bg-black text-white font-sans selection:bg-red-500/30">
             {/* Dynamic Background */}
@@ -473,6 +506,35 @@ export default function RegisterPage() {
                             )}
 
                             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                                {/* Step Progress Bar */}
+                                <div className="flex items-center justify-between mb-2">
+                                    {STEP_LABELS.map((label, i) => (
+                                        <div key={label} className="flex items-center flex-1">
+                                            <div className="flex flex-col items-center">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                                                    step > i + 1 ? 'bg-green-500 text-white' :
+                                                    step === i + 1 ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' :
+                                                    'bg-zinc-800 text-zinc-500 border border-zinc-700'
+                                                }`}>
+                                                    {step > i + 1 ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
+                                                </div>
+                                                <span className={`text-[10px] mt-1 font-bold uppercase tracking-wider ${
+                                                    step === i + 1 ? 'text-red-400' : 'text-zinc-600'
+                                                }`}>{label}</span>
+                                            </div>
+                                            {i < STEP_LABELS.length - 1 && (
+                                                <div className={`flex-1 h-0.5 mx-2 mb-4 rounded transition-all duration-300 ${
+                                                    step > i + 1 ? 'bg-green-500' : 'bg-zinc-800'
+                                                }`} />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <AnimatePresence mode="wait">
+                                {/* STEP 1: Role + Personal Info */}
+                                {step === 1 && (
+                                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
                                 {/* Role Selection Toggle - STEP 1: MUST SELECT FIRST */}
                                 <div className="space-y-3 pb-4 sm:pb-6 border-b border-white/10">
                                     <div className="flex items-center gap-2 mb-3">
@@ -566,6 +628,25 @@ export default function RegisterPage() {
                                             {errors.dob && <p className="text-xs text-red-400">{errors.dob}</p>}
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* Step 1 Navigation */}
+                                <div className="flex justify-end pt-4">
+                                    <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
+                                        Next: Training <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                </motion.div>
+                                )}
+
+                                {/* STEP 2: Training Details */}
+                                {step === 2 && (
+                                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
+                                <div className="space-y-3 sm:space-y-4">
+                                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                                        <div className="w-1 h-4 bg-red-500 rounded-full"></div>
+                                        Training Details
+                                    </h3>
 
                                     <div className="space-y-4">
                                         {/* Belt Selection for Both Roles */}
@@ -719,6 +800,21 @@ export default function RegisterPage() {
                                     )}
                                 </div>
 
+                                {/* Step 2 Navigation */}
+                                <div className="flex justify-between pt-4">
+                                    <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
+                                        <ChevronLeft className="w-4 h-4" /> Back
+                                    </button>
+                                    <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
+                                        Next: Dojo <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                </motion.div>
+                                )}
+
+                                {/* STEP 3: Location & Dojo */}
+                                {step === 3 && (
+                                <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
                                 {/* Dojo Selection Section */}
                                 <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
@@ -810,6 +906,21 @@ export default function RegisterPage() {
                                     </AnimatePresence>
                                 </div>
 
+                                {/* Step 3 Navigation */}
+                                <div className="flex justify-between pt-4">
+                                    <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
+                                        <ChevronLeft className="w-4 h-4" /> Back
+                                    </button>
+                                    <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
+                                        Next: Payment <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                </motion.div>
+                                )}
+
+                                {/* STEP 4: Security & Payment */}
+                                {step === 4 && (
+                                <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
                                 {/* Security Section */}
                                 <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
@@ -907,9 +1018,13 @@ export default function RegisterPage() {
 
                                 {/* Desktop submit button */}
                                 <div className="hidden md:block">
-                                    <Button
-                                        type="submit"
-                                        className="w-full h-12 mt-8 text-base font-bold bg-red-600 hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-red-600/50 rounded-lg"
+                                    <div className="flex gap-3 mt-8">
+                                        <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
+                                            <ChevronLeft className="w-4 h-4" /> Back
+                                        </button>
+                                        <Button
+                                            type="submit"
+                                            className="flex-1 h-12 text-base font-bold bg-red-600 hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-red-600/50 rounded-lg btn-shine"
                                         disabled={isLoading || paymentStep !== "form"}
                                     >
                                         {paymentStep === "paying" ? (
@@ -938,6 +1053,7 @@ export default function RegisterPage() {
                                             </>
                                         )}
                                     </Button>
+                                    </div>
                                     <p className="text-center text-xs text-zinc-500 mt-4">
                                         By registering, you agree to our Terms of Service. Your membership is valid for 1 year from the date of payment.
                                     </p>
@@ -945,9 +1061,13 @@ export default function RegisterPage() {
 
                                 {/* Mobile sticky submit button */}
                                 <div className="md:hidden sticky-action-bar">
-                                    <Button
-                                        type="submit"
-                                        className="w-full h-14 text-base font-bold bg-red-600 hover:bg-red-700 transition-all duration-200 shadow-lg shadow-red-600/30 rounded-xl"
+                                    <div className="flex gap-2">
+                                        <button type="button" onClick={prevStep} className="flex items-center justify-center p-3 rounded-xl border border-white/10 text-zinc-400 active:scale-[0.95]">
+                                            <ChevronLeft className="w-5 h-5" />
+                                        </button>
+                                        <Button
+                                            type="submit"
+                                            className="flex-1 h-14 text-base font-bold bg-red-600 hover:bg-red-700 transition-all duration-200 shadow-lg shadow-red-600/30 rounded-xl btn-shine"
                                         disabled={isLoading || paymentStep !== "form"}
                                     >
                                         {paymentStep === "paying" ? (
@@ -976,7 +1096,11 @@ export default function RegisterPage() {
                                             </>
                                         )}
                                     </Button>
+                                    </div>
                                 </div>
+                                </motion.div>
+                                )}
+                                </AnimatePresence>
                             </form>
                         </motion.div>
                     </div>

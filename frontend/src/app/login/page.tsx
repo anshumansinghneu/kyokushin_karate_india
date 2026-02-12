@@ -105,7 +105,7 @@ export default function LoginPage() {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2 group">
                             <label htmlFor="login-email" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">Email Address</label>
-                            <div className="relative">
+                            <div className="relative rounded-xl input-glow">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
                                 <Input
                                     id="login-email"
@@ -121,7 +121,7 @@ export default function LoginPage() {
 
                         <div className="space-y-2 group">
                             <label htmlFor="login-password" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">Password</label>
-                            <div className="relative">
+                            <div className="relative rounded-xl input-glow">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
                                 <Input
                                     id="login-password"
@@ -148,7 +148,7 @@ export default function LoginPage() {
                         </div>
 
                         <Button
-                            className="w-full h-14 text-lg font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl shadow-lg shadow-red-900/20 hover:shadow-red-900/40 transition-all duration-300 flex items-center justify-center gap-2 group"
+                            className="w-full h-14 text-lg font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl shadow-lg shadow-red-900/20 hover:shadow-red-900/40 transition-all duration-300 flex items-center justify-center gap-2 group btn-shine active:scale-[0.98]"
                             disabled={isLoading}
                         >
                             {isLoading ? (

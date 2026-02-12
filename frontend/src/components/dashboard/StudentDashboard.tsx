@@ -19,8 +19,16 @@ export default function StudentDashboard({ user }: { user: any }) {
     const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
     const [nextEvent, setNextEvent] = useState<any>(null);
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number }>({ days: 0, hours: 0, minutes: 0 });
+    const [greeting, setGreeting] = useState("OSU");
 
     const { showToast } = useToast();
+
+    useEffect(() => {
+        const hour = new Date().getHours();
+        if (hour < 12) setGreeting("Good Morning");
+        else if (hour < 17) setGreeting("Good Afternoon");
+        else setGreeting("Good Evening");
+    }, []);
 
     useEffect(() => {
         const fetchEvents = async () => {
@@ -72,7 +80,7 @@ export default function StudentDashboard({ user }: { user: any }) {
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.1
+                staggerChildren: 0.15
             }
         }
     };
@@ -96,7 +104,21 @@ export default function StudentDashboard({ user }: { user: any }) {
                 <div>
                     <p className="text-gray-400 text-sm uppercase tracking-widest font-bold mb-1">Dojo Dashboard</p>
                     <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight">
-                        OSU, <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">{user?.name?.split(' ')[0]}</span>
+                        <motion.span
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6 }}
+                        >
+                            {greeting},{" "}
+                        </motion.span>
+                        <motion.span
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.6, delay: 0.3 }}
+                            className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800"
+                        >
+                            {user?.name?.split(' ')[0]}
+                        </motion.span>
                     </h1>
                 </div>
                 <div className="flex gap-2 md:gap-3 items-center overflow-x-auto pb-2 md:pb-0 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">

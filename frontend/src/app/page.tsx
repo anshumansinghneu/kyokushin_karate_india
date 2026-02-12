@@ -12,6 +12,8 @@ import HeroSectionV2 from "@/components/HeroSectionV2";
 import LeadershipSection from "@/components/LeadershipSection";
 import MonthlyChampions from "@/components/MonthlyChampions";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import StatsCounter from "@/components/StatsCounter";
+import SectionDivider from "@/components/SectionDivider";
 
 interface Event {
   id: string;
@@ -158,11 +160,20 @@ export default function Home() {
             </div>
           </section>
 
+          <SectionDivider />
+
+          {/* STATS COUNTER */}
+          <StatsCounter />
+
+          <SectionDivider flip />
+
           {/* LEADERSHIP SECTION */}
           <LeadershipSection />
 
           {/* MONTHLY CHAMPIONS */}
           <MonthlyChampions />
+
+          <SectionDivider />
 
           {/* NEW EVENT FLASH NOTIFICATION */}
           <AnimatePresence>

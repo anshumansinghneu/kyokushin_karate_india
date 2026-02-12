@@ -9,6 +9,7 @@ import StructuredData from "@/components/StructuredData";
 import { ToastProvider } from "@/contexts/ToastContext";
 import MobileBottomNav from "@/components/ui/MobileBottomNav";
 import BackToTop from "@/components/ui/BackToTop";
+import PageTransition from "@/components/PageTransition";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -88,7 +89,7 @@ export default function RootLayout({
           <ScrollProgress />
           <Navbar />
           <main className="min-h-screen pt-24 pb-20 md:pb-0">
-            {children}
+            <PageTransition>{children}</PageTransition>
           </main>
           <Footer />
           <MobileBottomNav />

@@ -94,8 +94,9 @@ export default function InstructorsPage() {
                             <motion.div
                                 key={instructor.id}
                                 initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.08 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, amount: 0.15 }}
+                                transition={{ delay: i * 0.06, duration: 0.5 }}
                                 className="glass-card overflow-hidden group hover:border-red-500/30 transition-all duration-300"
                             >
                                 <div className="relative h-48 bg-gradient-to-br from-zinc-800 to-zinc-900 overflow-hidden">

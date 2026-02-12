@@ -276,6 +276,30 @@ body {
   }
 }
 
+/* Primary CTA Button Shine Sweep */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transition: left 0.6s ease;
+}
+.btn-shine:hover::after {
+  left: 100%;
+}
+
+/* Input focus glow */
+.input-glow:focus-within {
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15), 0 0 12px rgba(220, 38, 38, 0.08);
+}
+
 /* Better active states for mobile - subtle press feedback */
 @media (hover: none) and (pointer: coarse) {
   /* Cards & interactive elements get snappy tap feedback */
