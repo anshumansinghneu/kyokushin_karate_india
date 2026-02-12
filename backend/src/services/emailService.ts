@@ -29,18 +29,33 @@ function getTransporter(): nodemailer.Transporter {
     }
 
     if (configured) {
-        _transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: parseInt(process.env.SMTP_PORT || '587'),
-            secure: process.env.SMTP_PORT === '465',
+        const isGmail = process.env.SMTP_HOST === 'smtp.gmail.com';
+
+        const transportConfig: any = {
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
             },
-            connectionTimeout: 10000, // 10s to establish connection
-            greetingTimeout: 10000,   // 10s for SMTP greeting
-            socketTimeout: 15000,     // 15s for socket inactivity
-        });
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 15000,
+            pool: false,
+            tls: {
+                rejectUnauthorized: false,
+            },
+        };
+
+        if (isGmail) {
+            // Use Gmail service shorthand — handles host/port/security automatically
+            transportConfig.service = 'gmail';
+            console.log('📧 Using Gmail service shorthand');
+        } else {
+            transportConfig.host = process.env.SMTP_HOST;
+            transportConfig.port = parseInt(process.env.SMTP_PORT || '587');
+            transportConfig.secure = process.env.SMTP_PORT === '465';
+        }
+
+        _transporter = nodemailer.createTransport(transportConfig);
     } else {
         // Fallback: log to console when SMTP is not configured
         _transporter = {
@@ -125,11 +140,23 @@ async function send(to: string, subject: string, html: string, text: string) {
         const transporter = getTransporter();
         const fromAddr = getFrom();
         console.log(`[EMAIL] Sending "${subject}" to ${to} from ${fromAddr}`);
-        const info = await transporter.sendMail({ from: fromAddr, to, subject, html, text });
+
+        // Wrap sendMail with a manual timeout since nodemailer timeouts
+        // don't always fire on certain cloud providers (e.g. Render)
+        const sendPromise = transporter.sendMail({ from: fromAddr, to, subject, html, text });
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Email send timed out after 30s')), 30000)
+        );
+
+        const info = await Promise.race([sendPromise, timeoutPromise]) as any;
         console.log(`[EMAIL] ✅ Sent "${subject}" to ${to} (messageId: ${info.messageId})`);
     } catch (err: any) {
         console.error(`[EMAIL] ❌ Failed to send "${subject}" to ${to}:`, err?.message || err);
-        // Don't throw — email failure shouldn't block the main flow
+        if (err?.code) console.error(`[EMAIL] Error code: ${err.code}`);
+        if (err?.response) console.error(`[EMAIL] SMTP response: ${err.response}`);
+
+        // Reset transporter so next attempt creates a fresh connection
+        _transporter = null;
     }
 }
 
