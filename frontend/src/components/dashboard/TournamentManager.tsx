@@ -1089,11 +1089,11 @@ export default function TournamentManager() {
             {/* ════════════════════════════════════════════ */}
             <AnimatePresence>
                 {viewingTournament && (
-                    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 overflow-y-auto">
+                    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] overflow-y-auto">
                         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }}
                             className="min-h-screen">
                             {/* Sticky Header */}
-                            <div className="sticky top-0 z-10 bg-black/95 border-b border-white/10 backdrop-blur-xl">
+                            <div className="sticky top-0 z-20 bg-black/95 border-b border-white/10 backdrop-blur-xl">
                                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4">
                                     <div className="flex items-center justify-between">
                                         <div className="min-w-0">
