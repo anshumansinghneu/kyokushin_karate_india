@@ -1,8 +1,6 @@
-import { changePassword } from '../controllers/userController';
-router.post('/change-password', changePassword);
 import express from 'express';
 import { getMe } from '../controllers/authController';
-import { getAllUsers, getUser, getUserFullProfile, getUserByMembershipId, searchUsers, approveUser, rejectUser, deleteUser, inviteUser, updateMe, updateUser, createUser, getPublicInstructors } from '../controllers/userController';
+import { getAllUsers, getUser, getUserFullProfile, getUserByMembershipId, searchUsers, approveUser, rejectUser, deleteUser, inviteUser, updateMe, updateUser, createUser, getPublicInstructors, changePassword } from '../controllers/userController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -37,5 +35,6 @@ router.route('/:id')
 
 router.patch('/:id/approve', restrictTo('ADMIN', 'INSTRUCTOR'), approveUser);
 router.patch('/:id/reject', restrictTo('ADMIN', 'INSTRUCTOR'), rejectUser);
+router.post('/change-password', changePassword);
 
 export default router;
