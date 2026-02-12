@@ -56,7 +56,21 @@ function getTransporter(): nodemailer.Transporter {
 }
 
 function getFrom() {
-    return process.env.SMTP_FROM || 'Kyokushin Karate Foundation of India <noreply@kkfi.in>';
+    const from = process.env.SMTP_FROM || '';
+    // If SMTP_FROM has proper format like "Name <email>", use as-is
+    if (from.includes('<') && from.includes('>')) {
+        return from;
+    }
+    // If SMTP_FROM is just a name (no email), append SMTP_USER
+    if (from && process.env.SMTP_USER) {
+        return `${from} <${process.env.SMTP_USER}>`;
+    }
+    // If SMTP_FROM is an email address
+    if (from && from.includes('@')) {
+        return from;
+    }
+    // Fallback: use SMTP_USER directly or default
+    return process.env.SMTP_USER || 'Kyokushin Karate Foundation of India <noreply@kkfi.in>';
 }
 
 function getSiteUrl() {
@@ -106,9 +120,12 @@ function btn(text: string, url: string): string {
 async function send(to: string, subject: string, html: string, text: string) {
     try {
         const transporter = getTransporter();
-        await transporter.sendMail({ from: getFrom(), to, subject, html, text });
-    } catch (err) {
-        console.error(`[EMAIL ERROR] Failed to send to ${to}:`, err);
+        const fromAddr = getFrom();
+        console.log(`[EMAIL] Sending "${subject}" to ${to} from ${fromAddr}`);
+        const info = await transporter.sendMail({ from: fromAddr, to, subject, html, text });
+        console.log(`[EMAIL] ✅ Sent "${subject}" to ${to} (messageId: ${info.messageId})`);
+    } catch (err: any) {
+        console.error(`[EMAIL] ❌ Failed to send "${subject}" to ${to}:`, err?.message || err);
         // Don't throw — email failure shouldn't block the main flow
     }
 }
@@ -416,6 +433,74 @@ ${btn('Visit KKFI', SITE_URL)}
 };
 
 // ── Password Reset ──────────────────────────────────────────
+
+// ── Admin-Created User Welcome Email ────────────────────────
+export const sendAdminCreatedUserEmail = async (
+    email: string,
+    name: string,
+    password: string,
+    role: string,
+    membershipNumber: string
+) => {
+    const SITE_URL = getSiteUrl();
+    const roleLabel = role === 'INSTRUCTOR' ? 'Instructor' : 'Student';
+    const subject = `Welcome to KKFI – Your ${roleLabel} Account Has Been Created! 🥋`;
+    const html = wrapHtml(subject, `
+<div style="text-align:center;margin-bottom:24px;">
+  <div style="display:inline-block;background:#14532d;border:2px solid #22c55e;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:28px;margin-bottom:8px;">✅</div>
+  <h2 style="color:#fff;margin:8px 0 4px;font-size:22px;font-weight:800;">Welcome, ${name}!</h2>
+  <p style="color:#22c55e;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:0;">Account Created Successfully</p>
+</div>
+
+<p>An admin has created your <strong style="color:#dc2626;">${roleLabel}</strong> account with the <strong style="color:#fff;">Kyokushin Karate Foundation of India (KKFI)</strong>.</p>
+
+<!-- Login Credentials Card -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;background:linear-gradient(135deg,#1a0a0a,#2a1515);border-radius:16px;border:1px solid #dc2626;overflow:hidden;">
+<tr><td style="padding:4px 0 0;background:linear-gradient(90deg,#dc2626,#991b1b);height:4px;"></td></tr>
+<tr>
+<td style="padding:24px 28px;">
+  <p style="margin:0 0 16px;color:#dc2626;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:3px;">🔐 Your Login Credentials</p>
+  <table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+      <td style="padding:8px 0;">
+        <p style="margin:0;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:2px;">Email</p>
+        <p style="margin:4px 0 0;color:#fff;font-size:16px;font-weight:700;font-family:monospace;">${email}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px 0;">
+        <p style="margin:0;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:2px;">Password</p>
+        <p style="margin:4px 0 0;color:#fbbf24;font-size:16px;font-weight:700;font-family:monospace;">${password}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px 0;">
+        <p style="margin:0;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:2px;">Membership ID</p>
+        <p style="margin:4px 0 0;color:#22c55e;font-size:16px;font-weight:700;font-family:monospace;">${membershipNumber}</p>
+      </td>
+    </tr>
+  </table>
+</td>
+</tr>
+</table>
+
+<p style="color:#ef4444;font-size:13px;font-weight:600;">⚠️ Please change your password after your first login for security.</p>
+
+${btn('Login to Your Account →', SITE_URL + '/login')}
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-top:1px solid #333;padding-top:20px;">
+<tr><td>
+  <p style="margin:0;color:#888;font-size:13px;font-style:italic;">"A person who has not trained for a long time must not lose heart, but must make effort to set goals for themselves."</p>
+  <p style="margin:6px 0 0;color:#dc2626;font-size:12px;font-weight:700;">— Sosai Mas Oyama</p>
+</td></tr>
+</table>
+
+<p style="color:#888;font-size:13px;">Train hard, stay humble.<br/><strong style="color:#ccc;">Osu! 🥋</strong></p>
+`);
+    const text = `Osu ${name},\n\nWelcome to KKFI! An admin has created your ${roleLabel} account.\n\nYour Login Credentials:\nEmail: ${email}\nPassword: ${password}\nMembership ID: ${membershipNumber}\n\n⚠️ Please change your password after first login.\n\nLogin here: ${SITE_URL}/login\n\nOsu!`;
+    await send(email, subject, html, text);
+};
+
 export const sendPasswordResetEmail = async (email: string, name: string, resetToken: string) => {
     const SITE_URL = getSiteUrl();
     const resetUrl = `${SITE_URL}/reset-password?token=${resetToken}`;

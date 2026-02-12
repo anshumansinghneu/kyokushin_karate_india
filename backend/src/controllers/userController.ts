@@ -3,7 +3,7 @@ import prisma from '../prisma';
 import bcrypt from 'bcryptjs';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
-import { sendInstructorApprovalEmail, sendMembershipActiveEmail, sendRejectionEmail, sendRegistrationEmail } from '../services/emailService';
+import { sendInstructorApprovalEmail, sendMembershipActiveEmail, sendRejectionEmail, sendRegistrationEmail, sendAdminCreatedUserEmail } from '../services/emailService';
 
 export const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // @ts-ignore
@@ -489,9 +489,15 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         }
     });
 
-    // Send welcome email to the newly created user
+    // Send welcome email with login credentials to the newly created user
     try {
-        await sendRegistrationEmail(newUser.email, newUser.name);
+        await sendAdminCreatedUserEmail(
+            newUser.email,
+            newUser.name,
+            password, // Send the original plaintext password
+            role,
+            newUser.membershipNumber || ''
+        );
     } catch (emailError) {
         console.error('Failed to send welcome email:', emailError);
         // Don't fail the request if email fails

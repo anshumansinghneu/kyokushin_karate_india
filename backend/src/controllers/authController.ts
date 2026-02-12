@@ -163,11 +163,19 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
 
     // Send welcome email to the new user
     if (newUser) {
-        sendRegistrationEmail(newUser.email, newUser.name);
+        try {
+            await sendRegistrationEmail(newUser.email, newUser.name);
+        } catch (e) {
+            console.error('[AUTH] Failed to send registration email:', e);
+        }
 
         // Notify their instructor about the new applicant
         if (newUser.primaryInstructor?.email) {
-            sendNewApplicantEmail(newUser.primaryInstructor.email, newUser.name);
+            try {
+                await sendNewApplicantEmail(newUser.primaryInstructor.email, newUser.name);
+            } catch (e) {
+                console.error('[AUTH] Failed to send new applicant email:', e);
+            }
         }
     }
 
