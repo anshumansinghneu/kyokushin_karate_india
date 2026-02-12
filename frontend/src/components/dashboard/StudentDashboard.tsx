@@ -101,30 +101,30 @@ export default function StudentDashboard({ user }: { user: any }) {
                         OSU, <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">{user?.name?.split(' ')[0]}</span>
                     </h1>
                 </div>
-                <div className="flex flex-wrap gap-2 md:gap-3 items-center">
+                <div className="flex gap-2 md:gap-3 items-center overflow-x-auto pb-2 md:pb-0 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
                     <Button
                         onClick={() => setActiveTab('overview')}
                         className={`backdrop-blur-sm border ${activeTab === 'overview' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
                     >
-                        <Activity className="w-4 h-4 mr-2" /> Overview
+                        <Activity className="w-4 h-4 mr-2" /> <span className="whitespace-nowrap">Overview</span>
                     </Button>
                     <Button
                         onClick={() => setActiveTab('blogs')}
-                        className={`backdrop-blur-sm border ${activeTab === 'blogs' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
+                        className={`backdrop-blur-sm border flex-shrink-0 ${activeTab === 'blogs' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
                     >
-                        <FileText className="w-4 h-4 mr-2" /> My Blogs
+                        <FileText className="w-4 h-4 mr-2" /> <span className="whitespace-nowrap">My Blogs</span>
                     </Button>
                     <Button
                         onClick={() => setActiveTab('submit')}
-                        className={`backdrop-blur-sm border ${activeTab === 'submit' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
+                        className={`backdrop-blur-sm border flex-shrink-0 ${activeTab === 'submit' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
                     >
-                        <Edit className="w-4 h-4 mr-2" /> Write Blog
+                        <Edit className="w-4 h-4 mr-2" /> <span className="whitespace-nowrap">Write Blog</span>
                     </Button>
                     <Button
                         onClick={() => setActiveTab('orders')}
-                        className={`backdrop-blur-sm border ${activeTab === 'orders' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
+                        className={`backdrop-blur-sm border flex-shrink-0 ${activeTab === 'orders' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
                     >
-                        <ShoppingBag className="w-4 h-4 mr-2" /> My Orders
+                        <ShoppingBag className="w-4 h-4 mr-2" /> <span className="whitespace-nowrap">My Orders</span>
                     </Button>
                 </div>
             </motion.div>

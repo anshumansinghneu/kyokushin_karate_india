@@ -200,8 +200,8 @@ export default function Home() {
           {latestBlogs.length > 0 && (
             <section className="py-16 md:py-24 bg-black relative">
               <div className="container mx-auto px-4">
-                <div className="flex justify-between items-end mb-12">
-                  <h2 className="text-3xl md:text-5xl font-black tracking-tighter">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 md:mb-12 gap-4">
+                  <h2 className="text-2xl sm:text-3xl md:text-5xl font-black tracking-tighter">
                     DOJO <span className="text-red-600">CHRONICLES</span>
                   </h2>
                   <Link href="/blog" className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
@@ -237,8 +237,8 @@ export default function Home() {
           {mediaMentions.length > 0 && (
             <section className="py-16 md:py-24 bg-zinc-950 relative">
               <div className="container mx-auto px-4">
-                <div className="flex justify-between items-end mb-12">
-                  <h2 className="text-3xl md:text-5xl font-black tracking-tighter">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 md:mb-12 gap-4">
+                  <h2 className="text-2xl sm:text-3xl md:text-5xl font-black tracking-tighter">
                     IN THE <span className="text-red-600">MEDIA</span>
                   </h2>
                   <Link href="/media" className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
@@ -269,17 +269,17 @@ export default function Home() {
           )}
 
           {/* CTA SECTION */}
-          <section className="py-32 relative overflow-hidden flex items-center justify-center">
+          <section className="py-20 md:py-32 relative overflow-hidden flex items-center justify-center">
             <div className="absolute inset-0 bg-red-900/20" />
             <div className="container mx-auto px-4 text-center relative z-10">
-              <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 opacity-20 select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full pointer-events-none">
+              <h2 className="text-3xl sm:text-5xl md:text-8xl font-black tracking-tighter mb-8 opacity-20 select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full pointer-events-none">
                 KYOKUSHIN
               </h2>
-              <h3 className="text-3xl md:text-5xl font-bold mb-8 relative">
+              <h3 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-8 relative">
                 READY TO START YOUR JOURNEY?
               </h3>
               <Link href="/register">
-                <Button className="h-16 px-10 rounded-full bg-white text-black hover:bg-gray-200 text-xl font-bold tracking-wide transition-transform hover:scale-105">
+                <Button className="h-14 md:h-16 px-8 md:px-10 rounded-full bg-white text-black hover:bg-gray-200 text-lg md:text-xl font-bold tracking-wide transition-transform hover:scale-105">
                   BECOME A MEMBER
                 </Button>
               </Link>

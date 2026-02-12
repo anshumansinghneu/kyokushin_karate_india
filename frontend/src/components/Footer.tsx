@@ -3,7 +3,7 @@ import { Facebook, Instagram, Twitter, Youtube, Mail, MapPin, Phone, ExternalLin
 
 export default function Footer() {
     return (
-        <footer className="bg-black border-t border-white/10 pt-12 md:pt-16 pb-6 md:pb-8 relative z-50">
+        <footer className="bg-black border-t border-white/10 pt-12 md:pt-16 pb-24 md:pb-8 relative z-50">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16">
                     {/* Brand */}

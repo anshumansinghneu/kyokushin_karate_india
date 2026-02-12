@@ -3,25 +3,32 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Home, Calendar, CreditCard, User, LayoutDashboard } from 'lucide-react';
+import { Home, Calendar, CreditCard, User, LayoutDashboard, LogIn, UserPlus } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
-const NAV_ITEMS = [
+const AUTH_ITEMS = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/events', icon: Calendar, label: 'Events' },
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', auth: true },
-    { href: '/payments', icon: CreditCard, label: 'Pay', auth: true },
-    { href: '/profile', icon: User, label: 'Profile', auth: true },
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { href: '/payments', icon: CreditCard, label: 'Pay' },
+    { href: '/profile', icon: User, label: 'Profile' },
+];
+
+const GUEST_ITEMS = [
+    { href: '/', icon: Home, label: 'Home' },
+    { href: '/events', icon: Calendar, label: 'Events' },
+    { href: '/login', icon: LogIn, label: 'Login' },
+    { href: '/register', icon: UserPlus, label: 'Join' },
 ];
 
 export default function MobileBottomNav() {
     const pathname = usePathname();
     const { isAuthenticated } = useAuthStore();
 
-    const visibleItems = NAV_ITEMS.filter(item => !item.auth || isAuthenticated);
+    const visibleItems = isAuthenticated ? AUTH_ITEMS : GUEST_ITEMS;
 
-    // Hide on management pages, login, register
-    const hiddenPaths = ['/login', '/register', '/management', '/forgot-password', '/reset-password'];
+    // Hide on management pages and forgot/reset password
+    const hiddenPaths = ['/management', '/forgot-password', '/reset-password'];
     if (hiddenPaths.some(p => pathname.startsWith(p))) return null;
 
     return (
