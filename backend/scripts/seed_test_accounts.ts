@@ -23,6 +23,9 @@ async function main() {
     await prisma.tournamentResult.deleteMany();
     await prisma.match.deleteMany();
     await prisma.tournamentBracket.deleteMany();
+    await prisma.merchOrderItem.deleteMany();
+    await prisma.merchOrder.deleteMany();
+    await prisma.payment.deleteMany();
     await prisma.event.deleteMany();
     await prisma.monthlyRecognition.deleteMany();
     await prisma.beltVerificationRequest.deleteMany();
