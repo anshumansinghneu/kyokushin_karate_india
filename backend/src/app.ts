@@ -26,6 +26,7 @@ import announceRouter from './routes/announceRoutes';
 import paymentRouter from './routes/paymentRoutes';
 import merchRouter from './routes/merchRoutes';
 import { sendRenewalReminders } from './services/renewalReminderService';
+import { verifySmtp, sendTestEmail } from './services/emailService';
 import { globalErrorHandler } from './utils/errorHandler';
 
 const app = express();
@@ -96,6 +97,45 @@ app.use('/api/announcements', announceRouter);
 app.use('/api/payments', paymentRouter);  // Payment & UPI integration
 app.use('/api/merch', merchRouter);  // Merchandise store
 app.use('/api', noteRouter);  // Notes and profile views
+
+// Diagnostic: test email endpoint (call from browser or curl)
+app.get('/api/test-email', async (req, res) => {
+    const to = (req.query.to as string) || process.env.SMTP_USER || '';
+    if (!to) return res.status(400).json({ error: 'No recipient. Use ?to=email@example.com' });
+
+    console.log('\\n=== EMAIL DIAGNOSTIC START ===');
+
+    // Step 1: Verify SMTP connection
+    const verifyResult = await verifySmtp();
+    console.log('SMTP Verify:', verifyResult);
+
+    if (!verifyResult.success) {
+        console.log('=== EMAIL DIAGNOSTIC END (verify failed) ===\\n');
+        return res.json({
+            step: 'verify',
+            ...verifyResult,
+            env: {
+                SMTP_HOST: process.env.SMTP_HOST || 'NOT SET',
+                SMTP_PORT: process.env.SMTP_PORT || 'NOT SET',
+                SMTP_USER: process.env.SMTP_USER ? '✅ set' : '❌ NOT SET',
+                SMTP_PASS: process.env.SMTP_PASS ? '✅ set' : '❌ NOT SET',
+                SMTP_FROM: process.env.SMTP_FROM || 'NOT SET',
+                NODE_ENV: process.env.NODE_ENV || 'NOT SET',
+            },
+        });
+    }
+
+    // Step 2: Send test email
+    const sendResult = await sendTestEmail(to);
+    console.log('Send result:', sendResult);
+    console.log('=== EMAIL DIAGNOSTIC END ===\\n');
+
+    return res.json({
+        step: 'send',
+        to,
+        ...sendResult,
+    });
+});
 
 // Serve static files (uploads)
 app.use('/uploads', express.static(path.join(__dirname, '../src/uploads')));

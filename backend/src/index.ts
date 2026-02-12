@@ -7,6 +7,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import app from './app';
 import runMigration from './runMigration';
+import { verifySmtp } from './services/emailService';
 
 const PORT = process.env.PORT || 10000;
 
@@ -44,6 +45,10 @@ io.on('connection', (socket) => {
 runMigration().then(() => {
     server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
+        // Verify SMTP on startup (non-blocking)
+        verifySmtp().then(result => {
+            console.log(`📧 SMTP startup check: ${result.success ? '✅ WORKING' : '❌ FAILED - ' + result.message}`);
+        });
     });
 }).catch((error) => {
     console.error('Failed to run migration:', error);
@@ -52,4 +57,3 @@ runMigration().then(() => {
         console.log(`Server running on port ${PORT}`);
     });
 });
-// Trigger redeploy

@@ -25,36 +25,41 @@ function getTransporter(): nodemailer.Transporter {
 
     if (!_smtpLogged) {
         console.log(`📧 Email service: ${configured ? 'SMTP configured ✅' : '⚠️  No SMTP – emails will only log to console'}`);
+        console.log(`📧 SMTP_HOST=${process.env.SMTP_HOST}, SMTP_PORT=${process.env.SMTP_PORT}, SMTP_USER=${process.env.SMTP_USER ? '✅ set' : '❌ missing'}, SMTP_PASS=${process.env.SMTP_PASS ? '✅ set' : '❌ missing'}`);
         _smtpLogged = true;
     }
 
     if (configured) {
-        const isGmail = process.env.SMTP_HOST === 'smtp.gmail.com';
-
+        // For Gmail, use port 465 with SSL directly (most reliable on cloud)
+        // Port 587 with STARTTLS gets blocked on many cloud providers
         const transportConfig: any = {
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, // use SSL directly (not STARTTLS)
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
             },
-            connectionTimeout: 10000,
-            greetingTimeout: 10000,
-            socketTimeout: 15000,
+            connectionTimeout: 15000,
+            greetingTimeout: 15000,
+            socketTimeout: 20000,
             pool: false,
             tls: {
                 rejectUnauthorized: false,
             },
+            debug: true,   // Enable debug output
+            logger: true,  // Log to console
         };
 
-        if (isGmail) {
-            // Use Gmail service shorthand — handles host/port/security automatically
-            transportConfig.service = 'gmail';
-            console.log('📧 Using Gmail service shorthand');
-        } else {
+        const isGmail = process.env.SMTP_HOST === 'smtp.gmail.com';
+        if (!isGmail) {
+            // Non-Gmail: use configured host/port
             transportConfig.host = process.env.SMTP_HOST;
             transportConfig.port = parseInt(process.env.SMTP_PORT || '587');
             transportConfig.secure = process.env.SMTP_PORT === '465';
         }
 
+        console.log(`📧 Creating transporter: host=${transportConfig.host}, port=${transportConfig.port}, secure=${transportConfig.secure}`);
         _transporter = nodemailer.createTransport(transportConfig);
     } else {
         // Fallback: log to console when SMTP is not configured
@@ -157,6 +162,54 @@ async function send(to: string, subject: string, html: string, text: string) {
 
         // Reset transporter so next attempt creates a fresh connection
         _transporter = null;
+    }
+}
+
+// ── SMTP Verify & Test ──────────────────────────────────────
+export async function verifySmtp(): Promise<{ success: boolean; message: string }> {
+    try {
+        const transporter = getTransporter();
+        console.log('[EMAIL] Running SMTP verify...');
+        const verifyPromise = (transporter as any).verify?.();
+        if (!verifyPromise) return { success: false, message: 'Transporter has no verify method (console fallback)' };
+
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('SMTP verify timed out after 20s')), 20000)
+        );
+        await Promise.race([verifyPromise, timeoutPromise]);
+        console.log('[EMAIL] ✅ SMTP verify succeeded - connection works!');
+        return { success: true, message: 'SMTP connection verified - credentials work' };
+    } catch (err: any) {
+        console.error('[EMAIL] ❌ SMTP verify failed:', err?.message || err);
+        _transporter = null; // Reset for next attempt
+        return { success: false, message: err?.message || 'Unknown error' };
+    }
+}
+
+export async function sendTestEmail(to: string): Promise<{ success: boolean; message: string; messageId?: string }> {
+    try {
+        const transporter = getTransporter();
+        const fromAddr = getFrom();
+        console.log(`[TEST EMAIL] Sending test email to ${to} from ${fromAddr}`);
+
+        const sendPromise = transporter.sendMail({
+            from: fromAddr,
+            to,
+            subject: 'KKFI Email Test ✅',
+            html: '<h2>Email is working!</h2><p>If you received this, SMTP is configured correctly on Render.</p>',
+            text: 'Email is working! SMTP is configured correctly.',
+        });
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Test email timed out after 30s')), 30000)
+        );
+
+        const info = await Promise.race([sendPromise, timeoutPromise]) as any;
+        console.log(`[TEST EMAIL] ✅ Sent! messageId: ${info.messageId}`);
+        return { success: true, message: 'Test email sent!', messageId: info.messageId };
+    } catch (err: any) {
+        console.error(`[TEST EMAIL] ❌ Failed:`, err?.message || err);
+        _transporter = null;
+        return { success: false, message: err?.message || 'Unknown error' };
     }
 }
 
