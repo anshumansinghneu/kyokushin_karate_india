@@ -391,6 +391,12 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         return next(new AppError('Please provide name, email, password, and role', 400));
     }
 
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return next(new AppError('Please provide a valid email address', 400));
+    }
+
     if (password.length < 8) {
         return next(new AppError('Password must be at least 8 characters long', 400));
     }
@@ -401,7 +407,7 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-        where: { email }
+        where: { email: email.toLowerCase().trim() }
     });
 
     if (existingUser) {
@@ -413,8 +419,8 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
 
     // Prepare user data based on role
     const userData: any = {
-        name,
-        email,
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
         passwordHash: hashedPassword,
         role,
         phone: phone || null,
@@ -429,21 +435,35 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         fatherPhone: fatherPhone || null,
     };
 
+    // Auto-assign primaryInstructorId if a dojo is selected
+    if (dojoId && role === 'STUDENT') {
+        const dojoInstructor = await prisma.user.findFirst({
+            where: {
+                dojoId,
+                role: 'INSTRUCTOR',
+                membershipStatus: 'ACTIVE'
+            },
+            select: { id: true }
+        });
+        if (dojoInstructor) {
+            userData.primaryInstructorId = dojoInstructor.id;
+        }
+    }
+
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 1);
+
     // Role-specific defaults
     if (role === 'STUDENT') {
-        // Generate membership number if dojo is assigned
         const membershipNumber = await generateMembershipNumber(role);
-
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setFullYear(endDate.getFullYear() + 1);
 
         userData.membershipNumber = membershipNumber;
         userData.membershipStatus = membershipStatus || 'ACTIVE';
         userData.membershipStartDate = startDate;
         userData.membershipEndDate = endDate;
         userData.currentBeltRank = currentBeltRank || 'White';
-        userData.isInstructorApproved = true; // Auto-approved
+        userData.isInstructorApproved = true; // Auto-approved by admin
         // @ts-ignore
         userData.approvedBy = req.user.id;
         userData.approvedAt = new Date();
@@ -453,6 +473,9 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         userData.isInstructorApproved = true;
         userData.instructorApprovedAt = new Date();
         userData.membershipStatus = 'ACTIVE';
+        userData.membershipStartDate = startDate;
+        userData.membershipEndDate = endDate;
+        userData.currentBeltRank = currentBeltRank || 'Black';
         // @ts-ignore
         userData.approvedBy = req.user.id;
         userData.approvedAt = new Date();
@@ -466,11 +489,22 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         }
     });
 
+    // Send welcome email to the newly created user
+    try {
+        await sendRegistrationEmail(newUser.email, newUser.name);
+    } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't fail the request if email fails
+    }
+
+    // Exclude sensitive fields from response
+    const { passwordHash, ...safeUser } = newUser as any;
+
     res.status(201).json({
         status: 'success',
         message: `${role} created successfully`,
         data: {
-            user: newUser
+            user: safeUser
         }
     });
 });

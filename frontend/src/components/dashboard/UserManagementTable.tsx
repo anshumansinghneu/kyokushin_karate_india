@@ -39,6 +39,7 @@ export default function UserManagementTable() {
 
     // Create User Modal State
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
     const [createFormData, setCreateFormData] = useState({
         name: "",
         email: "",
@@ -197,6 +198,8 @@ export default function UserManagementTable() {
 
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isCreating) return;
+        setIsCreating(true);
         console.log("Creating user with data:", createFormData);
 
         try {
@@ -226,6 +229,8 @@ export default function UserManagementTable() {
             console.error("Failed to create user", error);
             const message = error.response?.data?.message || "Failed to create user";
             showToast(message, "error");
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -659,21 +664,21 @@ export default function UserManagementTable() {
                                         </div>
                                     </div>
 
-                                    {/* Belt Rank and Status (for Students) */}
-                                    {createFormData.role === "STUDENT" && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label>Belt Rank</Label>
-                                                <select
-                                                    value={createFormData.currentBeltRank}
-                                                    onChange={(e) => setCreateFormData({ ...createFormData, currentBeltRank: e.target.value })}
-                                                    className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                                >
-                                                    {["White", "Orange", "Blue", "Yellow", "Green", "Brown", "Black"].map(belt => (
-                                                        <option key={belt} value={belt}>{belt}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                    {/* Belt Rank and Status */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Belt Rank</Label>
+                                            <select
+                                                value={createFormData.currentBeltRank}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, currentBeltRank: e.target.value })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
+                                            >
+                                                {BELT_RANKS.map(belt => (
+                                                    <option key={belt} value={belt}>{belt}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        {createFormData.role === "STUDENT" && (
                                             <div className="space-y-2">
                                                 <Label>Membership Status</Label>
                                                 <select
@@ -685,8 +690,8 @@ export default function UserManagementTable() {
                                                     <option value="PENDING">Pending</option>
                                                 </select>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
 
                                     {/* Phone with Country Code */}
                                     <div className="space-y-2">
@@ -811,9 +816,16 @@ export default function UserManagementTable() {
                                     </div>
 
                                     <div className="pt-4 flex justify-end gap-2">
-                                        <Button type="button" variant="ghost" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
-                                        <Button type="submit" className="bg-primary hover:bg-primary-dark text-white">
-                                            <UserPlus className="w-4 h-4 mr-2" /> Create User
+                                        <Button type="button" variant="ghost" onClick={() => setIsCreateModalOpen(false)} disabled={isCreating}>Cancel</Button>
+                                        <Button type="submit" className="bg-primary hover:bg-primary-dark text-white" disabled={isCreating}>
+                                            {isCreating ? (
+                                                <span className="flex items-center gap-2">
+                                                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                                    Creating...
+                                                </span>
+                                            ) : (
+                                                <><UserPlus className="w-4 h-4 mr-2" /> Create User</>
+                                            )}
                                         </Button>
                                     </div>
                                 </form>
