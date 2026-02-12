@@ -259,10 +259,11 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
             }
         });
 
-        // Notify Admin about Instructor Approval
+        // Notify Admin about Instructor Approval (non-blocking)
         const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
         if (admin) {
-            await sendInstructorApprovalEmail(admin.email, userToApprove.name, currentUser.name);
+            sendInstructorApprovalEmail(admin.email, userToApprove.name, currentUser.name)
+                .catch(err => console.error('[APPROVE] Instructor approval email failed:', err?.message));
         }
 
         res.status(200).json({
@@ -294,8 +295,9 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
             },
         });
 
-        // Send Email Notification
-        await sendMembershipActiveEmail(updatedUser.email, updatedUser.name, membershipNumber);
+        // Send Email Notification (non-blocking)
+        sendMembershipActiveEmail(updatedUser.email, updatedUser.name, membershipNumber)
+            .catch(err => console.error('[APPROVE] Membership active email failed:', err?.message));
 
         res.status(200).json({
             status: 'success',
@@ -318,10 +320,11 @@ export const rejectUser = catchAsync(async (req: Request, res: Response, next: N
         },
     });
 
-    // Send Email Notification
+    // Send Email Notification (non-blocking)
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (user) {
-        await sendRejectionEmail(user.email, user.name);
+        sendRejectionEmail(user.email, user.name)
+            .catch(err => console.error('[REJECT] Rejection email failed:', err?.message));
     }
 
     res.status(200).json({
@@ -489,26 +492,21 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         }
     });
 
-    // Send welcome email with login credentials to the newly created user
-    try {
-        await sendAdminCreatedUserEmail(
-            newUser.email,
-            newUser.name,
-            password, // Send the original plaintext password
-            role,
-            newUser.membershipNumber || ''
-        );
-    } catch (emailError) {
-        console.error('Failed to send welcome email:', emailError);
-        // Don't fail the request if email fails
-    }
+    // Send welcome email with login credentials (non-blocking)
+    sendAdminCreatedUserEmail(
+        newUser.email,
+        newUser.name,
+        password,
+        role,
+        newUser.membershipNumber || ''
+    ).catch(err => console.error('[CREATE USER] Email failed:', err?.message || err));
 
     // Exclude sensitive fields from response
     const { passwordHash, ...safeUser } = newUser as any;
 
     res.status(201).json({
         status: 'success',
-        message: `${role} created successfully`,
+        message: `${role} created successfully. A welcome email with login credentials will be sent shortly.`,
         data: {
             user: safeUser
         }
@@ -544,11 +542,9 @@ export const inviteUser = catchAsync(async (req: Request, res: Response, next: N
         }
     });
 
-    // Send Email Notification (Invite)
-    // Re-using Registration Email or creating a specific Invite one.
-    // For now, let's use sendRegistrationEmail as a placeholder or create a new one.
-    // Let's use sendRegistrationEmail for simplicity as it welcomes them.
-    await sendRegistrationEmail(newUser.email, newUser.name);
+    // Send Email Notification (non-blocking)
+    sendRegistrationEmail(newUser.email, newUser.name)
+        .catch(err => console.error('[INVITE] Registration email failed:', err?.message));
 
     res.status(201).json({
         status: 'success',

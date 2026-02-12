@@ -224,10 +224,11 @@ export default function UserManagementTable() {
                 fatherPhone: ""
             });
             fetchUsers();
-            showToast("User created successfully!", "success");
+            const successMsg = res.data?.message || "User created successfully!";
+            showToast(`${successMsg}`, "success");
         } catch (error: any) {
             console.error("Failed to create user", error);
-            const message = error.response?.data?.message || "Failed to create user";
+            const message = error.response?.data?.message || error.message || "Failed to create user";
             showToast(message, "error");
         } finally {
             setIsCreating(false);
