@@ -13,6 +13,7 @@ import FightRecordCard from "./FightRecordCard";
 import ProfileCompletionBar from "@/components/ui/ProfileCompletionBar";
 // OnboardingTour removed
 import MyOrders from "./MyOrders";
+import BeltTimeline from "./BeltTimeline";
 
 export default function StudentDashboard({ user }: { user: any }) {
     const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
@@ -199,6 +200,13 @@ export default function StudentDashboard({ user }: { user: any }) {
                         <motion.div variants={itemVariants}>
                             <FightRecordCard />
                         </motion.div>
+
+                        {/* Belt Progression Timeline */}
+                        {user?.id && (
+                            <motion.div variants={itemVariants}>
+                                <BeltTimeline userId={user.id} />
+                            </motion.div>
+                        )}
 
                         {/* Next Event Hero Card */}
                         {nextEvent && (

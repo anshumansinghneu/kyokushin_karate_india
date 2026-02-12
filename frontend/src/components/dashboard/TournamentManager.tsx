@@ -6,7 +6,7 @@ import {
     Trophy, Plus, Calendar, MapPin, Users, Edit2, Trash2,
     Eye, Medal, Target, Search, X, CheckCircle, XCircle,
     Download, ChevronDown, ChevronUp,
-    UserCheck, RefreshCw
+    UserCheck, RefreshCw, Award, ArrowRightLeft, Layers, FileCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -111,8 +111,21 @@ export default function TournamentManager() {
         logs: [], done: false, error: null, resultCount: 0, startTime: 0
     });
 
-    // Tab: 'participants' | 'brackets'
-    const [detailTab, setDetailTab] = useState<'participants' | 'brackets'>('participants');
+    // Category management state
+    const [categoryData, setCategoryData] = useState<any[]>([]);
+    const [loadingCategories, setLoadingCategories] = useState(false);
+    const [movingParticipant, setMovingParticipant] = useState<{
+        registrationId: string; participantName: string;
+        currentAge: string; currentWeight: string; currentBelt: string;
+    } | null>(null);
+    const [moveTarget, setMoveTarget] = useState({ categoryAge: '', categoryWeight: '', categoryBelt: '' });
+
+    // Certificate state
+    const [tournamentResults, setTournamentResults] = useState<any[]>([]);
+    const [loadingResults, setLoadingResults] = useState(false);
+
+    // Tab: 'participants' | 'brackets' | 'categories' | 'certificates'
+    const [detailTab, setDetailTab] = useState<'participants' | 'brackets' | 'categories' | 'certificates'>('participants');
 
     const [formData, setFormData] = useState({
         name: "", description: "", startDate: "", endDate: "", location: "",
@@ -233,6 +246,10 @@ export default function TournamentManager() {
 
         // Fetch brackets
         fetchBrackets(tournament.id);
+        // Fetch categories
+        fetchCategories(tournament.id);
+        // Fetch results for certificates
+        fetchTournamentResults(tournament.id);
     };
 
     const fetchBrackets = async (eventId: string) => {
@@ -248,6 +265,84 @@ export default function TournamentManager() {
             setBrackets([]);
         } finally {
             setLoadingBrackets(false);
+        }
+    };
+
+    const fetchCategories = async (eventId: string) => {
+        setLoadingCategories(true);
+        try {
+            const res = await api.get(`/tournaments/${eventId}/categories`);
+            setCategoryData(res.data.data.categories || []);
+        } catch {
+            setCategoryData([]);
+        } finally {
+            setLoadingCategories(false);
+        }
+    };
+
+    const fetchTournamentResults = async (eventId: string) => {
+        setLoadingResults(true);
+        try {
+            const res = await api.get(`/results/${eventId}`);
+            setTournamentResults(res.data.data.results || []);
+        } catch {
+            setTournamentResults([]);
+        } finally {
+            setLoadingResults(false);
+        }
+    };
+
+    const handleMoveParticipant = async () => {
+        if (!movingParticipant) return;
+        try {
+            await api.patch(`/tournaments/registrations/${movingParticipant.registrationId}/category`, moveTarget);
+            showToast(`${movingParticipant.participantName} moved successfully!`, "success");
+            setMovingParticipant(null);
+            setMoveTarget({ categoryAge: '', categoryWeight: '', categoryBelt: '' });
+            if (viewingTournament) fetchCategories(viewingTournament.id);
+        } catch {
+            showToast("Failed to move participant", "error");
+        }
+    };
+
+    const handleDownloadCertificate = async (result: any) => {
+        try {
+            const { downloadCertificate } = await import('@/lib/certificateGenerator');
+            downloadCertificate({
+                participantName: result.user?.name || 'Unknown',
+                categoryName: result.categoryName,
+                position: result.finalRank,
+                tournamentName: viewingTournament?.name || 'Tournament',
+                date: viewingTournament?.startDate || new Date().toISOString(),
+                location: viewingTournament?.location || '',
+                dojoName: result.user?.dojo?.name,
+            });
+            showToast("Certificate downloaded!", "success");
+        } catch {
+            showToast("Failed to generate certificate", "error");
+        }
+    };
+
+    const handleDownloadAllCertificates = async () => {
+        if (tournamentResults.length === 0) return;
+        try {
+            const { downloadAllCertificates } = await import('@/lib/certificateGenerator');
+            const certs = tournamentResults
+                .filter((r: any) => r.finalRank <= 3)
+                .map((r: any) => ({
+                    participantName: r.user?.name || 'Unknown',
+                    categoryName: r.categoryName,
+                    position: r.finalRank,
+                    tournamentName: viewingTournament?.name || 'Tournament',
+                    date: viewingTournament?.startDate || new Date().toISOString(),
+                    location: viewingTournament?.location || '',
+                    dojoName: r.user?.dojo?.name,
+                }));
+            showToast(`Downloading ${certs.length} certificates...`, "info");
+            await downloadAllCertificates(certs);
+            showToast("All certificates downloaded!", "success");
+        } catch {
+            showToast("Failed to generate certificates", "error");
         }
     };
 
@@ -1037,6 +1132,29 @@ export default function TournamentManager() {
                                                 <span className="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full">{brackets.length}</span>
                                             )}
                                         </button>
+                                        <button onClick={() => setDetailTab('categories')}
+                                            className={`flex items-center gap-2 px-4 py-2.5 rounded-t-lg font-semibold text-sm transition-colors ${
+                                                detailTab === 'categories'
+                                                    ? 'bg-white/10 text-yellow-400 border-b-2 border-yellow-500'
+                                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                            }`}>
+                                            <Layers className="w-4 h-4" />
+                                            Categories
+                                        </button>
+                                        <button onClick={() => setDetailTab('certificates')}
+                                            className={`flex items-center gap-2 px-4 py-2.5 rounded-t-lg font-semibold text-sm transition-colors ${
+                                                detailTab === 'certificates'
+                                                    ? 'bg-white/10 text-yellow-400 border-b-2 border-yellow-500'
+                                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                            }`}>
+                                            <FileCheck className="w-4 h-4" />
+                                            Certificates
+                                            {tournamentResults.filter((r: any) => r.finalRank <= 3).length > 0 && (
+                                                <span className="bg-yellow-500/20 text-yellow-400 text-xs px-2 py-0.5 rounded-full">
+                                                    {tournamentResults.filter((r: any) => r.finalRank <= 3).length}
+                                                </span>
+                                            )}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1440,6 +1558,254 @@ export default function TournamentManager() {
                                         )}
                                     </div>
                                 )}
+
+                                {/* ═══ CATEGORIES TAB ═══ */}
+                                {detailTab === 'categories' && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                                <Layers className="w-5 h-5 text-yellow-500" />
+                                                Category Management
+                                            </h3>
+                                            <Button size="sm" onClick={() => viewingTournament && fetchCategories(viewingTournament.id)}
+                                                className="bg-white/10 hover:bg-white/20 text-white text-xs">
+                                                <RefreshCw className="w-3 h-3 mr-1" /> Refresh
+                                            </Button>
+                                        </div>
+                                        <p className="text-gray-500 text-sm">
+                                            View participants by category and move them between categories. Only approved participants are shown.
+                                        </p>
+
+                                        {loadingCategories ? (
+                                            <div className="text-center py-12">
+                                                <RefreshCw className="w-8 h-8 text-gray-400 animate-spin mx-auto" />
+                                                <p className="text-gray-500 mt-3">Loading categories...</p>
+                                            </div>
+                                        ) : categoryData.length === 0 ? (
+                                            <div className="text-center py-12 bg-white/5 border border-white/10 rounded-xl">
+                                                <Layers className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                                                <p className="text-gray-400">No approved participants in categories yet</p>
+                                            </div>
+                                        ) : (
+                                            <div className="grid gap-4">
+                                                {categoryData.map((cat: any, catIndex: number) => (
+                                                    <div key={catIndex} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                                                        <div className="px-4 py-3 bg-white/5 border-b border-white/10 flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <Target className="w-4 h-4 text-yellow-500" />
+                                                                <span className="font-bold text-white text-sm">{cat.categoryName}</span>
+                                                                <span className="text-xs bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">
+                                                                    {cat.participants.length} fighter{cat.participants.length !== 1 ? 's' : ''}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="divide-y divide-white/5">
+                                                            {cat.participants.map((p: any) => (
+                                                                <div key={p.registrationId} className="px-4 py-2.5 flex items-center justify-between hover:bg-white/5 transition-colors">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-yellow-600 to-red-600 flex items-center justify-center flex-shrink-0">
+                                                                            <span className="text-white text-[10px] font-bold">{p.name.charAt(0)}</span>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-white text-sm font-medium">{p.name}</span>
+                                                                            <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                                                                                <span className={`px-1.5 py-0.5 rounded-full ${getBeltColor(p.belt)}`}>
+                                                                                    {p.belt || 'White'}
+                                                                                </span>
+                                                                                {p.weight && <span>{p.weight}kg</span>}
+                                                                                {p.dojo && <span>{p.dojo}</span>}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setMovingParticipant({
+                                                                                registrationId: p.registrationId,
+                                                                                participantName: p.name,
+                                                                                currentAge: cat.categoryAge,
+                                                                                currentWeight: cat.categoryWeight,
+                                                                                currentBelt: cat.categoryBelt,
+                                                                            });
+                                                                            setMoveTarget({
+                                                                                categoryAge: cat.categoryAge,
+                                                                                categoryWeight: cat.categoryWeight,
+                                                                                categoryBelt: cat.categoryBelt,
+                                                                            });
+                                                                        }}
+                                                                        className="p-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition-colors text-xs flex items-center gap-1"
+                                                                        title="Move to different category"
+                                                                    >
+                                                                        <ArrowRightLeft className="w-3.5 h-3.5" />
+                                                                        <span className="hidden sm:inline">Move</span>
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* ═══ CERTIFICATES TAB ═══ */}
+                                {detailTab === 'certificates' && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                                <Award className="w-5 h-5 text-yellow-500" />
+                                                Tournament Certificates
+                                            </h3>
+                                            {tournamentResults.filter((r: any) => r.finalRank <= 3).length > 0 && (
+                                                <Button size="sm" onClick={handleDownloadAllCertificates}
+                                                    className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs">
+                                                    <Download className="w-3 h-3 mr-1" /> Download All ({tournamentResults.filter((r: any) => r.finalRank <= 3).length})
+                                                </Button>
+                                            )}
+                                        </div>
+
+                                        {loadingResults ? (
+                                            <div className="text-center py-12">
+                                                <RefreshCw className="w-8 h-8 text-gray-400 animate-spin mx-auto" />
+                                                <p className="text-gray-500 mt-3">Loading results...</p>
+                                            </div>
+                                        ) : tournamentResults.length === 0 ? (
+                                            <div className="text-center py-12 bg-white/5 border border-white/10 rounded-xl">
+                                                <Award className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                                                <h3 className="text-xl font-bold text-white mb-2">No Results Yet</h3>
+                                                <p className="text-gray-400 max-w-md mx-auto">
+                                                    Tournament results will appear here after brackets are completed and results are calculated.
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {/* Group by category */}
+                                                {Object.entries(
+                                                    tournamentResults.reduce((acc: any, r: any) => {
+                                                        if (!acc[r.categoryName]) acc[r.categoryName] = [];
+                                                        acc[r.categoryName].push(r);
+                                                        return acc;
+                                                    }, {} as Record<string, any[]>)
+                                                ).map(([categoryName, results]: [string, any]) => (
+                                                    <div key={categoryName} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                                                        <div className="px-4 py-3 bg-white/5 border-b border-white/10">
+                                                            <span className="font-bold text-white text-sm">{categoryName}</span>
+                                                        </div>
+                                                        <div className="divide-y divide-white/5">
+                                                            {(results as any[])
+                                                                .sort((a: any, b: any) => a.finalRank - b.finalRank)
+                                                                .map((result: any) => {
+                                                                    const medalColor = result.medal === 'GOLD' ? 'text-yellow-400 bg-yellow-500/20' :
+                                                                        result.medal === 'SILVER' ? 'text-gray-300 bg-gray-500/20' :
+                                                                        result.medal === 'BRONZE' ? 'text-orange-400 bg-orange-500/20' : 'text-gray-500 bg-white/5';
+                                                                    return (
+                                                                        <div key={result.id} className="px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors">
+                                                                            <div className="flex items-center gap-3">
+                                                                                <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${medalColor}`}>
+                                                                                    {result.finalRank <= 3 ? (
+                                                                                        <Medal className="w-4 h-4" />
+                                                                                    ) : (
+                                                                                        `#${result.finalRank}`
+                                                                                    )}
+                                                                                </span>
+                                                                                <div>
+                                                                                    <p className="text-white text-sm font-medium">{result.user?.name || 'Unknown'}</p>
+                                                                                    <p className="text-gray-500 text-[10px]">
+                                                                                        {result.medal || `Rank #${result.finalRank}`}
+                                                                                        {result.user?.dojo?.name && ` • ${result.user.dojo.name}`}
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                            {result.finalRank <= 3 && (
+                                                                                <Button size="sm" onClick={() => handleDownloadCertificate(result)}
+                                                                                    className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs">
+                                                                                    <Download className="w-3 h-3 mr-1" /> Certificate
+                                                                                </Button>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* ── Move Participant Modal ── */}
+            <AnimatePresence>
+                {movingParticipant && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-black/95 border border-white/10 rounded-2xl w-full max-w-md">
+                            <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                        <ArrowRightLeft className="w-5 h-5 text-blue-400" />
+                                        Move Participant
+                                    </h3>
+                                    <p className="text-gray-400 text-sm mt-0.5">{movingParticipant.participantName}</p>
+                                </div>
+                                <button onClick={() => setMovingParticipant(null)}
+                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                                    <X className="w-5 h-5 text-white" />
+                                </button>
+                            </div>
+                            <div className="p-5 space-y-4">
+                                <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Current Category</p>
+                                    <p className="text-white text-sm">
+                                        {[movingParticipant.currentAge, movingParticipant.currentWeight, movingParticipant.currentBelt].filter(Boolean).join(', ') || 'Uncategorized'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <Label className="text-white text-sm">New Age Category</Label>
+                                    <Input value={moveTarget.categoryAge} onChange={(e) => setMoveTarget({ ...moveTarget, categoryAge: e.target.value })}
+                                        className="bg-white/5 border-white/10 text-white mt-1" placeholder="e.g., 18-35" />
+                                </div>
+                                <div>
+                                    <Label className="text-white text-sm">New Weight Category</Label>
+                                    <Input value={moveTarget.categoryWeight} onChange={(e) => setMoveTarget({ ...moveTarget, categoryWeight: e.target.value })}
+                                        className="bg-white/5 border-white/10 text-white mt-1" placeholder="e.g., 60-70kg" />
+                                </div>
+                                <div>
+                                    <Label className="text-white text-sm">New Belt Category</Label>
+                                    <Input value={moveTarget.categoryBelt} onChange={(e) => setMoveTarget({ ...moveTarget, categoryBelt: e.target.value })}
+                                        className="bg-white/5 border-white/10 text-white mt-1" placeholder="e.g., Brown Belt" />
+                                </div>
+                                {/* Quick select from existing categories */}
+                                {categoryData.length > 1 && (
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-2">Or pick an existing category:</p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {categoryData.map((cat: any, i: number) => (
+                                                <button key={i}
+                                                    onClick={() => setMoveTarget({
+                                                        categoryAge: cat.categoryAge,
+                                                        categoryWeight: cat.categoryWeight,
+                                                        categoryBelt: cat.categoryBelt,
+                                                    })}
+                                                    className="px-2 py-1 rounded-lg text-xs bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 transition-colors">
+                                                    {cat.categoryName}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="flex justify-end gap-3 pt-2">
+                                    <Button onClick={() => setMovingParticipant(null)}
+                                        className="bg-white/5 hover:bg-white/10 border border-white/10 text-white">Cancel</Button>
+                                    <Button onClick={handleMoveParticipant}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white">
+                                        <ArrowRightLeft className="w-4 h-4 mr-2" /> Move
+                                    </Button>
+                                </div>
                             </div>
                         </motion.div>
                     </div>

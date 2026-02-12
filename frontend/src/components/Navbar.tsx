@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { getUserProfileImage } from "@/lib/imageUtils";
 import api from "@/lib/api";
+import NotificationCenter from "@/components/NotificationCenter";
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
@@ -123,7 +124,9 @@ export default function Navbar() {
                     ))}
 
                     {isAuthenticated ? (
-                        <div className="relative ml-4" ref={dropdownRef}>
+                        <div className="flex items-center gap-2">
+                            <NotificationCenter />
+                            <div className="relative ml-1" ref={dropdownRef}>
                             <button
                                 onClick={() => setDropdownOpen(!dropdownOpen)}
                                 className="flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 hover:border-primary/50 hover:bg-white/5 transition-all group"
@@ -211,6 +214,7 @@ export default function Navbar() {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
+                        </div>
                         </div>
                     ) : (
                         <div className="flex items-center gap-4 ml-4">
