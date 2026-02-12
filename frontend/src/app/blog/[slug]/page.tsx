@@ -6,6 +6,7 @@ import api from "@/lib/api";
 import { Calendar, User, ArrowLeft, Share2, Clock } from "lucide-react";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
+import DOMPurify from "dompurify";
 
 export default function BlogPost() {
     const { slug } = useParams();
@@ -66,7 +67,7 @@ export default function BlogPost() {
             if (current.type === 'text' && next?.type === 'image') {
                 rendered.push(
                     <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center my-12">
-                        <div className="prose prose-lg prose-invert text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: current.content }} />
+                        <div className="prose prose-lg prose-invert text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(current.content) }} />
                         <div className="rounded-xl overflow-hidden shadow-lg border border-white/10">
                             <img src={next.content} alt="Blog Content" className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500" />
                         </div>
@@ -81,7 +82,7 @@ export default function BlogPost() {
                         <div className="rounded-xl overflow-hidden shadow-lg border border-white/10 order-2 md:order-1">
                             <img src={current.content} alt="Blog Content" className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500" />
                         </div>
-                        <div className="prose prose-lg prose-invert text-gray-300 leading-relaxed order-1 md:order-2" dangerouslySetInnerHTML={{ __html: next.content }} />
+                        <div className="prose prose-lg prose-invert text-gray-300 leading-relaxed order-1 md:order-2" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(next.content) }} />
                     </div>
                 );
                 i += 2;
@@ -90,7 +91,7 @@ export default function BlogPost() {
             else {
                 if (current.type === 'text') {
                     rendered.push(
-                        <div key={i} className="prose prose-lg prose-invert max-w-none text-gray-300 leading-relaxed my-8" dangerouslySetInnerHTML={{ __html: current.content }} />
+                        <div key={i} className="prose prose-lg prose-invert max-w-none text-gray-300 leading-relaxed my-8" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(current.content) }} />
                     );
                 } else {
                     rendered.push(

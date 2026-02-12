@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useToast } from "@/contexts/ToastContext";
 import axios from "axios";
 import { downloadCertificate, downloadAllCertificates } from "@/lib/certificateGenerator";
 
@@ -70,6 +71,7 @@ interface Statistics {
 
 export default function TournamentResultsPage() {
     const { id } = useParams();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(true);
     const [statistics, setStatistics] = useState<Statistics | null>(null);
 
@@ -102,7 +104,7 @@ export default function TournamentResultsPage() {
             }
         } else {
             navigator.clipboard.writeText(url);
-            alert('Link copied to clipboard!');
+            showToast('Link copied to clipboard!', 'success');
         }
     };
 

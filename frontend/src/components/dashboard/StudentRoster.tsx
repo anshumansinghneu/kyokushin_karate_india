@@ -137,7 +137,7 @@ export default function StudentRoster() {
             setStudents(response.data.data.users);
         } catch (error) {
             console.error("Failed to approve", error);
-            alert("Failed to approve student");
+            showToast("Failed to approve student", "error");
         }
     };
 

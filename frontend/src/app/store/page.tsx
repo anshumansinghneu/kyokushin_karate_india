@@ -90,6 +90,18 @@ export default function StorePage() {
     localStorage.setItem('kkfi_cart', JSON.stringify(cart));
   }, [cart]);
 
+  // Escape key to close modals/cart
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectedProduct) setSelectedProduct(null);
+        else if (cartOpen) setCartOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [selectedProduct, cartOpen]);
+
   // Pre-fill shipping from user
   useEffect(() => {
     if (user) {

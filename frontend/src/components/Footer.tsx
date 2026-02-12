@@ -40,8 +40,8 @@ export default function Footer() {
                         <ul className="space-y-3 md:space-y-4 text-sm md:text-base text-gray-400">
                             <li><Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
                             <li><Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link></li>
-                            <li><Link href="/rules" className="hover:text-primary transition-colors">Tournament Rules</Link></li>
-                            <li><Link href="/membership" className="hover:text-primary transition-colors">Membership Terms</Link></li>
+                            <li><span className="text-gray-500 cursor-default">Tournament Rules</span></li>
+                            <li><span className="text-gray-500 cursor-default">Membership Terms</span></li>
                         </ul>
                     </div>
 

@@ -46,7 +46,9 @@ export default function RenewMembershipPage() {
         fetchConfig();
 
         return () => {
-            document.body.removeChild(script);
+            if (script.parentNode) {
+                document.body.removeChild(script);
+            }
         };
     }, []);
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Users, ArrowRight, ChevronRight, Star, Map, LayoutGrid } from "lucide-react";
+import { Search, MapPin, Users, ArrowRight, ChevronRight, Map, LayoutGrid, AlertCircle, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -12,22 +12,27 @@ import KarateLoader from "@/components/KarateLoader";
 export default function DojoListPage() {
     const [dojos, setDojos] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<any>(null);
 
+    const fetchDojos = async () => {
+        setIsLoading(true);
+        setError(false);
+        try {
+            const response = await api.get('/dojos');
+            setDojos(response.data.data.dojos);
+        } catch (err) {
+            console.error("Failed to fetch dojos", err);
+            setError(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchDojos = async () => {
-            try {
-                const response = await api.get('/dojos');
-                setDojos(response.data.data.dojos);
-            } catch (error) {
-                console.error("Failed to fetch dojos", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchDojos();
     }, []);
 
@@ -187,6 +192,14 @@ export default function DojoListPage() {
                     <div className="flex flex-col items-center justify-center py-20 gap-4 h-[50vh]">
                         <KarateLoader />
                     </div>
+                ) : error ? (
+                    <div className="text-center py-20">
+                        <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
+                        <p className="text-gray-400 text-lg mb-4">Failed to load dojos</p>
+                        <button onClick={fetchDojos} className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-all">
+                            <RefreshCw className="w-4 h-4" /> Try Again
+                        </button>
+                    </div>
                 ) : (
                     <>
                     {/* Map View */}
@@ -235,10 +248,6 @@ export default function DojoListPage() {
                                                 <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-wider">
                                                     {dojo.city}
                                                 </span>
-                                                <div className="flex items-center gap-1 text-yellow-500 bg-black/50 backdrop-blur-md px-2 py-1 rounded-full border border-white/10">
-                                                    <Star className="w-3 h-3 fill-current" />
-                                                    <span className="text-xs font-bold">5.0</span>
-                                                </div>
                                             </div>
 
                                             <div className="transform transition-transform duration-500 group-hover:-translate-y-2">

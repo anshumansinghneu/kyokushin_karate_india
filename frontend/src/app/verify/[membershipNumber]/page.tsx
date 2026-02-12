@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Shield, CheckCircle, XCircle, Search, Award, Calendar, MapPin, AlertTriangle, Flame, TrendingUp } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import api from '@/lib/api';
 
 interface VerifiedMember {
     name: string;
@@ -53,8 +54,6 @@ export default function VerifyPage() {
     const [searched, setSearched] = useState(false);
     const [error, setError] = useState('');
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-
     const doSearch = async (query: string) => {
         if (!query.trim()) return;
         setLoading(true);
@@ -63,16 +62,14 @@ export default function VerifyPage() {
         setSearched(true);
 
         try {
-            const res = await fetch(`${apiBase}/belts/verify/${encodeURIComponent(query.trim())}`);
-            const data = await res.json();
-
-            if (res.ok && data.data?.member) {
-                setMember(data.data.member);
+            const res = await api.get(`/belts/verify/${encodeURIComponent(query.trim())}`);
+            if (res.data?.data?.member) {
+                setMember(res.data.data.member);
             } else {
-                setError(data.message || 'No member found with this membership number');
+                setError(res.data?.message || 'No member found with this membership number');
             }
-        } catch {
-            setError('Failed to connect to verification server');
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to connect to verification server');
         } finally {
             setLoading(false);
         }

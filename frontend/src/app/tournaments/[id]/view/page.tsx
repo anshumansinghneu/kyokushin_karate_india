@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Trophy, Crown, Calendar, MapPin, Users, RefreshCw, Share2, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/contexts/ToastContext";
 import axios from "axios";
 import { io, Socket } from "socket.io-client";
 
@@ -56,6 +57,7 @@ interface Tournament {
 
 export default function PublicTournamentViewer() {
     const { id } = useParams();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(true);
     const [tournament, setTournament] = useState<Tournament | null>(null);
     const [brackets, setBrackets] = useState<Bracket[]>([]);
@@ -161,7 +163,7 @@ export default function PublicTournamentViewer() {
         } else {
             // Fallback: copy to clipboard
             navigator.clipboard.writeText(url);
-            alert('Link copied to clipboard!');
+            showToast('Link copied to clipboard!', 'success');
         }
     };
 

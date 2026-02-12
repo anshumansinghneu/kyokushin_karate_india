@@ -3,23 +3,28 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
-import { Calendar, User } from "lucide-react";
+import { Calendar, User, AlertCircle, RefreshCw } from "lucide-react";
 
 export default function BlogList() {
     const [posts, setPosts] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    const fetchPosts = async () => {
+        setIsLoading(true);
+        setError(false);
+        try {
+            const res = await api.get('/posts?type=BLOG');
+            setPosts(res.data.data.posts || []);
+        } catch (err) {
+            console.error("Failed to fetch blogs", err);
+            setError(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchPosts = async () => {
-            try {
-                const res = await api.get('/posts?type=BLOG');
-                setPosts(res.data.data.posts || []);
-            } catch (error) {
-                console.error("Failed to fetch blogs", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchPosts();
     }, []);
 
@@ -32,6 +37,19 @@ export default function BlogList() {
 
                 {isLoading ? (
                     <div className="text-center text-gray-500">Loading chronicles...</div>
+                ) : error ? (
+                    <div className="text-center py-20">
+                        <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
+                        <p className="text-gray-400 text-lg mb-4">Failed to load chronicles</p>
+                        <button onClick={fetchPosts} className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-all">
+                            <RefreshCw className="w-4 h-4" /> Try Again
+                        </button>
+                    </div>
+                ) : posts.length === 0 ? (
+                    <div className="text-center py-20">
+                        <Calendar className="w-12 h-12 mx-auto text-gray-600 mb-4" />
+                        <p className="text-gray-500 text-lg">No chronicles published yet</p>
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {posts.map((post) => (
@@ -42,6 +60,8 @@ export default function BlogList() {
                                             <img
                                                 src={post.imageUrl}
                                                 alt={post.title}
+                                                loading="lazy"
+                                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                         ) : (

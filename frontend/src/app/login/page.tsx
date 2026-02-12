@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,11 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const { login, isLoading, error } = useAuthStore();
     const router = useRouter();
+
+    // Clear any stale auth error when page mounts
+    useEffect(() => {
+        useAuthStore.setState({ error: null });
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

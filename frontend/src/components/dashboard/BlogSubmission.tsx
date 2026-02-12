@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Send, Image as ImageIcon, Link as LinkIcon, AlertCircle, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,18 @@ export default function BlogSubmission() {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [message, setMessage] = useState("");
+
+    // Warn user about unsaved changes before navigating away
+    const hasUnsavedContent = formData.title || formData.excerpt || formData.content;
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedContent) {
+                e.preventDefault();
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedContent]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

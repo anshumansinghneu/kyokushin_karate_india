@@ -3,25 +3,29 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import Link from "next/link";
-import { MapPin, Calendar, ChevronRight } from "lucide-react";
+import { MapPin, Calendar, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
 
 export default function SeminarsPage() {
     const [events, setEvents] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    const fetchEvents = async () => {
+        setIsLoading(true);
+        setError(false);
+        try {
+            const res = await api.get('/events');
+            const seminars = res.data.data.events.filter((e: any) => e.type === 'SEMINAR');
+            setEvents(seminars);
+        } catch (err) {
+            console.error("Failed to fetch seminars", err);
+            setError(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                const res = await api.get('/events');
-                // Filter for SEMINAR type
-                const seminars = res.data.data.events.filter((e: any) => e.type === 'SEMINAR');
-                setEvents(seminars);
-            } catch (error) {
-                console.error("Failed to fetch seminars", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchEvents();
     }, []);
 
@@ -37,6 +41,14 @@ export default function SeminarsPage() {
 
                 {isLoading ? (
                     <div className="text-center text-gray-500">Loading seminars...</div>
+                ) : error ? (
+                    <div className="text-center py-20">
+                        <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
+                        <p className="text-gray-400 text-lg mb-4">Failed to load seminars</p>
+                        <button onClick={fetchEvents} className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-all">
+                            <RefreshCw className="w-4 h-4" /> Try Again
+                        </button>
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {events.length > 0 ? (

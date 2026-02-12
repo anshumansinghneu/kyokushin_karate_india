@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Camera, X, ChevronLeft, ChevronRight, Upload, Star, Loader2, ImageIcon } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
+import { useToast } from "@/contexts/ToastContext";
 
 interface GalleryItem {
     id: string;
@@ -33,6 +34,7 @@ export default function GalleryPage() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { showToast } = useToast();
 
     const fetchGallery = useCallback(async () => {
         setIsLoading(true);
@@ -97,7 +99,14 @@ export default function GalleryPage() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                showToast("File size must be under 5MB", "error");
+                e.target.value = '';
+                return;
+            }
             setUploadFile(file);
+            // Revoke previous preview URL to prevent memory leak
+            if (uploadPreview) URL.revokeObjectURL(uploadPreview);
             setUploadPreview(URL.createObjectURL(file));
         }
     };
@@ -123,12 +132,13 @@ export default function GalleryPage() {
             // Reset form and refresh
             setShowUpload(false);
             setUploadFile(null);
+            if (uploadPreview) URL.revokeObjectURL(uploadPreview);
             setUploadPreview(null);
             setUploadCaption("");
             fetchGallery();
         } catch (error) {
             console.error("Upload failed", error);
-            alert("Upload failed. Please try again.");
+            showToast("Upload failed. Please try again.", "error");
         } finally {
             setUploading(false);
         }

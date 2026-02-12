@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Receipt, Download, IndianRupee, Calendar, CheckCircle, XCircle, Clock, FileText } from 'lucide-react';
+import { Receipt, Download, IndianRupee, Calendar, CheckCircle, XCircle, Clock, FileText, AlertCircle, RefreshCw } from 'lucide-react';
 import api from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Payment {
     id: string;
@@ -66,20 +67,29 @@ export default function PaymentHistoryPage() {
     const router = useRouter();
     const [payments, setPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
     const [downloadingId, setDownloadingId] = useState<string | null>(null);
+    const { showToast } = useToast();
 
-    useEffect(() => {
+    const fetchPayments = useCallback(() => {
         const token = localStorage.getItem('token');
         if (!token) { router.push('/login'); return; }
+        setLoading(true);
+        setError(false);
 
         api.get('/payments/my-payments')
             .then(res => setPayments(res.data.data.payments))
             .catch(err => {
                 console.error('Failed to load payments:', err);
                 if (err.response?.status === 401) router.push('/login');
+                else setError(true);
             })
             .finally(() => setLoading(false));
     }, [router]);
+
+    useEffect(() => {
+        fetchPayments();
+    }, [fetchPayments]);
 
     // ─── Generate & Download Invoice PDF ─────────────────────────
     const downloadInvoice = useCallback(async (paymentId: string) => {
@@ -204,7 +214,7 @@ export default function PaymentHistoryPage() {
             doc.save(`KKFI-Receipt-${invoice.invoiceNumber}.pdf`);
         } catch (err) {
             console.error('Invoice download failed:', err);
-            alert('Failed to download invoice. Please try again.');
+            showToast('Failed to download invoice. Please try again.', 'error');
         } finally {
             setDownloadingId(null);
         }
@@ -232,6 +242,14 @@ export default function PaymentHistoryPage() {
                     {loading ? (
                         <div className="flex justify-center py-20">
                             <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                    ) : error ? (
+                        <div className="text-center py-20">
+                            <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
+                            <p className="text-gray-400 text-lg mb-4">Failed to load payment history</p>
+                            <button onClick={fetchPayments} className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-all">
+                                <RefreshCw className="w-4 h-4" /> Try Again
+                            </button>
                         </div>
                     ) : payments.length === 0 ? (
                         <div className="text-center py-20">

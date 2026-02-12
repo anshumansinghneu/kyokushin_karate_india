@@ -4,7 +4,6 @@ import { Calendar, Trophy, Activity, ChevronRight, User, CheckCircle, Clock, Zap
 import Link from "next/link";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 
 import MembershipCard from "./MembershipCard";
@@ -20,11 +19,9 @@ export default function StudentDashboard({ user }: { user: any }) {
     const [nextEvent, setNextEvent] = useState<any>(null);
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number }>({ days: 0, hours: 0, minutes: 0 });
 
-    const { checkAuth } = useAuthStore();
     const { showToast } = useToast();
 
     useEffect(() => {
-        checkAuth(); // Refresh user data on mount
         const fetchEvents = async () => {
             try {
                 const response = await api.get('/events');

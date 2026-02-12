@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, Users, AlertCircle, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
-import Navbar from '@/components/Navbar';
 
 interface Event {
     id: string;
@@ -45,14 +44,24 @@ export default function CalendarPage() {
     const [currentMonth, setCurrentMonth] = useState(today.getMonth());
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
-    useEffect(() => {
+    const fetchEvents = () => {
+        setLoading(true);
+        setError(false);
         api.get('/events')
             .then(res => setEvents(res.data.data.events))
-            .catch(err => console.error('Failed to load events:', err))
+            .catch(err => {
+                console.error('Failed to load events:', err);
+                setError(true);
+            })
             .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        fetchEvents();
     }, []);
 
     const prevMonth = () => {
@@ -125,7 +134,6 @@ export default function CalendarPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white">
-            <Navbar />
             <div className="max-w-6xl mx-auto px-4 pt-28 pb-16">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                     {/* Header */}
@@ -171,6 +179,14 @@ export default function CalendarPage() {
                     {loading ? (
                         <div className="flex justify-center py-20">
                             <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                    ) : error ? (
+                        <div className="text-center py-20">
+                            <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
+                            <p className="text-gray-400 text-lg mb-4">Failed to load events</p>
+                            <button onClick={fetchEvents} className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-all">
+                                <RefreshCw className="w-4 h-4" /> Try Again
+                            </button>
                         </div>
                     ) : viewMode === 'calendar' ? (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

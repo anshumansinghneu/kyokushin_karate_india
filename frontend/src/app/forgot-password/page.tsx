@@ -96,12 +96,13 @@ export default function ForgotPasswordPage() {
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2 group">
-                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">
+                                <label htmlFor="forgot-email" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">
                                     Email Address
                                 </label>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
                                     <Input
+                                        id="forgot-email"
                                         type="email"
                                         placeholder="osu@kyokushin.in"
                                         required
