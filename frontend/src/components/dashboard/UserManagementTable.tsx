@@ -44,9 +44,11 @@ export default function UserManagementTable() {
         name: "",
         email: "",
         password: "",
+        confirmPassword: "",
         role: "STUDENT",
         countryCode: "+91",
         phone: "",
+        dob: "",
         dojoId: "",
         currentBeltRank: "White",
         membershipStatus: "ACTIVE",
@@ -57,6 +59,7 @@ export default function UserManagementTable() {
         fatherName: "",
         fatherPhone: ""
     });
+    const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
 
     const fetchUsers = async () => {
         setIsLoading(true);
@@ -199,33 +202,46 @@ export default function UserManagementTable() {
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
         if (isCreating) return;
+
+        // Validate
+        const errs: Record<string, string> = {};
+        if (!createFormData.name.trim()) errs.name = "Name is required";
+        if (!createFormData.email) errs.email = "Email is required";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createFormData.email)) errs.email = "Invalid email";
+        if (!createFormData.password) errs.password = "Password is required";
+        else if (createFormData.password.length < 8) errs.password = "Min 8 characters";
+        if (createFormData.password !== createFormData.confirmPassword) errs.confirmPassword = "Passwords do not match";
+        if (!createFormData.phone) errs.phone = "Phone is required";
+        if (!createFormData.dob) errs.dob = "Date of Birth is required";
+        if (!createFormData.state) errs.state = "State is required";
+        if (!createFormData.city) errs.city = "City is required";
+        if (!createFormData.height) errs.height = "Height is required";
+        if (!createFormData.weight) errs.weight = "Weight is required";
+        if (createFormData.role === "STUDENT") {
+            if (!createFormData.fatherName) errs.fatherName = "Required";
+            if (!createFormData.fatherPhone) errs.fatherPhone = "Required";
+        }
+        if (Object.keys(errs).length > 0) {
+            setCreateErrors(errs);
+            return;
+        }
+        setCreateErrors({});
         setIsCreating(true);
-        console.log("Creating user with data:", createFormData);
 
         try {
-            const res = await api.post("/users", createFormData);
-            console.log("Create user response:", res);
+            const { confirmPassword, ...payload } = createFormData;
+            const res = await api.post("/users", payload);
             setIsCreateModalOpen(false);
             setCreateFormData({
-                name: "",
-                email: "",
-                password: "",
-                role: "STUDENT",
-                countryCode: "+91",
-                phone: "",
-                dojoId: "",
-                currentBeltRank: "White",
-                membershipStatus: "ACTIVE",
-                city: "",
-                state: "",
-                height: "",
-                weight: "",
-                fatherName: "",
-                fatherPhone: ""
+                name: "", email: "", password: "", confirmPassword: "", role: "STUDENT",
+                countryCode: "+91", phone: "", dob: "", dojoId: "",
+                currentBeltRank: "White", membershipStatus: "ACTIVE",
+                city: "", state: "", height: "", weight: "",
+                fatherName: "", fatherPhone: ""
             });
             fetchUsers();
             const successMsg = res.data?.message || "User created successfully!";
-            showToast(`${successMsg}`, "success");
+            showToast(successMsg, "success");
         } catch (error: any) {
             console.error("Failed to create user", error);
             const message = error.response?.data?.message || error.message || "Failed to create user";
@@ -600,221 +616,230 @@ export default function UserManagementTable() {
                                 </div>
 
                                 <form onSubmit={handleCreateUser} className="space-y-4">
-                                    {/* Email and Password */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Email *</Label>
-                                            <Input
-                                                type="email"
-                                                value={createFormData.email}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Password * (min 8 chars)</Label>
-                                            <Input
-                                                type="password"
-                                                value={createFormData.password}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                                required
-                                                minLength={8}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Name */}
+                                    {/* Role Selection */}
                                     <div className="space-y-2">
-                                        <Label>Full Name *</Label>
-                                        <Input
-                                            value={createFormData.name}
-                                            onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
-                                            className="bg-black/50 border-white/10"
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Role and Dojo */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Role *</Label>
-                                            <select
-                                                value={createFormData.role}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, role: e.target.value })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                                required
-                                            >
-                                                <option value="STUDENT">Student</option>
-                                                <option value="INSTRUCTOR">Instructor</option>
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Dojo</Label>
-                                            <select
-                                                value={createFormData.dojoId}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, dojoId: e.target.value })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                            >
-                                                <option value="">No Dojo</option>
-                                                {dojos.map((dojo: any) => (
-                                                    <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
-                                                ))}
-                                            </select>
+                                        <Label>Role *</Label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button type="button" onClick={() => setCreateFormData({ ...createFormData, role: "STUDENT" })}
+                                                className={`p-3 rounded-lg border text-sm font-bold transition-all ${
+                                                    createFormData.role === "STUDENT" ? "border-red-500 bg-red-500/10 text-white" : "border-white/10 bg-black/30 text-gray-400 hover:bg-white/5"
+                                                }`}>
+                                                <User className="w-4 h-4 inline mr-2" />Student
+                                            </button>
+                                            <button type="button" onClick={() => setCreateFormData({ ...createFormData, role: "INSTRUCTOR" })}
+                                                className={`p-3 rounded-lg border text-sm font-bold transition-all ${
+                                                    createFormData.role === "INSTRUCTOR" ? "border-red-500 bg-red-500/10 text-white" : "border-white/10 bg-black/30 text-gray-400 hover:bg-white/5"
+                                                }`}>
+                                                <Shield className="w-4 h-4 inline mr-2" />Instructor
+                                            </button>
                                         </div>
                                     </div>
 
-                                    {/* Belt Rank and Status */}
+                                    {/* Personal Information Header */}
+                                    <div className="flex items-center gap-2 pt-2">
+                                        <div className="w-1 h-4 bg-red-500 rounded-full" />
+                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Personal Information</span>
+                                    </div>
+
+                                    {/* Name & Email */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
+                                        <div className="space-y-1">
+                                            <Label>Full Name *</Label>
+                                            <Input value={createFormData.name}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
+                                                className={`bg-black/50 border-white/10 ${createErrors.name ? 'border-red-500' : ''}`}
+                                                placeholder="Enter full name" />
+                                            {createErrors.name && <p className="text-xs text-red-400">{createErrors.name}</p>}
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label>Email *</Label>
+                                            <Input type="email" value={createFormData.email}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
+                                                className={`bg-black/50 border-white/10 ${createErrors.email ? 'border-red-500' : ''}`}
+                                                placeholder="user@email.com" />
+                                            {createErrors.email && <p className="text-xs text-red-400">{createErrors.email}</p>}
+                                        </div>
+                                    </div>
+
+                                    {/* Phone & DOB */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <Label>Phone Number *</Label>
+                                            <div className="flex gap-2">
+                                                <select value={createFormData.countryCode}
+                                                    onChange={(e) => setCreateFormData({ ...createFormData, countryCode: e.target.value })}
+                                                    className="w-24 bg-black/50 border border-white/10 rounded-md h-10 px-2 text-white text-sm">
+                                                    {COUNTRY_CODES.map((c) => (
+                                                        <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                                                    ))}
+                                                </select>
+                                                <Input type="tel" value={createFormData.phone}
+                                                    onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
+                                                    className={`bg-black/50 border-white/10 flex-1 ${createErrors.phone ? 'border-red-500' : ''}`}
+                                                    placeholder="9876543210" />
+                                            </div>
+                                            {createErrors.phone && <p className="text-xs text-red-400">{createErrors.phone}</p>}
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label>Date of Birth *</Label>
+                                            <Input type="date" value={createFormData.dob}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, dob: e.target.value })}
+                                                className={`bg-black/50 border-white/10 ${createErrors.dob ? 'border-red-500' : ''}`} />
+                                            {createErrors.dob && <p className="text-xs text-red-400">{createErrors.dob}</p>}
+                                        </div>
+                                    </div>
+
+                                    {/* Belt Rank & Status */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1">
                                             <Label>Belt Rank</Label>
-                                            <select
-                                                value={createFormData.currentBeltRank}
+                                            <select value={createFormData.currentBeltRank}
                                                 onChange={(e) => setCreateFormData({ ...createFormData, currentBeltRank: e.target.value })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                            >
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white">
                                                 {BELT_RANKS.map(belt => (
                                                     <option key={belt} value={belt}>{belt}</option>
                                                 ))}
                                             </select>
                                         </div>
-                                        {createFormData.role === "STUDENT" && (
-                                            <div className="space-y-2">
-                                                <Label>Membership Status</Label>
-                                                <select
-                                                    value={createFormData.membershipStatus}
-                                                    onChange={(e) => setCreateFormData({ ...createFormData, membershipStatus: e.target.value })}
-                                                    className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                                >
-                                                    <option value="ACTIVE">Active</option>
-                                                    <option value="PENDING">Pending</option>
-                                                </select>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Phone with Country Code */}
-                                    <div className="space-y-2">
-                                        <Label>Phone Number *</Label>
-                                        <div className="flex gap-2">
-                                            <select
-                                                value={createFormData.countryCode}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, countryCode: e.target.value })}
-                                                className="w-24 bg-black/50 border border-white/10 rounded-md h-10 px-2 text-white"
-                                                required
-                                            >
-                                                {COUNTRY_CODES.map((country) => (
-                                                    <option key={country.code} value={country.code}>
-                                                        {country.flag} {country.code}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <Input
-                                                type="tel"
-                                                value={createFormData.phone}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
-                                                className="bg-black/50 border-white/10 flex-1"
-                                                placeholder="9876543210"
-                                                required
-                                                pattern="[0-9]{10}"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* State and City Dropdowns */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>State *</Label>
-                                            <select
-                                                value={createFormData.state}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, state: e.target.value, city: "" })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                                required
-                                            >
-                                                <option value="">Select State</option>
-                                                {INDIAN_STATES.map((state) => (
-                                                    <option key={state} value={state}>{state}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>City *</Label>
-                                            <select
-                                                value={createFormData.city}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, city: e.target.value })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                                required
-                                                disabled={!createFormData.state}
-                                            >
-                                                <option value="">Select City</option>
-                                                {createFormData.state && CITIES[createFormData.state]?.map((city) => (
-                                                    <option key={city} value={city}>{city}</option>
-                                                ))}
+                                        <div className="space-y-1">
+                                            <Label>Membership Status</Label>
+                                            <select value={createFormData.membershipStatus}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, membershipStatus: e.target.value })}
+                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white">
+                                                <option value="ACTIVE">Active</option>
+                                                <option value="PENDING">Pending</option>
                                             </select>
                                         </div>
                                     </div>
 
-                                    {/* Height and Weight */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
+                                    {/* Height & Weight */}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div className="space-y-1">
                                             <Label>Height (cm) *</Label>
-                                            <Input
-                                                type="number"
-                                                value={createFormData.height}
+                                            <Input type="number" value={createFormData.height}
                                                 onChange={(e) => setCreateFormData({ ...createFormData, height: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                                placeholder="170"
-                                                required
-                                                min="50"
-                                                max="250"
-                                            />
+                                                className={`bg-black/50 border-white/10 ${createErrors.height ? 'border-red-500' : ''}`}
+                                                placeholder="170" min="50" max="250" />
+                                            {createErrors.height && <p className="text-xs text-red-400">{createErrors.height}</p>}
                                         </div>
-                                        <div className="space-y-2">
+                                        <div className="space-y-1">
                                             <Label>Weight (kg) *</Label>
-                                            <Input
-                                                type="number"
-                                                value={createFormData.weight}
+                                            <Input type="number" value={createFormData.weight}
                                                 onChange={(e) => setCreateFormData({ ...createFormData, weight: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                                placeholder="65"
-                                                required
-                                                min="20"
-                                                max="200"
-                                            />
+                                                className={`bg-black/50 border-white/10 ${createErrors.weight ? 'border-red-500' : ''}`}
+                                                placeholder="65" min="20" max="200" />
+                                            {createErrors.weight && <p className="text-xs text-red-400">{createErrors.weight}</p>}
                                         </div>
                                     </div>
 
-                                    {/* Father's Details */}
+                                    {/* Location & Dojo Header */}
+                                    <div className="flex items-center gap-2 pt-2">
+                                        <div className="w-1 h-4 bg-red-500 rounded-full" />
+                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Location & Dojo</span>
+                                    </div>
+
+                                    {/* State & City */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Father's Name *</Label>
-                                            <Input
-                                                value={createFormData.fatherName}
-                                                onChange={(e) => setCreateFormData({ ...createFormData, fatherName: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                                placeholder="Father's Full Name"
-                                                required
-                                            />
+                                        <div className="space-y-1">
+                                            <Label>State *</Label>
+                                            <select value={createFormData.state}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, state: e.target.value, city: "" })}
+                                                className={`w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white ${createErrors.state ? 'border-red-500' : ''}`}>
+                                                <option value="">Select State</option>
+                                                {INDIAN_STATES.map((s) => (
+                                                    <option key={s} value={s}>{s}</option>
+                                                ))}
+                                            </select>
+                                            {createErrors.state && <p className="text-xs text-red-400">{createErrors.state}</p>}
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label>Father's Phone *</Label>
-                                            <div className="flex gap-2">
-                                                <span className="flex items-center px-3 bg-black/50 border border-white/10 rounded-md text-white text-sm">
-                                                    {createFormData.countryCode}
-                                                </span>
-                                                <Input
-                                                    type="tel"
-                                                    value={createFormData.fatherPhone}
-                                                    onChange={(e) => setCreateFormData({ ...createFormData, fatherPhone: e.target.value })}
-                                                    className="bg-black/50 border-white/10 flex-1"
-                                                    placeholder="9876543210"
-                                                    required
-                                                    pattern="[0-9]{10}"
-                                                />
-                                            </div>
+                                        <div className="space-y-1">
+                                            <Label>City *</Label>
+                                            <select value={createFormData.city}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, city: e.target.value })}
+                                                className={`w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white ${createErrors.city ? 'border-red-500' : ''}`}
+                                                disabled={!createFormData.state}>
+                                                <option value="">Select City</option>
+                                                {createFormData.state && CITIES[createFormData.state]?.map((c) => (
+                                                    <option key={c} value={c}>{c}</option>
+                                                ))}
+                                            </select>
+                                            {createErrors.city && <p className="text-xs text-red-400">{createErrors.city}</p>}
                                         </div>
                                     </div>
+
+                                    {/* Dojo */}
+                                    <div className="space-y-1">
+                                        <Label>Dojo</Label>
+                                        <select value={createFormData.dojoId}
+                                            onChange={(e) => setCreateFormData({ ...createFormData, dojoId: e.target.value })}
+                                            className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white">
+                                            <option value="">No Dojo</option>
+                                            {dojos.map((dojo: any) => (
+                                                <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Guardian Info - Students Only */}
+                                    {createFormData.role === "STUDENT" && (
+                                        <>
+                                            <div className="flex items-center gap-2 pt-2">
+                                                <div className="w-1 h-4 bg-red-500 rounded-full" />
+                                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Guardian Information</span>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-1">
+                                                    <Label>Father&apos;s Name *</Label>
+                                                    <Input value={createFormData.fatherName}
+                                                        onChange={(e) => setCreateFormData({ ...createFormData, fatherName: e.target.value })}
+                                                        className={`bg-black/50 border-white/10 ${createErrors.fatherName ? 'border-red-500' : ''}`}
+                                                        placeholder="Father's Full Name" />
+                                                    {createErrors.fatherName && <p className="text-xs text-red-400">{createErrors.fatherName}</p>}
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label>Father&apos;s Phone *</Label>
+                                                    <div className="flex gap-2">
+                                                        <span className="flex items-center px-3 bg-black/50 border border-white/10 rounded-md text-white text-sm">
+                                                            {createFormData.countryCode}
+                                                        </span>
+                                                        <Input type="tel" value={createFormData.fatherPhone}
+                                                            onChange={(e) => setCreateFormData({ ...createFormData, fatherPhone: e.target.value })}
+                                                            className={`bg-black/50 border-white/10 flex-1 ${createErrors.fatherPhone ? 'border-red-500' : ''}`}
+                                                            placeholder="9876543210" />
+                                                    </div>
+                                                    {createErrors.fatherPhone && <p className="text-xs text-red-400">{createErrors.fatherPhone}</p>}
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* Account Security Header */}
+                                    <div className="flex items-center gap-2 pt-2">
+                                        <div className="w-1 h-4 bg-red-500 rounded-full" />
+                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Account Security</span>
+                                    </div>
+
+                                    {/* Password & Confirm */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <Label>Password * (min 8 chars)</Label>
+                                            <Input type="password" value={createFormData.password}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
+                                                className={`bg-black/50 border-white/10 ${createErrors.password ? 'border-red-500' : ''}`}
+                                                placeholder="Min. 8 characters" />
+                                            {createErrors.password && <p className="text-xs text-red-400">{createErrors.password}</p>}
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label>Confirm Password *</Label>
+                                            <Input type="password" value={createFormData.confirmPassword}
+                                                onChange={(e) => setCreateFormData({ ...createFormData, confirmPassword: e.target.value })}
+                                                className={`bg-black/50 border-white/10 ${createErrors.confirmPassword ? 'border-red-500' : ''}`}
+                                                placeholder="Re-enter password" />
+                                            {createErrors.confirmPassword && <p className="text-xs text-red-400">{createErrors.confirmPassword}</p>}
+                                        </div>
+                                    </div>
+
+                                    <p className="text-xs text-gray-500">The user will receive an email with their login credentials.</p>
 
                                     <div className="pt-4 flex justify-end gap-2">
                                         <Button type="button" variant="ghost" onClick={() => setIsCreateModalOpen(false)} disabled={isCreating}>Cancel</Button>

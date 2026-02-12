@@ -387,7 +387,7 @@ export const deleteUser = catchAsync(async (req: Request, res: Response, next: N
 });
 
 export const createUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { name, email, password, role, phone, countryCode, dojoId, currentBeltRank, membershipStatus, city, state, height, weight, fatherName, fatherPhone } = req.body;
+    const { name, email, password, role, phone, countryCode, dojoId, currentBeltRank, membershipStatus, city, state, height, weight, fatherName, fatherPhone, dob } = req.body;
 
     // Validation
     if (!name || !email || !password || !role) {
@@ -428,6 +428,7 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         role,
         phone: phone || null,
         countryCode: countryCode || '+91',
+        dateOfBirth: dob ? new Date(dob) : null,
         city: city || null,
         state: state || null,
         country: 'India',
