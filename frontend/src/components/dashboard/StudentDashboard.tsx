@@ -12,7 +12,7 @@ import BlogManager from "./BlogManager";
 import BlogSubmission from "./BlogSubmission";
 import FightRecordCard from "./FightRecordCard";
 import ProfileCompletionBar from "@/components/ui/ProfileCompletionBar";
-import OnboardingTour from "@/components/ui/OnboardingTour";
+// OnboardingTour removed
 import MyOrders from "./MyOrders";
 
 export default function StudentDashboard({ user }: { user: any }) {
@@ -320,7 +320,7 @@ export default function StudentDashboard({ user }: { user: any }) {
             )}
 
             {/* Onboarding Tour */}
-            <OnboardingTour role={user?.role} />
+            {/* OnboardingTour removed */}
         </motion.div>
     );
 }
