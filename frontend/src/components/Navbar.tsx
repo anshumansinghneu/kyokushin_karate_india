@@ -98,7 +98,7 @@ export default function Navbar() {
 
     return (
         <nav
-            className={`fixed top-0 left-0 right-0 z-50 transition-gpu duration-300 gpu-accelerate ${scrolled ? "bg-black/80 backdrop-blur-md py-4 border-b border-white/10" : "bg-transparent py-4 md:py-6"
+            className={`hidden md:block fixed top-0 left-0 right-0 z-50 transition-gpu duration-300 gpu-accelerate ${scrolled ? "bg-black/80 backdrop-blur-md py-4 border-b border-white/10" : "bg-transparent py-4 md:py-6"
                 }`}
         >
             <div className="container-responsive flex justify-between items-center">
@@ -230,7 +230,7 @@ export default function Navbar() {
 
                 {/* Mobile Menu Button */}
                 <button
-                    className="md:hidden z-50 text-white p-2"
+                    className="md:hidden z-50 text-white p-3 min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2 touch-action-manipulation"
                     onClick={() => setIsOpen(!isOpen)}
                     aria-label="Toggle menu"
                 >
@@ -259,7 +259,7 @@ export default function Navbar() {
                                     >
                                         <Link
                                             href={link.href}
-                                            className="flex items-center justify-between text-xl font-bold uppercase tracking-wider text-white hover:text-primary active:text-primary transition-colors py-4 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 border-b border-white/5"
+                                            className="flex items-center justify-between text-xl font-bold uppercase tracking-wider text-white hover:text-primary active:text-primary transition-colors py-4 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 border-b border-white/5 min-h-[52px] touch-action-manipulation"
                                         >
                                             <span className="flex items-center gap-2">
                                                 {'live' in link && link.live && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}

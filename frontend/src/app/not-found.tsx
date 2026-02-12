@@ -24,7 +24,7 @@ export default function NotFound() {
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                         transition={{ duration: 0.5 }}
-                        className="text-[200px] md:text-[300px] font-black leading-none mb-8 text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-900"
+                        className="text-[120px] sm:text-[200px] md:text-[300px] font-black leading-none mb-4 sm:mb-8 text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-900"
                     >
                         404
                     </motion.h1>
@@ -35,10 +35,10 @@ export default function NotFound() {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.3 }}
                     >
-                        <h2 className="text-4xl md:text-6xl font-bold mb-6">
+                        <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6">
                             Page Not Found
                         </h2>
-                        <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
+                        <p className="text-lg sm:text-xl text-gray-400 mb-8 md:mb-12 max-w-2xl mx-auto px-2">
                             The page you&apos;re looking for doesn&apos;t exist or has been moved.
                             Let&apos;s get you back on track.
                         </p>

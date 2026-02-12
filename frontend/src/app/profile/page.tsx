@@ -273,10 +273,11 @@ export default function ProfilePage() {
             <div className="absolute inset-0 bg-[url('/dojo-bg.png')] bg-cover bg-center opacity-10 mix-blend-overlay" />
 
             <div className="container mx-auto px-4 py-8 relative z-10">
-                <header className="flex items-center justify-between mb-12">
-                    <Link href="/dashboard" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group">
+                <header className="flex items-center justify-between mb-6 sm:mb-12">
+                    <Link href="/dashboard" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group py-2 min-h-[44px]">
                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        Back to Dashboard
+                        <span className="hidden sm:inline">Back to Dashboard</span>
+                        <span className="sm:hidden">Back</span>
                     </Link>
                     <h1 className="text-2xl font-bold tracking-wider uppercase text-transparent stroke-text" style={{ WebkitTextStroke: '1px rgba(255,255,255,0.5)' }}>
                         My Profile
@@ -290,7 +291,7 @@ export default function ProfilePage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="lg:col-span-1"
                     >
-                        <div className="glass-card p-8 flex flex-col items-center text-center relative overflow-hidden">
+                        <div className="glass-card p-4 sm:p-6 lg:p-8 flex flex-col items-center text-center relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/20 to-transparent" />
 
                             <div className="relative mb-6 group">
@@ -312,9 +313,9 @@ export default function ProfilePage() {
                                 />
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="absolute bottom-0 right-0 p-2 bg-primary rounded-full text-white shadow-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-primary/80"
+                                    className="absolute bottom-0 right-0 p-3 bg-primary rounded-full text-white shadow-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-primary/80 min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 >
-                                    <Camera className="w-4 h-4" />
+                                    <Camera className="w-5 h-5" />
                                 </button>
                             </div>
 
@@ -361,7 +362,7 @@ export default function ProfilePage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="glass-card p-8"
+                            className="glass-card p-4 sm:p-6 lg:p-8"
                         >
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -458,7 +459,7 @@ export default function ProfilePage() {
                                                 <button
                                                     key={`${c.city}-${c.state}`}
                                                     onClick={() => handleCitySelect(c)}
-                                                    className="w-full text-left px-4 py-2 hover:bg-primary/20 text-sm text-white flex justify-between items-center"
+                                                    className="w-full text-left px-4 py-3 hover:bg-primary/20 text-sm text-white flex justify-between items-center min-h-[44px]"
                                                 >
                                                     <span>{c.city}</span>
                                                     <span className="text-gray-500 text-xs">{c.state}</span>
@@ -506,7 +507,7 @@ export default function ProfilePage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="glass-card p-8"
+                            className="glass-card p-4 sm:p-6 lg:p-8"
                         >
                             <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
                                 <span className="w-1 h-6 bg-primary rounded-full" />
@@ -557,8 +558,132 @@ export default function ProfilePage() {
                             </div>
                         </motion.div>
                     </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Change Password Section */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.15 }}
+                            className="glass-card p-4 sm:p-6 lg:p-8"
+                        >
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
+                                <span className="w-1 h-6 bg-primary rounded-full" />
+                                Change Password
+                            </h3>
+                            <ChangePasswordForm />
+                        </motion.div>
+
                 </div>
+            function ChangePasswordForm() {
+                const [currentPassword, setCurrentPassword] = useState("");
+                const [newPassword, setNewPassword] = useState("");
+                const [confirmPassword, setConfirmPassword] = useState("");
+                const [loading, setLoading] = useState(false);
+                const [error, setError] = useState("");
+                const [success, setSuccess] = useState("");
+
+                const handleSubmit = async (e: React.FormEvent) => {
+                    e.preventDefault();
+                    setError("");
+                    setSuccess("");
+                    if (!currentPassword || !newPassword || !confirmPassword) {
+                        setError("All fields are required.");
+                        return;
+                    }
+                    if (newPassword.length < 8) {
+                        setError("New password must be at least 8 characters.");
+                        return;
+                    }
+                    if (newPassword !== confirmPassword) {
+                        setError("New passwords do not match.");
+                        return;
+                    }
+                    setLoading(true);
+                    try {
+                        await api.post("/users/change-password", {
+                            currentPassword,
+                            newPassword,
+                        });
+                        setSuccess("Password changed successfully.");
+                        setCurrentPassword("");
+                        setNewPassword("");
+                        setConfirmPassword("");
+                    } catch (err: any) {
+                        setError(err?.response?.data?.message || "Failed to change password.");
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                return (
+                    <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Current Password</label>
+                            <Input
+                                type="password"
+                                value={currentPassword}
+                                onChange={e => setCurrentPassword(e.target.value)}
+                                autoComplete="current-password"
+                                className="input-glass"
+                                disabled={loading}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">New Password</label>
+                            <Input
+                                type="password"
+                                value={newPassword}
+                                onChange={e => setNewPassword(e.target.value)}
+                                autoComplete="new-password"
+                                className="input-glass"
+                                disabled={loading}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirm New Password</label>
+                            <Input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={e => setConfirmPassword(e.target.value)}
+                                autoComplete="new-password"
+                                className="input-glass"
+                                disabled={loading}
+                            />
+                        </div>
+                        {error && <div className="text-red-400 text-sm">{error}</div>}
+                        {success && <div className="text-green-400 text-sm">{success}</div>}
+                        <Button type="submit" className="w-full h-10 bg-primary text-white font-bold rounded-lg" disabled={loading}>
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Change Password"}
+                        </Button>
+                    </form>
+                );
+            }
             </div>
+
+            {/* Mobile Sticky Save Bar */}
+            {isEditing && (
+                <div className="fixed bottom-16 left-0 right-0 z-50 p-3 bg-black/95 backdrop-blur-xl border-t border-white/10 md:hidden safe-area-inset">
+                    <div className="flex gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsEditing(false)}
+                            className="flex-1 h-12 border-white/20 text-white font-bold rounded-xl active:scale-95"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleSave}
+                            disabled={isLoading}
+                            className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-900/30 active:scale-95"
+                        >
+                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            {isLoading ? "Saving..." : "Save Changes"}
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

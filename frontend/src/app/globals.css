@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  /* ── Mobile-First Font Size (16px+ for readability) ── */
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  @media (max-width: 640px) {
+    html {
+      font-size: 16px; /* Prevent zoom on input focus in iOS */
+    }
+
+    /* Ensure all interactive elements meet 44x44px tap target */
+    button,
+    a,
+    input,
+    select,
+    textarea,
+    [role="button"],
+    [type="submit"],
+    [type="reset"],
+    [type="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Tighten vertical spacing on mobile */
+    section {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+  }
+}
+
 @layer utilities {
   .animation-delay-2000 {
     animation-delay: 2s;
@@ -82,6 +117,21 @@
   .space-fluid-lg {
     padding: clamp(4rem, 8vw, 8rem);
   }
+
+  /* Mobile-reduced spacing */
+  .mobile-compact {
+    @apply py-3 md:py-6;
+  }
+
+  /* Hide on mobile utility */
+  .mobile-hidden {
+    @apply hidden sm:block;
+  }
+
+  /* Show only on mobile */
+  .mobile-only {
+    @apply block sm:hidden;
+  }
 }
 
 :root {
@@ -131,7 +181,7 @@ body {
     padding-left: env(safe-area-inset-left);
   }
 
-  /* Mobile-first touch targets */
+  /* Mobile-first touch targets - 44px minimum */
   .touch-target {
     @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
   }
@@ -140,6 +190,32 @@ body {
   .smooth-scroll {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
+  }
+
+  /* Sticky action button container for mobile */
+  .sticky-action-bar {
+    @apply fixed bottom-16 left-0 right-0 z-50 p-3 bg-black/95 backdrop-blur-xl border-t border-white/10 md:relative md:bottom-auto md:bg-transparent md:backdrop-blur-none md:border-0 md:p-0;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 768px) {
+    .sticky-action-bar {
+      padding-bottom: 0;
+    }
+  }
+
+  /* Bottom sheet modal */
+  .bottom-sheet-overlay {
+    @apply fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm;
+  }
+
+  .bottom-sheet {
+    @apply fixed bottom-0 left-0 right-0 z-[201] bg-zinc-900 border-t border-white/10 rounded-t-3xl max-h-[85vh] overflow-y-auto;
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+
+  .bottom-sheet-handle {
+    @apply w-10 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-4;
   }
 }
 
@@ -190,4 +266,35 @@ body {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Smooth momentum scrolling on iOS */
+@layer utilities {
+  .scroll-smooth-mobile {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Better active states for mobile - subtle press feedback */
+@media (hover: none) and (pointer: coarse) {
+  /* Cards & interactive elements get snappy tap feedback */
+  .active\:scale-\[0\.98\]:active {
+    transition-duration: 100ms !important;
+  }
+
+  /* Prevent text selection on interactive elements during tap */
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }

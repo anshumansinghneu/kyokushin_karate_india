@@ -5,7 +5,7 @@ import { ArrowRight, ChevronRight, Play } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { MouseEvent, useRef, useState } from "react";
+import { MouseEvent, TouchEvent, useEffect, useRef, useState } from "react";
 
 interface HeroProps {
     heroOpacity: any;
@@ -18,6 +18,16 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
     const [isHovered, setIsHovered] = useState(false);
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+    // Detect touch device and auto-enable effects
+    useEffect(() => {
+        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        setIsTouchDevice(isTouch);
+        if (isTouch) {
+            setIsHovered(true); // Always show effects on touch devices
+        }
+    }, []);
 
     // Smooth mouse movement for spotlight
     const smoothX = useSpring(mouseX, { stiffness: 100, damping: 20 });
@@ -33,6 +43,15 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
         mouseY.set(clientY - top);
     }
 
+    function onTouchMove(e: TouchEvent) {
+        if (e.touches.length > 0) {
+            const touch = e.touches[0];
+            const { left, top } = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            mouseX.set(touch.clientX - left);
+            mouseY.set(touch.clientY - top);
+        }
+    }
+
     // Parallax Transforms for Text
     const titleX = useTransform(smoothX, [0, typeof window !== 'undefined' ? window.innerWidth : 1000], [30, -30]);
     const titleY = useTransform(smoothY, [0, typeof window !== 'undefined' ? window.innerHeight : 800], [30, -30]);
@@ -43,7 +62,8 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
             className="relative h-screen w-full overflow-hidden flex items-center justify-center bg-black cursor-default perspective-2000 gpu-accelerate"
             onMouseMove={onMouseMove}
             onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseLeave={() => !isTouchDevice && setIsHovered(false)}
+            onTouchMove={onTouchMove}
         >
             {/* Background Layers */}
             <motion.div
@@ -260,7 +280,7 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 1.2, duration: 1 }}
-                        className="relative max-w-2xl mx-auto mb-10 md:mb-16 px-4"
+                        className="relative max-w-2xl mx-auto mb-6 md:mb-16 px-4"
                     >
                         <p className="text-base md:text-xl text-gray-300 font-light leading-relaxed text-shadow-sm">
                             <span className="text-red-500 font-bold">Kyokushin</span> is not just a martial art. It is a way of life.
@@ -299,7 +319,7 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 2, duration: 1 }}
-                className="absolute bottom-20 md:bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 hidden md:flex"
+                className="absolute bottom-20 md:bottom-10 left-1/2 -translate-x-1/2 z-30 hidden md:flex flex-col items-center gap-2"
             >
                 <span className="text-[10px] uppercase tracking-[0.3em] text-gray-500">Scroll</span>
                 <div className="w-[1px] h-16 bg-gradient-to-b from-red-600/50 to-transparent">

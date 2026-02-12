@@ -55,7 +55,7 @@ export default function DashboardPage() {
                         </div>
                         <Link
                             href="/renew-membership"
-                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors whitespace-nowrap"
+                            className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors whitespace-nowrap min-h-[44px] flex items-center active:scale-95"
                         >
                             Renew ₹295
                         </Link>

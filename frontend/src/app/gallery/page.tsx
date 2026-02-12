@@ -169,7 +169,7 @@ export default function GalleryPage() {
                             <button
                                 key={cat.id}
                                 onClick={() => setCategory(cat.id)}
-                                className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+                                className={`px-4 py-2.5 rounded-full text-sm font-bold transition-all duration-200 min-h-[44px] flex items-center active:scale-95 ${
                                     category === cat.id
                                         ? "bg-red-600 text-white shadow-lg shadow-red-600/25"
                                         : "bg-zinc-900 text-gray-400 hover:bg-zinc-800 hover:text-white border border-white/10"
@@ -239,8 +239,8 @@ export default function GalleryPage() {
                                         className="w-full rounded-xl transition-transform duration-500 group-hover:scale-105"
                                         loading="lazy"
                                     />
-                                    {/* Overlay on hover */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex flex-col justify-end p-4">
+                                    {/* Overlay - always visible on mobile, hover on desktop */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex flex-col justify-end p-4">
                                         {item.caption && (
                                             <p className="text-sm font-medium text-white mb-1">{item.caption}</p>
                                         )}
@@ -267,7 +267,7 @@ export default function GalleryPage() {
                                 <button
                                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                                     disabled={page === 1}
-                                    className="px-4 py-2 bg-zinc-900 border border-white/10 rounded-lg text-sm font-bold disabled:opacity-30 hover:bg-zinc-800 transition-colors"
+                                    className="px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-sm font-bold disabled:opacity-30 hover:bg-zinc-800 transition-colors min-h-[44px]"
                                 >
                                     Previous
                                 </button>
@@ -277,7 +277,7 @@ export default function GalleryPage() {
                                 <button
                                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages}
-                                    className="px-4 py-2 bg-zinc-900 border border-white/10 rounded-lg text-sm font-bold disabled:opacity-30 hover:bg-zinc-800 transition-colors"
+                                    className="px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-sm font-bold disabled:opacity-30 hover:bg-zinc-800 transition-colors min-h-[44px]"
                                 >
                                     Next
                                 </button>

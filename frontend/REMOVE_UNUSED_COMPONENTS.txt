@@ -1,0 +1,5 @@
+Removed unused component: OnboardingTour.tsx
+
+No other unused components found in dashboard/ui/tournaments folders.
+
+If you want to remove more, specify the component name or folder.

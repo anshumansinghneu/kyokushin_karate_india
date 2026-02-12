@@ -334,7 +334,7 @@ export default function StorePage() {
               <button
                 key={cat.key}
                 onClick={() => setCategory(cat.key)}
-                className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
+                className={`px-4 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all min-h-[44px] flex items-center active:scale-95 ${
                   category === cat.key
                     ? "bg-red-600 text-white"
                     : "bg-zinc-900 text-gray-400 border border-white/10 hover:text-white"
@@ -471,7 +471,7 @@ export default function StorePage() {
                   )}
                   <button
                     onClick={() => setSelectedProduct(null)}
-                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/80 transition-colors"
+                    className="absolute top-4 right-4 w-11 h-11 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/80 transition-colors active:scale-90"
                   >
                     <X className="w-4 h-4 text-white" />
                   </button>
@@ -621,11 +621,11 @@ export default function StorePage() {
                                     -1
                                   )
                                 }
-                                className="w-6 h-6 rounded bg-zinc-700 flex items-center justify-center text-white hover:bg-zinc-600"
+                                className="w-9 h-9 rounded-lg bg-zinc-700 flex items-center justify-center text-white hover:bg-zinc-600 active:scale-90 transition-transform min-w-[36px] min-h-[36px]"
                               >
-                                <Minus className="w-3 h-3" />
+                                <Minus className="w-3.5 h-3.5" />
                               </button>
-                              <span className="text-sm font-bold text-white w-6 text-center">
+                              <span className="text-sm font-bold text-white w-8 text-center">
                                 {item.quantity}
                               </span>
                               <button
@@ -636,9 +636,9 @@ export default function StorePage() {
                                     1
                                   )
                                 }
-                                className="w-6 h-6 rounded bg-zinc-700 flex items-center justify-center text-white hover:bg-zinc-600"
+                                className="w-9 h-9 rounded-lg bg-zinc-700 flex items-center justify-center text-white hover:bg-zinc-600 active:scale-90 transition-transform min-w-[36px] min-h-[36px]"
                               >
-                                <Plus className="w-3 h-3" />
+                                <Plus className="w-3.5 h-3.5" />
                               </button>
                             </div>
                             <span className="font-bold text-white text-sm">
@@ -653,7 +653,7 @@ export default function StorePage() {
                           onClick={() =>
                             removeFromCart(item.product.id, item.size)
                           }
-                          className="text-gray-600 hover:text-red-500 self-start"
+                          className="text-gray-600 hover:text-red-500 self-start p-2 -mr-2 rounded-lg hover:bg-white/5 min-w-[40px] min-h-[40px] flex items-center justify-center active:scale-90 transition-all"
                         >
                           <X className="w-4 h-4" />
                         </button>

@@ -68,10 +68,10 @@ export default function LoginPage() {
             </div>
 
             {/* Right Side - Login Form */}
-            <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 md:p-16 lg:p-24 relative z-20">
-                <Link href="/" className="absolute top-8 left-8 lg:left-12 text-gray-500 hover:text-white flex items-center gap-2 transition-all group text-sm font-medium tracking-wide">
-                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    RETURN HOME
+            <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-8 md:p-16 lg:p-24 relative z-20">
+                <Link href="/" className="absolute top-6 left-4 sm:top-8 sm:left-8 lg:left-12 text-gray-500 hover:text-white flex items-center gap-2 transition-all group text-sm font-medium tracking-wide min-w-[44px] min-h-[44px] p-2 -m-2 rounded-xl active:bg-white/5">
+                    <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                    <span className="hidden sm:inline">RETURN HOME</span>
                 </Link>
 
                 <motion.div
@@ -128,13 +128,13 @@ export default function LoginPage() {
                         </div>
 
                         <div className="flex items-center justify-between text-sm pt-2">
-                            <label className="flex items-center gap-2 text-gray-400 cursor-pointer hover:text-white transition-colors select-none">
+                            <label className="flex items-center gap-3 text-gray-400 cursor-pointer hover:text-white transition-colors select-none py-2 pr-2 -ml-1 rounded-lg active:bg-white/5 min-h-[44px]">
                                 <div className="relative flex items-center">
-                                    <input type="checkbox" className="peer h-4 w-4 rounded border-white/20 bg-white/5 text-red-600 focus:ring-red-500/20 focus:ring-offset-0" />
+                                    <input type="checkbox" className="peer h-5 w-5 rounded border-white/20 bg-white/5 text-red-600 focus:ring-red-500/20 focus:ring-offset-0" />
                                 </div>
                                 Remember me
                             </label>
-                            <Link href="/forgot-password" className="text-red-500 hover:text-red-400 font-medium transition-colors">Forgot password?</Link>
+                            <Link href="/forgot-password" className="text-red-500 hover:text-red-400 font-medium transition-colors py-2 px-2 -mr-2 rounded-lg active:bg-white/5 min-h-[44px] flex items-center">Forgot password?</Link>
                         </div>
 
                         <Button

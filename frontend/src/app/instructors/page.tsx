@@ -144,9 +144,9 @@ export default function InstructorsPage() {
                                     {instructor.membershipNumber && (
                                         <Link
                                             href={`/verify/${instructor.membershipNumber}`}
-                                            className="flex items-center gap-1 text-xs font-bold text-red-400 hover:text-red-300 transition-colors"
+                                            className="flex items-center gap-1.5 text-xs font-bold text-red-400 hover:text-red-300 transition-colors py-2 -mb-1 min-h-[44px] active:opacity-70"
                                         >
-                                            Verify Credentials <ChevronRight className="w-3 h-3" />
+                                            Verify Credentials <ChevronRight className="w-3.5 h-3.5" />
                                         </Link>
                                     )}
                                 </div>

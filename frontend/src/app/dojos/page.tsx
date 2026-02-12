@@ -124,7 +124,7 @@ export default function DojoListPage() {
             <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black pointer-events-none" />
             <div className="fixed top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-[0.03] pointer-events-none" />
 
-            <div className="container mx-auto px-4 py-24 relative z-10">
+            <div className="container mx-auto px-4 py-8 sm:py-12 md:py-24 relative z-10">
                 {/* Header */}
                 <div className="text-center mb-10 md:mb-20">
                     <motion.h1
@@ -170,13 +170,13 @@ export default function DojoListPage() {
                 <div className="flex justify-center gap-2 mb-12">
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all ${viewMode === 'grid' ? 'bg-red-600 text-white' : 'bg-zinc-900 text-gray-400 border border-white/10 hover:text-white'}`}
+                        className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all min-h-[44px] active:scale-95 ${viewMode === 'grid' ? 'bg-red-600 text-white' : 'bg-zinc-900 text-gray-400 border border-white/10 hover:text-white'}`}
                     >
                         <LayoutGrid className="w-4 h-4" /> Grid
                     </button>
                     <button
                         onClick={() => setViewMode('map')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all ${viewMode === 'map' ? 'bg-red-600 text-white' : 'bg-zinc-900 text-gray-400 border border-white/10 hover:text-white'}`}
+                        className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all min-h-[44px] active:scale-95 ${viewMode === 'map' ? 'bg-red-600 text-white' : 'bg-zinc-900 text-gray-400 border border-white/10 hover:text-white'}`}
                     >
                         <Map className="w-4 h-4" /> Map View
                     </button>
@@ -208,7 +208,7 @@ export default function DojoListPage() {
                     )}
 
                     {/* Dojo Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                         <AnimatePresence>
                             {filteredDojos.map((dojo, index) => (
                                 <Link href={`/dojos/${dojo.id}`} key={dojo.id}>
@@ -217,7 +217,7 @@ export default function DojoListPage() {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.9 }}
                                         transition={{ delay: index * 0.1 }}
-                                        className="group relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden cursor-pointer bg-zinc-900 border border-white/5 hover:border-red-600/50 transition-all duration-500 hover:shadow-2xl hover:shadow-red-900/20"
+                                        className="group relative h-[320px] sm:h-[380px] md:h-[500px] rounded-3xl overflow-hidden cursor-pointer bg-zinc-900 border border-white/5 hover:border-red-600/50 transition-all duration-500 hover:shadow-2xl hover:shadow-red-900/20 active:scale-[0.98]"
                                     >
                                         {/* Background Image */}
                                         <div className="absolute inset-0">
@@ -230,7 +230,7 @@ export default function DojoListPage() {
                                         </div>
 
                                         {/* Content */}
-                                        <div className="absolute inset-0 p-8 flex flex-col justify-between">
+                                        <div className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-between">
                                             <div className="flex justify-between items-start">
                                                 <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-wider">
                                                     {dojo.city}
@@ -242,7 +242,7 @@ export default function DojoListPage() {
                                             </div>
 
                                             <div className="transform transition-transform duration-500 group-hover:-translate-y-2">
-                                                <h3 className="text-3xl font-black text-white mb-2 leading-none uppercase italic">
+                                                <h3 className="text-2xl sm:text-3xl font-black text-white mb-2 leading-none uppercase italic">
                                                     {dojo.name}
                                                 </h3>
                                                 <div className="flex items-center gap-2 text-gray-400 mb-6 group-hover:text-white transition-colors">
@@ -250,8 +250,8 @@ export default function DojoListPage() {
                                                     <span className="text-sm font-medium">{dojo.address || `${dojo.city}, ${dojo.state}`}</span>
                                                 </div>
 
-                                                <div className="h-0 overflow-hidden group-hover:h-auto transition-all duration-500">
-                                                    <p className="text-gray-400 text-sm line-clamp-2 mb-4 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+                                                <div className="h-auto md:h-0 md:overflow-hidden md:group-hover:h-auto transition-all duration-500">
+                                                    <p className="text-gray-400 text-sm line-clamp-2 mb-3 sm:mb-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity delay-100">
                                                         Experience traditional training in a modern facility. Join us to push your limits.
                                                     </p>
                                                 </div>
@@ -267,7 +267,7 @@ export default function DojoListPage() {
                                                         </div>
                                                         <span className="text-xs text-gray-400 ml-2">Active Members</span>
                                                     </div>
-                                                    <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center transform translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
+                                                    <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center transform translate-x-0 opacity-100 md:translate-x-4 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100 transition-all duration-300">
                                                         <ArrowRight className="w-5 h-5" />
                                                     </div>
                                                 </div>

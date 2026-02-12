@@ -102,25 +102,25 @@ export default function Home() {
           />
 
           {/* PHILOSOPHY SECTION (Parallax) */}
-          <section className="py-16 md:py-32 relative">
-            <div className="container mx-auto px-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          <section className="py-10 sm:py-16 md:py-32 relative">
+            <div className="container mx-auto px-3 sm:px-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-16 items-center">
                 <motion.div
                   initial={{ opacity: 0, x: -50 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-100px" }}
                   transition={{ duration: 0.8 }}
                 >
-                  <h2 className="text-4xl md:text-6xl font-black mb-8 leading-tight">
+                  <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-8 leading-tight">
                     KEEP YOUR HEAD LOW, <br />
                     <span className="text-red-600">EYES HIGH</span>
                   </h2>
-                  <div className="space-y-6 text-gray-400 text-lg leading-relaxed">
+                  <div className="space-y-4 sm:space-y-6 text-gray-400 text-base sm:text-lg leading-relaxed">
                     <p>
                       "The heart of our karate is real fighting. There can be no proof without real fighting.
                       Without proof there is no trust. Without trust there is no respect. This is a definition in the world of Martial Arts."
                     </p>
-                    <p className="font-serif italic text-2xl text-white border-l-4 border-red-600 pl-6 py-2">
+                    <p className="font-serif italic text-xl sm:text-2xl text-white border-l-4 border-red-600 pl-4 sm:pl-6 py-2">
                       — Masutatsu Oyama
                     </p>
                   </div>
@@ -145,9 +145,9 @@ export default function Home() {
                       <p className="text-red-500 text-sm">Founder of Kyokushin</p>
                     </div>
                   </div>
-                  {/* Decorative elements */}
-                  <div className="absolute -top-10 -right-10 w-40 h-40 border border-red-600/20 rounded-full animate-spin-slow hidden md:block" />
-                  <div className="absolute -bottom-10 -left-10 w-60 h-60 border border-white/5 rounded-full animate-reverse-spin hidden md:block" />
+                  {/* Decorative elements - hidden on mobile */}
+                  <div className="absolute -top-10 -right-10 w-40 h-40 border border-red-600/20 rounded-full animate-spin-slow hidden lg:block" />
+                  <div className="absolute -bottom-10 -left-10 w-60 h-60 border border-white/5 rounded-full animate-reverse-spin hidden lg:block" />
                 </motion.div>
               </div>
             </div>
@@ -183,9 +183,9 @@ export default function Home() {
                     </div>
                     <button
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setNewEventFlash(null); }}
-                      className="p-1 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-colors flex-shrink-0"
+                      className="p-2 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-90"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
                 </Link>
@@ -198,17 +198,17 @@ export default function Home() {
 
           {/* LATEST NEWS SECTION - only render when there are blog posts */}
           {latestBlogs.length > 0 && (
-            <section className="py-16 md:py-24 bg-black relative">
-              <div className="container mx-auto px-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 md:mb-12 gap-4">
+            <section className="py-10 sm:py-16 md:py-24 bg-black relative">
+              <div className="container mx-auto px-3 sm:px-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 sm:mb-8 md:mb-12 gap-4">
                   <h2 className="text-2xl sm:text-3xl md:text-5xl font-black tracking-tighter">
                     DOJO <span className="text-red-600">CHRONICLES</span>
                   </h2>
-                  <Link href="/blog" className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                  <Link href="/blog" className="flex items-center gap-2 text-red-500 md:text-gray-400 hover:text-white transition-colors text-sm md:text-base font-semibold md:font-normal">
                     Read All <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
                   {latestBlogs.map((post) => (
                     <Link href={`/blog/${post.slug}`} key={post.id} className="group">
                       <article className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 hover:border-red-600/50 transition-all duration-300 h-full flex flex-col">
@@ -235,17 +235,17 @@ export default function Home() {
 
           {/* MEDIA SECTION - only render when there are media mentions */}
           {mediaMentions.length > 0 && (
-            <section className="py-16 md:py-24 bg-zinc-950 relative">
-              <div className="container mx-auto px-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 md:mb-12 gap-4">
+            <section className="py-10 sm:py-16 md:py-24 bg-zinc-950 relative">
+              <div className="container mx-auto px-3 sm:px-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 sm:mb-8 md:mb-12 gap-4">
                   <h2 className="text-2xl sm:text-3xl md:text-5xl font-black tracking-tighter">
                     IN THE <span className="text-red-600">MEDIA</span>
                   </h2>
-                  <Link href="/media" className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                  <Link href="/media" className="flex items-center gap-2 text-red-500 md:text-gray-400 hover:text-white transition-colors text-sm md:text-base font-semibold md:font-normal">
                     View All <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
                   {mediaMentions.map((post) => (
                     <a href={post.externalLink} target="_blank" rel="noopener noreferrer" key={post.id} className="group block">
                       <article className="bg-black rounded-2xl overflow-hidden border border-white/10 hover:border-red-600/50 transition-all duration-300 h-full">
@@ -269,17 +269,17 @@ export default function Home() {
           )}
 
           {/* CTA SECTION */}
-          <section className="py-20 md:py-32 relative overflow-hidden flex items-center justify-center">
+          <section className="py-12 sm:py-20 md:py-32 relative overflow-hidden flex items-center justify-center">
             <div className="absolute inset-0 bg-red-900/20" />
-            <div className="container mx-auto px-4 text-center relative z-10">
-              <h2 className="text-3xl sm:text-5xl md:text-8xl font-black tracking-tighter mb-8 opacity-20 select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full pointer-events-none">
+            <div className="container mx-auto px-3 sm:px-4 text-center relative z-10">
+              <h2 className="text-3xl sm:text-5xl md:text-8xl font-black tracking-tighter mb-6 sm:mb-8 opacity-20 select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full pointer-events-none hidden sm:block">
                 KYOKUSHIN
               </h2>
-              <h3 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-8 relative">
+              <h3 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-6 sm:mb-8 relative">
                 READY TO START YOUR JOURNEY?
               </h3>
               <Link href="/register">
-                <Button className="h-14 md:h-16 px-8 md:px-10 rounded-full bg-white text-black hover:bg-gray-200 text-lg md:text-xl font-bold tracking-wide transition-transform hover:scale-105">
+                <Button className="h-14 md:h-16 px-8 md:px-10 rounded-full bg-white text-black hover:bg-gray-200 text-base sm:text-lg md:text-xl font-bold tracking-wide transition-transform hover:scale-105 active:scale-95 min-h-[44px]">
                   BECOME A MEMBER
                 </Button>
               </Link>

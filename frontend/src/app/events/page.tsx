@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, MapPin, ArrowRight, Clock, Search, Filter } from "lucide-react";
+import { MapPin, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import api from "@/lib/api";
 import KarateLoader from "@/components/KarateLoader";
 
@@ -64,7 +62,7 @@ export default function EventsPage() {
                             <button
                                 key={tab}
                                 onClick={() => setFilter(tab as any)}
-                                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 ${filter === tab
+                                className={`px-5 sm:px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 min-h-[44px] whitespace-nowrap active:scale-95 ${filter === tab
                                     ? "bg-primary text-white shadow-lg"
                                     : "text-gray-400 hover:text-white"
                                     }`}
@@ -82,16 +80,16 @@ export default function EventsPage() {
                     </div>
                 ) : (
                     /* Events Grid */
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                         {filteredEvents.map((event, index) => {
                             const dateObj = formatDate(event.startDate);
                             return (
+                                <Link href={`/events/${event.id}`} key={event.id}>
                                 <motion.div
-                                    key={event.id}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: index * 0.1 }}
-                                    className="group relative min-h-[280px] md:h-[300px] rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-primary/50 transition-colors"
+                                    className="group relative min-h-[280px] md:h-[300px] rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-primary/50 transition-colors active:scale-[0.98]"
                                 >
                                     {/* Background Image */}
                                     <div className="absolute inset-0 bg-gray-900">
@@ -122,7 +120,7 @@ export default function EventsPage() {
 
                                         <div>
                                             <h3 className="text-xl sm:text-3xl font-bold text-white mb-2 group-hover:text-primary transition-colors">{event.name}</h3>
-                                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-400 text-sm mb-6">
+                                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-400 text-sm mb-4 sm:mb-6">
                                                 <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {event.location}</span>
                                                 <span className="w-1 h-1 rounded-full bg-gray-600" />
                                                 <span className="text-white font-bold">₹{event.memberFee}</span>
@@ -130,15 +128,14 @@ export default function EventsPage() {
 
                                             <div className="flex items-center justify-between">
                                                 <span className="text-sm font-bold text-primary uppercase tracking-wider">{event.status}</span>
-                                                <Link href={`/events/${event.id}`}>
-                                                    <Button className="rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur-md group-hover:bg-primary group-hover:border-primary transition-all">
-                                                        View Details <ArrowRight className="w-4 h-4 ml-2" />
-                                                    </Button>
-                                                </Link>
+                                                <span className="rounded-full bg-white/10 px-4 py-2 text-white border border-white/10 backdrop-blur-md group-hover:bg-primary group-hover:border-primary transition-all text-sm font-semibold inline-flex items-center gap-2">
+                                                    View Details <ArrowRight className="w-4 h-4" />
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
                                 </motion.div>
+                                </Link>
                             );
                         })}
                     </div>

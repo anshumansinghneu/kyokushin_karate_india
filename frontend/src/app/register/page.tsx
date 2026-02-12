@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, ChevronRight, User, GraduationCap, CreditCard, Shield } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, GraduationCap, CreditCard, Shield } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { INDIAN_STATES, CITIES, BELT_RANKS, COUNTRY_CODES } from "@/lib/constants";
@@ -16,6 +16,7 @@ const ADMIN_INSTRUCTOR_ID = "42b18481-85ee-49ed-8b3c-dc4f707fe29e"; // Sihan Vas
 // Razorpay types
 declare global {
     interface Window {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         Razorpay: any;
     }
 }
@@ -47,16 +48,19 @@ export default function RegisterPage() {
         yearsOfExperience: ""
     });
 
-    const [locations, setLocations] = useState<any>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [, setLocations] = useState<any>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [dojos, setDojos] = useState<any[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [selectedDojo, setSelectedDojo] = useState<any>(null);
-    const [loadingLocations, setLoadingLocations] = useState(true);
+    const [, setLoadingLocations] = useState(true);
     const [loadingDojos, setLoadingDojos] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [touched, setTouched] = useState<Record<string, boolean>>({});
-    const [age, setAge] = useState<number | null>(null); // Derived age state
+    const [, setAge] = useState<number | null>(null); // Derived age state
 
-    const { register, registerWithPayment, completeRegistration, isLoading, error: authError } = useAuthStore();
+    const { registerWithPayment, completeRegistration, isLoading, error: authError } = useAuthStore();
     const router = useRouter();
 
     // Fetch Locations on Mount + Load Razorpay Script + Fetch Payment Config
@@ -259,7 +263,7 @@ export default function RegisterPage() {
 
         // Validate required fields based on role
         const newErrors: Record<string, string> = {};
-        let fieldsToValidate = role === "STUDENT"
+        const fieldsToValidate = role === "STUDENT"
             ? ["name", "email", "password", "confirmPassword", "phone", "dob", "height", "weight", "state", "city", "dojoId", "fatherName", "fatherPhone", "currentBeltRank"]
             : ["name", "email", "password", "confirmPassword", "phone", "dob", "height", "weight", "state", "city", "currentBeltRank", "yearsOfExperience"];
 
@@ -279,6 +283,7 @@ export default function RegisterPage() {
         if (Object.keys(newErrors).length > 0) return;
 
         try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const payload: any = {
                 ...formData,
                 role,
@@ -348,13 +353,14 @@ export default function RegisterPage() {
                         });
                         setPaymentStep("done");
                         setTimeout(() => router.push("/dashboard"), 1500);
-                    } catch (err) {
+                    } catch {
                         setPaymentStep("form");
                     }
                 },
             };
 
             const razorpay = new window.Razorpay(options);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             razorpay.on("payment.failed", (response: any) => {
                 console.error("Payment failed:", response.error);
                 setPaymentStep("form");
@@ -364,7 +370,7 @@ export default function RegisterPage() {
             });
             razorpay.open();
 
-        } catch (err) {
+        } catch {
             setPaymentStep("form");
         }
     };
@@ -378,7 +384,7 @@ export default function RegisterPage() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-red-900/20 via-zinc-950 to-black z-0" />
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] z-0 pointer-events-none" />
 
-            {/* Left Side - Hero Section */}
+            {/* Left Side - Hero Section (hidden on mobile & tablet for more content space) */}
             <div className="hidden lg:flex w-1/2 relative flex-col justify-between p-16 z-10">
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -425,7 +431,7 @@ export default function RegisterPage() {
 
             {/* Right Side - Form Section */}
             <div className="w-full lg:w-1/2 flex flex-col relative z-20 h-screen overflow-y-auto scrollbar-hide">
-                <div className="min-h-full flex flex-col justify-start p-4 md:p-8 lg:p-12 py-8">
+                <div className="min-h-full flex flex-col justify-start p-3 sm:p-4 md:p-8 lg:p-12 py-4 sm:py-6 md:py-8 pb-32 md:pb-8">
                     <div className="max-w-2xl w-full mx-auto">
                         {/* Header */}
                         <div className="flex items-center justify-between mb-6">
@@ -443,10 +449,10 @@ export default function RegisterPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5 }}
-                            className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-2xl shadow-2xl"
+                            className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 p-4 sm:p-6 md:p-8 rounded-2xl shadow-2xl"
                         >
-                            <div className="mb-6">
-                                <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">Join the Dojo</h2>
+                            <div className="mb-4 sm:mb-6">
+                                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1">Join the Dojo</h2>
                                 <p className="text-sm text-zinc-400">Begin your martial arts journey</p>
                             </div>
 
@@ -457,9 +463,9 @@ export default function RegisterPage() {
                                 </div>
                             )}
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                                 {/* Role Selection Toggle - STEP 1: MUST SELECT FIRST */}
-                                <div className="space-y-3 pb-6 border-b border-white/10">
+                                <div className="space-y-3 pb-4 sm:pb-6 border-b border-white/10">
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600 text-white font-bold text-sm">1</span>
                                         <label className="text-sm font-bold text-white uppercase tracking-wider">Select Your Role</label>
@@ -491,14 +497,14 @@ export default function RegisterPage() {
                                 </div>
 
                                 {/* Personal Details Section */}
-                                <div className="space-y-4 mt-6">
+                                <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
                                         <div className="w-1 h-4 bg-red-500 rounded-full"></div>
                                         Personal Information
                                     </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                         <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-400">Full Name <span className="text-red-400">*</span></label>
+                                            <label className="text-sm sm:text-xs font-medium text-zinc-400">Full Name <span className="text-red-400">*</span></label>
                                             <Input
                                                 name="name"
                                                 placeholder="Enter full name"
@@ -560,7 +566,7 @@ export default function RegisterPage() {
                                                     value={formData.currentBeltRank}
                                                     onChange={handleChange}
                                                     onBlur={handleBlur}
-                                                    className={`w-full h-11 rounded-lg border bg-zinc-950/50 px-3 text-sm text-white focus:outline-none focus:border-red-500 transition-colors ${errors.currentBeltRank ? 'border-red-500/50' : 'border-white/10'}`}
+                                                    className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-red-500 transition-colors touch-action-manipulation ${errors.currentBeltRank ? 'border-red-500/50' : 'border-white/10'}`}
                                                 >
                                                     {BELT_RANKS.map(belt => (
                                                         <option key={belt} value={belt} className="bg-zinc-900">{belt}</option>
@@ -660,7 +666,7 @@ export default function RegisterPage() {
                                             <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mt-4 mb-2">Guardian Information</h4>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-1.5">
-                                                    <label className="text-xs font-medium text-zinc-400">Father's Name <span className="text-red-400">*</span></label>
+                                                    <label className="text-xs font-medium text-zinc-400">Father&apos;s Name <span className="text-red-400">*</span></label>
                                                     <Input
                                                         name="fatherName"
                                                         placeholder="Enter father's name"
@@ -672,13 +678,13 @@ export default function RegisterPage() {
                                                     {errors.fatherName && <p className="text-xs text-red-400">{errors.fatherName}</p>}
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <label className="text-xs font-medium text-zinc-400">Father's Phone <span className="text-red-400">*</span></label>
+                                                    <label className="text-xs font-medium text-zinc-400">Father&apos;s Phone <span className="text-red-400">*</span></label>
                                                     <div className="flex gap-2">
                                                         <select
                                                             name="countryCode"
                                                             value={formData.countryCode}
                                                             onChange={handleChange}
-                                                            className="w-20 h-11 rounded-lg border border-white/10 bg-zinc-950/50 px-2 text-xs text-white focus:outline-none focus:border-red-500"
+                                                            className="w-24 h-12 min-h-[44px] rounded-lg border border-white/10 bg-zinc-950/50 px-2 text-sm text-white focus:outline-none focus:border-red-500 touch-action-manipulation"
                                                         >
                                                             {COUNTRY_CODES.map(c => (
                                                                 <option key={c.code} value={c.code} className="bg-zinc-900">{c.flag} {c.code}</option>
@@ -701,7 +707,7 @@ export default function RegisterPage() {
                                 </div>
 
                                 {/* Dojo Selection Section */}
-                                <div className="space-y-4 mt-6">
+                                <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
                                         <div className="w-1 h-4 bg-red-500 rounded-full"></div>
                                         Location & Dojo
@@ -715,7 +721,7 @@ export default function RegisterPage() {
                                                 value={formData.state}
                                                 onChange={handleChange}
                                                 onBlur={handleBlur}
-                                                className={`w-full h-11 rounded-lg border bg-zinc-950/50 px-3 text-sm text-white focus:outline-none focus:border-red-500 transition-colors ${errors.state ? 'border-red-500/50' : 'border-white/10'}`}
+                                                className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-red-500 transition-colors touch-action-manipulation ${errors.state ? 'border-red-500/50' : 'border-white/10'}`}
                                             >
                                                 <option value="" className="bg-zinc-900">Select State</option>
                                                 {INDIAN_STATES.map(s => (
@@ -732,7 +738,7 @@ export default function RegisterPage() {
                                                 onChange={handleChange}
                                                 onBlur={handleBlur}
                                                 disabled={!formData.state}
-                                                className={`w-full h-11 rounded-lg border bg-zinc-950/50 px-3 text-sm text-white focus:outline-none focus:border-red-500 transition-colors disabled:opacity-50 ${errors.city ? 'border-red-500/50' : 'border-white/10'}`}
+                                                className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-red-500 transition-colors disabled:opacity-50 touch-action-manipulation ${errors.city ? 'border-red-500/50' : 'border-white/10'}`}
                                             >
                                                 <option value="" className="bg-zinc-900">Select City</option>
                                                 {availableCities.map((c: string) => (
@@ -754,7 +760,7 @@ export default function RegisterPage() {
                                             onChange={handleChange}
                                             onBlur={handleBlur}
                                             disabled={!formData.city || loadingDojos}
-                                            className={`w-full h-11 rounded-lg border bg-zinc-950/50 px-3 text-sm text-white focus:outline-none focus:border-red-500 transition-colors disabled:opacity-50 ${errors.dojoId ? 'border-red-500/50' : 'border-white/10'}`}
+                                            className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-red-500 transition-colors disabled:opacity-50 touch-action-manipulation ${errors.dojoId ? 'border-red-500/50' : 'border-white/10'}`}
                                         >
                                             <option value="" className="bg-zinc-900">{loadingDojos ? "Loading..." : "Choose your dojo"}</option>
                                             {dojos.map(d => (
@@ -792,7 +798,7 @@ export default function RegisterPage() {
                                 </div>
 
                                 {/* Security Section */}
-                                <div className="space-y-4 mt-6">
+                                <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
                                         <div className="w-1 h-4 bg-red-500 rounded-full"></div>
                                         Account Security
@@ -864,40 +870,78 @@ export default function RegisterPage() {
                                     </motion.div>
                                 )}
 
-                                <Button
-                                    type="submit"
-                                    className="w-full h-12 mt-8 text-base font-bold bg-red-600 hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-red-600/50 rounded-lg"
-                                    disabled={isLoading || paymentStep !== "form"}
-                                >
-                                    {paymentStep === "paying" ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                            Opening Payment...
-                                        </>
-                                    ) : paymentStep === "verifying" ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                            Verifying Payment...
-                                        </>
-                                    ) : paymentStep === "done" ? (
-                                        <>
-                                            <CheckCircle2 className="w-4 h-4 mr-2" />
-                                            Registration Complete!
-                                        </>
-                                    ) : isLoading ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                            Processing...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Pay ₹{paymentInfo?.totalAmount || 295} & Register
-                                        </>
-                                    )}
-                                </Button>
-                                <p className="text-center text-xs text-zinc-500 mt-4">
-                                    By registering, you agree to our Terms of Service. Your membership is valid for 1 year from the date of payment.
-                                </p>
+                                {/* Desktop submit button */}
+                                <div className="hidden md:block">
+                                    <Button
+                                        type="submit"
+                                        className="w-full h-12 mt-8 text-base font-bold bg-red-600 hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-red-600/50 rounded-lg"
+                                        disabled={isLoading || paymentStep !== "form"}
+                                    >
+                                        {paymentStep === "paying" ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                Opening Payment...
+                                            </>
+                                        ) : paymentStep === "verifying" ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                Verifying Payment...
+                                            </>
+                                        ) : paymentStep === "done" ? (
+                                            <>
+                                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                                Registration Complete!
+                                            </>
+                                        ) : isLoading ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                Processing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Pay ₹{paymentInfo?.totalAmount || 295} & Register
+                                            </>
+                                        )}
+                                    </Button>
+                                    <p className="text-center text-xs text-zinc-500 mt-4">
+                                        By registering, you agree to our Terms of Service. Your membership is valid for 1 year from the date of payment.
+                                    </p>
+                                </div>
+
+                                {/* Mobile sticky submit button */}
+                                <div className="md:hidden sticky-action-bar">
+                                    <Button
+                                        type="submit"
+                                        className="w-full h-14 text-base font-bold bg-red-600 hover:bg-red-700 transition-all duration-200 shadow-lg shadow-red-600/30 rounded-xl"
+                                        disabled={isLoading || paymentStep !== "form"}
+                                    >
+                                        {paymentStep === "paying" ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                Opening Payment...
+                                            </>
+                                        ) : paymentStep === "verifying" ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                Verifying Payment...
+                                            </>
+                                        ) : paymentStep === "done" ? (
+                                            <>
+                                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                                Done!
+                                            </>
+                                        ) : isLoading ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                Processing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Pay ₹{paymentInfo?.totalAmount || 295} & Register
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
                             </form>
                         </motion.div>
                     </div>
