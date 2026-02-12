@@ -59,7 +59,15 @@ export default function StorePage() {
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("ALL");
   const [search, setSearch] = useState("");
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('kkfi_cart');
+        return saved ? JSON.parse(saved) : [];
+      } catch { return []; }
+    }
+    return [];
+  });
   const [cartOpen, setCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState("");
@@ -76,6 +84,11 @@ export default function StorePage() {
 
   const { user, isAuthenticated } = useAuthStore();
   const { showToast } = useToast();
+
+  // Persist cart to localStorage
+  useEffect(() => {
+    localStorage.setItem('kkfi_cart', JSON.stringify(cart));
+  }, [cart]);
 
   // Pre-fill shipping from user
   useEffect(() => {
@@ -171,6 +184,14 @@ export default function StorePage() {
     // Validate shipping
     if (!shipping.name || !shipping.phone || !shipping.address || !shipping.city || !shipping.state || !shipping.pincode) {
       showToast("Please fill in all shipping details", "error");
+      return;
+    }
+    if (!/^\d{10}$/.test(shipping.phone)) {
+      showToast("Please enter a valid 10-digit phone number", "error");
+      return;
+    }
+    if (!/^\d{6}$/.test(shipping.pincode)) {
+      showToast("Please enter a valid 6-digit PIN code", "error");
       return;
     }
 

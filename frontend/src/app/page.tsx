@@ -22,7 +22,12 @@ interface Event {
 }
 
 export default function Home() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !sessionStorage.getItem('splash_seen');
+    }
+    return true;
+  });
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
   const [latestBlogs, setLatestBlogs] = useState<any[]>([]);
   const [mediaMentions, setMediaMentions] = useState<any[]>([]);
@@ -87,7 +92,7 @@ export default function Home() {
     <div ref={containerRef} className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white overflow-x-hidden relative">
       <AnimatePresence mode="wait">
         {showSplash && (
-          <SplashScreen key="splash" onFinish={() => setShowSplash(false)} />
+          <SplashScreen key="splash" onFinish={() => { sessionStorage.setItem('splash_seen', 'true'); setShowSplash(false); }} />
         )}
       </AnimatePresence>
 

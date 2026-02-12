@@ -6,12 +6,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Lock, Mail, ChevronRight } from "lucide-react";
+import { ArrowLeft, Lock, Mail, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const { login, isLoading, error } = useAuthStore();
     const router = useRouter();
 
@@ -98,10 +99,11 @@ export default function LoginPage() {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2 group">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">Email Address</label>
+                            <label htmlFor="login-email" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">Email Address</label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
                                 <Input
+                                    id="login-email"
                                     type="email"
                                     placeholder="osu@kyokushin.in"
                                     required
@@ -113,27 +115,30 @@ export default function LoginPage() {
                         </div>
 
                         <div className="space-y-2 group">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">Password</label>
+                            <label htmlFor="login-password" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">Password</label>
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
                                 <Input
-                                    type="password"
+                                    id="login-password"
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="••••••••"
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="pl-12 h-14 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-gray-600 focus:border-red-500/50 focus:ring-red-500/20 transition-all"
+                                    className="pl-12 pr-12 h-14 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-gray-600 focus:border-red-500/50 focus:ring-red-500/20 transition-all"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-white transition-colors rounded-lg"
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between text-sm pt-2">
-                            <label className="flex items-center gap-3 text-gray-400 cursor-pointer hover:text-white transition-colors select-none py-2 pr-2 -ml-1 rounded-lg active:bg-white/5 min-h-[44px]">
-                                <div className="relative flex items-center">
-                                    <input type="checkbox" className="peer h-5 w-5 rounded border-white/20 bg-white/5 text-red-600 focus:ring-red-500/20 focus:ring-offset-0" />
-                                </div>
-                                Remember me
-                            </label>
+                        <div className="flex items-center justify-end text-sm pt-2">
                             <Link href="/forgot-password" className="text-red-500 hover:text-red-400 font-medium transition-colors py-2 px-2 -mr-2 rounded-lg active:bg-white/5 min-h-[44px] flex items-center">Forgot password?</Link>
                         </div>
 

@@ -12,10 +12,12 @@ import api from "@/lib/api";
 import { getUserProfileImage } from "@/lib/imageUtils";
 import { INDIAN_CITIES, CityData } from "@/lib/indianCities";
 import BeltCertificate from "@/components/BeltCertificate";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function ProfilePage() {
     const router = useRouter();
     const { user, isAuthenticated, isLoading: authLoading, checkAuth, updateProfile } = useAuthStore();
+    const { showToast } = useToast();
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -128,6 +130,10 @@ export default function ProfilePage() {
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            showToast("File too large. Maximum size is 5MB.", "error");
+            return;
+        }
         setIsUploading(true);
         try {
             const fd = new FormData();
@@ -142,6 +148,7 @@ export default function ProfilePage() {
             }
         } catch (err) {
             console.error("Photo upload failed", err);
+            showToast("Failed to upload photo. Please try again.", "error");
         } finally {
             setIsUploading(false);
         }
@@ -157,8 +164,10 @@ export default function ProfilePage() {
         try {
             await updateProfile(formData);
             setIsEditing(false);
+            showToast("Profile updated successfully!", "success");
         } catch (error) {
             console.error("Failed to update profile", error);
+            showToast("Failed to update profile. Please try again.", "error");
         } finally {
             setIsLoading(false);
         }
@@ -311,8 +320,9 @@ export default function ProfilePage() {
         return (
             <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
                 <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Current Password</label>
+                    <label htmlFor="cp-current" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Current Password</label>
                     <Input
+                        id="cp-current"
                         type="password"
                         value={currentPassword}
                         onChange={e => setCurrentPassword(e.target.value)}
@@ -322,8 +332,9 @@ export default function ProfilePage() {
                     />
                 </div>
                 <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">New Password</label>
+                    <label htmlFor="cp-new" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">New Password</label>
                     <Input
+                        id="cp-new"
                         type="password"
                         value={newPassword}
                         onChange={e => setNewPassword(e.target.value)}
@@ -333,8 +344,9 @@ export default function ProfilePage() {
                     />
                 </div>
                 <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirm New Password</label>
+                    <label htmlFor="cp-confirm" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirm New Password</label>
                     <Input
+                        id="cp-confirm"
                         type="password"
                         value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
@@ -471,8 +483,9 @@ export default function ProfilePage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Full Name</label>
+                                    <label htmlFor="profile-name" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Full Name</label>
                                     <Input
+                                        id="profile-name"
                                         name="name"
                                         value={formData.name}
                                         onChange={handleChange}
@@ -481,8 +494,9 @@ export default function ProfilePage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Email</label>
+                                    <label htmlFor="profile-email" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Email</label>
                                     <Input
+                                        id="profile-email"
                                         name="email"
                                         value={formData.email}
                                         disabled
@@ -490,7 +504,7 @@ export default function ProfilePage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+                                    <label htmlFor="profile-phone" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
                                         Phone <span className="text-red-400">*</span>
                                     </label>
                                     <div className="flex gap-2">
@@ -498,6 +512,7 @@ export default function ProfilePage() {
                                             +91
                                         </div>
                                         <Input
+                                            id="profile-phone"
                                             name="phone"
                                             value={formData.phone}
                                             onChange={handleChange}

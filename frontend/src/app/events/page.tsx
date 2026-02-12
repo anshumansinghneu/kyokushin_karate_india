@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MapPin, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight, Calendar, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import KarateLoader from "@/components/KarateLoader";
@@ -10,19 +10,24 @@ import KarateLoader from "@/components/KarateLoader";
 export default function EventsPage() {
     const [events, setEvents] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<"ALL" | "TOURNAMENT" | "CAMP">("ALL");
 
+    const fetchEvents = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await api.get('/events');
+            setEvents(response.data.data.events);
+        } catch (err) {
+            console.error("Failed to fetch events", err);
+            setError("Failed to load events. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                const response = await api.get('/events');
-                setEvents(response.data.data.events);
-            } catch (error) {
-                console.error("Failed to fetch events", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchEvents();
     }, []);
 
@@ -77,6 +82,28 @@ export default function EventsPage() {
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-4 h-[50vh]">
                         <KarateLoader />
+                    </div>
+                ) : error ? (
+                    <div className="flex flex-col items-center justify-center py-24 gap-4">
+                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
+                            <Calendar className="w-8 h-8 text-red-400" />
+                        </div>
+                        <h3 className="text-xl font-bold text-white">Something went wrong</h3>
+                        <p className="text-gray-400 text-center max-w-md">{error}</p>
+                        <button
+                            onClick={fetchEvents}
+                            className="mt-4 flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-colors active:scale-95"
+                        >
+                            <RefreshCw className="w-4 h-4" /> Try Again
+                        </button>
+                    </div>
+                ) : filteredEvents.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 gap-4">
+                        <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center">
+                            <Calendar className="w-8 h-8 text-blue-400" />
+                        </div>
+                        <h3 className="text-xl font-bold text-white">No events found</h3>
+                        <p className="text-gray-400 text-center">Check back soon for upcoming {filter !== "ALL" ? filter.toLowerCase() + "s" : "events"}</p>
                     </div>
                 ) : (
                     /* Events Grid */

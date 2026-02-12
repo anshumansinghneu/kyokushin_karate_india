@@ -13,10 +13,10 @@ export default function Footer() {
                             The official platform for Kyokushin Karate Foundation of India. Dedicated to the preservation and promotion of the ultimate truth.
                         </p>
                         <div className="flex gap-4">
-                            <a href="#" className="text-gray-400 hover:text-primary transition-colors p-2 -ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center"><Facebook className="w-5 h-5" /></a>
-                            <a href="#" className="text-gray-400 hover:text-primary transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"><Instagram className="w-5 h-5" /></a>
-                            <a href="#" className="text-gray-400 hover:text-primary transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"><Twitter className="w-5 h-5" /></a>
-                            <a href="#" className="text-gray-400 hover:text-primary transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"><Youtube className="w-5 h-5" /></a>
+                            <span className="text-gray-400 hover:text-primary transition-colors p-2 -ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-default opacity-40" title="Coming soon"><Facebook className="w-5 h-5" /></span>
+                            <span className="text-gray-400 hover:text-primary transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-default opacity-40" title="Coming soon"><Instagram className="w-5 h-5" /></span>
+                            <span className="text-gray-400 hover:text-primary transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-default opacity-40" title="Coming soon"><Twitter className="w-5 h-5" /></span>
+                            <span className="text-gray-400 hover:text-primary transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-default opacity-40" title="Coming soon"><Youtube className="w-5 h-5" /></span>
                         </div>
                     </div>
 

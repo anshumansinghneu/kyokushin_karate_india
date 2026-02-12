@@ -14,12 +14,27 @@ api.interceptors.request.use(
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
-        } else {
-            console.warn('No token found in localStorage');
         }
         return config;
     },
     (error) => Promise.reject(error)
+);
+
+// Add a response interceptor to handle 401 (expired/invalid token)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            // Only redirect if not already on login/register page
+            if (typeof window !== 'undefined' && 
+                !window.location.pathname.includes('/login') && 
+                !window.location.pathname.includes('/register')) {
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
 );
 
 export default api;

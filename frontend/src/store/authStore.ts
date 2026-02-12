@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import api from '@/lib/api';
-import { useRouter } from 'next/navigation';
 
 interface User {
     id: string;

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, GraduationCap, CreditCard, Shield } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, GraduationCap, CreditCard, Shield, Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { INDIAN_STATES, CITIES, BELT_RANKS, COUNTRY_CODES } from "@/lib/constants";
@@ -23,6 +23,8 @@ declare global {
 
 export default function RegisterPage() {
     const [role, setRole] = useState<"STUDENT" | "INSTRUCTOR">("STUDENT");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [paymentStep, setPaymentStep] = useState<"form" | "paying" | "verifying" | "done">("form");
     const [paymentInfo, setPaymentInfo] = useState<{ amount: number; taxAmount: number; totalAmount: number } | null>(null);
     const [formData, setFormData] = useState({
@@ -99,6 +101,10 @@ export default function RegisterPage() {
             }
         };
         fetchPaymentConfig();
+
+        return () => {
+            if (script.parentNode) script.parentNode.removeChild(script);
+        };
 
         return () => {
             document.body.removeChild(script);
@@ -291,6 +297,9 @@ export default function RegisterPage() {
                 weight: Number(formData.weight)
             };
 
+            // Remove confirmPassword - not needed by backend
+            delete payload.confirmPassword;
+
             // Add instructor-specific fields
             if (role === "INSTRUCTOR") {
                 payload.yearsOfExperience = Number(formData.yearsOfExperience);
@@ -424,7 +433,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="flex justify-between items-end text-xs text-zinc-600 uppercase tracking-widest font-medium">
-                    <span>© 2024 Kyokushin India</span>
+                    <span>© {new Date().getFullYear()} Kyokushin India</span>
                     <span>Osu!</span>
                 </div>
             </div>
@@ -504,8 +513,9 @@ export default function RegisterPage() {
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                         <div className="space-y-1.5">
-                                            <label className="text-sm sm:text-xs font-medium text-zinc-400">Full Name <span className="text-red-400">*</span></label>
+                                            <label htmlFor="reg-name" className="text-sm sm:text-xs font-medium text-zinc-400">Full Name <span className="text-red-400">*</span></label>
                                             <Input
+                                                id="reg-name"
                                                 name="name"
                                                 placeholder="Enter full name"
                                                 value={formData.name}
@@ -516,8 +526,9 @@ export default function RegisterPage() {
                                             {errors.name && <p className="text-xs text-red-400">{errors.name}</p>}
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-400">Email Address <span className="text-red-400">*</span></label>
+                                            <label htmlFor="reg-email" className="text-xs font-medium text-zinc-400">Email Address <span className="text-red-400">*</span></label>
                                             <Input
+                                                id="reg-email"
                                                 name="email"
                                                 type="email"
                                                 placeholder="your@email.com"
@@ -529,8 +540,9 @@ export default function RegisterPage() {
                                             {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-400">Phone Number <span className="text-red-400">*</span></label>
+                                            <label htmlFor="reg-phone" className="text-xs font-medium text-zinc-400">Phone Number <span className="text-red-400">*</span></label>
                                             <Input
+                                                id="reg-phone"
                                                 name="phone"
                                                 placeholder="9876543210"
                                                 value={formData.phone}
@@ -541,8 +553,9 @@ export default function RegisterPage() {
                                             {errors.phone && <p className="text-xs text-red-400">{errors.phone}</p>}
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-400">Date of Birth <span className="text-red-400">*</span></label>
+                                            <label htmlFor="reg-dob" className="text-xs font-medium text-zinc-400">Date of Birth <span className="text-red-400">*</span></label>
                                             <Input
+                                                id="reg-dob"
                                                 name="dob"
                                                 type="date"
                                                 value={formData.dob}
@@ -805,29 +818,51 @@ export default function RegisterPage() {
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-400">Password <span className="text-red-400">*</span></label>
-                                            <Input
-                                                name="password"
-                                                type="password"
-                                                placeholder="Min. 8 characters"
-                                                value={formData.password}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                                className={`bg-zinc-950/50 border-white/10 focus:border-red-500 h-11 rounded-lg text-white placeholder:text-zinc-600 ${errors.password ? 'border-red-500/50' : ''}`}
-                                            />
+                                            <label htmlFor="reg-password" className="text-xs font-medium text-zinc-400">Password <span className="text-red-400">*</span></label>
+                                            <div className="relative">
+                                                <Input
+                                                    id="reg-password"
+                                                    name="password"
+                                                    type={showPassword ? "text" : "password"}
+                                                    placeholder="Min. 8 characters"
+                                                    value={formData.password}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                    className={`bg-zinc-950/50 border-white/10 focus:border-red-500 h-11 rounded-lg text-white placeholder:text-zinc-600 pr-11 ${errors.password ? 'border-red-500/50' : ''}`}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-white transition-colors rounded"
+                                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                                >
+                                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
+                                            </div>
                                             {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-400">Confirm Password <span className="text-red-400">*</span></label>
-                                            <Input
-                                                name="confirmPassword"
-                                                type="password"
-                                                placeholder="Re-enter password"
-                                                value={formData.confirmPassword}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                                className={`bg-zinc-950/50 border-white/10 focus:border-red-500 h-11 rounded-lg text-white placeholder:text-zinc-600 ${errors.confirmPassword ? 'border-red-500/50' : ''}`}
-                                            />
+                                            <label htmlFor="reg-confirm-password" className="text-xs font-medium text-zinc-400">Confirm Password <span className="text-red-400">*</span></label>
+                                            <div className="relative">
+                                                <Input
+                                                    id="reg-confirm-password"
+                                                    name="confirmPassword"
+                                                    type={showConfirmPassword ? "text" : "password"}
+                                                    placeholder="Re-enter password"
+                                                    value={formData.confirmPassword}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                    className={`bg-zinc-950/50 border-white/10 focus:border-red-500 h-11 rounded-lg text-white placeholder:text-zinc-600 pr-11 ${errors.confirmPassword ? 'border-red-500/50' : ''}`}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-white transition-colors rounded"
+                                                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                                >
+                                                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
+                                            </div>
                                             {errors.confirmPassword && <p className="text-xs text-red-400">{errors.confirmPassword}</p>}
                                         </div>
                                     </div>
