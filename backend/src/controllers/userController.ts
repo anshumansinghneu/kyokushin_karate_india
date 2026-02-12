@@ -494,13 +494,20 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
     });
 
     // Send welcome email with login credentials (non-blocking)
+    console.log(`[CREATE USER] Sending welcome email to ${newUser.email} (role: ${role}, membership: ${newUser.membershipNumber})`);
     sendAdminCreatedUserEmail(
         newUser.email,
         newUser.name,
         password,
         role,
         newUser.membershipNumber || ''
-    ).catch(err => console.error('[CREATE USER] Email failed:', err?.message || err));
+    ).then(() => {
+        console.log(`[CREATE USER] ✅ Welcome email sent to ${newUser.email}`);
+    }).catch(err => {
+        console.error(`[CREATE USER] ❌ Email FAILED for ${newUser.email}:`, err?.message || err);
+        if (err?.code) console.error(`[CREATE USER] Error code: ${err.code}`);
+        if (err?.response) console.error(`[CREATE USER] SMTP response: ${err.response}`);
+    });
 
     // Exclude sensitive fields from response
     const { passwordHash, ...safeUser } = newUser as any;
