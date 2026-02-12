@@ -1,26 +1,3 @@
-// Change password for logged-in user
-export const changePassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
-    const user = req.user;
-    const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword) {
-        return next(new AppError('Current and new password are required', 400));
-    }
-    if (newPassword.length < 8) {
-        return next(new AppError('New password must be at least 8 characters', 400));
-    }
-    const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
-    if (!specialCharRegex.test(newPassword)) {
-        return next(new AppError('New password must contain at least one special character', 400));
-    }
-    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-    if (!dbUser || !(await bcrypt.compare(currentPassword, dbUser.passwordHash))) {
-        return next(new AppError('Current password is incorrect', 401));
-    }
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-    await prisma.user.update({ where: { id: user.id }, data: { passwordHash: hashedPassword } });
-    res.status(200).json({ status: 'success', message: 'Password updated successfully' });
-});
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../prisma';
 import bcrypt from 'bcryptjs';
@@ -746,4 +723,28 @@ export const getPublicInstructors = catchAsync(async (req: Request, res: Respons
         status: 'success',
         data: { instructors },
     });
+});
+
+// Change password for logged-in user
+export const changePassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // @ts-ignore
+    const user = req.user;
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+        return next(new AppError('Current and new password are required', 400));
+    }
+    if (newPassword.length < 8) {
+        return next(new AppError('New password must be at least 8 characters', 400));
+    }
+    const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+    if (!specialCharRegex.test(newPassword)) {
+        return next(new AppError('New password must contain at least one special character', 400));
+    }
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+    if (!dbUser || !(await bcrypt.compare(currentPassword, dbUser.passwordHash))) {
+        return next(new AppError('Current password is incorrect', 401));
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({ where: { id: user.id }, data: { passwordHash: hashedPassword } });
+    res.status(200).json({ status: 'success', message: 'Password updated successfully' });
 });
