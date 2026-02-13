@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Contact Us',
-  description: 'Get in touch with the Kyokushin Karate Foundation of India. Visit our headquarters in Shuklaganj, Unnao, UP or call us at +91 99567 11400.',
+  title: 'Contact KKFI | Kyokushin Karate Enquiries & Dojo Information',
+  description: 'Contact the Kyokushin Karate Foundation of India for dojo information, membership enquiries, and training details. HQ: Shuklaganj, Unnao, UP. Call: +91 99567 11400.',
+  alternates: {
+    canonical: 'https://kyokushinfoundation.com/contact',
+  },
   openGraph: {
-    title: 'Contact Us | KKFI',
+    title: 'Contact Us | Kyokushin Karate Foundation of India',
     description: 'Contact KKFI — Shuklaganj Bypass Rd, Unnao, UP 209861. Phone: +91 99567 11400.',
   },
 };

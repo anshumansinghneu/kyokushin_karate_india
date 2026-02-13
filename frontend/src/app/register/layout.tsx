@@ -1,11 +1,15 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Register',
-  description: 'Join the Kyokushin Karate Foundation of India. Register as a student or instructor and begin your martial arts journey with KKFI.',
+  title: 'Join KKFI | Register for Full Contact Karate Training in India',
+  description: 'Register with the Kyokushin Karate Foundation of India. Join as a student or instructor — full-contact karate training, belt gradings & tournaments. Membership starts at ₹295. Start your martial arts journey today!',
+  keywords: ['register karate India', 'join Kyokushin dojo', 'karate membership India', 'martial arts registration', 'KKFI membership'],
+  alternates: {
+    canonical: 'https://kyokushinfoundation.com/register',
+  },
   openGraph: {
-    title: 'Register | KKFI',
-    description: 'Join the Kyokushin Karate Foundation of India. Register as a student or instructor.',
+    title: 'Register | Kyokushin Karate Foundation of India',
+    description: 'Join KKFI — register as a student or instructor. Full-contact karate training, belt gradings & tournaments across India.',
   },
 };
 

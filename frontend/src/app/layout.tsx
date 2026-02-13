@@ -18,17 +18,34 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://kyokushin-karate-india.vercel.app'),
+  metadataBase: new URL('https://kyokushinfoundation.com'),
   icons: {
     icon: '/kkfi-logo.avif',
     apple: '/kkfi-logo.avif',
   },
   title: {
-    default: "Kyokushin Karate Foundation of India | Official Platform",
-    template: "%s | KKFI"
+    default: "Kyokushin Karate Foundation of India | Best Full Contact Karate Training",
+    template: "%s | KKFI – Kyokushin Karate Foundation of India"
   },
-  description: "Official platform for Kyokushin Karate Foundation of India. Join dojos, track belt progression, register for tournaments, and connect with the martial arts community.",
-  keywords: ["Kyokushin Karate", "Martial Arts India", "Karate Training", "Belt Promotion", "Karate Tournament", "Dojo India", "Karate Classes"],
+  description: "Join the Kyokushin Karate Foundation of India. Led by Shihan Vasant Kumar Singh, we offer authentic full-contact karate training for kids and adults across India. Dojos, tournaments, belt gradings & self-defense classes. Start your journey today!",
+  keywords: [
+    "Kyokushin Karate India",
+    "full-contact karate India",
+    "Kyokushin grading syllabus 2026",
+    "self-defense classes for adults India",
+    "martial arts for kids near me",
+    "best karate classes India",
+    "Kyokushin dojo near me",
+    "Shihan Vasant Kumar Singh",
+    "KKFI",
+    "karate tournament India",
+    "full contact karate training",
+    "martial arts India",
+    "karate for children India",
+    "Kyokushin belt promotion",
+    "IKO Kyokushin India",
+    "karate self defense training"
+  ],
   authors: [{ name: "Kyokushin Karate Foundation of India" }],
   creator: "Kyokushin Karate Foundation of India",
   publisher: "Kyokushin Karate Foundation of India",
@@ -37,26 +54,29 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
+  alternates: {
+    canonical: 'https://kyokushinfoundation.com',
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://kyokushin-karate-india.vercel.app",
-    title: "Kyokushin Karate Foundation of India | Official Platform",
-    description: "Official platform for Kyokushin Karate Foundation of India. Join dojos, track belt progression, register for tournaments.",
+    url: "https://kyokushinfoundation.com",
+    title: "Kyokushin Karate Foundation of India | Best Full Contact Karate Training",
+    description: "Join the Kyokushin Karate Foundation of India. Led by Shihan Vasant Kumar Singh, we offer authentic full-contact karate training for kids and adults across India. Start your journey today!",
     siteName: "Kyokushin Karate Foundation of India",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Kyokushin Karate Foundation of India"
+        alt: "Kyokushin Karate Foundation of India – Full Contact Karate Training"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kyokushin Karate Foundation of India | Official Platform",
-    description: "Official platform for Kyokushin Karate Foundation of India. Join dojos, track belt progression, register for tournaments.",
+    title: "Kyokushin Karate Foundation of India | Best Full Contact Karate Training",
+    description: "Join the Kyokushin Karate Foundation of India. Authentic full-contact karate training for kids & adults. Dojos, tournaments & belt gradings across India.",
     images: ["/og-image.png"],
   },
   robots: {

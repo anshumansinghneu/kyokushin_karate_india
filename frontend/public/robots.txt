@@ -2,16 +2,37 @@
 User-agent: *
 Allow: /
 
-# Disallow admin and private pages
+# Disallow private/admin pages
 Disallow: /admin
 Disallow: /api/
 Disallow: /dashboard
+Disallow: /profile
+Disallow: /management
+Disallow: /payments
+Disallow: /renew-membership
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /login
 
-# Allow specific routes
+# Allow all public content
+Allow: /intro
 Allow: /dojos
 Allow: /events
-Allow: /about
+Allow: /blog
 Allow: /contact
+Allow: /syllabus
+Allow: /instructors
+Allow: /gallery
+Allow: /media
+Allow: /seminars
+Allow: /sponsors
+Allow: /csr
+Allow: /store
+Allow: /register
+Allow: /verify
+Allow: /low-kick
+Allow: /calendar
+Allow: /tournaments
 
 # Sitemap location
-Sitemap: https://kyokushin-karate-india.vercel.app/sitemap.xml
+Sitemap: https://kyokushinfoundation.com/sitemap.xml

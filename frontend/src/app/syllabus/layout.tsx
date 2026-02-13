@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Training Syllabus",
-  description: "Complete Kyokushin Karate belt curriculum from White to Black belt. Learn about kihon, kata, kumite requirements for each grade.",
+  title: "Kyokushin Belt Syllabus & Training Curriculum | White to Black Belt",
+  description: "Complete Kyokushin Karate grading syllabus — kihon, kata, kumite requirements for every belt from White to Black. Official KKFI training curriculum 2026.",
+  keywords: ["Kyokushin grading syllabus 2026", "karate belt requirements", "Kyokushin kata list", "karate training curriculum", "belt promotion requirements"],
+  alternates: {
+    canonical: 'https://kyokushinfoundation.com/syllabus',
+  },
   openGraph: {
-    title: "Training Syllabus | KKFI",
-    description: "Complete Kyokushin Karate belt curriculum from White to Black belt.",
+    title: "Kyokushin Belt Syllabus | KKFI Training Curriculum",
+    description: "Complete Kyokushin belt curriculum from White to Black belt — kata, kumite & conditioning requirements for every grade.",
   },
 };
 
