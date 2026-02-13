@@ -27,7 +27,7 @@ export default function RegisterPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [paymentStep, setPaymentStep] = useState<"form" | "paying" | "verifying" | "done">("form");
     const [step, setStep] = useState(1);
-    const TOTAL_STEPS = 4;
+    const TOTAL_STEPS = 6;
     const [paymentInfo, setPaymentInfo] = useState<{ amount: number; taxAmount: number; totalAmount: number } | null>(null);
     const [formData, setFormData] = useState({
         name: "",
@@ -388,12 +388,14 @@ export default function RegisterPage() {
     // Step validation
     const getStepFields = (s: number): string[] => {
         switch (s) {
-            case 1: return ["name", "email", "phone", "dob"];
-            case 2: return role === "STUDENT"
-                ? ["currentBeltRank", "height", "weight", "fatherName", "fatherPhone", ...(formData.currentBeltRank !== "White" ? ["beltExamDate"] : [])]
-                : ["currentBeltRank", "height", "weight", "yearsOfExperience"];
-            case 3: return role === "STUDENT" ? ["state", "city", "dojoId"] : ["state", "city"];
-            case 4: return ["password", "confirmPassword"];
+            case 1: return ["name", "email"];
+            case 2: return ["phone", "dob"];
+            case 3: return ["currentBeltRank", "height", "weight", ...(formData.currentBeltRank !== "White" ? ["beltExamDate"] : [])];
+            case 4: return role === "STUDENT"
+                ? ["fatherName", "fatherPhone"]
+                : ["yearsOfExperience"];
+            case 5: return role === "STUDENT" ? ["state", "city", "dojoId"] : ["state", "city"];
+            case 6: return ["password", "confirmPassword"];
             default: return [];
         }
     };
@@ -418,7 +420,7 @@ export default function RegisterPage() {
 
     const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
-    const STEP_LABELS = ["Personal", "Training", "Dojo", "Payment"];
+    const STEP_LABELS = ["You", "Contact", "Training", role === "STUDENT" ? "Guardian" : "Experience", "Dojo", "Payment"];
 
     return (
         <div className="min-h-screen w-full flex relative overflow-hidden bg-black text-white font-sans selection:bg-red-500/30">
@@ -507,18 +509,18 @@ export default function RegisterPage() {
 
                             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                                 {/* Step Progress Bar */}
-                                <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center justify-between mb-2 gap-0.5">
                                     {STEP_LABELS.map((label, i) => (
                                         <div key={label} className="flex items-center flex-1">
                                             <div className="flex flex-col items-center">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                                                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all duration-300 ${
                                                     step > i + 1 ? 'bg-green-500 text-white' :
                                                     step === i + 1 ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' :
                                                     'bg-zinc-800 text-zinc-500 border border-zinc-700'
                                                 }`}>
-                                                    {step > i + 1 ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
+                                                    {step > i + 1 ? <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : i + 1}
                                                 </div>
-                                                <span className={`text-[10px] mt-1 font-bold uppercase tracking-wider ${
+                                                <span className={`text-[8px] sm:text-[10px] mt-1 font-bold uppercase tracking-wider ${
                                                     step === i + 1 ? 'text-red-400' : 'text-zinc-600'
                                                 }`}>{label}</span>
                                             </div>
@@ -532,14 +534,14 @@ export default function RegisterPage() {
                                 </div>
 
                                 <AnimatePresence mode="wait">
-                                {/* STEP 1: Role + Personal Info */}
+                                {/* STEP 1: Role + Name + Email */}
                                 {step === 1 && (
                                 <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
-                                {/* Role Selection Toggle - STEP 1: MUST SELECT FIRST */}
+                                {/* Role Selection Toggle */}
                                 <div className="space-y-3 pb-4 sm:pb-6 border-b border-white/10">
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600 text-white font-bold text-sm">1</span>
-                                        <label className="text-sm font-bold text-white uppercase tracking-wider">Select Your Role</label>
+                                        <label className="text-sm font-bold text-white uppercase tracking-wider">Who are you?</label>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <button
@@ -567,13 +569,12 @@ export default function RegisterPage() {
                                     </div>
                                 </div>
 
-                                {/* Personal Details Section */}
-                                <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
+                                <div className="space-y-3 sm:space-y-4">
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
                                         <div className="w-1 h-4 bg-red-500 rounded-full"></div>
-                                        Personal Information
+                                        Basic Details
                                     </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                    <div className="space-y-4">
                                         <div className="space-y-1.5">
                                             <label htmlFor="reg-name" className="text-sm sm:text-xs font-medium text-zinc-400">Full Name <span className="text-red-400">*</span></label>
                                             <Input
@@ -601,6 +602,26 @@ export default function RegisterPage() {
                                             />
                                             {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end pt-4">
+                                    <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
+                                        Next <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                </motion.div>
+                                )}
+
+                                {/* STEP 2: Phone + DOB */}
+                                {step === 2 && (
+                                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
+                                <div className="space-y-3 sm:space-y-4">
+                                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                                        <div className="w-1 h-4 bg-red-500 rounded-full"></div>
+                                        Contact Details
+                                    </h3>
+                                    <div className="space-y-4">
                                         <div className="space-y-1.5">
                                             <label htmlFor="reg-phone" className="text-xs font-medium text-zinc-400">Phone Number <span className="text-red-400">*</span></label>
                                             <Input
@@ -630,18 +651,20 @@ export default function RegisterPage() {
                                     </div>
                                 </div>
 
-                                {/* Step 1 Navigation */}
-                                <div className="flex justify-end pt-4">
+                                <div className="flex justify-between pt-4">
+                                    <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
+                                        <ChevronLeft className="w-4 h-4" /> Back
+                                    </button>
                                     <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
-                                        Next: Training <ChevronRight className="w-4 h-4" />
+                                        Next <ChevronRight className="w-4 h-4" />
                                     </button>
                                 </div>
                                 </motion.div>
                                 )}
 
-                                {/* STEP 2: Training Details */}
-                                {step === 2 && (
-                                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
+                                {/* STEP 3: Training Details (Belt + Height + Weight) */}
+                                {step === 3 && (
+                                <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
                                 <div className="space-y-3 sm:space-y-4">
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
                                         <div className="w-1 h-4 bg-red-500 rounded-full"></div>
@@ -710,7 +733,7 @@ export default function RegisterPage() {
                                         )}
                                     </div>
 
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1.5">
                                             <label className="text-xs font-medium text-zinc-400">Height (cm) <span className="text-red-400">*</span></label>
                                             <Input
@@ -737,7 +760,75 @@ export default function RegisterPage() {
                                             />
                                             {errors.weight && <p className="text-xs text-red-400">{errors.weight}</p>}
                                         </div>
-                                        {role === "INSTRUCTOR" && (
+                                    </div>
+                                </div>
+
+                                {/* Step 3 Navigation */}
+                                <div className="flex justify-between pt-4">
+                                    <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
+                                        <ChevronLeft className="w-4 h-4" /> Back
+                                    </button>
+                                    <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
+                                        Next <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                </motion.div>
+                                )}
+
+                                {/* STEP 4: Guardian (Students) or Experience (Instructors) */}
+                                {step === 4 && (
+                                <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
+                                <div className="space-y-3 sm:space-y-4">
+                                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                                        <div className="w-1 h-4 bg-red-500 rounded-full"></div>
+                                        {role === "STUDENT" ? "Guardian Information" : "Experience"}
+                                    </h3>
+
+                                    {/* Guardian Details - Only for Students */}
+                                    {role === "STUDENT" && (
+                                        <div className="space-y-4">
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-zinc-400">Father&apos;s Name <span className="text-red-400">*</span></label>
+                                                <Input
+                                                    name="fatherName"
+                                                    placeholder="Enter father's name"
+                                                    value={formData.fatherName}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                    className={`bg-zinc-950/50 border-white/10 focus:border-red-500 h-11 rounded-lg text-white placeholder:text-zinc-600 ${errors.fatherName ? 'border-red-500/50' : ''}`}
+                                                />
+                                                {errors.fatherName && <p className="text-xs text-red-400">{errors.fatherName}</p>}
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-zinc-400">Father&apos;s Phone <span className="text-red-400">*</span></label>
+                                                <div className="flex gap-2">
+                                                    <select
+                                                        name="countryCode"
+                                                        value={formData.countryCode}
+                                                        onChange={handleChange}
+                                                        className="w-24 h-12 min-h-[44px] rounded-lg border border-white/10 bg-zinc-950/50 px-2 text-sm text-white focus:outline-none focus:border-red-500 touch-action-manipulation"
+                                                    >
+                                                        {COUNTRY_CODES.map(c => (
+                                                            <option key={c.code} value={c.code} className="bg-zinc-900">{c.flag} {c.code}</option>
+                                                        ))}
+                                                    </select>
+                                                    <Input
+                                                        name="fatherPhone"
+                                                        placeholder="9876543210"
+                                                        value={formData.fatherPhone}
+                                                        onChange={handleChange}
+                                                        onBlur={handleBlur}
+                                                        className={`flex-1 bg-zinc-950/50 border-white/10 focus:border-red-500 h-11 rounded-lg text-white placeholder:text-zinc-600 ${errors.fatherPhone ? 'border-red-500/50' : ''}`}
+                                                    />
+                                                </div>
+                                                {errors.fatherPhone && <p className="text-xs text-red-400">{errors.fatherPhone}</p>}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Experience - Only for Instructors */}
+                                    {role === "INSTRUCTOR" && (
+                                        <div className="space-y-4">
                                             <div className="space-y-1.5">
                                                 <label className="text-xs font-medium text-zinc-400">Years of Experience <span className="text-red-400">*</span></label>
                                                 <Input
@@ -751,72 +842,26 @@ export default function RegisterPage() {
                                                 />
                                                 {errors.yearsOfExperience && <p className="text-xs text-red-400">{errors.yearsOfExperience}</p>}
                                             </div>
-                                        )}
-                                    </div>
-
-                                    {/* Guardian Details - Only for Students */}
-                                    {role === "STUDENT" && (
-                                        <>
-                                            <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mt-4 mb-2">Guardian Information</h4>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="space-y-1.5">
-                                                    <label className="text-xs font-medium text-zinc-400">Father&apos;s Name <span className="text-red-400">*</span></label>
-                                                    <Input
-                                                        name="fatherName"
-                                                        placeholder="Enter father's name"
-                                                        value={formData.fatherName}
-                                                        onChange={handleChange}
-                                                        onBlur={handleBlur}
-                                                        className={`bg-zinc-950/50 border-white/10 focus:border-red-500 h-11 rounded-lg text-white placeholder:text-zinc-600 ${errors.fatherName ? 'border-red-500/50' : ''}`}
-                                                    />
-                                                    {errors.fatherName && <p className="text-xs text-red-400">{errors.fatherName}</p>}
-                                                </div>
-                                                <div className="space-y-1.5">
-                                                    <label className="text-xs font-medium text-zinc-400">Father&apos;s Phone <span className="text-red-400">*</span></label>
-                                                    <div className="flex gap-2">
-                                                        <select
-                                                            name="countryCode"
-                                                            value={formData.countryCode}
-                                                            onChange={handleChange}
-                                                            className="w-24 h-12 min-h-[44px] rounded-lg border border-white/10 bg-zinc-950/50 px-2 text-sm text-white focus:outline-none focus:border-red-500 touch-action-manipulation"
-                                                        >
-                                                            {COUNTRY_CODES.map(c => (
-                                                                <option key={c.code} value={c.code} className="bg-zinc-900">{c.flag} {c.code}</option>
-                                                            ))}
-                                                        </select>
-                                                        <Input
-                                                            name="fatherPhone"
-                                                            placeholder="9876543210"
-                                                            value={formData.fatherPhone}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            className={`flex-1 bg-zinc-950/50 border-white/10 focus:border-red-500 h-11 rounded-lg text-white placeholder:text-zinc-600 ${errors.fatherPhone ? 'border-red-500/50' : ''}`}
-                                                        />
-                                                    </div>
-                                                    {errors.fatherPhone && <p className="text-xs text-red-400">{errors.fatherPhone}</p>}
-                                                </div>
-                                            </div>
-                                        </>
+                                        </div>
                                     )}
                                 </div>
 
-                                {/* Step 2 Navigation */}
+                                {/* Step 4 Navigation */}
                                 <div className="flex justify-between pt-4">
                                     <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
                                         <ChevronLeft className="w-4 h-4" /> Back
                                     </button>
                                     <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
-                                        Next: Dojo <ChevronRight className="w-4 h-4" />
+                                        Next <ChevronRight className="w-4 h-4" />
                                     </button>
                                 </div>
                                 </motion.div>
                                 )}
 
-                                {/* STEP 3: Location & Dojo */}
-                                {step === 3 && (
-                                <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
-                                {/* Dojo Selection Section */}
-                                <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
+                                {/* STEP 5: Location & Dojo */}
+                                {step === 5 && (
+                                <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
+                                <div className="space-y-3 sm:space-y-4">
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
                                         <div className="w-1 h-4 bg-red-500 rounded-full"></div>
                                         Location & Dojo
@@ -906,21 +951,21 @@ export default function RegisterPage() {
                                     </AnimatePresence>
                                 </div>
 
-                                {/* Step 3 Navigation */}
+                                {/* Step 5 Navigation */}
                                 <div className="flex justify-between pt-4">
                                     <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
                                         <ChevronLeft className="w-4 h-4" /> Back
                                     </button>
                                     <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
-                                        Next: Payment <ChevronRight className="w-4 h-4" />
+                                        Next <ChevronRight className="w-4 h-4" />
                                     </button>
                                 </div>
                                 </motion.div>
                                 )}
 
-                                {/* STEP 4: Security & Payment */}
-                                {step === 4 && (
-                                <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
+                                {/* STEP 6: Security & Payment */}
+                                {step === 6 && (
+                                <motion.div key="step6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
                                 {/* Security Section */}
                                 <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
