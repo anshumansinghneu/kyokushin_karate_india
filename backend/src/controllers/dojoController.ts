@@ -175,21 +175,43 @@ export const createDojo = catchAsync(async (req: Request, res: Response, next: N
 });
 
 export const updateDojo = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const dojo = await prisma.dojo.update({
-        where: { id: req.params.id },
-        data: req.body,
-    });
+    const { name, city, state, country, address, contactEmail, contactPhone, latitude, longitude, instructorId } = req.body;
 
-    if (!dojo) {
-        return next(new AppError('No dojo found with that ID', 404));
+    // Build update data with only valid Dojo model fields
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (city !== undefined) updateData.city = city;
+    if (state !== undefined) updateData.state = state;
+    if (country !== undefined) updateData.country = country;
+    if (address !== undefined) updateData.address = address;
+    if (contactEmail !== undefined) updateData.contactEmail = contactEmail;
+    if (contactPhone !== undefined) updateData.contactPhone = contactPhone;
+    if (latitude !== undefined) updateData.latitude = latitude;
+    if (longitude !== undefined) updateData.longitude = longitude;
+
+    // Handle instructor relation separately (instructorId is not a Dojo column)
+    if (instructorId) {
+        updateData.instructors = { connect: { id: instructorId } };
     }
 
-    res.status(200).json({
-        status: 'success',
-        data: {
-            dojo,
-        },
-    });
+    try {
+        const dojo = await prisma.dojo.update({
+            where: { id: req.params.id },
+            data: updateData,
+        });
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                dojo,
+            },
+        });
+    } catch (error: any) {
+        if (error.code === 'P2025') {
+            return next(new AppError('No dojo found with that ID', 404));
+        }
+        throw error;
+    }
 });
 
 export const deleteDojo = catchAsync(async (req: Request, res: Response, next: NextFunction) => {

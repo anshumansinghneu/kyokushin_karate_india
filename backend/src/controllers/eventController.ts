@@ -223,21 +223,43 @@ export const bulkApproveRegistrations = catchAsync(async (req: Request, res: Res
     });
 });
 export const updateEvent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const event = await prisma.event.update({
-        where: { id: req.params.id },
-        data: req.body,
-    });
+    const { name, type, description, imageUrl, startDate, endDate, location, dojoId, registrationDeadline, maxParticipants, memberFee, nonMemberFee, categories, status } = req.body;
 
-    if (!event) {
-        return next(new AppError('No event found with that ID', 404));
+    // Build update data with only valid Event model fields
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (type !== undefined) updateData.type = type;
+    if (description !== undefined) updateData.description = description;
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (startDate !== undefined) updateData.startDate = new Date(startDate);
+    if (endDate !== undefined) updateData.endDate = new Date(endDate);
+    if (location !== undefined) updateData.location = location;
+    if (dojoId !== undefined) updateData.dojoId = dojoId;
+    if (registrationDeadline !== undefined) updateData.registrationDeadline = new Date(registrationDeadline);
+    if (maxParticipants !== undefined) updateData.maxParticipants = maxParticipants;
+    if (memberFee !== undefined) updateData.memberFee = memberFee;
+    if (nonMemberFee !== undefined) updateData.nonMemberFee = nonMemberFee;
+    if (categories !== undefined) updateData.categories = categories;
+    if (status !== undefined) updateData.status = status;
+
+    try {
+        const event = await prisma.event.update({
+            where: { id: req.params.id },
+            data: updateData,
+        });
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                event,
+            },
+        });
+    } catch (error: any) {
+        if (error.code === 'P2025') {
+            return next(new AppError('No event found with that ID', 404));
+        }
+        throw error;
     }
-
-    res.status(200).json({
-        status: 'success',
-        data: {
-            event,
-        },
-    });
 });
 
 export const deleteEvent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {

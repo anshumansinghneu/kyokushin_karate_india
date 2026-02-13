@@ -346,13 +346,16 @@ export const updateMe = catchAsync(async (req: Request, res: Response, next: Nex
 
     // 2) Filtered out unwanted fields names that are not allowed to be updated
     // For now, allow updating phone, city, address, bio/description, profilePhotoUrl, height, and weight
-    const allowedFields = ['name', 'phone', 'countryCode', 'city', 'state', 'address', 'description', 'profilePhotoUrl', 'height', 'weight'];
+    const allowedFields = ['name', 'phone', 'countryCode', 'city', 'state', 'country', 'profilePhotoUrl', 'height', 'weight', 'fatherName', 'fatherPhone', 'dateOfBirth'];
     const filteredBody: any = {};
     Object.keys(req.body).forEach(el => {
         if (allowedFields.includes(el)) {
             // Convert height and weight to numbers
             if (el === 'height' || el === 'weight') {
                 filteredBody[el] = req.body[el] ? parseFloat(req.body[el]) : null;
+            // Convert date fields
+            } else if (el === 'dateOfBirth') {
+                filteredBody[el] = req.body[el] ? new Date(req.body[el]) : null;
             } else {
                 filteredBody[el] = req.body[el];
             }
@@ -565,23 +568,48 @@ export const inviteUser = catchAsync(async (req: Request, res: Response, next: N
 export const updateUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
-    // Filter out fields that shouldn't be updated directly if needed,
-    // but for Admin, we generally trust them.
-    // However, password updates should still go through a specific route or be hashed if allowed here.
-    // For now, let's exclude password from this general update to be safe.
-    const { password, passwordConfirm, ...dataToUpdate } = req.body;
+    // Whitelist of fields an admin can update on a user
+    const allowedFields = [
+        'name', 'phone', 'countryCode', 'dateOfBirth', 'height', 'weight',
+        'city', 'state', 'country', 'profilePhotoUrl', 'fatherName', 'fatherPhone',
+        'dojoId', 'primaryInstructorId', 'currentBeltRank', 'role',
+        'membershipStatus', 'membershipStartDate', 'membershipEndDate',
+        'verificationStatus', 'isInstructorApproved'
+    ];
 
-    const updatedUser = await prisma.user.update({
-        where: { id },
-        data: dataToUpdate,
-    });
+    const updateData: any = {};
+    for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+            // Convert numeric fields
+            if (field === 'height' || field === 'weight') {
+                updateData[field] = req.body[field] ? parseFloat(req.body[field]) : null;
+            // Convert date fields
+            } else if (field === 'dateOfBirth' || field === 'membershipStartDate' || field === 'membershipEndDate') {
+                updateData[field] = req.body[field] ? new Date(req.body[field]) : null;
+            } else {
+                updateData[field] = req.body[field];
+            }
+        }
+    }
 
-    res.status(200).json({
-        status: 'success',
-        data: {
-            user: updatedUser,
-        },
-    });
+    try {
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: updateData,
+        });
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                user: updatedUser,
+            },
+        });
+    } catch (error: any) {
+        if (error.code === 'P2025') {
+            return next(new AppError('No user found with that ID', 404));
+        }
+        throw error;
+    }
 });
 
 /**

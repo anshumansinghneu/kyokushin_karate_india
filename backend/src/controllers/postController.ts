@@ -147,17 +147,40 @@ export const createPost = catchAsync(async (req: Request, res: Response, next: N
 });
 
 export const updatePost = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const post = await prisma.post.update({
-        where: { id: req.params.id },
-        data: req.body
-    });
+    const { type, title, slug, content, excerpt, imageUrl, externalLink, sourceName, attachmentUrl, status, publishedAt } = req.body;
 
-    res.status(200).json({
-        status: 'success',
-        data: {
-            post
+    // Build update data with only valid Post model fields (exclude authorId, id, createdAt)
+    const updateData: any = {};
+    if (type !== undefined) updateData.type = type;
+    if (title !== undefined) updateData.title = title;
+    if (slug !== undefined) updateData.slug = slug;
+    if (content !== undefined) updateData.content = content;
+    if (excerpt !== undefined) updateData.excerpt = excerpt;
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (externalLink !== undefined) updateData.externalLink = externalLink;
+    if (sourceName !== undefined) updateData.sourceName = sourceName;
+    if (attachmentUrl !== undefined) updateData.attachmentUrl = attachmentUrl;
+    if (status !== undefined) updateData.status = status;
+    if (publishedAt !== undefined) updateData.publishedAt = new Date(publishedAt);
+
+    try {
+        const post = await prisma.post.update({
+            where: { id: req.params.id },
+            data: updateData
+        });
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                post
+            }
+        });
+    } catch (error: any) {
+        if (error.code === 'P2025') {
+            return next(new AppError('No post found with that ID', 404));
         }
-    });
+        throw error;
+    }
 });
 
 export const deletePost = catchAsync(async (req: Request, res: Response, next: NextFunction) => {

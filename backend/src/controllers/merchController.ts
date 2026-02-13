@@ -65,17 +65,38 @@ export const createProduct = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const updateProduct = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const product = await prisma.product.update({
-        where: { id: req.params.id },
-        data: req.body,
-    });
+    const { name, description, price, comparePrice, category, images, sizes, stockCount, featured, inStock, isActive } = req.body;
 
-    if (!product) return next(new AppError('Product not found', 404));
+    // Build update data with only valid Product model fields
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (price !== undefined) updateData.price = price;
+    if (comparePrice !== undefined) updateData.comparePrice = comparePrice;
+    if (category !== undefined) updateData.category = category;
+    if (images !== undefined) updateData.images = images;
+    if (sizes !== undefined) updateData.sizes = sizes;
+    if (stockCount !== undefined) updateData.stockCount = stockCount;
+    if (featured !== undefined) updateData.featured = featured;
+    if (inStock !== undefined) updateData.inStock = inStock;
+    if (isActive !== undefined) updateData.isActive = isActive;
 
-    res.status(200).json({
-        status: 'success',
-        data: { product },
-    });
+    try {
+        const product = await prisma.product.update({
+            where: { id: req.params.id },
+            data: updateData,
+        });
+
+        res.status(200).json({
+            status: 'success',
+            data: { product },
+        });
+    } catch (error: any) {
+        if (error.code === 'P2025') {
+            return next(new AppError('Product not found', 404));
+        }
+        throw error;
+    }
 });
 
 export const deleteProduct = catchAsync(async (req: Request, res: Response) => {
