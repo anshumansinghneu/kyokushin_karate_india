@@ -409,7 +409,7 @@ export const deleteUser = catchAsync(async (req: Request, res: Response, next: N
 
         // Gallery & vouchers
         await tx.gallery.deleteMany({ where: { OR: [{ uploadedBy: id }, { approvedBy: id }] } });
-        await tx.voucherCode.deleteMany({ where: { createdBy: id } });
+        await tx.cashVoucher.deleteMany({ where: { OR: [{ createdBy: id }, { redeemedBy: id }] } });
 
         // Tournament related
         await tx.tournamentResult.deleteMany({ where: { userId: id } });
@@ -427,7 +427,7 @@ export const deleteUser = catchAsync(async (req: Request, res: Response, next: N
             await tx.payment.deleteMany({ where: { eventId: { in: eventIds } } });
             await tx.eventRegistration.deleteMany({ where: { eventId: { in: eventIds } } });
             await tx.gallery.deleteMany({ where: { eventId: { in: eventIds } } });
-            await tx.voucherCode.deleteMany({ where: { specificEventId: { in: eventIds } } });
+            await tx.cashVoucher.deleteMany({ where: { specificEventId: { in: eventIds } } });
             // Delete bracket-related data
             const brackets = await tx.tournamentBracket.findMany({ where: { eventId: { in: eventIds } }, select: { id: true } });
             if (brackets.length > 0) {

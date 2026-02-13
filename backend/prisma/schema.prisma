@@ -154,7 +154,8 @@ model User {
   // Other
   uploadedGallery       Gallery[]        @relation("GalleryUploader")
   approvedGallery       Gallery[]        @relation("GalleryApprover")
-  createdVouchers       VoucherCode[]
+  createdVouchers       CashVoucher[]    @relation("VoucherCreator")
+  redeemedVouchers      CashVoucher[]    @relation("VoucherRedeemer")
   notifications         Notification[]
   trainingSessions      TrainingSession[]
   posts                 Post[]
@@ -238,7 +239,7 @@ model Event {
   brackets              TournamentBracket[]
   results               TournamentResult[]
   gallery               Gallery[]
-  specificVouchers      VoucherCode[]
+  specificVouchers      CashVoucher[]
   payments              Payment[]
   notifications         Notification[]
 
@@ -386,18 +387,21 @@ model Gallery {
   uploadedAt        DateTime  @default(now())
 }
 
-model VoucherCode {
+model CashVoucher {
   id                String                @id @default(uuid())
   code              String                @unique
-  discountAmount    Float                 // Fixed amount only
-  applicableTo      VoucherApplicability
+  amount            Float                 // Full amount covered by voucher
+  applicableTo      VoucherApplicability  // MEMBERSHIP, TOURNAMENT, CAMP, ALL
   specificEventId   String?
   specificEvent     Event?                @relation(fields: [specificEventId], references: [id])
-  maxUsesPerUser    Int                   @default(1)
   expiryDate        DateTime
   isActive          Boolean               @default(true)
+  isRedeemed        Boolean               @default(false)
+  redeemedBy        String?               // userId of person who redeemed
+  redeemedByUser    User?                 @relation("VoucherRedeemer", fields: [redeemedBy], references: [id])
+  redeemedAt        DateTime?
   createdBy         String
-  creator           User                  @relation(fields: [createdBy], references: [id])
+  creator           User                  @relation("VoucherCreator", fields: [createdBy], references: [id])
   createdAt         DateTime              @default(now())
 }
 

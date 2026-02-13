@@ -64,7 +64,14 @@ export default function RegisterPage() {
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [, setAge] = useState<number | null>(null); // Derived age state
 
-    const { registerWithPayment, completeRegistration, isLoading, error: authError } = useAuthStore();
+    // Voucher state
+    const [hasVoucher, setHasVoucher] = useState(false);
+    const [voucherCode, setVoucherCode] = useState("");
+    const [voucherValidating, setVoucherValidating] = useState(false);
+    const [voucherValid, setVoucherValid] = useState<{ amount: number; code: string } | null>(null);
+    const [voucherError, setVoucherError] = useState("");
+
+    const { registerWithPayment, completeRegistration, registerWithVoucher, isLoading, error: authError } = useAuthStore();
     const router = useRouter();
 
     // Fetch Locations on Mount + Load Razorpay Script + Fetch Payment Config
@@ -262,6 +269,31 @@ export default function RegisterPage() {
         setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
     };
 
+    // Voucher validation
+    const handleValidateVoucher = async () => {
+        if (!voucherCode.trim()) {
+            setVoucherError("Please enter a voucher code");
+            return;
+        }
+        setVoucherValidating(true);
+        setVoucherError("");
+        setVoucherValid(null);
+        try {
+            const res = await api.post('/vouchers/validate', {
+                code: voucherCode.trim(),
+                type: 'MEMBERSHIP',
+            });
+            setVoucherValid({
+                amount: res.data.data.voucher.amount,
+                code: res.data.data.voucher.code,
+            });
+        } catch (err: any) {
+            setVoucherError(err.response?.data?.message || "Invalid voucher code");
+        } finally {
+            setVoucherValidating(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -317,6 +349,19 @@ export default function RegisterPage() {
                 delete payload.yearsOfExperience;
             }
 
+            // ── VOUCHER PATH: Skip Razorpay ──
+            if (voucherValid) {
+                setPaymentStep("verifying");
+                await registerWithVoucher({
+                    ...payload,
+                    voucherCode: voucherValid.code,
+                });
+                setPaymentStep("done");
+                setTimeout(() => router.push("/dashboard"), 1500);
+                return;
+            }
+
+            // ── RAZORPAY PATH ──
             // ── Step 1: Create Payment Order ──
             setPaymentStep("paying");
             const orderData = await registerWithPayment(payload);
@@ -1024,8 +1069,89 @@ export default function RegisterPage() {
                                     </div>
                                 </div>
 
+                                {/* Voucher Section */}
+                                <div className="space-y-3 sm:space-y-4">
+                                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                                        <div className="w-1 h-4 bg-green-500 rounded-full"></div>
+                                        Have a Cash Voucher?
+                                    </h3>
+
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setHasVoucher(!hasVoucher);
+                                                if (hasVoucher) {
+                                                    setVoucherCode("");
+                                                    setVoucherValid(null);
+                                                    setVoucherError("");
+                                                }
+                                            }}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${hasVoucher ? 'bg-green-600' : 'bg-zinc-700'}`}
+                                        >
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hasVoucher ? 'translate-x-6' : 'translate-x-1'}`} />
+                                        </button>
+                                        <span className="text-sm text-zinc-400">I have a voucher code for cash payment</span>
+                                    </div>
+
+                                    <AnimatePresence>
+                                        {hasVoucher && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                className="space-y-3"
+                                            >
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        placeholder="Enter voucher code (e.g. KKFI-ABCD1234)"
+                                                        value={voucherCode}
+                                                        onChange={(e) => {
+                                                            setVoucherCode(e.target.value.toUpperCase());
+                                                            setVoucherError("");
+                                                            setVoucherValid(null);
+                                                        }}
+                                                        className="bg-zinc-950/50 border-white/10 focus:border-green-500 h-11 rounded-lg text-white placeholder:text-zinc-600 font-mono tracking-wider"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleValidateVoucher}
+                                                        disabled={voucherValidating || !voucherCode.trim()}
+                                                        className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold transition-all disabled:opacity-50 whitespace-nowrap"
+                                                    >
+                                                        {voucherValidating ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                        ) : "Verify"}
+                                                    </button>
+                                                </div>
+
+                                                {voucherError && (
+                                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-red-400 text-sm">
+                                                        <AlertCircle className="w-4 h-4" />
+                                                        {voucherError}
+                                                    </motion.div>
+                                                )}
+
+                                                {voucherValid && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: -5 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3"
+                                                    >
+                                                        <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+                                                        <div>
+                                                            <p className="text-sm font-bold text-green-400">Voucher Valid!</p>
+                                                            <p className="text-xs text-zinc-400">This voucher covers ₹{voucherValid.amount} — no online payment needed.</p>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
                                 {/* Payment Info Section */}
-                                {paymentInfo && (
+                                {paymentInfo && !voucherValid && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -1069,7 +1195,7 @@ export default function RegisterPage() {
                                         </button>
                                         <Button
                                             type="submit"
-                                            className="flex-1 h-12 text-base font-bold bg-red-600 hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-red-600/50 rounded-lg btn-shine"
+                                            className={`flex-1 h-12 text-base font-bold transition-all duration-200 shadow-lg rounded-lg btn-shine ${voucherValid ? 'bg-green-600 hover:bg-green-700 hover:shadow-green-600/50' : 'bg-red-600 hover:bg-red-700 hover:shadow-red-600/50'}`}
                                         disabled={isLoading || paymentStep !== "form"}
                                     >
                                         {paymentStep === "paying" ? (
@@ -1080,7 +1206,7 @@ export default function RegisterPage() {
                                         ) : paymentStep === "verifying" ? (
                                             <>
                                                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                Verifying Payment...
+                                                {voucherValid ? 'Redeeming Voucher...' : 'Verifying Payment...'}
                                             </>
                                         ) : paymentStep === "done" ? (
                                             <>
@@ -1091,6 +1217,11 @@ export default function RegisterPage() {
                                             <>
                                                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                                 Processing...
+                                            </>
+                                        ) : voucherValid ? (
+                                            <>
+                                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                                Register with Voucher
                                             </>
                                         ) : (
                                             <>
@@ -1112,7 +1243,7 @@ export default function RegisterPage() {
                                         </button>
                                         <Button
                                             type="submit"
-                                            className="flex-1 h-14 text-base font-bold bg-red-600 hover:bg-red-700 transition-all duration-200 shadow-lg shadow-red-600/30 rounded-xl btn-shine"
+                                            className={`flex-1 h-14 text-base font-bold transition-all duration-200 shadow-lg rounded-xl btn-shine ${voucherValid ? 'bg-green-600 hover:bg-green-700 shadow-green-600/30' : 'bg-red-600 hover:bg-red-700 shadow-red-600/30'}`}
                                         disabled={isLoading || paymentStep !== "form"}
                                     >
                                         {paymentStep === "paying" ? (
@@ -1123,7 +1254,7 @@ export default function RegisterPage() {
                                         ) : paymentStep === "verifying" ? (
                                             <>
                                                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                Verifying Payment...
+                                                {voucherValid ? 'Redeeming...' : 'Verifying...'}
                                             </>
                                         ) : paymentStep === "done" ? (
                                             <>
@@ -1134,6 +1265,11 @@ export default function RegisterPage() {
                                             <>
                                                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                                 Processing...
+                                            </>
+                                        ) : voucherValid ? (
+                                            <>
+                                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                                Register with Voucher
                                             </>
                                         ) : (
                                             <>

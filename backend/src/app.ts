@@ -26,6 +26,7 @@ import announceRouter from './routes/announceRoutes';
 import paymentRouter from './routes/paymentRoutes';
 import merchRouter from './routes/merchRoutes';
 import notificationRouter from './routes/notificationRoutes';
+import voucherRouter from './routes/voucherRoutes';
 import { sendRenewalReminders } from './services/renewalReminderService';
 import { verifySmtp, sendTestEmail } from './services/emailService';
 import { globalErrorHandler } from './utils/errorHandler';
@@ -138,6 +139,7 @@ app.use('/api/announcements', announceRouter);
 app.use('/api/payments', paymentRouter);  // Payment & UPI integration
 app.use('/api/merch', merchRouter);  // Merchandise store
 app.use('/api/notifications', notificationRouter);  // Notification center
+app.use('/api/vouchers', voucherRouter);  // Cash voucher system
 app.use('/api', noteRouter);  // Notes and profile views
 
 // Serve static files (uploads)

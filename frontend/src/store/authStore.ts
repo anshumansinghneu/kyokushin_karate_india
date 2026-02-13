@@ -42,6 +42,7 @@ interface AuthState {
     register: (data: any) => Promise<void>;
     registerWithPayment: (data: any) => Promise<{ orderId: string; paymentId: string; amount: number; taxAmount: number; totalAmount: number; keyId: string }>;
     completeRegistration: (paymentData: any) => Promise<void>;
+    registerWithVoucher: (data: any) => Promise<void>;
     logout: () => void;
     checkAuth: () => Promise<void>;
     updateProfile: (data: any) => Promise<void>;
@@ -119,6 +120,25 @@ export const useAuthStore = create<AuthState>((set) => ({
         } catch (error: any) {
             set({
                 error: error.response?.data?.message || 'Payment verification failed',
+                isLoading: false
+            });
+            throw error;
+        }
+    },
+
+    // Register with cash voucher (no Razorpay)
+    registerWithVoucher: async (data) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await api.post('/vouchers/redeem/registration', data);
+            const { token } = response.data;
+            const { user } = response.data.data;
+
+            localStorage.setItem('token', token);
+            set({ token, user, isAuthenticated: true, isLoading: false });
+        } catch (error: any) {
+            set({
+                error: error.response?.data?.message || 'Voucher redemption failed',
                 isLoading: false
             });
             throw error;

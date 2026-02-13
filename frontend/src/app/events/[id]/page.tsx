@@ -26,6 +26,13 @@ export default function EventDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [eventType, setEventType] = useState<string>("");
 
+    // Voucher state
+    const [hasVoucher, setHasVoucher] = useState(false);
+    const [voucherCode, setVoucherCode] = useState("");
+    const [voucherValidating, setVoucherValidating] = useState(false);
+    const [voucherValid, setVoucherValid] = useState<{ amount: number; code: string } | null>(null);
+    const [voucherError, setVoucherError] = useState("");
+
     useEffect(() => {
         const fetchEvent = async () => {
             try {
@@ -59,6 +66,48 @@ export default function EventDetailPage() {
             return;
         }
         setIsRegistering(true);
+    };
+
+    const handleValidateEventVoucher = async () => {
+        if (!voucherCode.trim()) {
+            setVoucherError("Please enter a voucher code");
+            return;
+        }
+        setVoucherValidating(true);
+        setVoucherError("");
+        setVoucherValid(null);
+        try {
+            const res = await api.post('/vouchers/validate', {
+                code: voucherCode.trim(),
+                type: event?.type || 'TOURNAMENT',
+                eventId: id,
+            });
+            setVoucherValid({
+                amount: res.data.data.voucher.amount,
+                code: res.data.data.voucher.code,
+            });
+        } catch (err: any) {
+            setVoucherError(err.response?.data?.message || "Invalid voucher code");
+        } finally {
+            setVoucherValidating(false);
+        }
+    };
+
+    const handleVoucherRedemption = async () => {
+        if (!voucherValid) return;
+        setPaymentProcessing(true);
+        try {
+            await api.post(`/vouchers/redeem/event/${id}`, {
+                voucherCode: voucherValid.code,
+                eventType,
+            });
+            setRegistrationStep(3);
+            showToast("Registration successful! Voucher redeemed.", "success");
+        } catch (err: any) {
+            showToast(err.response?.data?.message || "Voucher redemption failed.", "error");
+        } finally {
+            setPaymentProcessing(false);
+        }
     };
 
     const handlePayment = async () => {
@@ -371,14 +420,86 @@ export default function EventDetailPage() {
                                                 <span>Type</span>
                                                 <span className="text-white font-bold">{eventType}</span>
                                             </div>
-                                            <div className="flex justify-between text-gray-400 border-t border-white/10 pt-4">
-                                                <span>Total Amount</span>
-                                                <span className="text-xl font-bold text-primary">₹{event.memberFee}</span>
-                                            </div>
+                                            {!voucherValid && (
+                                                <div className="flex justify-between text-gray-400 border-t border-white/10 pt-4">
+                                                    <span>Total Amount</span>
+                                                    <span className="text-xl font-bold text-primary">₹{event.memberFee}</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        <Button onClick={handlePayment} disabled={paymentProcessing} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50">
-                                            {paymentProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</> : 'Confirm & Pay'}
-                                        </Button>
+
+                                        {/* Voucher Section */}
+                                        <div className="mb-6 space-y-3">
+                                            <div className="flex items-center gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setHasVoucher(!hasVoucher);
+                                                        if (hasVoucher) {
+                                                            setVoucherCode("");
+                                                            setVoucherValid(null);
+                                                            setVoucherError("");
+                                                        }
+                                                    }}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${hasVoucher ? 'bg-green-600' : 'bg-zinc-700'}`}
+                                                >
+                                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hasVoucher ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                </button>
+                                                <span className="text-sm text-gray-400">I have a cash voucher</span>
+                                            </div>
+
+                                            {hasVoucher && (
+                                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-3">
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            placeholder="Enter voucher code"
+                                                            value={voucherCode}
+                                                            onChange={(e) => {
+                                                                setVoucherCode(e.target.value.toUpperCase());
+                                                                setVoucherError("");
+                                                                setVoucherValid(null);
+                                                            }}
+                                                            className="flex-1 bg-zinc-950/50 border border-white/10 focus:border-green-500 h-10 rounded-lg text-white placeholder:text-zinc-600 font-mono tracking-wider px-3 text-sm outline-none"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleValidateEventVoucher}
+                                                            disabled={voucherValidating || !voucherCode.trim()}
+                                                            className="px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold transition-all disabled:opacity-50"
+                                                        >
+                                                            {voucherValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
+                                                        </button>
+                                                    </div>
+
+                                                    {voucherError && (
+                                                        <div className="flex items-center gap-2 text-red-400 text-sm">
+                                                            <AlertCircle className="w-4 h-4" />
+                                                            {voucherError}
+                                                        </div>
+                                                    )}
+
+                                                    {voucherValid && (
+                                                        <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
+                                                            <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+                                                            <div>
+                                                                <p className="text-sm font-bold text-green-400">Voucher Valid!</p>
+                                                                <p className="text-xs text-gray-400">Covers ₹{voucherValid.amount} — no online payment needed.</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                        </div>
+
+                                        {voucherValid ? (
+                                            <Button onClick={handleVoucherRedemption} disabled={paymentProcessing} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50">
+                                                {paymentProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Redeeming...</> : <><CheckCircle className="w-4 h-4 mr-2" /> Register with Voucher</>}
+                                            </Button>
+                                        ) : (
+                                            <Button onClick={handlePayment} disabled={paymentProcessing} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50">
+                                                {paymentProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</> : `Confirm & Pay ₹${event.memberFee}`}
+                                            </Button>
+                                        )}
                                         <Button variant="ghost" onClick={() => setRegistrationStep(1)} className="w-full mt-2">
                                             Back
                                         </Button>

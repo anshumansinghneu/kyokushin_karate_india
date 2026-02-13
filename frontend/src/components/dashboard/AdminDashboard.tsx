@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag } from "lucide-react";
+import { Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -23,11 +23,12 @@ import AnnouncementManager from './AnnouncementManager';
 import PaymentManagement from './PaymentManagement';
 import LiveMatchManager from './LiveMatchManager';
 import StoreManagement from './StoreManagement';
+import VoucherManager from './VoucherManager';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function AdminDashboard({ user }: { user: any }) {
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers'>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
     const { logout } = useAuthStore();
@@ -67,6 +68,7 @@ export default function AdminDashboard({ user }: { user: any }) {
         { id: 'overview', label: 'Overview', icon: BarChart },
         { id: 'users', label: 'User Management', icon: Users },
         { id: 'payments', label: 'Payments', icon: IndianRupee },
+        { id: 'vouchers', label: 'Cash Vouchers', icon: Ticket },
         { id: 'belt-verifications', label: 'Belt Verifications', icon: Shield },
         { id: 'belt-promotions', label: 'Belt Promotions', icon: Award },
         { id: 'dojos', label: 'Dojo Management', icon: Building },
@@ -230,6 +232,7 @@ export default function AdminDashboard({ user }: { user: any }) {
                         {activeTab === 'recognition' && <motion.div key="recognition" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><RecognitionManager /></motion.div>}
                         {activeTab === 'announcements' && <motion.div key="announcements" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><AnnouncementManager /></motion.div>}
                         {activeTab === 'payments' && <motion.div key="payments" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><PaymentManagement /></motion.div>}
+                        {activeTab === 'vouchers' && <motion.div key="vouchers" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><VoucherManager /></motion.div>}
                     </AnimatePresence>
                 </div>
             </div>
