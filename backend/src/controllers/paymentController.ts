@@ -200,8 +200,12 @@ export const verifyRegistrationPayment = catchAsync(async (req: Request, res: Re
     membershipEndDate.setDate(membershipEndDate.getDate() + PAYMENT_CONFIG.MEMBERSHIP_DURATION_DAYS);
 
     const userId = await prisma.$transaction(async (tx) => {
-        // Resolve instructor
-        let resolvedInstructorId = regData.instructorId;
+        // Resolve instructor – validate the ID actually exists to avoid FK violations
+        let resolvedInstructorId: string | null = null;
+        if (regData.instructorId) {
+            const instructor = await tx.user.findUnique({ where: { id: regData.instructorId }, select: { id: true } });
+            if (instructor) resolvedInstructorId = instructor.id;
+        }
         if (!resolvedInstructorId && isStudent) {
             const admin = await tx.user.findFirst({ where: { role: 'ADMIN' }, select: { id: true } });
             if (admin) resolvedInstructorId = admin.id;
