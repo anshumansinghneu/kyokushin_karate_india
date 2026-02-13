@@ -768,20 +768,6 @@ export default function RegisterPage() {
                                             )}
                                         </div>
 
-                                        {/* Belt Claim Reason - Optional for Students claiming higher belts */}
-                                        {role === "STUDENT" && formData.currentBeltRank !== "White" && (
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-zinc-400">Reason (Optional)</label>
-                                                <Input
-                                                    name="beltClaimReason"
-                                                    placeholder="E.g., Trained at another dojo for 2 years"
-                                                    value={formData.beltClaimReason}
-                                                    onChange={handleChange}
-                                                    className="bg-zinc-950/50 border-white/10 focus:border-red-500 h-11 rounded-lg text-white placeholder:text-zinc-600"
-                                                />
-                                                <p className="text-xs text-zinc-500">Help instructors understand your background</p>
-                                            </div>
-                                        )}
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
