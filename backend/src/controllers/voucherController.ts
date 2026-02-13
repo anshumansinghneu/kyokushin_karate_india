@@ -235,7 +235,7 @@ export const redeemVoucherForRegistration = catchAsync(async (req: Request, res:
                 weight: weight ? parseFloat(weight) : undefined,
                 city, state,
                 country: country || 'India',
-                dojoId: dojoId || undefined,
+                dojoId: (dojoId && dojoId !== 'fallback') ? dojoId : undefined,
                 primaryInstructorId: resolvedInstructorId || undefined,
                 role: role || 'STUDENT',
                 membershipStatus: 'PENDING',

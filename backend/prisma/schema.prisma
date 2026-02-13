@@ -519,7 +519,7 @@ model Payment {
   currency          String        @default("INR")
 
   // Razorpay
-  razorpayOrderId   String        @unique
+  razorpayOrderId   String?       @unique
   razorpayPaymentId String?
   razorpaySignature String?
 
