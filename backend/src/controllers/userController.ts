@@ -379,8 +379,76 @@ export const updateMe = catchAsync(async (req: Request, res: Response, next: Nex
 export const deleteUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
-    await prisma.user.delete({
-        where: { id }
+    // Check user exists
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+        return next(new AppError('No user found with that ID', 404));
+    }
+
+    // Delete all related records in a transaction to avoid FK constraint errors
+    await prisma.$transaction(async (tx) => {
+        // Delete merch order items first (depends on merch orders)
+        const merchOrders = await tx.merchOrder.findMany({ where: { userId: id }, select: { id: true } });
+        if (merchOrders.length > 0) {
+            await tx.merchOrderItem.deleteMany({ where: { orderId: { in: merchOrders.map(o => o.id) } } });
+        }
+        await tx.merchOrder.deleteMany({ where: { userId: id } });
+
+        // Payments, notifications, training
+        await tx.payment.deleteMany({ where: { userId: id } });
+        await tx.notification.deleteMany({ where: { userId: id } });
+        await tx.trainingSession.deleteMany({ where: { userId: id } });
+
+        // Posts & recognition
+        await tx.post.deleteMany({ where: { authorId: id } });
+        await tx.monthlyRecognition.deleteMany({ where: { userId: id } });
+
+        // Notes & profile views
+        await tx.studentNote.deleteMany({ where: { OR: [{ studentId: id }, { createdBy: id }] } });
+        await tx.profileView.deleteMany({ where: { OR: [{ studentId: id }, { viewedBy: id }] } });
+
+        // Gallery & vouchers
+        await tx.gallery.deleteMany({ where: { OR: [{ uploadedBy: id }, { approvedBy: id }] } });
+        await tx.voucherCode.deleteMany({ where: { createdBy: id } });
+
+        // Tournament related
+        await tx.tournamentResult.deleteMany({ where: { userId: id } });
+        await tx.match.deleteMany({ where: { OR: [{ fighterAId: id }, { fighterBId: id }, { winnerId: id }] } });
+
+        // Event registrations (nullify approver first, then delete user's own)
+        await tx.eventRegistration.updateMany({ where: { approvedBy: id }, data: { approvedBy: null } });
+        await tx.eventRegistration.deleteMany({ where: { userId: id } });
+
+        // Events created by user — remove notifications & registrations first
+        const events = await tx.event.findMany({ where: { createdBy: id }, select: { id: true } });
+        if (events.length > 0) {
+            const eventIds = events.map(e => e.id);
+            await tx.notification.deleteMany({ where: { relatedEventId: { in: eventIds } } });
+            await tx.payment.deleteMany({ where: { eventId: { in: eventIds } } });
+            await tx.eventRegistration.deleteMany({ where: { eventId: { in: eventIds } } });
+            await tx.gallery.deleteMany({ where: { eventId: { in: eventIds } } });
+            await tx.voucherCode.deleteMany({ where: { specificEventId: { in: eventIds } } });
+            // Delete bracket-related data
+            const brackets = await tx.tournamentBracket.findMany({ where: { eventId: { in: eventIds } }, select: { id: true } });
+            if (brackets.length > 0) {
+                const bracketIds = brackets.map(b => b.id);
+                await tx.match.deleteMany({ where: { bracketId: { in: bracketIds } } });
+                await tx.tournamentResult.deleteMany({ where: { bracketId: { in: bracketIds } } });
+                await tx.tournamentBracket.deleteMany({ where: { id: { in: bracketIds } } });
+            }
+            await tx.event.deleteMany({ where: { id: { in: eventIds } } });
+        }
+
+        // Belt related
+        await tx.beltVerificationRequest.deleteMany({ where: { OR: [{ studentId: id }, { reviewedBy: id }] } });
+        await tx.beltHistory.deleteMany({ where: { OR: [{ studentId: id }, { promotedBy: id }] } });
+
+        // Unlink students referencing this user as instructor/approver
+        await tx.user.updateMany({ where: { primaryInstructorId: id }, data: { primaryInstructorId: null } });
+        await tx.user.updateMany({ where: { approvedBy: id }, data: { approvedBy: null } });
+
+        // Finally delete the user
+        await tx.user.delete({ where: { id } });
     });
 
     res.status(204).json({

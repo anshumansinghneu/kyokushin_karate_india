@@ -136,10 +136,12 @@ export default function UserManagementTable() {
         setIsDeleting(true);
         try {
             await api.delete(`/users/${deleteId}`);
+            showToast("User deleted successfully!", "success");
             fetchUsers();
             setDeleteId(null);
-        } catch (error) {
-            console.error("Failed to delete user", error);
+        } catch (error: any) {
+            const message = error?.response?.data?.message || "Failed to delete user";
+            showToast(message, "error");
         } finally {
             setIsDeleting(false);
         }

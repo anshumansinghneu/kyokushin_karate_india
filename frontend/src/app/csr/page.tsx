@@ -546,46 +546,94 @@ export default function CSRPage() {
                 </div>
             </section>
 
-            {/* ── CSR PARTNER ───────────────────────────────────────── */}
+            {/* ── CSR PARTNERS ──────────────────────────────────────── */}
             <section className="relative z-10 mb-32 px-4">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="max-w-4xl mx-auto"
+                    className="text-center mb-12"
                 >
-                    <h2 className="text-3xl md:text-4xl font-black text-center mb-10 tracking-tight">
-                        CSR <span className="text-green-400">PARTNER</span>
+                    <span className="text-xs font-bold text-green-500/60 uppercase tracking-[0.3em] block mb-4">Proudly supported by</span>
+                    <h2 className="text-4xl md:text-6xl font-black tracking-tighter">
+                        OUR{" "}
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+                            PARTNERS
+                        </span>
                     </h2>
-                    <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        className="flex flex-col sm:flex-row items-center gap-8 bg-gradient-to-br from-white/[0.05] to-white/[0.01] border border-green-500/20 rounded-[2rem] p-8 md:p-10 hover:border-green-500/40 transition-all duration-500 group"
-                    >
-                        <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center p-4 shrink-0 shadow-xl group-hover:shadow-green-500/10 group-hover:scale-105 transition-all duration-500">
-                            <img
-                                src="https://www.shrigangindustries.com/assets/img/logo.png"
-                                alt="Shri Gang Industries"
-                                className="w-full h-full object-contain"
-                            />
-                        </div>
-                        <div className="flex-1 text-center sm:text-left">
-                            <h3 className="text-2xl font-black text-white mb-2">Shri Gang Industries</h3>
-                            <p className="text-sm text-gray-400 mb-4 leading-relaxed">
-                                A valued CSR partner committed to community empowerment through sports and education initiatives.
-                                Their contribution fuels our school outreach and scholarship programs across northern India.
-                            </p>
+                </motion.div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                    {[
+                        {
+                            name: "Goldiee Group",
+                            tagline: "The Epitome of Quality Since 1980",
+                            description: "One of India's largest producers of quality spices and food products — powering our community health and nutrition programs.",
+                            logo: "https://goldiee.com/wp-content/uploads/2018/10/Logo_.png",
+                            website: "https://goldiee.com/",
+                            borderColor: "border-yellow-500/20",
+                            hoverBorder: "hover:border-yellow-500/40",
+                            accentColor: "text-yellow-400",
+                            glowColor: "group-hover:shadow-yellow-500/10",
+                            location: "Kanpur, UP",
+                        },
+                        {
+                            name: "Frontier Alloys",
+                            tagline: "Trailblazers in Rolling Stock Components",
+                            description: "Leading manufacturer serving Indian Railways for 38+ years — supporting our youth empowerment and school outreach programs.",
+                            logo: "https://static.wixstatic.com/media/2a0662_67b739277d564fc79ac52eee67e02837~mv2.png",
+                            website: "https://www.frontieralloy.com/",
+                            borderColor: "border-blue-500/20",
+                            hoverBorder: "hover:border-blue-500/40",
+                            accentColor: "text-blue-400",
+                            glowColor: "group-hover:shadow-blue-500/10",
+                            location: "Kanpur, UP",
+                        },
+                        {
+                            name: "Shri Gang Industries",
+                            tagline: "Excellence in Distillery & Food Products Since 1990",
+                            description: "A committed CSR partner fueling our scholarship and rural karate development programs across northern India.",
+                            logo: "https://www.shrigangindustries.com/assets/img/logo.png",
+                            website: "https://www.shrigangindustries.com/",
+                            borderColor: "border-green-500/20",
+                            hoverBorder: "hover:border-green-500/40",
+                            accentColor: "text-green-400",
+                            glowColor: "group-hover:shadow-green-500/10",
+                            location: "Sikandrabad, UP",
+                        },
+                    ].map((partner, i) => (
+                        <motion.div
+                            key={partner.name}
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: i * 0.12, duration: 0.5 }}
+                            whileHover={{ scale: 1.02 }}
+                            className={`group relative bg-gradient-to-br from-white/[0.06] to-white/[0.01] border ${partner.borderColor} ${partner.hoverBorder} rounded-[2rem] p-7 md:p-8 transition-all duration-500 flex flex-col items-center text-center shadow-lg ${partner.glowColor}`}
+                        >
+                            <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center p-4 mb-5 shadow-lg group-hover:scale-105 transition-transform duration-500">
+                                <img
+                                    src={partner.logo}
+                                    alt={partner.name}
+                                    className="w-full h-full object-contain"
+                                />
+                            </div>
+                            <h3 className="text-xl font-black text-white mb-1">{partner.name}</h3>
+                            <p className={`text-xs font-bold ${partner.accentColor} mb-3`}>{partner.tagline}</p>
+                            <p className="text-sm text-gray-400 leading-relaxed mb-4">{partner.description}</p>
+                            <p className="text-xs text-gray-600 mb-5">{partner.location}</p>
                             <a
-                                href="https://www.shrigangindustries.com/"
+                                href={partner.website}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 text-green-400 text-sm font-bold hover:text-green-300 transition-colors group/link"
+                                className={`inline-flex items-center gap-2 ${partner.accentColor} text-sm font-bold hover:opacity-80 transition-opacity mt-auto group/link`}
                             >
                                 Visit Website
                                 <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
                             </a>
-                        </div>
-                    </motion.div>
-                </motion.div>
+                        </motion.div>
+                    ))}
+                </div>
             </section>
 
             {/* ── HOW IT WORKS (process flow) ───────────────────────── */}
