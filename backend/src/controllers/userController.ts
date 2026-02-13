@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../prisma';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { sendInstructorApprovalEmail, sendMembershipActiveEmail, sendRejectionEmail, sendRegistrationEmail, sendAdminCreatedUserEmail } from '../services/emailService';
@@ -47,11 +48,14 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
         }
     });
 
+    // Strip passwordHash from all users
+    const safeUsers = users.map(({ passwordHash, ...rest }) => rest);
+
     res.status(200).json({
         status: 'success',
-        results: users.length,
+        results: safeUsers.length,
         data: {
-            users,
+            users: safeUsers,
         },
     });
 });
@@ -138,6 +142,22 @@ export const searchUsers = catchAsync(async (req: Request, res: Response, next: 
 });
 
 export const getUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // @ts-ignore
+    const currentUser = req.user;
+
+    // Authorization: students can only view themselves
+    if (currentUser.role === 'STUDENT' && currentUser.id !== req.params.id) {
+        return next(new AppError('You are not authorized to view this user', 403));
+    }
+
+    // Instructors can only view their own students or themselves
+    if (currentUser.role === 'INSTRUCTOR' && currentUser.id !== req.params.id) {
+        const targetUser = await prisma.user.findUnique({ where: { id: req.params.id }, select: { primaryInstructorId: true } });
+        if (!targetUser || targetUser.primaryInstructorId !== currentUser.id) {
+            return next(new AppError('You are not authorized to view this user', 403));
+        }
+    }
+
     const user = await prisma.user.findUnique({
         where: { id: req.params.id },
         include: {
@@ -151,10 +171,13 @@ export const getUser = catchAsync(async (req: Request, res: Response, next: Next
         return next(new AppError('No user found with that ID', 404));
     }
 
+    // Strip passwordHash
+    const { passwordHash, ...safeUser } = user as any;
+
     res.status(200).json({
         status: 'success',
         data: {
-            user,
+            user: safeUser,
         },
     });
 });
@@ -270,7 +293,7 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
             status: 'success',
             message: 'Student approved by instructor. Waiting for Admin confirmation.',
             data: {
-                user: updatedUser
+                user: (() => { const { passwordHash: _p, ...safe } = updatedUser as any; return safe; })()
             }
         });
         return;
@@ -278,31 +301,61 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
 
     // Admin Approval
     if (currentUser.role === 'ADMIN') {
-        const membershipNumber = await generateMembershipNumber(userToApprove.role);
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setFullYear(endDate.getFullYear() + 1);
+        // Idempotency guard: if already approved, return existing data
+        if (userToApprove.membershipStatus === 'ACTIVE' && userToApprove.membershipNumber) {
+            const { passwordHash: _p, ...safeApproved } = userToApprove as any;
+            return res.status(200).json({
+                status: 'success',
+                message: 'User is already approved.',
+                data: { user: safeApproved },
+            });
+        }
 
-        const updatedUser = await prisma.user.update({
-            where: { id: userId },
-            data: {
-                membershipStatus: 'ACTIVE',
-                membershipNumber,
-                membershipStartDate: startDate,
-                membershipEndDate: endDate,
-                approvedBy: currentUser.id,
-                approvedAt: new Date(),
-            },
+        // Use serializable transaction to prevent race conditions on membership number
+        const updatedUser = await prisma.$transaction(async (tx) => {
+            const membershipNumber = await (async () => {
+                const { prefix, pad } = getRolePrefix(userToApprove.role);
+                const lastUser = await tx.user.findFirst({
+                    where: { membershipNumber: { startsWith: prefix } },
+                    orderBy: { membershipNumber: 'desc' },
+                    select: { membershipNumber: true },
+                });
+                let nextSeq = 1;
+                if (lastUser?.membershipNumber) {
+                    const seqStr = lastUser.membershipNumber.replace(prefix, '');
+                    const parsed = parseInt(seqStr, 10);
+                    if (!isNaN(parsed)) nextSeq = parsed + 1;
+                }
+                return `${prefix}${nextSeq.toString().padStart(pad, '0')}`;
+            })();
+
+            const startDate = new Date();
+            const endDate = new Date();
+            endDate.setFullYear(endDate.getFullYear() + 1);
+
+            return tx.user.update({
+                where: { id: userId },
+                data: {
+                    membershipStatus: 'ACTIVE',
+                    membershipNumber,
+                    membershipStartDate: startDate,
+                    membershipEndDate: endDate,
+                    approvedBy: currentUser.id,
+                    approvedAt: new Date(),
+                },
+            });
         });
 
         // Send Email Notification (non-blocking)
-        sendMembershipActiveEmail(updatedUser.email, updatedUser.name, membershipNumber)
+        sendMembershipActiveEmail(updatedUser.email, updatedUser.name, updatedUser.membershipNumber!)
             .catch(err => console.error('[APPROVE] Membership active email failed:', err?.message));
+
+        const { passwordHash: _ph2, ...safeApprovedUser } = updatedUser as any;
 
         res.status(200).json({
             status: 'success',
             data: {
-                user: updatedUser,
+                user: safeApprovedUser,
             },
         });
     } else {
@@ -327,10 +380,13 @@ export const rejectUser = catchAsync(async (req: Request, res: Response, next: N
             .catch(err => console.error('[REJECT] Rejection email failed:', err?.message));
     }
 
+    // Strip passwordHash
+    const { passwordHash: _ph, ...safeRejectedUser } = updatedUser as any;
+
     res.status(200).json({
         status: 'success',
         data: {
-            user: updatedUser,
+            user: safeRejectedUser,
         },
     });
 });
@@ -604,9 +660,9 @@ export const inviteUser = catchAsync(async (req: Request, res: Response, next: N
         return next(new AppError('User with this email already exists', 400));
     }
 
-    // In a real app, we would generate a random password and email it.
-    // For now, we'll set a default password 'welcome123'
-    const hashedPassword = await bcrypt.hash('welcome123', 12);
+    // Generate a secure random password
+    const randomPassword = crypto.randomBytes(12).toString('base64url').slice(0, 16) + '!A1';
+    const hashedPassword = await bcrypt.hash(randomPassword, 12);
 
     const newUser = await prisma.user.create({
         data: {
@@ -625,11 +681,14 @@ export const inviteUser = catchAsync(async (req: Request, res: Response, next: N
     sendRegistrationEmail(newUser.email, newUser.name)
         .catch(err => console.error('[INVITE] Registration email failed:', err?.message));
 
+    // Strip passwordHash from response
+    const { passwordHash: _, ...safeInvitedUser } = newUser as any;
+
     res.status(201).json({
         status: 'success',
         message: 'Invitation sent successfully',
         data: {
-            user: newUser
+            user: safeInvitedUser
         }
     });
 });

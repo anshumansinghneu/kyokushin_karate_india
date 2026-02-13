@@ -45,7 +45,11 @@ export default function InstructorDashboard({ user }: { user: any }) {
         fetchData();
     }, []);
 
+    const [approvingId, setApprovingId] = useState<string | null>(null);
+
     const handleApprove = async (id: string) => {
+        if (approvingId) return; // Prevent double-click
+        setApprovingId(id);
         try {
             await api.patch(`/users/${id}/approve`);
             showToast("Student approved successfully!", "success");
@@ -59,6 +63,8 @@ export default function InstructorDashboard({ user }: { user: any }) {
         } catch (error) {
             console.error("Failed to approve student", error);
             showToast("Failed to approve student", "error");
+        } finally {
+            setApprovingId(null);
         }
     };
 
@@ -223,7 +229,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApprove(student.id)}>Approve</Button>
+                                            <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApprove(student.id)} disabled={approvingId === student.id}>{approvingId === student.id ? 'Approving...' : 'Approve'}</Button>
                                             <Button size="sm" variant="outline" className="h-8 border-red-500/50 text-red-500 hover:bg-red-950" onClick={() => handleReject(student.id)}>Reject</Button>
                                         </div>
                                     </div>

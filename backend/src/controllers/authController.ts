@@ -233,10 +233,13 @@ export const getMe = catchAsync(async (req: Request, res: Response, next: NextFu
         }
     });
 
+    // Strip passwordHash from response
+    const { passwordHash, ...safeUser } = (user || {}) as any;
+
     res.status(200).json({
         status: 'success',
         data: {
-            user,
+            user: safeUser,
         },
     });
 });

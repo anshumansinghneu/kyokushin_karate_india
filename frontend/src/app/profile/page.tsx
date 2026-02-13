@@ -14,6 +14,96 @@ import { INDIAN_CITIES, CityData } from "@/lib/indianCities";
 import BeltCertificate from "@/components/BeltCertificate";
 import { useToast } from "@/contexts/ToastContext";
 
+// Extracted as standalone component to prevent re-mount on parent re-renders
+function ChangePasswordForm() {
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+        setSuccess("");
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            setError("All fields are required.");
+            return;
+        }
+        if (newPassword.length < 8) {
+            setError("New password must be at least 8 characters.");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setError("New passwords do not match.");
+            return;
+        }
+        setLoading(true);
+        try {
+            await api.post("/users/change-password", {
+                currentPassword,
+                newPassword,
+            });
+            setSuccess("Password changed successfully.");
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+        } catch (err: unknown) {
+            const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to change password.";
+            setError(errMsg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+            <div>
+                <label htmlFor="cp-current" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Current Password</label>
+                <Input
+                    id="cp-current"
+                    type="password"
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                    autoComplete="current-password"
+                    className="input-glass"
+                    disabled={loading}
+                />
+            </div>
+            <div>
+                <label htmlFor="cp-new" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">New Password</label>
+                <Input
+                    id="cp-new"
+                    type="password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
+                    className="input-glass"
+                    disabled={loading}
+                />
+            </div>
+            <div>
+                <label htmlFor="cp-confirm" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirm New Password</label>
+                <Input
+                    id="cp-confirm"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                    className="input-glass"
+                    disabled={loading}
+                />
+            </div>
+            {error && <div className="text-red-400 text-sm">{error}</div>}
+            {success && <div className="text-green-400 text-sm">{success}</div>}
+            <Button type="submit" className="w-full h-10 bg-primary text-white font-bold rounded-lg" disabled={loading}>
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Change Password"}
+            </Button>
+        </form>
+    );
+}
+
 export default function ProfilePage() {
     const router = useRouter();
     const { user, isAuthenticated, isLoading: authLoading, checkAuth, updateProfile } = useAuthStore();
@@ -273,95 +363,6 @@ export default function ProfilePage() {
     // Don't render if not authenticated
     if (!isAuthenticated || !user) {
         return null;
-    }
-
-    function ChangePasswordForm() {
-        const [currentPassword, setCurrentPassword] = useState("");
-        const [newPassword, setNewPassword] = useState("");
-        const [confirmPassword, setConfirmPassword] = useState("");
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState("");
-        const [success, setSuccess] = useState("");
-
-        const handleSubmit = async (e: React.FormEvent) => {
-            e.preventDefault();
-            setError("");
-            setSuccess("");
-            if (!currentPassword || !newPassword || !confirmPassword) {
-                setError("All fields are required.");
-                return;
-            }
-            if (newPassword.length < 8) {
-                setError("New password must be at least 8 characters.");
-                return;
-            }
-            if (newPassword !== confirmPassword) {
-                setError("New passwords do not match.");
-                return;
-            }
-            setLoading(true);
-            try {
-                await api.post("/users/change-password", {
-                    currentPassword,
-                    newPassword,
-                });
-                setSuccess("Password changed successfully.");
-                setCurrentPassword("");
-                setNewPassword("");
-                setConfirmPassword("");
-            } catch (err: unknown) {
-                const errMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to change password.";
-                setError(errMsg);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        return (
-            <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-                <div>
-                    <label htmlFor="cp-current" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Current Password</label>
-                    <Input
-                        id="cp-current"
-                        type="password"
-                        value={currentPassword}
-                        onChange={e => setCurrentPassword(e.target.value)}
-                        autoComplete="current-password"
-                        className="input-glass"
-                        disabled={loading}
-                    />
-                </div>
-                <div>
-                    <label htmlFor="cp-new" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">New Password</label>
-                    <Input
-                        id="cp-new"
-                        type="password"
-                        value={newPassword}
-                        onChange={e => setNewPassword(e.target.value)}
-                        autoComplete="new-password"
-                        className="input-glass"
-                        disabled={loading}
-                    />
-                </div>
-                <div>
-                    <label htmlFor="cp-confirm" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirm New Password</label>
-                    <Input
-                        id="cp-confirm"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={e => setConfirmPassword(e.target.value)}
-                        autoComplete="new-password"
-                        className="input-glass"
-                        disabled={loading}
-                    />
-                </div>
-                {error && <div className="text-red-400 text-sm">{error}</div>}
-                {success && <div className="text-green-400 text-sm">{success}</div>}
-                <Button type="submit" className="w-full h-10 bg-primary text-white font-bold rounded-lg" disabled={loading}>
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Change Password"}
-                </Button>
-            </form>
-        );
     }
 
     return (

@@ -103,8 +103,10 @@ export const createRegistrationOrder = catchAsync(async (req: Request, res: Resp
     });
 
     // ── Store Registration Data + Order ──
+    // Hash password before storing to avoid plaintext in DB JSON
+    const hashedPasswordForStorage = await bcrypt.hash(password, 12);
     const registrationData = {
-        email, password, name, phone, dob, height, weight, city, state,
+        email, passwordHash: hashedPasswordForStorage, name, phone, dob, height, weight, city, state,
         country: country || 'India', dojoId, instructorId, currentBeltRank,
         beltExamDate, beltClaimReason, yearsOfExperience,
         countryCode: countryCode || '+91', fatherName, fatherPhone,
@@ -192,7 +194,8 @@ export const verifyRegistrationPayment = catchAsync(async (req: Request, res: Re
     }
 
     // ── Create User Account via Transaction ──
-    const hashedPassword = await bcrypt.hash(regData.password, 12);
+    // Password is already hashed in registrationData (hashed before storage)
+    const hashedPassword = regData.passwordHash || await bcrypt.hash(regData.password, 12);
     const isStudent = regData.role === 'STUDENT';
     const isInstructor = regData.role === 'INSTRUCTOR';
     const requestedBelt = regData.currentBeltRank || 'White';

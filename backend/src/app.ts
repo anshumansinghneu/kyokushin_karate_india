@@ -121,7 +121,7 @@ app.get('/api/test-email', async (req, res) => {
 
 // Routes
 app.use('/api/setup', setupRouter);  // Admin setup (one-time use)
-app.use('/api/auth', authRouter);  // No rate limit for testing
+app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/users', userRouter);
 app.use('/api/dojos', dojoRouter);
 app.use('/api/belts', beltRouter);
@@ -158,7 +158,7 @@ app.get('/health', (req, res) => {
 // Protected by a simple secret to prevent abuse
 app.get('/api/cron/renewal-reminders', async (req, res) => {
     const secret = req.query.secret || req.headers['x-cron-secret'];
-    if (secret !== (process.env.CRON_SECRET || 'kkfi-cron-secret-2024')) {
+    if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
         return res.status(401).json({ status: 'fail', message: 'Invalid cron secret' });
     }
     try {

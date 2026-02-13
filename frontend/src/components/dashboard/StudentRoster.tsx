@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, MoreVertical, Shield, User, Award, Calendar, Plus, Check, Eye, Filter, TrendingUp, Clock } from "lucide-react";
+import { Search, MoreVertical, Shield, User, Award, Calendar, Plus, Check, Eye, Filter, TrendingUp, Clock, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
@@ -129,15 +129,22 @@ export default function StudentRoster() {
         }
     };
 
+    const [approvingId, setApprovingId] = useState<string | null>(null);
+
     const handleApprove = async (id: string) => {
+        if (approvingId) return; // Prevent double-click
+        setApprovingId(id);
         try {
             await api.patch(`/users/${id}/approve`);
+            showToast("Student approved!", "success");
             // Refresh list
             const response = await api.get('/users');
             setStudents(response.data.data.users);
         } catch (error) {
             console.error("Failed to approve", error);
             showToast("Failed to approve student", "error");
+        } finally {
+            setApprovingId(null);
         }
     };
 
@@ -234,8 +241,8 @@ export default function StudentRoster() {
                             </div>
                             <div className="flex gap-1">
                                 {student.membershipStatus === 'PENDING' && (
-                                    <Button size="sm" variant="ghost" className="text-green-400 hover:bg-green-500/20" onClick={() => handleApprove(student.id)}>
-                                        <Check className="w-4 h-4" />
+                                    <Button size="sm" variant="ghost" className="text-green-400 hover:bg-green-500/20" onClick={() => handleApprove(student.id)} disabled={approvingId === student.id}>
+                                        {approvingId === student.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                     </Button>
                                 )}
                             </div>
