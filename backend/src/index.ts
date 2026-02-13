@@ -41,19 +41,18 @@ io.on('connection', (socket) => {
     });
 });
 
-// Run migration before starting server
-runMigration().then(() => {
-    server.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-        // Verify SMTP on startup (non-blocking)
-        verifySmtp().then(result => {
-            console.log(`📧 SMTP startup check: ${result.success ? '✅ WORKING' : '❌ FAILED - ' + result.message}`);
-        });
-    });
-}).catch((error) => {
-    console.error('Failed to run migration:', error);
-    // Start server anyway
-    server.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+// Start server FIRST so Render's health check passes immediately,
+// then run migrations & SMTP check in background
+server.listen(Number(PORT), '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+
+    // Run migration in background (non-blocking)
+    runMigration()
+        .then(() => console.log('✅ Background migration check done'))
+        .catch((error) => console.error('❌ Migration error:', error));
+
+    // Verify SMTP in background (non-blocking)
+    verifySmtp().then(result => {
+        console.log(`📧 SMTP startup check: ${result.success ? '✅ WORKING' : '❌ FAILED - ' + result.message}`);
     });
 });

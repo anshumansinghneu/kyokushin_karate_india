@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Home, Calendar, CreditCard, User, LayoutDashboard, LogIn, UserPlus,
     ShieldCheck, Radio, MoreHorizontal, X,
-    ShoppingBag, Image, Users, BookOpen, Newspaper, Award, GraduationCap, Heart
+    ShoppingBag, Image, Users, BookOpen, Newspaper, Award, GraduationCap, Heart, HandHeart
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
@@ -37,6 +37,7 @@ const MORE_AUTH_ITEMS = [
     { href: '/media', icon: Newspaper, label: 'Media' },
     { href: '/syllabus', icon: Award, label: 'Syllabus' },
     { href: '/sponsors', icon: Heart, label: 'Sponsors' },
+    { href: '/csr', icon: HandHeart, label: 'CSR' },
 ];
 
 const MORE_GUEST_ITEMS = [
@@ -49,6 +50,7 @@ const MORE_GUEST_ITEMS = [
     { href: '/media', icon: Newspaper, label: 'Media' },
     { href: '/syllabus', icon: Award, label: 'Syllabus' },
     { href: '/sponsors', icon: Heart, label: 'Sponsors' },
+    { href: '/csr', icon: HandHeart, label: 'CSR' },
 ];
 
 export default function MobileBottomNav() {

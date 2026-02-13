@@ -49,6 +49,27 @@ const sponsors = [
         achievements: ["ISO 9001 Certified", "IRIS Certified", "Class A Foundry", "Indian Railways Approved"],
         location: "Kanpur, UP & Paonta Sahib, HP",
     },
+    {
+        name: "Shri Gang Industries",
+        tagline: "Excellence in Distillery & Food Products Since 1990",
+        description: "Shri Gang Industries & Allied Products Limited (earlier Suraj Vanaspati Ltd) is a leading manufacturer of Vanaspati, Refined Oils, and operates modern Distillery & Bottling facilities. With ISO certification and a commitment to green initiatives, they deliver quality products with powerful management and timely delivery.",
+        website: "https://www.shrigangindustries.com/",
+        logo: "https://www.shrigangindustries.com/assets/img/logo.png",
+        color: "from-green-600 to-emerald-700",
+        borderColor: "border-green-500/30",
+        glowColor: "rgba(34,197,94,0.3)",
+        accentColor: "text-green-400",
+        bgAccent: "bg-green-500/10",
+        icon: Factory,
+        stats: [
+            { label: "Founded", value: "1990" },
+            { label: "Divisions", value: "4+" },
+            { label: "HQ", value: "New Delhi" },
+            { label: "Certified", value: "ISO" },
+        ],
+        achievements: ["ISO Certified", "CSR Committed", "Green Initiatives", "Quality Assured"],
+        location: "Sikandrabad, UP & New Delhi",
+    },
 ];
 
 function SponsorCard({ sponsor, index }: { sponsor: typeof sponsors[0]; index: number }) {
@@ -175,6 +196,7 @@ export default function SponsorsPage() {
                 <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-[0.03]" />
                 <div className="absolute -top-[30%] -left-[10%] w-[60%] h-[60%] bg-yellow-600/5 blur-[150px] rounded-full" />
                 <div className="absolute top-[40%] -right-[10%] w-[50%] h-[50%] bg-blue-600/5 blur-[150px] rounded-full" />
+                <div className="absolute bottom-[10%] left-[20%] w-[40%] h-[40%] bg-green-600/5 blur-[150px] rounded-full" />
             </div>
 
             <div className="container mx-auto px-4 py-24 relative z-10">
