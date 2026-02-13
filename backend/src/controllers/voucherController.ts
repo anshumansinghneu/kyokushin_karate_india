@@ -203,8 +203,12 @@ export const redeemVoucherForRegistration = catchAsync(async (req: Request, res:
     membershipEndDate.setDate(membershipEndDate.getDate() + PAYMENT_CONFIG.MEMBERSHIP_DURATION_DAYS);
 
     const userId = await prisma.$transaction(async (tx: any) => {
-        // Resolve instructor
-        let resolvedInstructorId = instructorId;
+        // Resolve instructor — validate the ID exists before using it
+        let resolvedInstructorId = null;
+        if (instructorId) {
+            const instructor = await tx.user.findUnique({ where: { id: instructorId }, select: { id: true } });
+            if (instructor) resolvedInstructorId = instructor.id;
+        }
         if (!resolvedInstructorId && isStudent) {
             const admin = await tx.user.findFirst({ where: { role: 'ADMIN' }, select: { id: true } });
             if (admin) resolvedInstructorId = admin.id;
