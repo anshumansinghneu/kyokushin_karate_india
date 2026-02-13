@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useMotionValue, useInView, animate } from "framer-motion";
+import { motion, useInView, animate, motionValue } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import { Users, MapPin, Trophy, Calendar } from "lucide-react";
 import KankuMark from "./KankuMark";
@@ -12,7 +12,7 @@ function AnimatedCounter({ target, suffix = "+", duration = 2 }: { target: numbe
 
     useEffect(() => {
         if (!inView) return;
-        const mv = useMotionValue(0);
+        const mv = motionValue(0);
         const unsub = mv.on("change", (v) => setDisplay(Math.round(v)));
         animate(mv, target, { duration, ease: "easeOut" });
         return unsub;
