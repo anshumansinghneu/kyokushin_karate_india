@@ -25,6 +25,8 @@ interface User {
     weight?: number;
     membershipNumber?: string;
     membershipStatus?: 'ACTIVE' | 'PENDING' | 'EXPIRED' | 'SUSPENDED';
+    experienceYears?: number;
+    experienceMonths?: number;
     fatherName?: string;
     fatherPhone?: string;
     registrations?: any[];

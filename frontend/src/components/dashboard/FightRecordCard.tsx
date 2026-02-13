@@ -64,13 +64,7 @@ export default function FightRecordCard({ userId }: { userId?: string }) {
     }
 
     if (!record || record.totalMatches === 0) {
-        return (
-            <div className="glass-card p-6 text-center">
-                <Swords className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-500 font-semibold">No fight records yet</p>
-                <p className="text-xs text-gray-600 mt-1">Compete in tournaments to build your record</p>
-            </div>
-        );
+        return null;
     }
 
     return (

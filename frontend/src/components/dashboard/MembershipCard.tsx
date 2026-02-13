@@ -17,6 +17,8 @@ interface MembershipCardProps {
         profilePhotoUrl?: string;
         role?: string;
         createdAt?: string;
+        experienceYears?: number;
+        experienceMonths?: number;
         dojo?: { name: string; city?: string } | null;
     };
     showDownload?: boolean;
@@ -38,8 +40,16 @@ const ROLE_TITLES: Record<string, string> = {
     STUDENT: 'KARATEKA',
 };
 
-function calculateExperience(startDate?: string, createdAt?: string) {
-    const date = startDate || createdAt;
+function calculateExperience(user?: { experienceYears?: number; experienceMonths?: number; membershipStartDate?: string; createdAt?: string }) {
+    // Use stored experience if available
+    if (user?.experienceYears || user?.experienceMonths) {
+        const years = user.experienceYears || 0;
+        const months = user.experienceMonths || 0;
+        if (years > 0) return { years, months, display: `${years}y ${months}m` };
+        return { years: 0, months, display: months > 0 ? `${months} mo` : 'New' };
+    }
+    // Fallback to calculated from membership start
+    const date = user?.membershipStartDate || user?.createdAt;
     if (!date) return { years: 0, months: 0, display: 'New' };
     const ms = Date.now() - new Date(date).getTime();
     const totalMonths = Math.floor(ms / (30.44 * 24 * 60 * 60 * 1000));
@@ -71,8 +81,8 @@ export default function MembershipCard({ user, showDownload = true }: Membership
     const theme = BELT_THEMES[belt] || BELT_THEMES.White;
     const roleTitle = ROLE_TITLES[user?.role || 'STUDENT'] || 'KARATEKA';
     const experience = useMemo(
-        () => calculateExperience(user?.membershipStartDate, user?.createdAt),
-        [user?.membershipStartDate, user?.createdAt]
+        () => calculateExperience(user),
+        [user?.experienceYears, user?.experienceMonths, user?.membershipStartDate, user?.createdAt]
     );
 
     const verifyUrl = typeof window !== 'undefined'
@@ -184,7 +194,7 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                                 </div>
                                 <div className="bg-white/[0.05] backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-white/[0.08]">
                                     <p className="text-[7px] sm:text-[8px] font-bold text-gray-500 uppercase tracking-[0.15em] mb-0.5">ID</p>
-                                    <p className="text-[10px] sm:text-xs font-black tracking-wider text-white">{user?.membershipNumber || "PENDING"}</p>
+                                    <p className="text-[10px] sm:text-xs font-black tracking-wider text-white">{user?.membershipNumber || (user?.membershipStatus === 'ACTIVE' ? 'GENERATING...' : 'AWAITING APPROVAL')}</p>
                                 </div>
                             </div>
 
@@ -238,7 +248,7 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                                                 includeMargin={false}
                                             />
                                         ) : (
-                                            <div className="w-12 h-12 flex items-center justify-center text-gray-400 text-[7px] font-bold">PENDING</div>
+                                            <div className="w-12 h-12 flex items-center justify-center text-gray-400 text-[7px] font-bold">AWAITING</div>
                                         )}
                                     </div>
                                 </div>

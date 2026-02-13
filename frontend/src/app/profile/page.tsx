@@ -496,6 +496,14 @@ export default function ProfilePage() {
                                     <p className="text-gray-500 uppercase text-xs font-bold">Dojo</p>
                                     <p className="text-white">{user?.dojo?.name || "Not Assigned"}</p>
                                 </div>
+                                <div>
+                                    <p className="text-gray-500 uppercase text-xs font-bold">Experience</p>
+                                    <p className="text-white">
+                                        {(user?.experienceYears || user?.experienceMonths)
+                                            ? `${user?.experienceYears || 0}y ${user?.experienceMonths || 0}m`
+                                            : "Not Set"}
+                                    </p>
+                                </div>
                             </div>
                         </div>
 

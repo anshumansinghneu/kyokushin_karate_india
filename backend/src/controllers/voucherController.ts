@@ -159,7 +159,8 @@ export const redeemVoucherForRegistration = catchAsync(async (req: Request, res:
         voucherCode,
         email, password, name, phone, dob, height, weight, city, state, country,
         dojoId, instructorId, currentBeltRank, beltExamDate, beltClaimReason,
-        yearsOfExperience, countryCode, fatherName, fatherPhone, role
+        yearsOfExperience, countryCode, fatherName, fatherPhone, role,
+        experienceYears, experienceMonths
     } = req.body;
 
     // Basic validation
@@ -249,6 +250,8 @@ export const redeemVoucherForRegistration = catchAsync(async (req: Request, res:
                 verificationStatus,
                 fatherName: isStudent ? fatherName : undefined,
                 fatherPhone: isStudent ? fatherPhone : undefined,
+                experienceYears: experienceYears ? parseInt(experienceYears) : 0,
+                experienceMonths: experienceMonths ? parseInt(experienceMonths) : 0,
             },
         });
 

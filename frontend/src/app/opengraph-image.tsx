@@ -35,7 +35,7 @@ export default async function Image() {
             background: 'linear-gradient(90deg, #dc2626, #ef4444, #dc2626)',
           }}
         />
-        
+
         {/* Kanku symbol (simplified) */}
         <div
           style={{

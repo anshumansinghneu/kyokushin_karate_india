@@ -16,6 +16,7 @@ interface Payment {
     currency: string;
     status: string;
     type: string;
+    description: string | null;
     createdAt: string;
     user: {
         id: string;
@@ -63,7 +64,7 @@ export default function PaymentManagement() {
             setTotal(res.data.total || allPayments.length);
 
             // Calculate stats
-            const successful = allPayments.filter(p => p.status === 'captured' || p.status === 'CAPTURED');
+            const successful = allPayments.filter(p => ['captured', 'CAPTURED', 'PAID', 'paid'].includes(p.status));
             const membershipPays = successful.filter(p => p.type === 'MEMBERSHIP');
             const renewalPays = successful.filter(p => p.type === 'RENEWAL');
             const tournamentPays = successful.filter(p => p.type === 'TOURNAMENT');
@@ -121,13 +122,13 @@ export default function PaymentManagement() {
     const paginatedPayments = filteredPayments.slice((page - 1) * pageSize, page * pageSize);
     const totalPages = Math.ceil(filteredPayments.length / pageSize);
 
-    const formatAmount = (amount: number) => `₹${(amount / 100).toLocaleString('en-IN')}`;
+    const formatAmount = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
     const formatDate = (date: string) => new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     const handleExportCSV = () => {
-        const headers = "Date,Name,Email,Membership #,Type,Amount,Status,Razorpay ID\n";
+        const headers = "Date,Name,Email,Membership #,Type,Amount,Status,Razorpay ID,Voucher\n";
         const rows = filteredPayments.map(p =>
-            `${formatDate(p.createdAt)},${p.user?.name || 'Unknown'},${p.user?.email || 'N/A'},${p.user?.membershipNumber || 'N/A'},${p.type},${(p.amount / 100).toFixed(2)},${p.status},${p.razorpayPaymentId || 'N/A'}`
+            `${formatDate(p.createdAt)},${p.user?.name || 'Unknown'},${p.user?.email || 'N/A'},${p.user?.membershipNumber || 'N/A'},${p.type},${p.amount.toFixed(2)},${p.status},${p.razorpayPaymentId || 'N/A'},${extractVoucherCode(p.description) || 'N/A'}`
         ).join("\n");
         const blob = new Blob([headers + rows], { type: "text/csv" });
         const url = window.URL.createObjectURL(blob);
@@ -140,11 +141,17 @@ export default function PaymentManagement() {
 
     const statusColor = (status: string) => {
         switch (status.toLowerCase()) {
-            case 'captured': return 'bg-green-500/20 text-green-400 border-green-500/50';
+            case 'captured': case 'paid': return 'bg-green-500/20 text-green-400 border-green-500/50';
             case 'created': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
             case 'failed': return 'bg-red-500/20 text-red-400 border-red-500/50';
             default: return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
         }
+    };
+
+    const extractVoucherCode = (description: string | null): string | null => {
+        if (!description) return null;
+        const match = description.match(/Cash Voucher:\s*([A-Z0-9-]+)/i);
+        return match ? match[1] : null;
     };
 
     const typeColor = (type: string) => {
@@ -253,6 +260,7 @@ export default function PaymentManagement() {
                         >
                             <option value="all">All Status</option>
                             <option value="captured">Captured</option>
+                            <option value="paid">Paid (Voucher)</option>
                             <option value="created">Pending</option>
                             <option value="failed">Failed</option>
                         </select>
@@ -269,17 +277,18 @@ export default function PaymentManagement() {
                                 <th className="py-3 px-4 hidden md:table-cell">Type</th>
                                 <th className="py-3 px-4">Amount</th>
                                 <th className="py-3 px-4">Status</th>
+                                <th className="py-3 px-4 hidden md:table-cell">Voucher</th>
                                 <th className="py-3 px-4 hidden lg:table-cell">Razorpay ID</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm text-gray-300">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={6} className="py-8 text-center text-gray-500">Loading payments...</td>
+                                    <td colSpan={7} className="py-8 text-center text-gray-500">Loading payments...</td>
                                 </tr>
                             ) : paginatedPayments.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="py-8 text-center text-gray-500">No payments found.</td>
+                                    <td colSpan={7} className="py-8 text-center text-gray-500">No payments found.</td>
                                 </tr>
                             ) : (
                                 <AnimatePresence>
@@ -312,6 +321,15 @@ export default function PaymentManagement() {
                                                 <span className={`text-xs font-bold px-2 py-1 rounded-full border ${statusColor(payment.status)}`}>
                                                     {payment.status.toUpperCase()}
                                                 </span>
+                                            </td>
+                                            <td className="py-3 px-4 hidden md:table-cell">
+                                                {extractVoucherCode(payment.description) ? (
+                                                    <span className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/50">
+                                                        {extractVoucherCode(payment.description)}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-gray-600">—</span>
+                                                )}
                                             </td>
                                             <td className="py-3 px-4 hidden lg:table-cell">
                                                 <span className="text-xs text-gray-500 font-mono">

@@ -19,16 +19,9 @@ export default function StudentDashboard({ user }: { user: any }) {
     const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
     const [nextEvent, setNextEvent] = useState<any>(null);
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number }>({ days: 0, hours: 0, minutes: 0 });
-    const [greeting, setGreeting] = useState("OSU");
+    const greeting = "Osu";
 
     const { showToast } = useToast();
-
-    useEffect(() => {
-        const hour = new Date().getHours();
-        if (hour < 12) setGreeting("Good Morning");
-        else if (hour < 17) setGreeting("Good Afternoon");
-        else setGreeting("Good Evening");
-    }, []);
 
     useEffect(() => {
         const fetchEvents = async () => {

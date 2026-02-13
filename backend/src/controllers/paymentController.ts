@@ -25,7 +25,8 @@ export const createRegistrationOrder = catchAsync(async (req: Request, res: Resp
     const {
         email, password, name, phone, dob, height, weight, city, state, country,
         dojoId, instructorId, currentBeltRank, beltExamDate, beltClaimReason,
-        yearsOfExperience, countryCode, fatherName, fatherPhone, role
+        yearsOfExperience, countryCode, fatherName, fatherPhone, role,
+        experienceYears, experienceMonths
     } = req.body;
 
     // ── Validation ──
@@ -108,6 +109,8 @@ export const createRegistrationOrder = catchAsync(async (req: Request, res: Resp
         beltExamDate, beltClaimReason, yearsOfExperience,
         countryCode: countryCode || '+91', fatherName, fatherPhone,
         role: role || 'STUDENT',
+        experienceYears: experienceYears || 0,
+        experienceMonths: experienceMonths || 0,
     };
 
     const payment = await prisma.payment.create({
@@ -251,6 +254,8 @@ export const verifyRegistrationPayment = catchAsync(async (req: Request, res: Re
                 verificationStatus,
                 fatherName: isStudent ? regData.fatherName : undefined,
                 fatherPhone: isStudent ? regData.fatherPhone : undefined,
+                experienceYears: regData.experienceYears ? parseInt(regData.experienceYears) : 0,
+                experienceMonths: regData.experienceMonths ? parseInt(regData.experienceMonths) : 0,
             },
         });
 

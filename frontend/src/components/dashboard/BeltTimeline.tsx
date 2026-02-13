@@ -48,7 +48,7 @@ export default function BeltTimeline({ userId }: { userId: string }) {
         const fetchHistory = async () => {
             try {
                 const res = await api.get(`/belts/history/${userId}`);
-                setHistory(res.data.data.beltHistory || []);
+                setHistory(res.data.data.history || res.data.data.beltHistory || []);
             } catch {
                 // silent
             } finally {
@@ -73,21 +73,7 @@ export default function BeltTimeline({ userId }: { userId: string }) {
     }
 
     if (history.length === 0) {
-        return (
-            <div className="glass-card p-6">
-                <div className="flex items-center gap-2 mb-4">
-                    <Award className="w-5 h-5 text-yellow-500" />
-                    <h3 className="text-lg font-bold text-white">Belt Journey</h3>
-                </div>
-                <div className="text-center py-6">
-                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-3">
-                        <Award className="w-6 h-6 text-gray-500" />
-                    </div>
-                    <p className="text-gray-500 text-sm">Your belt journey starts with White Belt</p>
-                    <p className="text-gray-600 text-xs mt-1">Promotions will appear here as you progress</p>
-                </div>
-            </div>
-        );
+        return null;
     }
 
     // Sort by date (oldest first for timeline)

@@ -59,7 +59,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
 
-    // Blog listing + pillar articles  
+    // Blog listing + pillar articles
     {
       url: `${baseUrl}/blog`,
       lastModified: new Date(),

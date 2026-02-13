@@ -124,6 +124,10 @@ model User {
   primaryInstructor     User?            @relation("InstructorStudents", fields: [primaryInstructorId], references: [id])
   students              User[]           @relation("InstructorStudents")
 
+  // Martial Arts Experience
+  experienceYears       Int?             @default(0)
+  experienceMonths      Int?             @default(0)
+
   // Belt Ranking
   currentBeltRank       String?          @default("White")
   verificationStatus    VerificationStatus? @default(VERIFIED)

@@ -131,7 +131,7 @@ export default function StudentRoster() {
 
     const handleApprove = async (id: string) => {
         try {
-            await api.post(`/users/${id}/approve`);
+            await api.patch(`/users/${id}/approve`);
             // Refresh list
             const response = await api.get('/users');
             setStudents(response.data.data.users);

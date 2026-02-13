@@ -49,7 +49,9 @@ export default function RegisterPage() {
         instructorId: "",
         fatherName: "",
         fatherPhone: "",
-        yearsOfExperience: ""
+        yearsOfExperience: "",
+        experienceYears: "0",
+        experienceMonths: "0"
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -330,6 +332,10 @@ export default function RegisterPage() {
             // Remove confirmPassword - not needed by backend
             delete payload.confirmPassword;
 
+            // Add experience fields for both roles
+            payload.experienceYears = Number(formData.experienceYears) || 0;
+            payload.experienceMonths = Number(formData.experienceMonths) || 0;
+
             // Add instructor-specific fields
             if (role === "INSTRUCTOR") {
                 payload.yearsOfExperience = Number(formData.yearsOfExperience);
@@ -435,7 +441,7 @@ export default function RegisterPage() {
         switch (s) {
             case 1: return ["name", "email"];
             case 2: return ["phone", "dob"];
-            case 3: return ["currentBeltRank", "height", "weight", ...(formData.currentBeltRank !== "White" ? ["beltExamDate"] : [])];
+            case 3: return ["currentBeltRank", "height", "weight", "experienceYears", "experienceMonths", ...(formData.currentBeltRank !== "White" ? ["beltExamDate"] : [])];
             case 4: return role === "STUDENT"
                 ? ["fatherName", "fatherPhone"]
                 : ["yearsOfExperience"];
@@ -805,6 +811,40 @@ export default function RegisterPage() {
                                             />
                                             {errors.weight && <p className="text-xs text-red-400">{errors.weight}</p>}
                                         </div>
+                                    </div>
+
+                                    {/* Martial Arts Experience */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-zinc-400">Martial Arts Experience <span className="text-red-400">*</span></label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <select
+                                                    name="experienceYears"
+                                                    value={formData.experienceYears}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                    className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-red-500 transition-colors ${errors.experienceYears ? 'border-red-500/50' : 'border-white/10'}`}
+                                                >
+                                                    {Array.from({ length: 51 }, (_, i) => (
+                                                        <option key={i} value={String(i)} className="bg-zinc-900">{i} {i === 1 ? 'Year' : 'Years'}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <select
+                                                    name="experienceMonths"
+                                                    value={formData.experienceMonths}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                    className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-red-500 transition-colors ${errors.experienceMonths ? 'border-red-500/50' : 'border-white/10'}`}
+                                                >
+                                                    {Array.from({ length: 12 }, (_, i) => (
+                                                        <option key={i} value={String(i)} className="bg-zinc-900">{i} {i === 1 ? 'Month' : 'Months'}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-zinc-500">Total time training in any martial art</p>
                                     </div>
                                 </div>
 
