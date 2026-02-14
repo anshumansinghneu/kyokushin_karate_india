@@ -33,7 +33,7 @@ const BELT_PROGRESSION = [
     { name: "Yellow", color: "bg-yellow-400 text-yellow-900", value: 3 },
     { name: "Green", color: "bg-green-600 text-white", value: 4 },
     { name: "Brown", color: "bg-amber-700 text-white", value: 5 },
-    { name: "Black", color: "bg-black text-white border border-yellow-400", value: 6 },
+    { name: "Black", color: "bg-black text-white border border-yellow-400", value: 6, match: (b: string) => b.startsWith('Black') },
 ];
 
 export default function BeltPromotionsView() {

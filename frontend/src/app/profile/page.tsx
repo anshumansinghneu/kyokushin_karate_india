@@ -393,7 +393,7 @@ export default function ProfilePage() {
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:20px_20px]" />
                     {/* Belt color stripe */}
                     <div className={`absolute bottom-0 left-0 right-0 h-1 ${
-                        user?.currentBeltRank === 'Black' ? 'bg-gradient-to-r from-black via-red-600 to-black' :
+                        user?.currentBeltRank?.startsWith('Black') ? 'bg-gradient-to-r from-black via-red-600 to-black' :
                         user?.currentBeltRank === 'Brown' ? 'bg-amber-700' :
                         user?.currentBeltRank === 'Green' ? 'bg-green-500' :
                         user?.currentBeltRank === 'Blue' ? 'bg-blue-500' :
@@ -692,7 +692,7 @@ export default function ProfilePage() {
                                                     ${record.newBelt === 'Yellow' ? 'bg-yellow-500 text-white border-yellow-600' : ''}
                                                     ${record.newBelt === 'Green' ? 'bg-green-500 text-white border-green-600' : ''}
                                                     ${record.newBelt === 'Brown' ? 'bg-amber-700 text-white border-amber-800' : ''}
-                                                    ${record.newBelt === 'Black' ? 'bg-black text-white border-gray-600' : ''}
+                                                    ${record.newBelt?.startsWith('Black') ? 'bg-black text-white border-gray-600' : ''}
                                                 `}>
                                                     {record.newBelt?.[0] || 'W'}
                                                 </div>

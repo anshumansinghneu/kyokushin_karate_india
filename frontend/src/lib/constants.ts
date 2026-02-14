@@ -53,4 +53,4 @@ export const COUNTRY_CODES = [
     { code: "+971", country: "UAE", flag: "🇦🇪" },
 ];
 
-export const BELT_RANKS = ["White", "Orange", "Blue", "Yellow", "Green", "Brown", "Black"];
+export const BELT_RANKS = ["White", "Orange", "Blue", "Yellow", "Green", "Brown", "Black 1st Dan", "Black 2nd Dan", "Black 3rd Dan", "Black 4th Dan"];

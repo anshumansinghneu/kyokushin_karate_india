@@ -79,7 +79,9 @@ export const publicVerify = catchAsync(async (req: Request, res: Response, next:
 
 // Helper to get belt rank value (higher is better)
 const getBeltValue = (belt: string) => {
-    const belts = ['White', 'Orange', 'Blue', 'Yellow', 'Green', 'Brown', 'Black'];
+    const belts = ['White', 'Orange', 'Blue', 'Yellow', 'Green', 'Brown', 'Black 1st Dan', 'Black 2nd Dan', 'Black 3rd Dan', 'Black 4th Dan'];
+    // Also handle legacy "Black" value
+    if (belt === 'Black') return belts.indexOf('Black 1st Dan');
     return belts.indexOf(belt);
 };
 

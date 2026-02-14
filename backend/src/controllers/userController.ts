@@ -606,7 +606,7 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         userData.membershipStatus = 'ACTIVE';
         userData.membershipStartDate = startDate;
         userData.membershipEndDate = endDate;
-        userData.currentBeltRank = currentBeltRank || 'Black';
+        userData.currentBeltRank = currentBeltRank || 'Black 1st Dan';
         // @ts-ignore
         userData.approvedBy = req.user.id;
         userData.approvedAt = new Date();
