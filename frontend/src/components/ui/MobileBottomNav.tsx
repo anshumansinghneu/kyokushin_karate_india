@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Home, Calendar, CreditCard, User, LayoutDashboard, LogIn, UserPlus,
-    ShieldCheck, Radio, MoreHorizontal, X,
+    ShieldCheck, Radio, MoreHorizontal, X, Shield,
     ShoppingBag, Image, Users, BookOpen, Newspaper, Award, GraduationCap, Heart, HandHeart
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -27,6 +27,7 @@ const GUEST_ITEMS = [
 
 const MORE_AUTH_ITEMS = [
     { href: '/payments', icon: CreditCard, label: 'Payments' },
+    { href: '/seminars', icon: Shield, label: 'Seminars' },
     { href: '/verify', icon: ShieldCheck, label: 'Belt Verify' },
     { href: '/live', icon: Radio, label: 'Live Matches', adminOnly: true },
     { href: '/store', icon: ShoppingBag, label: 'Store' },
@@ -41,6 +42,7 @@ const MORE_AUTH_ITEMS = [
 ];
 
 const MORE_GUEST_ITEMS = [
+    { href: '/seminars', icon: Shield, label: 'Seminars' },
     { href: '/verify', icon: ShieldCheck, label: 'Belt Verify' },
     { href: '/store', icon: ShoppingBag, label: 'Store' },
     { href: '/gallery', icon: Image, label: 'Gallery' },

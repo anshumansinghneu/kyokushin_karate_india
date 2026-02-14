@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle, Receipt,
-    ShoppingBag, Calendar, MapPin, Users, Image, Heart, HandHeart, ShieldCheck, Radio, Swords
+    ShoppingBag, Calendar, MapPin, Users, Image, Heart, HandHeart, ShieldCheck, Radio, Swords, Shield
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
@@ -195,6 +195,7 @@ export default function Navbar() {
     const exploreDropdown: NavDropdown = {
         name: "Explore",
         items: [
+            { name: "Seminars", href: "/seminars", icon: Shield, description: "Self-defense workshops" },
             { name: "Gallery", href: "/gallery", icon: Image, description: "Photos & moments" },
             { name: "Instructors", href: "/instructors", icon: Users, description: "Our senseis" },
             { name: "Sponsors", href: "/sponsors", icon: Heart, description: "Our partners" },
@@ -227,6 +228,7 @@ export default function Navbar() {
         {
             label: "Explore",
             items: [
+                { name: "Seminars", href: "/seminars", icon: Shield },
                 { name: "Gallery", href: "/gallery", icon: Image },
                 { name: "Instructors", href: "/instructors", icon: Users },
                 { name: "Sponsors", href: "/sponsors", icon: Heart },
