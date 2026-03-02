@@ -4,7 +4,6 @@ import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 
 export const logTrainingSession = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const userId = req.user.id;
     const { date, duration, intensity, focus, notes } = req.body;
 
@@ -32,7 +31,6 @@ export const logTrainingSession = catchAsync(async (req: Request, res: Response,
 });
 
 export const getTrainingSessions = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const userId = req.user.id;
 
     const sessions = await prisma.trainingSession.findMany({

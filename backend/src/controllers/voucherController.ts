@@ -4,6 +4,7 @@ import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { PAYMENT_CONFIG, calculateTotal } from '../services/paymentService';
+import { signAccessToken, createRefreshToken } from '../utils/jwt';
 
 // Generate a unique 8-character alphanumeric voucher code
 const generateVoucherCode = (): string => {
@@ -12,7 +13,6 @@ const generateVoucherCode = (): string => {
 
 // ─── Create Cash Voucher (Admin Only) ──────────────────────────────────
 export const createVoucher = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const adminUser = req.user;
     const { applicableTo, specificEventId, expiryDays } = req.body;
 
@@ -190,7 +190,6 @@ export const redeemVoucherForRegistration = catchAsync(async (req: Request, res:
 
     // All good — create user via transaction (similar to verifyRegistrationPayment)
     const bcrypt = require('bcryptjs');
-    const jwt = require('jsonwebtoken');
     const { sendRegistrationEmail, sendNewApplicantEmail } = require('../services/emailService');
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -324,9 +323,9 @@ export const redeemVoucherForRegistration = catchAsync(async (req: Request, res:
         }
     }
 
-    // Generate token for auto-login
-    const signToken = (id: string) => jwt.sign({ id }, process.env.JWT_SECRET!, { expiresIn: '90d' });
-    const token = signToken(userId);
+    // Generate tokens for auto-login
+    const token = signAccessToken(userId);
+    const refreshToken = await createRefreshToken(userId);
 
     if (newUser) (newUser as any).passwordHash = undefined;
 
@@ -334,6 +333,7 @@ export const redeemVoucherForRegistration = catchAsync(async (req: Request, res:
         status: 'success',
         message: 'Registration successful! Voucher redeemed. Awaiting instructor/admin approval.',
         token,
+        refreshToken,
         data: {
             user: newUser,
             payment: {
@@ -347,7 +347,6 @@ export const redeemVoucherForRegistration = catchAsync(async (req: Request, res:
 
 // ─── Redeem Voucher for Event (Protected — logged in user) ─────────────
 export const redeemVoucherForEvent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
     const { eventId } = req.params;
     const { voucherCode, eventType } = req.body;

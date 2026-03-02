@@ -50,9 +50,7 @@ export const getGalleryItems = catchAsync(async (req: Request, res: Response) =>
 
 // POST /api/gallery — Auth: upload a gallery image
 export const uploadGalleryItem = catchAsync(async (req: Request, res: Response) => {
-    // @ts-ignore
     const userId = req.user.id;
-    // @ts-ignore
     const userRole = req.user.role;
 
     const { imageUrl, caption, eventId, dojoId } = req.body;
@@ -108,7 +106,6 @@ export const getPendingGalleryItems = catchAsync(async (req: Request, res: Respo
 
 // PATCH /api/gallery/:id/approve — Admin: approve a gallery item
 export const approveGalleryItem = catchAsync(async (req: Request, res: Response) => {
-    // @ts-ignore
     const userId = req.user.id;
     const { id } = req.params;
     const { isPublicFeatured } = req.body;
@@ -149,9 +146,7 @@ export const toggleFeatured = catchAsync(async (req: Request, res: Response) => 
 
 // DELETE /api/gallery/:id — Admin or uploader can delete
 export const deleteGalleryItem = catchAsync(async (req: Request, res: Response) => {
-    // @ts-ignore
     const userId = req.user.id;
-    // @ts-ignore
     const userRole = req.user.role;
     const { id } = req.params;
 

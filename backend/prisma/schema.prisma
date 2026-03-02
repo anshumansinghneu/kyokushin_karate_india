@@ -172,9 +172,16 @@ model User {
   notesAuthored         StudentNote[]    @relation("AuthoredNotes")
   payments              Payment[]
   merchOrders           MerchOrder[]
+  refreshTokens         RefreshToken[]
+  passwordResetTokens   PasswordResetToken[]
 
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
+
+  @@index([role])
+  @@index([membershipStatus])
+  @@index([dojoId])
+  @@index([primaryInstructorId])
 }
 
 model Dojo {
@@ -210,6 +217,9 @@ model BeltHistory {
   promotionDate DateTime @default(now())
   notes         String?
   createdAt     DateTime @default(now())
+
+  @@index([studentId])
+  @@index([promotedBy])
 }
 
 model Event {
@@ -249,6 +259,9 @@ model Event {
 
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
+
+  @@index([status])
+  @@index([startDate])
 }
 
 model EventRegistration {
@@ -285,6 +298,7 @@ model EventRegistration {
   updatedAt               DateTime       @updatedAt
 
   @@unique([eventId, userId])
+  @@index([userId])
 }
 
 model TournamentBracket {
@@ -423,6 +437,8 @@ model Notification {
   emailSent       Boolean          @default(false)
   emailSentAt     DateTime?
   createdAt       DateTime         @default(now())
+
+  @@index([userId, isRead])
 }
 
 model TrainingSession {
@@ -435,6 +451,9 @@ model TrainingSession {
   focus       String?  // e.g., "Kata", "Kumite", "Conditioning"
   notes       String?
   createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([date])
 }
 
 enum ContentType {
@@ -644,4 +663,31 @@ enum OrderStatus {
   DELIVERED
   COMPLETED
   CANCELLED
+}
+
+model RefreshToken {
+  id          String   @id @default(uuid())
+  token       String   @unique
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  revokedAt   DateTime?
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash   String   @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
 }

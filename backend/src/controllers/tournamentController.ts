@@ -62,7 +62,6 @@ export const getBrackets = catchAsync(async (req: Request, res: Response, next: 
     const { eventId } = req.params;
 
     const brackets = await TournamentService.getBrackets(eventId);
-    // @ts-ignore
     const currentUser = req.user;
 
     // Visibility Check: If bracket is DRAFT, only Admin can see it

@@ -2,7 +2,6 @@ import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
-// @ts-ignore - Type definitions issue in production build
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 
@@ -57,7 +56,7 @@ app.use(cors({
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-app.use(morgan('dev'));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -79,8 +78,11 @@ const apiLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// Diagnostic: test email endpoint (public, no auth)
+// Diagnostic: test email endpoint (dev-only or admin-only)
 app.get('/api/test-email', async (req, res) => {
+    if (process.env.NODE_ENV === 'production') {
+        return res.status(404).json({ status: 'fail', message: 'Not found' });
+    }
     const to = (req.query.to as string) || process.env.SMTP_USER || '';
     if (!to) return res.status(400).json({ error: 'No recipient. Use ?to=email@example.com' });
 

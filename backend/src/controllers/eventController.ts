@@ -5,34 +5,45 @@ import { catchAsync } from '../utils/catchAsync';
 import { sendEventRegistrationEmail } from '../services/emailService';
 
 export const getAllEvents = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const events = await prisma.event.findMany({
-        orderBy: { startDate: 'asc' },
-        select: {
-            id: true,
-            type: true,
-            name: true,
-            description: true,
-            startDate: true,
-            endDate: true,
-            location: true,
-            registrationDeadline: true,
-            maxParticipants: true,
-            memberFee: true,
-            nonMemberFee: true,
-            status: true,
-            createdAt: true,
-            updatedAt: true,
-            dojoId: true,
-            dojo: {
-                select: { name: true, city: true }
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+    const skip = (page - 1) * limit;
+
+    const [events, total] = await Promise.all([
+        prisma.event.findMany({
+            orderBy: { startDate: 'asc' },
+            skip,
+            take: limit,
+            select: {
+                id: true,
+                type: true,
+                name: true,
+                description: true,
+                startDate: true,
+                endDate: true,
+                location: true,
+                registrationDeadline: true,
+                maxParticipants: true,
+                memberFee: true,
+                nonMemberFee: true,
+                status: true,
+                createdAt: true,
+                updatedAt: true,
+                dojoId: true,
+                dojo: {
+                    select: { name: true, city: true }
+                }
             }
-            // Intentionally omitting imageUrl until migration is run in production
-        }
-    });
+        }),
+        prisma.event.count(),
+    ]);
 
     res.status(200).json({
         status: 'success',
         results: events.length,
+        total,
+        page,
+        pages: Math.ceil(total / limit),
         data: {
             events,
         },
@@ -45,9 +56,7 @@ export const getEvent = catchAsync(async (req: Request, res: Response, next: Nex
         include: {
             dojo: true,
             registrations: {
-                include: {
-                    user: { select: { name: true, currentBeltRank: true, dojo: { select: { name: true } } } }
-                }
+                select: { id: true } // Only return count-able IDs publicly
             }
         }
     });
@@ -56,16 +65,21 @@ export const getEvent = catchAsync(async (req: Request, res: Response, next: Nex
         return next(new AppError('No event found with that ID', 404));
     }
 
+    // Return registration count instead of full registration data for public endpoint
+    const { registrations, ...eventData } = event as any;
+
     res.status(200).json({
         status: 'success',
         data: {
-            event,
+            event: {
+                ...eventData,
+                registrationCount: registrations.length,
+            },
         },
     });
 });
 
 export const createEvent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
 
     const {
@@ -104,7 +118,6 @@ export const createEvent = catchAsync(async (req: Request, res: Response, next: 
 export const registerForEvent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { eventId } = req.params;
     const { categoryAge, categoryWeight, categoryBelt, eventType } = req.body;
-    // @ts-ignore
     const currentUser = req.user;
 
     const event = await prisma.event.findUnique({ where: { id: eventId } });
@@ -162,7 +175,6 @@ export const registerForEvent = catchAsync(async (req: Request, res: Response, n
 
 export const approveRegistration = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { registrationId } = req.params;
-    // @ts-ignore
     const currentUser = req.user;
 
     const registration = await prisma.eventRegistration.update({
@@ -200,7 +212,6 @@ export const rejectRegistration = catchAsync(async (req: Request, res: Response,
 
 export const bulkApproveRegistrations = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { registrationIds } = req.body;
-    // @ts-ignore
     const currentUser = req.user;
 
     if (!registrationIds || !Array.isArray(registrationIds) || registrationIds.length === 0) {

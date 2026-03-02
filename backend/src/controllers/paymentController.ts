@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
@@ -11,12 +10,7 @@ import {
     verifyRazorpaySignature,
 } from '../services/paymentService';
 import { sendRegistrationEmail, sendNewApplicantEmail } from '../services/emailService';
-
-const signToken = (id: string) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET!, {
-        expiresIn: '90d',
-    });
-};
+import { signAccessToken, createRefreshToken } from '../utils/jwt';
 
 // ─── Step 1: Create Registration Order ────────────────────────────────
 // Called when a student/instructor submits the registration form.
@@ -322,8 +316,9 @@ export const verifyRegistrationPayment = catchAsync(async (req: Request, res: Re
         }
     }
 
-    // Generate token for auto-login
-    const token = signToken(userId);
+    // Generate tokens for auto-login
+    const token = signAccessToken(userId);
+    const refreshToken = await createRefreshToken(userId);
 
     // Remove password from output
     if (newUser) (newUser as any).passwordHash = undefined;
@@ -332,6 +327,7 @@ export const verifyRegistrationPayment = catchAsync(async (req: Request, res: Re
         status: 'success',
         message: 'Payment verified and account created successfully! Awaiting instructor/admin approval for full access.',
         token,
+        refreshToken,
         data: {
             user: newUser,
             payment: {
@@ -346,7 +342,6 @@ export const verifyRegistrationPayment = catchAsync(async (req: Request, res: Re
 // ─── Create Renewal Order ──────────────────────────────────────────────
 // For annual membership renewal
 export const createRenewalOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
 
     // Check if user already has an active non-expired membership
@@ -429,7 +424,6 @@ export const createRenewalOrder = catchAsync(async (req: Request, res: Response,
 // ─── Verify Renewal Payment ────────────────────────────────────────────
 export const verifyRenewalPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    // @ts-ignore
     const currentUser = req.user;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -493,7 +487,6 @@ export const verifyRenewalPayment = catchAsync(async (req: Request, res: Respons
 // ─── Create Tournament Payment Order ───────────────────────────────────
 export const createTournamentOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { eventId } = req.params;
-    // @ts-ignore
     const currentUser = req.user;
 
     const event = await prisma.event.findUnique({ where: { id: eventId } });
@@ -558,7 +551,6 @@ export const createTournamentOrder = catchAsync(async (req: Request, res: Respon
 // ─── Verify Tournament Payment ─────────────────────────────────────────
 export const verifyTournamentPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, categoryAge, categoryWeight, categoryBelt, eventType } = req.body;
-    // @ts-ignore
     const currentUser = req.user;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -629,7 +621,6 @@ export const verifyTournamentPayment = catchAsync(async (req: Request, res: Resp
 
 // ─── Get Payment History ───────────────────────────────────────────────
 export const getMyPayments = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
 
     const payments = await prisma.payment.findMany({
@@ -711,7 +702,6 @@ export const getPaymentConfig = catchAsync(async (req: Request, res: Response, n
 
 // ─── Get Invoice/Receipt Data for a Payment ─────────────────────────────
 export const getPaymentInvoice = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
     const { paymentId } = req.params;
 

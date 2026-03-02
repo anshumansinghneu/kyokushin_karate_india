@@ -38,14 +38,12 @@ export const protect = catchAsync(async (req: Request, res: Response, next: Next
         currentUser.membershipStatus = 'EXPIRED';
     }
 
-    // @ts-ignore
     req.user = currentUser;
     next();
 });
 
 // Middleware to require active membership (blocks expired users)
 export const requireActiveMembership = (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const user = req.user;
 
     // Admins bypass membership check
@@ -63,7 +61,6 @@ export const requireActiveMembership = (req: Request, res: Response, next: NextF
 
 export const restrictTo = (...roles: string[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
-        // @ts-ignore
         if (!roles.includes(req.user.role)) {
             return next(new AppError('You do not have permission to perform this action', 403));
         }

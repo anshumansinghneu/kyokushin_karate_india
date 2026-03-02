@@ -15,7 +15,7 @@ router.post('/', restrictTo('ADMIN', 'INSTRUCTOR'), createEvent);
 router.patch('/:id', restrictTo('ADMIN', 'INSTRUCTOR'), updateEvent);
 router.delete('/:id', restrictTo('ADMIN'), deleteEvent);
 
-router.get('/:id/registrations', getEventRegistrations);
+router.get('/:id/registrations', restrictTo('ADMIN', 'INSTRUCTOR'), getEventRegistrations);
 router.post('/:eventId/register', registerForEvent);
 router.post('/registrations/:registrationId/approve', restrictTo('ADMIN'), approveRegistration);
 router.post('/registrations/:registrationId/reject', restrictTo('ADMIN'), rejectRegistration);

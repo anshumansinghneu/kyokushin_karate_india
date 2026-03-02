@@ -7,7 +7,6 @@ import { catchAsync } from '../utils/catchAsync';
 import { sendInstructorApprovalEmail, sendMembershipActiveEmail, sendRejectionEmail, sendRegistrationEmail, sendAdminCreatedUserEmail } from '../services/emailService';
 
 export const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
 
     let where: any = {};
@@ -38,15 +37,25 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
         where.membershipStatus = req.query.status;
     }
 
-    const users = await prisma.user.findMany({
-        where,
-        include: {
-            dojo: true,
-            primaryInstructor: {
-                select: { name: true }
-            }
-        }
-    });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+        prisma.user.findMany({
+            where,
+            include: {
+                dojo: true,
+                primaryInstructor: {
+                    select: { name: true }
+                }
+            },
+            skip,
+            take: limit,
+            orderBy: { createdAt: 'desc' },
+        }),
+        prisma.user.count({ where }),
+    ]);
 
     // Strip passwordHash from all users
     const safeUsers = users.map(({ passwordHash, ...rest }) => rest);
@@ -54,6 +63,9 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
     res.status(200).json({
         status: 'success',
         results: safeUsers.length,
+        total,
+        page,
+        pages: Math.ceil(total / limit),
         data: {
             users: safeUsers,
         },
@@ -61,7 +73,6 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
 });
 
 export const searchUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
     const query = req.query.q as string;
 
@@ -142,7 +153,6 @@ export const searchUsers = catchAsync(async (req: Request, res: Response, next: 
 });
 
 export const getUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
 
     // Authorization: students can only view themselves
@@ -255,7 +265,6 @@ const generateMembershipNumber = async (role: string) => {
 
 export const approveUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.id;
-    // @ts-ignore
     const currentUser = req.user;
 
     const userToApprove = await prisma.user.findUnique({ where: { id: userId } });
@@ -392,7 +401,6 @@ export const rejectUser = catchAsync(async (req: Request, res: Response, next: N
 });
 
 export const updateMe = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
 
     // 1) Create error if user POSTs password data
@@ -595,7 +603,6 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         userData.membershipEndDate = endDate;
         userData.currentBeltRank = currentBeltRank || 'White';
         userData.isInstructorApproved = true; // Auto-approved by admin
-        // @ts-ignore
         userData.approvedBy = req.user.id;
         userData.approvedAt = new Date();
     } else if (role === 'INSTRUCTOR') {
@@ -607,7 +614,6 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         userData.membershipStartDate = startDate;
         userData.membershipEndDate = endDate;
         userData.currentBeltRank = currentBeltRank || 'Black 1st Dan';
-        // @ts-ignore
         userData.approvedBy = req.user.id;
         userData.approvedAt = new Date();
     }
@@ -621,7 +627,6 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
     });
 
     // Send welcome email with login credentials (non-blocking)
-    console.log(`[CREATE USER] Sending welcome email to ${newUser.email} (role: ${role}, membership: ${newUser.membershipNumber})`);
     sendAdminCreatedUserEmail(
         newUser.email,
         newUser.name,
@@ -629,7 +634,6 @@ export const createUser = catchAsync(async (req: Request, res: Response, next: N
         role,
         newUser.membershipNumber || ''
     ).then(() => {
-        console.log(`[CREATE USER] ✅ Welcome email sent to ${newUser.email}`);
     }).catch(err => {
         console.error(`[CREATE USER] ❌ Email FAILED for ${newUser.email}:`, err?.message || err);
         if (err?.code) console.error(`[CREATE USER] Error code: ${err.code}`);
@@ -672,7 +676,6 @@ export const inviteUser = catchAsync(async (req: Request, res: Response, next: N
             passwordHash: hashedPassword,
             role: 'STUDENT',
             membershipStatus: 'PENDING',
-            // @ts-ignore
             dojoId: req.user.dojoId // Assign to instructor's dojo if available
         }
     });
@@ -725,10 +728,13 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
             data: updateData,
         });
 
+        // Strip passwordHash from response
+        const { passwordHash: _, ...safeUser } = updatedUser as any;
+
         res.status(200).json({
             status: 'success',
             data: {
-                user: updatedUser,
+                user: safeUser,
             },
         });
     } catch (error: any) {
@@ -744,7 +750,6 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
  */
 export const getUserFullProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
-    // @ts-ignore
     const currentUser = req.user;
 
     // Authorization: Admin can see all, Instructor can see their students, Student can see themselves
@@ -837,8 +842,8 @@ export const getUserFullProfile = catchAsync(async (req: Request, res: Response,
         createdAt: result.createdAt,
     }));
 
-    // Remove password from response
-    const { password, ...userWithoutPassword } = user as any;
+    // Remove passwordHash from response
+    const { passwordHash: _ph, ...userWithoutPassword } = user as any;
 
     res.status(200).json({
         status: 'success',
@@ -882,7 +887,6 @@ export const getPublicInstructors = catchAsync(async (req: Request, res: Respons
 
 // Change password for logged-in user
 export const changePassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const user = req.user;
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) {

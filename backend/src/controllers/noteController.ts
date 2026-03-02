@@ -5,7 +5,6 @@ import { catchAsync } from '../utils/catchAsync';
 
 // Get notes for a student
 export const getStudentNotes = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
     const { studentId } = req.params;
 
@@ -66,7 +65,6 @@ export const getStudentNotes = catchAsync(async (req: Request, res: Response, ne
 
 // Create a note for a student
 export const createStudentNote = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
     const { studentId } = req.params;
     const { noteText, isPrivate } = req.body;
@@ -128,7 +126,6 @@ export const createStudentNote = catchAsync(async (req: Request, res: Response, 
 
 // Update a note
 export const updateStudentNote = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
     const { noteId } = req.params;
     const { noteText, isPrivate } = req.body;
@@ -174,7 +171,6 @@ export const updateStudentNote = catchAsync(async (req: Request, res: Response, 
 
 // Delete a note
 export const deleteStudentNote = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
     const { noteId } = req.params;
 
@@ -203,7 +199,6 @@ export const deleteStudentNote = catchAsync(async (req: Request, res: Response, 
 
 // Log profile view
 export const logProfileView = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
     const { studentId } = req.params;
 
@@ -239,7 +234,6 @@ export const logProfileView = catchAsync(async (req: Request, res: Response, nex
 
 // Get profile views for a student
 export const getProfileViews = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const currentUser = req.user;
     const { studentId } = req.params;
 

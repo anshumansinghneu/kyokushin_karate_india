@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../prisma';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/errorHandler';
+import { sanitizeRichHtml, stripHtml } from '../utils/sanitize';
 
 export const getAllPosts = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { type, status } = req.query;
@@ -98,12 +99,8 @@ export const getPostBySlug = catchAsync(async (req: Request, res: Response, next
 });
 
 export const createPost = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const userId = req.user.id;
-    // @ts-ignore
     const userRole = req.user.role; // Assuming role is available on req.user
-
-    console.log("Creating post with body:", req.body);
 
     const { type, title, slug, content, excerpt, imageUrl, externalLink, sourceName, attachmentUrl, publishedAt } = req.body;
 
@@ -120,13 +117,13 @@ export const createPost = catchAsync(async (req: Request, res: Response, next: N
         const newPost = await prisma.post.create({
             data: {
                 type,
-                title,
+                title: stripHtml(title),
                 slug: finalSlug,
-                content,
-                excerpt,
+                content: content ? sanitizeRichHtml(content) : content,
+                excerpt: excerpt ? stripHtml(excerpt) : excerpt,
                 imageUrl,
                 externalLink,
-                sourceName,
+                sourceName: sourceName ? stripHtml(sourceName) : sourceName,
                 attachmentUrl,
                 status: status as any,
                 publishedAt: publishedAt ? new Date(publishedAt) : new Date(),
@@ -152,13 +149,13 @@ export const updatePost = catchAsync(async (req: Request, res: Response, next: N
     // Build update data with only valid Post model fields (exclude authorId, id, createdAt)
     const updateData: any = {};
     if (type !== undefined) updateData.type = type;
-    if (title !== undefined) updateData.title = title;
+    if (title !== undefined) updateData.title = stripHtml(title);
     if (slug !== undefined) updateData.slug = slug;
-    if (content !== undefined) updateData.content = content;
-    if (excerpt !== undefined) updateData.excerpt = excerpt;
+    if (content !== undefined) updateData.content = sanitizeRichHtml(content);
+    if (excerpt !== undefined) updateData.excerpt = stripHtml(excerpt);
     if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
     if (externalLink !== undefined) updateData.externalLink = externalLink;
-    if (sourceName !== undefined) updateData.sourceName = sourceName;
+    if (sourceName !== undefined) updateData.sourceName = stripHtml(sourceName);
     if (attachmentUrl !== undefined) updateData.attachmentUrl = attachmentUrl;
     if (status !== undefined) updateData.status = status;
     if (publishedAt !== undefined) updateData.publishedAt = new Date(publishedAt);

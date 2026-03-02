@@ -87,7 +87,6 @@ const getBeltValue = (belt: string) => {
 
 export const promoteStudent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { studentId, newBelt, notes, promotionDate } = req.body;
-    // @ts-ignore
     const currentUser = req.user;
 
     const student = await prisma.user.findUnique({ where: { id: studentId } });
@@ -187,7 +186,6 @@ export const promoteStudent = catchAsync(async (req: Request, res: Response, nex
 
 export const getBeltHistory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
-    // @ts-ignore
     const currentUser = req.user;
 
     // Authorization: Admin, Instructor (same dojo), or the student themselves
@@ -224,9 +222,7 @@ export const getBeltHistory = catchAsync(async (req: Request, res: Response, nex
  * Get pending belt verification requests for instructor
  */
 export const getPendingVerifications = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const instructorId = req.user.id;
-    // @ts-ignore
     const userRole = req.user.role;
 
     if (userRole !== 'INSTRUCTOR' && userRole !== 'ADMIN') {
@@ -293,9 +289,7 @@ export const getPendingVerifications = catchAsync(async (req: Request, res: Resp
 export const reviewVerification = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const { action, rejectionReason } = req.body; // action: 'APPROVE' | 'REJECT'
-    // @ts-ignore
     const reviewerId = req.user.id;
-    // @ts-ignore
     const userRole = req.user.role;
 
     if (userRole !== 'INSTRUCTOR' && userRole !== 'ADMIN') {
@@ -407,9 +401,7 @@ export const reviewVerification = catchAsync(async (req: Request, res: Response,
  */
 export const getStudentVerifications = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { studentId } = req.params;
-    // @ts-ignore
     const userId = req.user.id;
-    // @ts-ignore
     const userRole = req.user.role;
 
     // Students can only view their own requests
@@ -444,9 +436,7 @@ export const getStudentVerifications = catchAsync(async (req: Request, res: Resp
  * Get students eligible for belt promotion
  */
 export const getEligibleStudents = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // @ts-ignore
     const instructorId = req.user.id;
-    // @ts-ignore
     const userRole = req.user.role;
 
     if (userRole !== 'INSTRUCTOR' && userRole !== 'ADMIN') {
