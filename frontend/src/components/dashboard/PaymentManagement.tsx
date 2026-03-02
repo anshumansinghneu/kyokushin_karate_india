@@ -305,6 +305,28 @@ export default function PaymentManagement() {
                             </button>
                         )}
                     </div>
+                    {/* Date Preset Buttons */}
+                    <div className="flex flex-wrap gap-2 mt-3">
+                        {[
+                            { label: 'Today', from: new Date().toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] },
+                            { label: 'This Week', from: (() => { const d = new Date(); d.setDate(d.getDate() - d.getDay()); return d.toISOString().split('T')[0]; })(), to: new Date().toISOString().split('T')[0] },
+                            { label: 'This Month', from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] },
+                            { label: 'Last 30 Days', from: (() => { const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split('T')[0]; })(), to: new Date().toISOString().split('T')[0] },
+                            { label: 'Last 90 Days', from: (() => { const d = new Date(); d.setDate(d.getDate() - 90); return d.toISOString().split('T')[0]; })(), to: new Date().toISOString().split('T')[0] },
+                        ].map((preset) => (
+                            <button
+                                key={preset.label}
+                                onClick={() => { setDateFrom(preset.from); setDateTo(preset.to); }}
+                                className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${
+                                    dateFrom === preset.from && dateTo === preset.to
+                                        ? 'bg-red-600 text-white border-red-600'
+                                        : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+                                }`}
+                            >
+                                {preset.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Payments Table */}

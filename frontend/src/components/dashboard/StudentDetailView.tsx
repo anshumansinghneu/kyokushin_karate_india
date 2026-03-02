@@ -189,7 +189,36 @@ export default function StudentDetailView({ studentId, onClose }: StudentDetailV
     };
 
     const handleExport = () => {
-        showToast("Export functionality coming soon!", "info");
+        if (!student) return;
+        const lines = [
+            `Student Profile Export`,
+            `Name: ${student.name}`,
+            `Email: ${student.email}`,
+            `Phone: ${student.phone || 'N/A'}`,
+            `Membership #: ${student.membershipNumber || 'N/A'}`,
+            `Belt Rank: ${student.currentBeltRank || 'N/A'}`,
+            `Status: ${student.membershipStatus}`,
+            `Role: ${student.role}`,
+            `City: ${student.city || 'N/A'}, ${student.state || 'N/A'}`,
+            `Dojo: ${student.dojo?.name || 'N/A'}`,
+            `Instructor: ${student.primaryInstructor?.name || 'N/A'}`,
+            `Member Since: ${formatDate(student.createdAt)}`,
+            ``,
+            `Belt History:`,
+            ...student.beltHistory.map(b => `  ${formatDate(b.promotionDate)} — ${b.oldBelt} → ${b.newBelt} (by ${b.promotedByName})`),
+            ``,
+            `Training Sessions: ${student.trainingSessions.length}`,
+            `Tournament Results: ${student.tournamentResults.length}`,
+            ...student.tournamentResults.map(t => `  ${t.tournamentName} — ${t.category} — #${t.placement}`),
+        ];
+        const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${student.name.replace(/\s+/g, '_')}_profile.txt`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        showToast('Profile exported successfully!', 'success');
     };
 
     if (loading) {

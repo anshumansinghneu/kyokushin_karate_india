@@ -85,16 +85,20 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: BarChart },
+        { id: '_divider_people', label: 'PEOPLE', divider: true },
         { id: 'users', label: 'User Management', icon: Users },
-        { id: 'payments', label: 'Payments', icon: IndianRupee },
-        { id: 'vouchers', label: 'Cash Vouchers', icon: Ticket },
         { id: 'belt-verifications', label: 'Belt Verifications', icon: Shield },
         { id: 'belt-promotions', label: 'Belt Promotions', icon: Award },
+        { id: '_divider_finance', label: 'FINANCE', divider: true },
+        { id: 'payments', label: 'Payments', icon: IndianRupee },
+        { id: 'vouchers', label: 'Cash Vouchers', icon: Ticket },
+        { id: 'store', label: 'Merchandise', icon: ShoppingBag },
+        { id: '_divider_events', label: 'EVENTS', divider: true },
         { id: 'dojos', label: 'Dojo Management', icon: Building },
         { id: 'events', label: 'Event Management', icon: Calendar },
         { id: 'tournaments', label: 'Tournaments', icon: Trophy },
         { id: 'live-management', label: 'Live Control', icon: Radio },
-        { id: 'store', label: 'Merchandise', icon: ShoppingBag },
+        { id: '_divider_content', label: 'CONTENT', divider: true },
         { id: 'blogs', label: 'Blogs', icon: FileText },
         { id: 'media', label: 'Media', icon: Newspaper },
         { id: 'recognition', label: 'Monthly Recognition', icon: Trophy },
@@ -137,6 +141,11 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
 
                 <div className="flex-1 overflow-y-auto py-6 px-3 space-y-1">
                     {menuItems.map((item) => (
+                        'divider' in item && item.divider ? (
+                            <div key={item.id} className="pt-4 pb-1 px-4">
+                                <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">{item.label}</p>
+                            </div>
+                        ) : (
                         <button
                             key={item.id}
                             onClick={() => { handleTabChange(item.id as TabId); setIsSidebarOpen(false); }}
@@ -145,9 +154,10 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                 : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
-                            <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-gray-500 group-hover:text-white'}`} />
+                            {'icon' in item && item.icon && <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-gray-500 group-hover:text-white'}`} />}
                             {item.label}
                         </button>
+                        )
                     ))}
                 </div>
 
@@ -229,17 +239,18 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                         ))
                                     ) : (
                                     [
-                                        { label: "Total Users", value: stats.usersCount, icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
-                                        { label: "Active Dojos", value: stats.dojos, icon: MapPin, color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/20" },
-                                        { label: "Upcoming Events", value: stats.events, icon: Calendar, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
-                                        { label: "Pending Verifications", value: stats.pending, icon: Shield, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20" },
+                                        { label: "Total Users", value: stats.usersCount, icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", tab: 'users' as TabId },
+                                        { label: "Active Dojos", value: stats.dojos, icon: MapPin, color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/20", tab: 'dojos' as TabId },
+                                        { label: "Upcoming Events", value: stats.events, icon: Calendar, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20", tab: 'events' as TabId },
+                                        { label: "Pending Verifications", value: stats.pending, icon: Shield, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", tab: 'belt-verifications' as TabId },
                                     ].map((stat, i) => (
                                         <motion.div
                                             key={i}
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: i * 0.1 }}
-                                            className={`p-6 rounded-2xl border ${stat.border} ${stat.bg} backdrop-blur-sm relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300`}
+                                            onClick={() => handleTabChange(stat.tab)}
+                                            className={`p-6 rounded-2xl border ${stat.border} ${stat.bg} backdrop-blur-sm relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300 cursor-pointer`}
                                         >
                                             <div className="relative z-10 flex justify-between items-start">
                                                 <div>

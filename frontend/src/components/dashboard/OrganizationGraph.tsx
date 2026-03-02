@@ -301,8 +301,10 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
 
     if (!tree) {
         return (
-            <div className="p-8 text-center text-gray-500 bg-white/5 rounded-2xl border border-white/10 border-dashed">
-                Organization structure not available. Ensure an Admin user exists.
+            <div className="p-12 text-center bg-white/5 rounded-2xl border border-white/10 border-dashed">
+                <Users className="w-12 h-12 mx-auto mb-3 text-gray-600" />
+                <p className="text-lg font-bold text-white">No Organization Data</p>
+                <p className="text-sm text-gray-400 mt-1">Organization chart will appear once users are added. Ensure an Admin user exists.</p>
             </div>
         );
     }

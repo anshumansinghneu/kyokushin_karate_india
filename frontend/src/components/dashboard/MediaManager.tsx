@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit, Trash2, Save, X, Upload, ExternalLink, FileText } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Upload, ExternalLink, FileText, Newspaper } from "lucide-react";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -153,46 +153,46 @@ const MediaManager = () => {
 
     if (isEditing) {
         return (
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="bg-zinc-900 border border-white/10 p-6 rounded-xl shadow-sm">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold">{currentPost.id ? 'Edit Media Mention' : 'New Media Mention'}</h2>
-                    <button onClick={() => setIsEditing(false)} className="p-2 hover:bg-gray-100 rounded-full">
+                    <h2 className="text-xl font-bold text-white">{currentPost.id ? 'Edit Media Mention' : 'New Media Mention'}</h2>
+                    <button onClick={() => setIsEditing(false)} className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white">
                         <X size={20} />
                     </button>
                 </div>
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Title / Headline</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">Title / Headline</label>
                         <input
                             type="text"
                             value={currentPost.title || ''}
                             onChange={(e) => setCurrentPost({ ...currentPost, title: e.target.value })}
-                            className="w-full p-2 border rounded-lg text-gray-900"
+                            className="w-full p-2 border border-white/10 rounded-lg bg-white/5 text-white"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Source Name (e.g. Times of India)</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">Source Name (e.g. Times of India)</label>
                         <input
                             type="text"
                             value={currentPost.sourceName || ''}
                             onChange={(e) => setCurrentPost({ ...currentPost, sourceName: e.target.value })}
-                            className="w-full p-2 border rounded-lg text-gray-900"
+                            className="w-full p-2 border border-white/10 rounded-lg bg-white/5 text-white"
                         />
                     </div>
 
                     {/* Media Type Toggle */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Media Type</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Media Type</label>
                         <div className="flex gap-4">
                             <button
                                 onClick={() => setMediaType('LINK')}
-                                className={`px-4 py-2 rounded-lg flex items-center gap-2 ${mediaType === 'LINK' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                                className={`px-4 py-2 rounded-lg flex items-center gap-2 ${mediaType === 'LINK' ? 'bg-blue-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                             >
                                 <ExternalLink size={16} /> External Link
                             </button>
                             <button
                                 onClick={() => setMediaType('PDF')}
-                                className={`px-4 py-2 rounded-lg flex items-center gap-2 ${mediaType === 'PDF' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                                className={`px-4 py-2 rounded-lg flex items-center gap-2 ${mediaType === 'PDF' ? 'bg-blue-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                             >
                                 <FileText size={16} /> Upload PDF
                             </button>
@@ -201,27 +201,27 @@ const MediaManager = () => {
 
                     {mediaType === 'LINK' ? (
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">External Link</label>
+                            <label className="block text-sm font-medium text-gray-400 mb-1">External Link</label>
                             <input
                                 type="text"
                                 value={currentPost.externalLink || ''}
                                 onChange={(e) => setCurrentPost({ ...currentPost, externalLink: e.target.value })}
-                                className="w-full p-2 border rounded-lg text-gray-900"
+                                className="w-full p-2 border border-white/10 rounded-lg bg-white/5 text-white"
                                 placeholder="https://..."
                             />
                         </div>
                     ) : (
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">PDF Document</label>
+                            <label className="block text-sm font-medium text-gray-400 mb-1">PDF Document</label>
                             <div className="flex items-center gap-4">
                                 {currentPost.attachmentUrl ? (
-                                    <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+                                    <div className="flex items-center gap-2 text-green-400 bg-green-500/10 px-3 py-2 rounded-lg border border-green-500/20">
                                         <FileText size={16} />
                                         <span className="text-sm truncate max-w-xs">{currentPost.attachmentUrl.split('/').pop()}</span>
-                                        <button onClick={() => setCurrentPost({ ...currentPost, attachmentUrl: '' })} className="text-red-500 hover:bg-red-50 rounded p-1"><X size={14} /></button>
+                                        <button onClick={() => setCurrentPost({ ...currentPost, attachmentUrl: '' })} className="text-red-400 hover:bg-red-500/10 rounded p-1"><X size={14} /></button>
                                     </div>
                                 ) : (
-                                    <label className="cursor-pointer bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 flex items-center gap-2">
+                                    <label className="cursor-pointer bg-white/5 border border-white/10 px-4 py-2 rounded-lg hover:bg-white/10 flex items-center gap-2 text-gray-300">
                                         <Upload size={16} />
                                         {uploading ? 'Uploading...' : 'Upload PDF'}
                                         <input type="file" className="hidden" accept="application/pdf" onChange={handlePdfUpload} />
@@ -232,12 +232,12 @@ const MediaManager = () => {
                     )}
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Cover Image</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-1">Cover Image</label>
                         <div className="flex items-center gap-4">
                             {currentPost.imageUrl && (
                                 <img src={currentPost.imageUrl} alt="Preview" className="h-20 w-32 object-cover rounded" />
                             )}
-                            <label className="cursor-pointer bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 flex items-center gap-2">
+                            <label className="cursor-pointer bg-white/5 border border-white/10 px-4 py-2 rounded-lg hover:bg-white/10 flex items-center gap-2 text-gray-300">
                                 <Upload size={16} />
                                 {uploading ? 'Uploading...' : 'Upload Image'}
                                 <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
@@ -248,7 +248,7 @@ const MediaManager = () => {
                     <div className="flex justify-end gap-2 pt-4">
                         <button
                             onClick={() => setIsEditing(false)}
-                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                            className="px-4 py-2 text-gray-400 hover:bg-white/10 rounded-lg"
                         >
                             Cancel
                         </button>
@@ -265,7 +265,7 @@ const MediaManager = () => {
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-zinc-900 border border-white/10 rounded-xl shadow-sm overflow-hidden">
             {/* Delete Confirmation Modal */}
             <AnimatePresence>
                 {deleteId && (
@@ -301,8 +301,8 @@ const MediaManager = () => {
                 )}
             </AnimatePresence>
 
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-gray-900">Media Mentions</h2>
+            <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-white">Media Mentions</h2>
                 <button
                     onClick={() => { setCurrentPost({}); setIsEditing(true); }}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 text-sm font-medium"
@@ -312,33 +312,42 @@ const MediaManager = () => {
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-white/5">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Headline</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Headline</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Source</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Content</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-white/10">
+                        {posts.length === 0 && (
+                            <tr>
+                                <td colSpan={4} className="px-6 py-12 text-center">
+                                    <Newspaper className="w-10 h-10 mx-auto mb-3 text-gray-600" />
+                                    <p className="text-gray-400 font-bold">No media mentions yet</p>
+                                    <p className="text-gray-500 text-sm mt-1">Add your first media mention.</p>
+                                </td>
+                            </tr>
+                        )}
                         {posts.map((post) => (
-                            <tr key={post.id} className="hover:bg-gray-50">
+                            <tr key={post.id} className="hover:bg-white/5">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
                                         {post.imageUrl && (
                                             <img src={post.imageUrl} alt="" className="h-10 w-10 rounded object-cover" />
                                         )}
-                                        <div className="text-sm font-medium text-gray-900">{post.title}</div>
+                                        <div className="text-sm font-medium text-white">{post.title}</div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-500">{post.sourceName}</td>
-                                <td className="px-6 py-4 text-sm text-blue-500">
+                                <td className="px-6 py-4 text-sm text-gray-400">{post.sourceName}</td>
+                                <td className="px-6 py-4 text-sm text-blue-400">
                                     {post.externalLink ? (
                                         <a href={post.externalLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
                                             Visit Link <ExternalLink size={12} />
                                         </a>
                                     ) : post.attachmentUrl ? (
-                                        <a href={post.attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline text-red-600">
+                                        <a href={post.attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline text-red-400">
                                             View PDF <FileText size={12} />
                                         </a>
                                     ) : (
@@ -348,13 +357,13 @@ const MediaManager = () => {
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <button
                                         onClick={() => { setCurrentPost(post); setIsEditing(true); }}
-                                        className="text-blue-600 hover:text-blue-900 mr-4"
+                                        className="text-blue-400 hover:text-blue-300 mr-4"
                                     >
                                         <Edit size={16} />
                                     </button>
                                     <button
                                         onClick={() => handleDeleteClick(post.id)}
-                                        className="text-red-600 hover:text-red-900"
+                                        className="text-red-400 hover:text-red-300"
                                     >
                                         <Trash2 size={16} />
                                     </button>

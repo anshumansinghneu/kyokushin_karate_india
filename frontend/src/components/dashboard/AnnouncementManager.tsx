@@ -129,6 +129,50 @@ export default function AnnouncementManager() {
                         </div>
 
                         <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Quick Templates</label>
+                            <select
+                                onChange={(e) => {
+                                    const templates: Record<string, { subject: string; body: string }> = {
+                                        tournament: {
+                                            subject: "Upcoming Tournament Registration Open",
+                                            body: "Dear Members,\n\nWe are excited to announce that registration is now open for our upcoming tournament.\n\nPlease visit the Events section on our website to register before the deadline.\n\nTrain hard and prepare well!\n\nOsu!"
+                                        },
+                                        grading: {
+                                            subject: "Belt Grading Examination Notice",
+                                            body: "Dear Students,\n\nA belt grading examination has been scheduled. Please check the Events section for dates and eligibility details.\n\nMake sure your training attendance is up to date and fees are cleared before the exam.\n\nOsu!"
+                                        },
+                                        closure: {
+                                            subject: "Training Schedule Update",
+                                            body: "Dear Members,\n\nPlease note that the training schedule has been updated. Regular classes will resume as per the new timetable.\n\nCheck with your dojo instructor for specific timings.\n\nOsu!"
+                                        },
+                                        fee: {
+                                            subject: "Membership Fee Reminder",
+                                            body: "Dear Members,\n\nThis is a friendly reminder that your membership renewal is due. Please complete your payment through the website to continue enjoying membership benefits.\n\nIf you have already renewed, please ignore this message.\n\nOsu!"
+                                        },
+                                        general: {
+                                            subject: "Important Update from KKFI",
+                                            body: "Dear Members,\n\nWe have an important update to share with you.\n\n[Add your message here]\n\nFor any questions, please contact your dojo instructor.\n\nOsu!"
+                                        }
+                                    };
+                                    const tpl = templates[e.target.value];
+                                    if (tpl) {
+                                        setSubject(tpl.subject);
+                                        setBody(tpl.body);
+                                    }
+                                    e.target.value = "";
+                                }}
+                                className="w-full h-10 bg-white/5 border border-white/10 rounded-xl text-white text-sm px-3 focus:border-red-500/50 focus:outline-none"
+                            >
+                                <option value="" className="bg-black">Choose a template...</option>
+                                <option value="tournament" className="bg-black">Tournament Announcement</option>
+                                <option value="grading" className="bg-black">Belt Grading Notice</option>
+                                <option value="closure" className="bg-black">Schedule Update</option>
+                                <option value="fee" className="bg-black">Fee Reminder</option>
+                                <option value="general" className="bg-black">General Update</option>
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Subject</label>
                             <Input
                                 value={subject}

@@ -276,6 +276,7 @@ function ProductManagement() {
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState<any>(null); // null = list view, {} = new, {id:...} = editing
     const [saving, setSaving] = useState(false);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState<string | null>(null);
     const { showToast } = useToast();
 
@@ -360,7 +361,7 @@ function ProductManagement() {
     };
 
     const deleteProduct = async (id: string) => {
-        if (!confirm("Delete this product?")) return;
+        setDeleteConfirmId(null);
         setDeleting(id);
         try {
             await api.delete(`/merch/products/${id}`);
@@ -457,22 +458,88 @@ function ProductManagement() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sizes (comma-separated)</label>
-                            <input
-                                value={form.sizes}
-                                onChange={(e) => setForm({ ...form, sizes: e.target.value })}
-                                className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50"
-                                placeholder="S,M,L,XL"
-                            />
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sizes</label>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((size) => {
+                                    const selected = form.sizes.split(',').map(s => s.trim()).filter(Boolean).includes(size);
+                                    return (
+                                        <button
+                                            key={size}
+                                            type="button"
+                                            onClick={() => {
+                                                const current = form.sizes.split(',').map(s => s.trim()).filter(Boolean);
+                                                const updated = selected ? current.filter(s => s !== size) : [...current, size];
+                                                setForm({ ...form, sizes: updated.join(',') });
+                                            }}
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-bold border transition-all ${
+                                                selected
+                                                    ? 'bg-red-600 text-white border-red-600'
+                                                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+                                            }`}
+                                        >
+                                            {size}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {form.sizes && <p className="text-xs text-gray-500 mt-1">Selected: {form.sizes}</p>}
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Image URLs (comma-separated)</label>
-                            <input
-                                value={form.images}
-                                onChange={(e) => setForm({ ...form, images: e.target.value })}
-                                className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50"
-                                placeholder="https://..."
-                            />
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Product Images</label>
+                            <div className="mt-2 space-y-2">
+                                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors text-gray-300 text-sm">
+                                    <ImagePlus className="w-4 h-4" />
+                                    Upload Image
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            const uploadData = new FormData();
+                                            uploadData.append('image', file);
+                                            try {
+                                                const res = await api.post('/upload', uploadData, {
+                                                    headers: { 'Content-Type': 'multipart/form-data' }
+                                                });
+                                                const url = res.data.data.url;
+                                                const current = form.images.split(',').map(s => s.trim()).filter(Boolean);
+                                                setForm({ ...form, images: [...current, url].join(',') });
+                                                showToast('Image uploaded!', 'success');
+                                            } catch {
+                                                showToast('Image upload failed', 'error');
+                                            }
+                                        }}
+                                    />
+                                </label>
+                                {form.images && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {form.images.split(',').map(s => s.trim()).filter(Boolean).map((url, idx) => (
+                                            <div key={idx} className="relative group">
+                                                <img src={url} alt={`Product ${idx + 1}`} className="h-16 w-16 object-cover rounded-lg border border-white/10" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const current = form.images.split(',').map(s => s.trim()).filter(Boolean);
+                                                        current.splice(idx, 1);
+                                                        setForm({ ...form, images: current.join(',') });
+                                                    }}
+                                                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <input
+                                    value={form.images}
+                                    onChange={(e) => setForm({ ...form, images: e.target.value })}
+                                    className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-red-500/50"
+                                    placeholder="Or paste URLs comma-separated"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -545,7 +612,7 @@ function ProductManagement() {
                                         <Edit2 className="w-3 h-3 mr-1" /> Edit
                                     </Button>
                                     <Button
-                                        onClick={() => deleteProduct(p.id)}
+                                        onClick={() => setDeleteConfirmId(p.id)}
                                         disabled={deleting === p.id}
                                         className="bg-red-950/50 text-red-400 border border-red-500/20 hover:bg-red-900/50"
                                         size="sm"

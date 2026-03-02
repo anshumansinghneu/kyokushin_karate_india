@@ -73,13 +73,21 @@ export default function EventManager() {
         fetchEvents();
     }, []);
 
-    const handleOpenModal = (event?: Event) => {
+    const handleOpenModal = async (event?: Event) => {
         if (event) {
             setEditingEvent(event);
+            // Fetch full event details to get description
+            let description = "";
+            try {
+                const res = await api.get(`/events/${event.id}`);
+                description = res.data.data.event?.description || "";
+            } catch {
+                // Fallback: use empty description if fetch fails
+            }
             setFormData({
                 name: event.name,
                 type: event.type,
-                description: "", // Fetch full details if needed
+                description,
                 imageUrl: event.imageUrl || "",
                 startDate: new Date(event.startDate).toISOString().split('T')[0],
                 endDate: new Date(event.endDate).toISOString().split('T')[0],
@@ -127,8 +135,10 @@ export default function EventManager() {
 
             if (editingEvent) {
                 await api.patch(`/events/${editingEvent.id}`, payload);
+                showToast("Event updated successfully!", "success");
             } else {
                 await api.post('/events', payload);
+                showToast("Event created successfully!", "success");
             }
             setIsModalOpen(false);
             fetchEvents();
@@ -152,8 +162,10 @@ export default function EventManager() {
             await api.delete(`/events/${deleteId}`);
             fetchEvents();
             setDeleteId(null);
+            showToast("Event deleted successfully!", "success");
         } catch (error) {
             console.error("Failed to delete event", error);
+            showToast("Failed to delete event", "error");
         } finally {
             setIsDeleting(false);
         }
@@ -205,6 +217,17 @@ export default function EventManager() {
                 </Button>
             </div>
 
+            {events.length === 0 && !isLoading && (
+                <div className="text-center py-16 glass-card">
+                    <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-600" />
+                    <p className="text-lg font-bold text-white">No events yet</p>
+                    <p className="text-sm text-gray-400 mt-1">Create your first event to get started.</p>
+                    <Button onClick={() => handleOpenModal()} className="bg-primary hover:bg-primary-dark text-white mt-4">
+                        <Plus className="w-4 h-4 mr-2" /> Create Event
+                    </Button>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {events.map((event) => (
                     <motion.div
@@ -213,7 +236,7 @@ export default function EventManager() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="glass-card p-6 relative group"
                     >
-                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute top-4 right-4 flex gap-2">
                             <Button variant="ghost" className="h-8 w-8 p-0 text-blue-400 hover:bg-blue-500/20" onClick={() => handleOpenModal(event)}>
                                 <Edit2 className="w-4 h-4" />
                             </Button>
@@ -383,7 +406,14 @@ export default function EventManager() {
                                             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                             required
                                             className="bg-black/50 border-white/10"
+                                            list="dojo-locations"
+                                            placeholder="Start typing or select a dojo location..."
                                         />
+                                        <datalist id="dojo-locations">
+                                            {dojos.map(d => (
+                                                <option key={d.id} value={d.name} />
+                                            ))}
+                                        </datalist>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Host Dojo</Label>

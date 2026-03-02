@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Ticket, Plus, Copy, CheckCircle, XCircle, Clock, Loader2, AlertCircle, Trash2 } from "lucide-react";
+import { Ticket, Plus, Copy, CheckCircle, XCircle, Clock, Loader2, AlertCircle, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
@@ -37,6 +37,8 @@ export default function VoucherManager() {
     const [creating, setCreating] = useState(false);
     const [events, setEvents] = useState<Event[]>([]);
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
+    const [voucherSearch, setVoucherSearch] = useState("");
+    const [voucherFilter, setVoucherFilter] = useState<'all' | 'active' | 'redeemed' | 'expired' | 'deactivated'>('all');
 
     // Create form state
     const [applicableTo, setApplicableTo] = useState<string>("MEMBERSHIP");
@@ -309,7 +311,56 @@ export default function VoucherManager() {
             <div className="space-y-4">
                 <h3 className="text-lg font-bold text-white">All Vouchers</h3>
 
-                {vouchers.length === 0 ? (
+                {/* Search & Filter */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <input
+                            value={voucherSearch}
+                            onChange={(e) => setVoucherSearch(e.target.value)}
+                            placeholder="Search by code, redeemed user..."
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
+                        />
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                        {([
+                            { key: 'all' as const, label: `All (${vouchers.length})` },
+                            { key: 'active' as const, label: `Active (${activeVouchers.length})` },
+                            { key: 'redeemed' as const, label: `Redeemed (${usedVouchers.length})` },
+                            { key: 'expired' as const, label: 'Expired' },
+                            { key: 'deactivated' as const, label: 'Deactivated' },
+                        ]).map((f) => (
+                            <button
+                                key={f.key}
+                                onClick={() => setVoucherFilter(f.key)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+                                    voucherFilter === f.key
+                                        ? 'bg-red-600 text-white border-red-600'
+                                        : 'bg-white/5 text-gray-400 border-white/10 hover:text-white'
+                                }`}
+                            >
+                                {f.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {(() => {
+                    let filtered = vouchers;
+                    if (voucherFilter === 'active') filtered = filtered.filter(v => v.isActive && !v.isRedeemed && new Date(v.expiryDate) > new Date());
+                    if (voucherFilter === 'redeemed') filtered = filtered.filter(v => v.isRedeemed);
+                    if (voucherFilter === 'expired') filtered = filtered.filter(v => !v.isRedeemed && new Date(v.expiryDate) < new Date());
+                    if (voucherFilter === 'deactivated') filtered = filtered.filter(v => !v.isActive && !v.isRedeemed);
+                    if (voucherSearch) {
+                        const q = voucherSearch.toLowerCase();
+                        filtered = filtered.filter(v =>
+                            v.code.toLowerCase().includes(q) ||
+                            v.redeemedByUser?.name?.toLowerCase().includes(q) ||
+                            v.redeemedByUser?.email?.toLowerCase().includes(q) ||
+                            v.applicableTo.toLowerCase().includes(q)
+                        );
+                    }
+                    return filtered.length === 0 ? (
                     <div className="text-center py-12 text-gray-400">
                         <Ticket className="w-12 h-12 mx-auto mb-4 opacity-30" />
                         <p className="text-lg font-bold">No vouchers yet</p>
@@ -317,7 +368,7 @@ export default function VoucherManager() {
                     </div>
                 ) : (
                     <div className="grid gap-3">
-                        {vouchers.map((voucher) => (
+                        {filtered.map((voucher) => (
                             <motion.div
                                 key={voucher.id}
                                 initial={{ opacity: 0, y: 10 }}
@@ -388,7 +439,8 @@ export default function VoucherManager() {
                             </motion.div>
                         ))}
                     </div>
-                )}
+                );
+                })()}
             </div>
         </div>
     );

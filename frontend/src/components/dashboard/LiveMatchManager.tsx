@@ -439,18 +439,18 @@ function LiveMatchCard({
                         <div className="flex items-center justify-center gap-2">
                             <button
                                 onClick={() => onUpdateScore(match.id, 'fighterAScore', -1)}
-                                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors active:scale-95"
                             >
-                                <Minus className="w-4 h-4" />
+                                <Minus className="w-5 h-5" />
                             </button>
-                            <span className="text-3xl font-mono font-black text-white min-w-[40px]">
+                            <span className="text-3xl sm:text-4xl font-mono font-black text-white min-w-[48px]">
                                 {match.fighterAScore || 0}
                             </span>
                             <button
                                 onClick={() => onUpdateScore(match.id, 'fighterAScore', 1)}
-                                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-red-600/30 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-600/20 hover:bg-red-600/40 border border-red-600/30 flex items-center justify-center text-red-400 hover:text-white transition-colors active:scale-95"
                             >
-                                <Plus className="w-4 h-4" />
+                                <Plus className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
@@ -463,18 +463,18 @@ function LiveMatchCard({
                         <div className="flex items-center justify-center gap-2">
                             <button
                                 onClick={() => onUpdateScore(match.id, 'fighterBScore', -1)}
-                                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors active:scale-95"
                             >
-                                <Minus className="w-4 h-4" />
+                                <Minus className="w-5 h-5" />
                             </button>
-                            <span className="text-3xl font-mono font-black text-white min-w-[40px]">
+                            <span className="text-3xl sm:text-4xl font-mono font-black text-white min-w-[48px]">
                                 {match.fighterBScore || 0}
                             </span>
                             <button
                                 onClick={() => onUpdateScore(match.id, 'fighterBScore', 1)}
-                                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-red-600/30 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-600/20 hover:bg-red-600/40 border border-red-600/30 flex items-center justify-center text-red-400 hover:text-white transition-colors active:scale-95"
                             >
-                                <Plus className="w-4 h-4" />
+                                <Plus className="w-5 h-5" />
                             </button>
                         </div>
                     </div>

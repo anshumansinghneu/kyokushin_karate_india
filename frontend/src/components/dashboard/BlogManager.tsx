@@ -463,19 +463,19 @@ const BlogManager = () => {
                 <div className="px-6 py-4 border-b border-white/10 flex gap-4">
                     <button
                         onClick={() => setFilter('ALL')}
-                        className={`px - 3 py - 1 rounded - full text - xs font - bold uppercase tracking - wider transition - colors ${filter === 'ALL' ? 'bg-white text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'} `}
+                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${filter === 'ALL' ? 'bg-white text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                     >
                         All
                     </button>
                     <button
                         onClick={() => setFilter('PUBLISHED')}
-                        className={`px - 3 py - 1 rounded - full text - xs font - bold uppercase tracking - wider transition - colors ${filter === 'PUBLISHED' ? 'bg-green-500 text-white' : 'bg-green-500/10 text-green-500 hover:bg-green-500/20'} `}
+                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${filter === 'PUBLISHED' ? 'bg-green-500 text-white' : 'bg-green-500/10 text-green-500 hover:bg-green-500/20'}`}
                     >
                         Published
                     </button>
                     <button
                         onClick={() => setFilter('PENDING')}
-                        className={`px - 3 py - 1 rounded - full text - xs font - bold uppercase tracking - wider transition - colors ${filter === 'PENDING' ? 'bg-yellow-500 text-white' : 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20'} `}
+                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${filter === 'PENDING' ? 'bg-yellow-500 text-white' : 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20'}`}
                     >
                         Pending
                     </button>
@@ -508,10 +508,10 @@ const BlogManager = () => {
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-400">{post.author?.name}</td>
                                     <td className="px-6 py-4">
-                                        <span className={`px - 2 py - 1 text - [10px] font - bold rounded - full uppercase tracking - wider ${post.status === 'PUBLISHED' ? 'bg-green-500/20 text-green-500' :
+                                        <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${post.status === 'PUBLISHED' ? 'bg-green-500/20 text-green-500' :
                                             post.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-500' :
                                                 'bg-gray-500/20 text-gray-400'
-                                            } `}>
+                                            }`}>
                                             {post.status}
                                         </span>
                                     </td>

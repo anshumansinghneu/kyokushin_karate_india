@@ -172,6 +172,17 @@ export default function DojoManager() {
                 </Button>
             </div>
 
+            {dojos.length === 0 && !isLoading && (
+                <div className="text-center py-16 glass-card">
+                    <Building className="w-12 h-12 mx-auto mb-3 text-gray-600" />
+                    <p className="text-lg font-bold text-white">No dojos yet</p>
+                    <p className="text-sm text-gray-400 mt-1">Create your first dojo to get started.</p>
+                    <Button onClick={() => handleOpenModal()} className="bg-primary hover:bg-primary-dark text-white mt-4">
+                        <Plus className="w-4 h-4 mr-2" /> Add New Dojo
+                    </Button>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {dojos.map((dojo) => (
                     <motion.div
@@ -180,7 +191,7 @@ export default function DojoManager() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="glass-card p-6 relative group"
                     >
-                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute top-4 right-4 flex gap-2">
                             <Button variant="ghost" className="h-8 w-8 p-0 text-blue-400 hover:bg-blue-500/20" onClick={() => handleOpenModal(dojo)}>
                                 <Edit2 className="w-4 h-4" />
                             </Button>
