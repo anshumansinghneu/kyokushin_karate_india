@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Users, Building, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Portal } from "@/components/ui/portal";
+import Portal from "@/components/ui/portal";
 import api from "@/lib/api";
 
 interface Dojo {
