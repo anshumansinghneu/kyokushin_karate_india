@@ -249,6 +249,27 @@ export default function Navbar() {
     ];
 
     return (
+        <>
+        {/* Mobile Top Bar — visible only below md */}
+        <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/10">
+            <div className="flex items-center justify-between px-4 h-14">
+                <Link href="/" className="text-xl font-black tracking-tighter">
+                    <span className="bg-gradient-to-r from-orange-500 via-white to-green-500 bg-clip-text text-transparent italic">KKFI</span>
+                </Link>
+                <div className="flex items-center gap-1">
+                    {isAuthenticated && <NotificationCenter />}
+                    <button
+                        className="z-50 text-white p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center touch-action-manipulation"
+                        onClick={() => setIsOpen(!isOpen)}
+                        aria-label="Toggle menu"
+                    >
+                        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {/* Desktop Navbar */}
         <nav
             className={`hidden md:block fixed top-0 left-0 right-0 z-50 transition-gpu duration-300 gpu-accelerate ${
                 scrolled ? "bg-black/80 backdrop-blur-md py-4 border-b border-white/10" : "bg-transparent py-4 md:py-6"
@@ -387,27 +408,21 @@ export default function Navbar() {
                     )}
                 </div>
 
-                {/* Mobile Menu Button */}
-                <button
-                    className="md:hidden z-50 text-white p-3 min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2 touch-action-manipulation"
-                    onClick={() => setIsOpen(!isOpen)}
-                    aria-label="Toggle menu"
-                >
-                    {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                </button>
+            </div>
+        </nav>
 
-                {/* Mobile Menu Overlay */}
-                <AnimatePresence>
-                    {isOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, x: "100%" }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: "100%" }}
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="fixed inset-0 bg-black z-40 flex flex-col md:hidden overflow-y-auto"
-                            style={{ touchAction: 'pan-y' }}
-                        >
-                            <div className="pt-20 px-6 pb-8 flex flex-col gap-1">
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    initial={{ opacity: 0, x: "100%" }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: "100%" }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="fixed inset-0 bg-black z-40 flex flex-col md:hidden overflow-y-auto"
+                    style={{ touchAction: 'pan-y' }}
+                >
+                    <div className="pt-16 px-6 pb-8 flex flex-col gap-1">
                                 {mobileGroups.map((group, gi) => (
                                     <div key={gi}>
                                         {group.label ? (
@@ -527,7 +542,6 @@ export default function Navbar() {
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </div>
-        </nav>
+        </>
     );
 }

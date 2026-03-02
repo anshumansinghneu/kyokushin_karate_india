@@ -78,7 +78,7 @@ export default function Footer() {
                     </motion.div>
 
                     {/* Legal */}
-                    <motion.div variants={fadeUp} className="hidden sm:block">
+                    <motion.div variants={fadeUp}>
                         <h3 className="text-white font-bold uppercase tracking-widest text-sm md:text-base mb-3 sm:mb-4 md:mb-6">Legal</h3>
                         <ul className="space-y-3 md:space-y-4 text-sm md:text-base text-gray-400">
                             <li><Link href="/privacy" className="hover:text-red-500 transition-colors group flex items-center"><span className="w-0 group-hover:w-3 h-px bg-red-500 mr-0 group-hover:mr-2 transition-all duration-300" />Privacy Policy</Link></li>

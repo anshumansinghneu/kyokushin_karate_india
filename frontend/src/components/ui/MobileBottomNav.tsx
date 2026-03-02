@@ -13,25 +13,25 @@ import { useAuthStore } from '@/store/authStore';
 
 const AUTH_ITEMS = [
     { href: '/', icon: Home, label: 'Home' },
+    { href: '/store', icon: ShoppingBag, label: 'Store' },
     { href: '/events', icon: Calendar, label: 'Events' },
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { href: '/profile', icon: User, label: 'Profile' },
 ];
 
 const GUEST_ITEMS = [
     { href: '/', icon: Home, label: 'Home' },
+    { href: '/store', icon: ShoppingBag, label: 'Store' },
     { href: '/events', icon: Calendar, label: 'Events' },
-    { href: '/login', icon: LogIn, label: 'Login' },
     { href: '/register', icon: UserPlus, label: 'Join' },
 ];
 
 const MORE_AUTH_ITEMS = [
+    { href: '/profile', icon: User, label: 'Profile' },
     { href: '/payments', icon: CreditCard, label: 'Payments' },
+    { href: '/gallery', icon: Image, label: 'Gallery' },
     { href: '/seminars', icon: Shield, label: 'Seminars' },
     { href: '/verify', icon: ShieldCheck, label: 'Belt Verify' },
     { href: '/live', icon: Radio, label: 'Live Matches', adminOnly: true },
-    { href: '/store', icon: ShoppingBag, label: 'Store' },
-    { href: '/gallery', icon: Image, label: 'Gallery' },
     { href: '/instructors', icon: Users, label: 'Instructors' },
     { href: '/dojos', icon: GraduationCap, label: 'Find a Dojo' },
     { href: '/blog', icon: BookOpen, label: 'Blog' },
@@ -42,10 +42,10 @@ const MORE_AUTH_ITEMS = [
 ];
 
 const MORE_GUEST_ITEMS = [
+    { href: '/login', icon: LogIn, label: 'Login' },
+    { href: '/gallery', icon: Image, label: 'Gallery' },
     { href: '/seminars', icon: Shield, label: 'Seminars' },
     { href: '/verify', icon: ShieldCheck, label: 'Belt Verify' },
-    { href: '/store', icon: ShoppingBag, label: 'Store' },
-    { href: '/gallery', icon: Image, label: 'Gallery' },
     { href: '/instructors', icon: Users, label: 'Instructors' },
     { href: '/dojos', icon: GraduationCap, label: 'Find a Dojo' },
     { href: '/blog', icon: BookOpen, label: 'Blog' },

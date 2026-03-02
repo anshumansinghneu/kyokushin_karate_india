@@ -1,31 +1,41 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag, Ticket, RefreshCw, ChevronDown } from "lucide-react";
+import { Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag, Ticket, RefreshCw, ChevronDown, Search, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import UserManagementTable from "./UserManagementTable";
-import DojoManager from "./DojoManager";
-import EventManager from "./EventManager";
-import BlogManager from "./BlogManager";
-import MediaManager from "./MediaManager";
-import RecognitionManager from "./RecognitionManager";
+// Lazy-loaded tab components for code splitting
+const UserManagementTable = lazy(() => import("./UserManagementTable"));
+const DojoManager = lazy(() => import("./DojoManager"));
+const EventManager = lazy(() => import("./EventManager"));
+const BlogManager = lazy(() => import("./BlogManager"));
+const MediaManager = lazy(() => import("./MediaManager"));
+const RecognitionManager = lazy(() => import("./RecognitionManager"));
+const BeltPromotionsView = lazy(() => import("./BeltPromotionsView"));
+const BeltApprovalsView = lazy(() => import("./BeltApprovalsView"));
+const TournamentManager = lazy(() => import("./TournamentManager"));
+const AnnouncementManager = lazy(() => import('./AnnouncementManager'));
+const PaymentManagement = lazy(() => import('./PaymentManagement'));
+const LiveMatchManager = lazy(() => import('./LiveMatchManager'));
+const StoreManagement = lazy(() => import('./StoreManagement'));
+const VoucherManager = lazy(() => import('./VoucherManager'));
+
 import OrganizationGraph from "./OrganizationGraph";
-import BeltPromotionsView from "./BeltPromotionsView";
-import BeltApprovalsView from "./BeltApprovalsView";
-import TournamentManager from "./TournamentManager";
 import GlobalSearch from "./GlobalSearch";
 import StudentDetailView from "./StudentDetailView";
-import AnnouncementManager from './AnnouncementManager';
-import PaymentManagement from './PaymentManagement';
-import LiveMatchManager from './LiveMatchManager';
-import StoreManagement from './StoreManagement';
-import VoucherManager from './VoucherManager';
 import { useToast } from '@/contexts/ToastContext';
+
+function TabLoader() {
+    return (
+        <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+        </div>
+    );
+}
 
 type TabId = 'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers';
 
@@ -38,6 +48,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
     const validInitial = VALID_TABS.includes(initialTab as TabId) ? initialTab as TabId : 'overview';
     const [activeTab, setActiveTab] = useState<TabId>(validInitial);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [sidebarFilter, setSidebarFilter] = useState('');
     const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
     const { logout } = useAuthStore();
@@ -133,6 +144,11 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
         },
     ];
 
+    // Breadcrumb: find the label for the active tab
+    const activeLabel = menuSections.flatMap(s => s.items).find(i => i.id === activeTab)?.label || 'Overview';
+    const activeSection = menuSections.find(s => s.items.some(i => i.id === activeTab));
+    const activeSectionHeader = activeSection?.header;
+
     return (
         <div className="flex min-h-[80vh] bg-black/50 rounded-3xl border border-white/10 overflow-hidden relative">
             {/* Mobile Sidebar Toggle */}
@@ -167,8 +183,25 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto py-4 px-3">
+                {/* Sidebar Search */}
+                <div className="px-3 pt-3 pb-1">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                        <input
+                            value={sidebarFilter}
+                            onChange={e => setSidebarFilter(e.target.value)}
+                            placeholder="Filter menu..."
+                            className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-red-500/40 transition-colors"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto py-2 px-3">
                     {menuSections.map((section, si) => {
+                        const filteredItems = sidebarFilter
+                            ? section.items.filter(item => item.label.toLowerCase().includes(sidebarFilter.toLowerCase()))
+                            : section.items;
+                        if (sidebarFilter && filteredItems.length === 0) return null;
                         const sectionHasActive = section.items.some(item => item.id === activeTab);
                         const isCollapsed = section.id ? collapsedSections.has(section.id) && !sectionHasActive : false;
 
@@ -186,7 +219,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                     </button>
                                 )}
                                 <div className={`space-y-0.5 overflow-hidden transition-all duration-200 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}>
-                                    {section.items.map((item) => (
+                                    {filteredItems.map((item) => (
                                         <button
                                             key={item.id}
                                             onClick={() => { handleTabChange(item.id as TabId); setIsSidebarOpen(false); }}
@@ -205,11 +238,11 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                             )}
                                             <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${activeTab === item.id ? 'text-red-400' : 'text-gray-500'}`} />
                                             <span className="truncate">{item.label}</span>
-                                            {'badge' in item && item.badge && (
+                                            {'badge' in item && (item as any).badge ? (
                                                 <span className="ml-auto text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                                                    {item.badge}
+                                                    {(item as any).badge}
                                                 </span>
-                                            )}
+                                            ) : null}
                                         </button>
                                     ))}
                                 </div>
@@ -230,8 +263,20 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
             </motion.div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-y-auto min-h-[80vh] lg:h-[80vh] relative">
+            <div className="flex-1 overflow-y-auto min-h-[80vh] relative">
                 <div className="pt-16 lg:pt-0 p-4 md:p-8 lg:p-10">
+                    {/* Breadcrumb */}
+                    {activeTab !== 'overview' && (
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
+                            <button onClick={() => handleTabChange('overview')} className="hover:text-white transition-colors">Dashboard</button>
+                            {activeSectionHeader && (
+                                <><ChevronRight className="w-3 h-3" /><span className="text-gray-600">{activeSectionHeader}</span></>
+                            )}
+                            <ChevronRight className="w-3 h-3" />
+                            <span className="text-white font-semibold">{activeLabel}</span>
+                        </div>
+                    )}
+
                     {/* Global Search */}
                     <div className="mb-8">
                         <GlobalSearch onResultClick={(userId) => setSelectedStudentId(userId)} />
@@ -373,20 +418,20 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                             </motion.div>
                         )}
 
-                        {activeTab === 'users' && <motion.div key="users" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><UserManagementTable /></motion.div>}
-                        {activeTab === 'belt-verifications' && <motion.div key="belt-verifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><BeltApprovalsView /></motion.div>}
-                        {activeTab === 'belt-promotions' && <motion.div key="belt-promotions" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><BeltPromotionsView /></motion.div>}
-                        {activeTab === 'dojos' && <motion.div key="dojos" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><DojoManager /></motion.div>}
-                        {activeTab === 'events' && <motion.div key="events" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><EventManager /></motion.div>}
-                        {activeTab === 'tournaments' && <motion.div key="tournaments" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><TournamentManager /></motion.div>}
-                        {activeTab === 'live-management' && <motion.div key="live-management" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><LiveMatchManager /></motion.div>}
-                        {activeTab === 'store' && <motion.div key="store" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><StoreManagement /></motion.div>}
-                        {activeTab === 'blogs' && <motion.div key="blogs" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><BlogManager /></motion.div>}
-                        {activeTab === 'media' && <motion.div key="media" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><MediaManager /></motion.div>}
-                        {activeTab === 'recognition' && <motion.div key="recognition" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><RecognitionManager /></motion.div>}
-                        {activeTab === 'announcements' && <motion.div key="announcements" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><AnnouncementManager /></motion.div>}
-                        {activeTab === 'payments' && <motion.div key="payments" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><PaymentManagement /></motion.div>}
-                        {activeTab === 'vouchers' && <motion.div key="vouchers" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><VoucherManager /></motion.div>}
+                        {activeTab === 'users' && <motion.div key="users" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><UserManagementTable /></Suspense></motion.div>}
+                        {activeTab === 'belt-verifications' && <motion.div key="belt-verifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><BeltApprovalsView /></Suspense></motion.div>}
+                        {activeTab === 'belt-promotions' && <motion.div key="belt-promotions" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><BeltPromotionsView /></Suspense></motion.div>}
+                        {activeTab === 'dojos' && <motion.div key="dojos" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><DojoManager /></Suspense></motion.div>}
+                        {activeTab === 'events' && <motion.div key="events" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><EventManager /></Suspense></motion.div>}
+                        {activeTab === 'tournaments' && <motion.div key="tournaments" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><TournamentManager /></Suspense></motion.div>}
+                        {activeTab === 'live-management' && <motion.div key="live-management" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><LiveMatchManager /></Suspense></motion.div>}
+                        {activeTab === 'store' && <motion.div key="store" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><StoreManagement /></Suspense></motion.div>}
+                        {activeTab === 'blogs' && <motion.div key="blogs" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><BlogManager /></Suspense></motion.div>}
+                        {activeTab === 'media' && <motion.div key="media" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><MediaManager /></Suspense></motion.div>}
+                        {activeTab === 'recognition' && <motion.div key="recognition" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><RecognitionManager /></Suspense></motion.div>}
+                        {activeTab === 'announcements' && <motion.div key="announcements" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><AnnouncementManager /></Suspense></motion.div>}
+                        {activeTab === 'payments' && <motion.div key="payments" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><PaymentManagement /></Suspense></motion.div>}
+                        {activeTab === 'vouchers' && <motion.div key="vouchers" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><VoucherManager /></Suspense></motion.div>}
                     </AnimatePresence>
                 </div>
             </div>
