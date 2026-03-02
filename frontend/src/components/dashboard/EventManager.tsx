@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Plus, Edit2, Trash2, X, Save, MapPin, Users, DollarSign, Search, Clock } from "lucide-react";
+import { Calendar, Plus, Edit2, Trash2, X, Save, MapPin, Users, DollarSign, Search, Clock, Trophy, Tent, BookOpen, ImagePlus, Info, IndianRupee, CalendarClock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,6 +39,7 @@ export default function EventManager() {
     const [editingEvent, setEditingEvent] = useState<Event | null>(null);
     const [typeFilter, setTypeFilter] = useState<'ALL' | 'TOURNAMENT' | 'CAMP' | 'SEMINAR'>('ALL');
     const [searchQuery, setSearchQuery] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({
         name: "",
         type: "TOURNAMENT",
@@ -54,6 +55,41 @@ export default function EventManager() {
         nonMemberFee: 0,
         categories: [] // Simplified for now
     });
+
+    // Smart auto-fill: when start date changes, auto-set end date (+1 day) and deadline (-7 days)
+    const handleStartDateChange = (startDate: string) => {
+        const updates: Partial<typeof formData> = { startDate };
+        if (startDate) {
+            const d = new Date(startDate);
+            // Auto-fill end date = start + 1 day (if end date is empty or before new start)
+            if (!formData.endDate || new Date(formData.endDate) < d) {
+                const end = new Date(d);
+                end.setDate(end.getDate() + 1);
+                updates.endDate = end.toISOString().split('T')[0];
+            }
+            // Auto-fill deadline = start - 7 days (if deadline is empty)
+            if (!formData.registrationDeadline) {
+                const deadline = new Date(d);
+                deadline.setDate(deadline.getDate() - 7);
+                updates.registrationDeadline = deadline.toISOString().split('T')[0];
+            }
+        }
+        setFormData(prev => ({ ...prev, ...updates }));
+    };
+
+    // Auto-fill location when selecting a host dojo
+    const handleDojoChange = (dojoId: string) => {
+        setFormData(prev => {
+            const dojo = dojos.find(d => d.id === dojoId);
+            return { ...prev, dojoId, location: dojo ? dojo.name : prev.location };
+        });
+    };
+
+    const typeOptions = [
+        { value: 'TOURNAMENT', label: 'Tournament', icon: Trophy, color: 'red' },
+        { value: 'CAMP', label: 'Camp', icon: Tent, color: 'emerald' },
+        { value: 'SEMINAR', label: 'Seminar', icon: BookOpen, color: 'blue' },
+    ] as const;
 
     const fetchEvents = async () => {
         setIsLoading(true);
@@ -124,6 +160,7 @@ export default function EventManager() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSaving(true);
         try {
             const payload = {
                 ...formData,
@@ -147,6 +184,8 @@ export default function EventManager() {
         } catch (error) {
             console.error("Failed to save event", error);
             showToast("Failed to save event. Please check inputs.", "error");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -387,192 +426,296 @@ export default function EventManager() {
                 {isModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 20 }}
-                            className="bg-zinc-900 border border-white/10 rounded-xl p-6 w-full max-w-2xl shadow-2xl my-8"
+                            initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 20, scale: 0.97 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl my-8 overflow-hidden"
                         >
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-white">
-                                    {editingEvent ? 'Edit Event' : 'Create New Event'}
-                                </h3>
-                                <Button variant="ghost" className="h-8 w-8 p-0" onClick={() => setIsModalOpen(false)}>
+                            {/* Modal Header */}
+                            <div className="flex justify-between items-center px-6 py-4 border-b border-white/10 bg-white/[0.02]">
+                                <div>
+                                    <h3 className="text-lg font-bold text-white">
+                                        {editingEvent ? 'Edit Event' : 'Create New Event'}
+                                    </h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        {editingEvent ? 'Update event details below' : 'Fill in the details to create a new event'}
+                                    </p>
+                                </div>
+                                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors">
                                     <X className="w-5 h-5" />
-                                </Button>
+                                </button>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Event Name</Label>
-                                        <Input
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            required
-                                            className="bg-black/50 border-white/10"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Type</Label>
-                                        <select
-                                            value={formData.type}
-                                            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                            className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                        >
-                                            <option value="TOURNAMENT">Tournament</option>
-                                            <option value="CAMP">Camp</option>
-                                            <option value="SEMINAR">Seminar</option>
-                                        </select>
-                                    </div>
-                                </div>
+                            <form onSubmit={handleSubmit} className="overflow-y-auto max-h-[calc(100vh-200px)]">
+                                <div className="p-6 space-y-6">
 
-                                <div className="space-y-2">
-                                    <Label>Description</Label>
-                                    <textarea
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        className="w-full bg-black/50 border border-white/10 rounded-md p-3 text-white min-h-[80px]"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Cover Image</Label>
-                                    <div className="flex gap-2">
-                                        <Input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={async (e) => {
-                                                const file = e.target.files?.[0];
-                                                if (!file) return;
-                                                const uploadData = new FormData();
-                                                uploadData.append('image', file);
-                                                try {
-                                                    const res = await api.post('/upload', uploadData, {
-                                                        headers: { 'Content-Type': 'multipart/form-data' }
-                                                    });
-                                                    setFormData({ ...formData, imageUrl: res.data.data.url });
-                                                } catch (err) {
-                                                    console.error("Upload failed", err);
-                                                    showToast("Failed to upload image", "error");
-                                                }
-                                            }}
-                                            className="bg-black/50 border-white/10"
-                                        />
+                                    {/* Section: Event Type - visual selector */}
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Event Type</label>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {typeOptions.map(opt => {
+                                                const Icon = opt.icon;
+                                                const isActive = formData.type === opt.value;
+                                                const colorMap: Record<string, { active: string; ring: string; icon: string }> = {
+                                                    red: { active: 'bg-red-500/15 border-red-500/50', ring: 'ring-red-500/30', icon: 'text-red-400' },
+                                                    emerald: { active: 'bg-emerald-500/15 border-emerald-500/50', ring: 'ring-emerald-500/30', icon: 'text-emerald-400' },
+                                                    blue: { active: 'bg-blue-500/15 border-blue-500/50', ring: 'ring-blue-500/30', icon: 'text-blue-400' },
+                                                };
+                                                const c = colorMap[opt.color];
+                                                return (
+                                                    <button
+                                                        key={opt.value}
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, type: opt.value })}
+                                                        className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
+                                                            isActive ? `${c.active} ring-2 ${c.ring}` : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20'
+                                                        }`}
+                                                    >
+                                                        <Icon className={`w-5 h-5 ${isActive ? c.icon : 'text-gray-500'}`} />
+                                                        <span className={`text-sm font-semibold ${isActive ? 'text-white' : 'text-gray-400'}`}>{opt.label}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                    {formData.imageUrl && (
-                                        <div className="relative w-full h-32 rounded-lg overflow-hidden border border-white/10 mt-2">
-                                            <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData({ ...formData, imageUrl: "" })}
-                                                className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-red-500/50"
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </button>
+
+                                    {/* Section: Basic Info */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <Info className="w-3.5 h-3.5" /> Basic Information
+                                        </div>
+                                        <div>
+                                            <label className="text-sm text-gray-300 mb-1.5 block">Event Name <span className="text-red-400">*</span></label>
+                                            <input
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                required
+                                                placeholder="e.g. KKFI Inter-Dojo Championship 2026"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm text-gray-300 mb-1.5 block">Description</label>
+                                            <textarea
+                                                value={formData.description}
+                                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                                rows={3}
+                                                placeholder="Brief description of the event..."
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all resize-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Section: Cover Image */}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <ImagePlus className="w-3.5 h-3.5" /> Cover Image
+                                        </div>
+                                        {formData.imageUrl ? (
+                                            <div className="relative rounded-xl overflow-hidden border border-white/10 group">
+                                                <img src={formData.imageUrl} alt="Cover" className="w-full h-40 object-cover" />
+                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                                    <label className="cursor-pointer px-3 py-2 bg-white/20 backdrop-blur rounded-lg text-sm text-white hover:bg-white/30 transition-colors">
+                                                        Change
+                                                        <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (!file) return;
+                                                            const uploadData = new FormData();
+                                                            uploadData.append('image', file);
+                                                            try {
+                                                                const res = await api.post('/upload', uploadData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                                                                setFormData({ ...formData, imageUrl: res.data.data.url });
+                                                            } catch { showToast("Upload failed", "error"); }
+                                                        }} />
+                                                    </label>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                                                        className="px-3 py-2 bg-red-500/30 backdrop-blur rounded-lg text-sm text-red-300 hover:bg-red-500/50 transition-colors"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <label className="cursor-pointer flex flex-col items-center justify-center gap-2 py-8 border-2 border-dashed border-white/15 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/25 transition-all">
+                                                <ImagePlus className="w-8 h-8 text-gray-600" />
+                                                <span className="text-sm text-gray-500">Click to upload cover image</span>
+                                                <span className="text-xs text-gray-600">PNG, JPG up to 5MB</span>
+                                                <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    const uploadData = new FormData();
+                                                    uploadData.append('image', file);
+                                                    try {
+                                                        const res = await api.post('/upload', uploadData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                                                        setFormData({ ...formData, imageUrl: res.data.data.url });
+                                                    } catch { showToast("Upload failed", "error"); }
+                                                }} />
+                                            </label>
+                                        )}
+                                    </div>
+
+                                    {/* Section: Schedule */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <CalendarClock className="w-3.5 h-3.5" /> Schedule
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Start Date <span className="text-red-400">*</span></label>
+                                                <input
+                                                    type="date"
+                                                    value={formData.startDate}
+                                                    onChange={(e) => handleStartDateChange(e.target.value)}
+                                                    required
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all [color-scheme:dark]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">End Date <span className="text-red-400">*</span></label>
+                                                <input
+                                                    type="date"
+                                                    value={formData.endDate}
+                                                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                                                    required
+                                                    min={formData.startDate}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all [color-scheme:dark]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Reg. Deadline <span className="text-red-400">*</span></label>
+                                                <input
+                                                    type="date"
+                                                    value={formData.registrationDeadline}
+                                                    onChange={(e) => setFormData({ ...formData, registrationDeadline: e.target.value })}
+                                                    required
+                                                    max={formData.startDate}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all [color-scheme:dark]"
+                                                />
+                                            </div>
+                                        </div>
+                                        {formData.startDate && !editingEvent && (
+                                            <p className="text-[11px] text-gray-600 flex items-center gap-1">
+                                                <Info className="w-3 h-3" /> End date and deadline were auto-filled. Adjust if needed.
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Section: Location & Venue */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <MapPin className="w-3.5 h-3.5" /> Location & Venue
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Host Dojo</label>
+                                                <select
+                                                    value={formData.dojoId}
+                                                    onChange={(e) => handleDojoChange(e.target.value)}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-red-500/50 transition-all appearance-none cursor-pointer"
+                                                >
+                                                    <option value="" className="bg-zinc-900">Select a dojo...</option>
+                                                    {dojos.map(d => (
+                                                        <option key={d.id} value={d.id} className="bg-zinc-900">{d.name}</option>
+                                                    ))}
+                                                </select>
+                                                <p className="text-[11px] text-gray-600 mt-1">Selecting a dojo auto-fills location</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Location <span className="text-red-400">*</span></label>
+                                                <input
+                                                    value={formData.location}
+                                                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                                    required
+                                                    placeholder="City, State"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Section: Capacity & Pricing */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <IndianRupee className="w-3.5 h-3.5" /> Capacity & Pricing
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Max Participants</label>
+                                                <input
+                                                    type="number"
+                                                    value={formData.maxParticipants}
+                                                    onChange={(e) => setFormData({ ...formData, maxParticipants: Number(e.target.value) })}
+                                                    min={1}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Member Fee (₹)</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
+                                                    <input
+                                                        type="number"
+                                                        value={formData.memberFee}
+                                                        onChange={(e) => setFormData({ ...formData, memberFee: Number(e.target.value) })}
+                                                        min={0}
+                                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Non-Member (₹)</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
+                                                    <input
+                                                        type="number"
+                                                        value={formData.nonMemberFee}
+                                                        onChange={(e) => setFormData({ ...formData, nonMemberFee: Number(e.target.value) })}
+                                                        min={0}
+                                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Live Summary */}
+                                    {formData.name && (
+                                        <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4">
+                                            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Preview</p>
+                                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${typeAccent[formData.type]?.badge || 'bg-gray-500/15 text-gray-400'}`}>
+                                                    {formData.type}
+                                                </span>
+                                                <span className="text-white font-semibold">{formData.name}</span>
+                                                {formData.location && <span className="text-gray-500">· {formData.location}</span>}
+                                                {formData.startDate && (
+                                                    <span className="text-gray-500">
+                                                        · {new Date(formData.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                                        {formData.endDate && formData.endDate !== formData.startDate && ` – ${new Date(formData.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`}
+                                                    </span>
+                                                )}
+                                                {formData.memberFee > 0 && <span className="text-gray-500">· ₹{formData.memberFee}</span>}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Start Date</Label>
-                                        <Input
-                                            type="date"
-                                            value={formData.startDate}
-                                            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                                            required
-                                            className="bg-black/50 border-white/10"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>End Date</Label>
-                                        <Input
-                                            type="date"
-                                            value={formData.endDate}
-                                            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                                            required
-                                            className="bg-black/50 border-white/10"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Deadline</Label>
-                                        <Input
-                                            type="date"
-                                            value={formData.registrationDeadline}
-                                            onChange={(e) => setFormData({ ...formData, registrationDeadline: e.target.value })}
-                                            required
-                                            className="bg-black/50 border-white/10"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Location</Label>
-                                        <Input
-                                            value={formData.location}
-                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                            required
-                                            className="bg-black/50 border-white/10"
-                                            list="dojo-locations"
-                                            placeholder="Start typing or select a dojo location..."
-                                        />
-                                        <datalist id="dojo-locations">
-                                            {dojos.map(d => (
-                                                <option key={d.id} value={d.name} />
-                                            ))}
-                                        </datalist>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Host Dojo</Label>
-                                        <select
-                                            value={formData.dojoId}
-                                            onChange={(e) => setFormData({ ...formData, dojoId: e.target.value })}
-                                            className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                        >
-                                            <option value="">Select Dojo...</option>
-                                            {dojos.map(d => (
-                                                <option key={d.id} value={d.id}>{d.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Max Participants</Label>
-                                        <Input
-                                            type="number"
-                                            value={formData.maxParticipants}
-                                            onChange={(e) => setFormData({ ...formData, maxParticipants: Number(e.target.value) })}
-                                            className="bg-black/50 border-white/10"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Member Fee (₹)</Label>
-                                        <Input
-                                            type="number"
-                                            value={formData.memberFee}
-                                            onChange={(e) => setFormData({ ...formData, memberFee: Number(e.target.value) })}
-                                            className="bg-black/50 border-white/10"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Non-Member Fee (₹)</Label>
-                                        <Input
-                                            type="number"
-                                            value={formData.nonMemberFee}
-                                            onChange={(e) => setFormData({ ...formData, nonMemberFee: Number(e.target.value) })}
-                                            className="bg-black/50 border-white/10"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 flex justify-end gap-2">
-                                    <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                                    <Button type="submit" className="bg-primary hover:bg-primary-dark text-white">
-                                        <Save className="w-4 h-4 mr-2" /> Save Event
-                                    </Button>
+                                {/* Footer Actions */}
+                                <div className="flex items-center justify-between px-6 py-4 border-t border-white/10 bg-white/[0.02]">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSaving}
+                                        className="px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 text-white text-sm font-bold rounded-xl transition-colors flex items-center gap-2"
+                                    >
+                                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                        {isSaving ? 'Saving...' : editingEvent ? 'Update Event' : 'Create Event'}
+                                    </button>
                                 </div>
                             </form>
                         </motion.div>

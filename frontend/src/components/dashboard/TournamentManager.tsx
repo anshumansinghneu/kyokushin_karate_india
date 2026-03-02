@@ -6,7 +6,8 @@ import {
     Trophy, Plus, Calendar, MapPin, Users, Edit2, Trash2,
     Eye, Medal, Target, Search, X, CheckCircle, XCircle,
     Download, ChevronDown, ChevronUp,
-    UserCheck, RefreshCw, Award, ArrowRightLeft, Layers, FileCheck
+    UserCheck, RefreshCw, Award, ArrowRightLeft, Layers, FileCheck,
+    Loader2, Info, IndianRupee, CalendarClock, ListPlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1005,78 +1006,179 @@ export default function TournamentManager() {
             <AnimatePresence>
                 {(showCreateModal || editingTournament) && (
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-black/95 border border-white/10 rounded-2xl w-full max-w-2xl my-8">
-                            <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                                <h3 className="text-xl font-bold text-white">
-                                    {editingTournament ? "Edit Tournament" : "Create Tournament"}
-                                </h3>
+                        <motion.div initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.97 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-2xl my-8 overflow-hidden shadow-2xl">
+
+                            {/* Header */}
+                            <div className="flex justify-between items-center px-6 py-4 border-b border-white/10 bg-white/[0.02]">
+                                <div>
+                                    <h3 className="text-lg font-bold text-white">
+                                        {editingTournament ? "Edit Tournament" : "Create Tournament"}
+                                    </h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        {editingTournament ? 'Update tournament details' : 'Set up a new tournament event'}
+                                    </p>
+                                </div>
                                 <button onClick={() => { setShowCreateModal(false); setEditingTournament(null); resetForm(); }}
-                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                                    <X className="w-5 h-5 text-white" />
+                                    className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors">
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
-                            <form onSubmit={editingTournament ? handleUpdate : handleCreate} className="p-6 space-y-4">
-                                <div>
-                                    <Label className="text-white">Tournament Name *</Label>
-                                    <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        required className="bg-white/5 border-white/10 text-white mt-1" placeholder="e.g., KKFI National Championship 2026" />
-                                </div>
-                                <div>
-                                    <Label className="text-white">Description</Label>
-                                    <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white mt-1 min-h-[80px]" />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div><Label className="text-white">Start Date *</Label>
-                                        <Input type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                                            required className="bg-white/5 border-white/10 text-white mt-1" /></div>
-                                    <div><Label className="text-white">End Date *</Label>
-                                        <Input type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                                            required className="bg-white/5 border-white/10 text-white mt-1" /></div>
-                                </div>
-                                <div><Label className="text-white">Location *</Label>
-                                    <Input value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                        required className="bg-white/5 border-white/10 text-white mt-1" placeholder="City, State" /></div>
-                                <div><Label className="text-white">Registration Deadline *</Label>
-                                    <Input type="date" value={formData.registrationDeadline} onChange={(e) => setFormData({ ...formData, registrationDeadline: e.target.value })}
-                                        required className="bg-white/5 border-white/10 text-white mt-1" /></div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div><Label className="text-white">Max Participants</Label>
-                                        <Input type="number" value={formData.maxParticipants} onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })}
-                                            className="bg-white/5 border-white/10 text-white mt-1" placeholder="Optional" /></div>
-                                    <div><Label className="text-white">Member Fee *</Label>
-                                        <Input type="number" step="0.01" value={formData.memberFee} onChange={(e) => setFormData({ ...formData, memberFee: e.target.value })}
-                                            required className="bg-white/5 border-white/10 text-white mt-1" placeholder="0.00" /></div>
-                                    <div><Label className="text-white">Non-Member Fee *</Label>
-                                        <Input type="number" step="0.01" value={formData.nonMemberFee} onChange={(e) => setFormData({ ...formData, nonMemberFee: e.target.value })}
-                                            required className="bg-white/5 border-white/10 text-white mt-1" placeholder="0.00" /></div>
-                                </div>
-                                <div>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <Label className="text-white">Categories</Label>
-                                        <Button type="button" onClick={addCategory} className="bg-white/10 hover:bg-white/20 text-white text-xs" size="sm">
-                                            <Plus className="w-3 h-3 mr-1" /> Add
-                                        </Button>
+
+                            <form onSubmit={editingTournament ? handleUpdate : handleCreate} className="overflow-y-auto max-h-[calc(100vh-200px)]">
+                                <div className="p-6 space-y-6">
+
+                                    {/* Section: Basic Info */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <Info className="w-3.5 h-3.5" /> Basic Information
+                                        </div>
+                                        <div>
+                                            <label className="text-sm text-gray-300 mb-1.5 block">Tournament Name <span className="text-red-400">*</span></label>
+                                            <input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                required placeholder="e.g., KKFI National Championship 2026"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 transition-all" />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm text-gray-300 mb-1.5 block">Description</label>
+                                            <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                                rows={3} placeholder="Brief description of the tournament..."
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 transition-all resize-none" />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        {formData.categories.map((category, index) => (
-                                            <div key={index} className="flex gap-2">
-                                                <Input value={category} onChange={(e) => updateCategory(index, e.target.value)}
-                                                    className="bg-white/5 border-white/10 text-white" placeholder="e.g., Men's -70kg" />
-                                                <Button type="button" onClick={() => removeCategory(index)} className="bg-red-600 hover:bg-red-700 text-white" size="sm">
-                                                    <X className="w-4 h-4" />
-                                                </Button>
+
+                                    {/* Section: Schedule */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <CalendarClock className="w-3.5 h-3.5" /> Schedule
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Start Date <span className="text-red-400">*</span></label>
+                                                <input type="date" value={formData.startDate} onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    const updates: any = { startDate: val };
+                                                    if (val && (!formData.endDate || new Date(formData.endDate) < new Date(val))) {
+                                                        const end = new Date(val); end.setDate(end.getDate() + 1);
+                                                        updates.endDate = end.toISOString().split('T')[0];
+                                                    }
+                                                    if (val && !formData.registrationDeadline) {
+                                                        const dl = new Date(val); dl.setDate(dl.getDate() - 14);
+                                                        updates.registrationDeadline = dl.toISOString().split('T')[0];
+                                                    }
+                                                    setFormData(prev => ({ ...prev, ...updates }));
+                                                }}
+                                                    required className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 transition-all [color-scheme:dark]" />
                                             </div>
-                                        ))}
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">End Date <span className="text-red-400">*</span></label>
+                                                <input type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                                                    required min={formData.startDate}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 transition-all [color-scheme:dark]" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm text-gray-300 mb-1.5 block">Registration Deadline <span className="text-red-400">*</span></label>
+                                            <input type="date" value={formData.registrationDeadline} onChange={(e) => setFormData({ ...formData, registrationDeadline: e.target.value })}
+                                                required max={formData.startDate}
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 transition-all [color-scheme:dark]" />
+                                            <p className="text-[11px] text-gray-600 mt-1 flex items-center gap-1">
+                                                <Info className="w-3 h-3" /> Auto-set to 14 days before start when creating
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Section: Location */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <MapPin className="w-3.5 h-3.5" /> Venue
+                                        </div>
+                                        <div>
+                                            <label className="text-sm text-gray-300 mb-1.5 block">Location <span className="text-red-400">*</span></label>
+                                            <input value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                                required placeholder="City, State"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 transition-all" />
+                                        </div>
+                                    </div>
+
+                                    {/* Section: Capacity & Pricing */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <IndianRupee className="w-3.5 h-3.5" /> Capacity & Pricing
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Max Participants</label>
+                                                <input type="number" value={formData.maxParticipants} onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })}
+                                                    placeholder="Optional"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 transition-all" />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Member Fee <span className="text-red-400">*</span></label>
+                                                <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
+                                                    <input type="number" step="0.01" value={formData.memberFee} onChange={(e) => setFormData({ ...formData, memberFee: e.target.value })}
+                                                        required placeholder="0.00"
+                                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 transition-all" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Non-Member Fee <span className="text-red-400">*</span></label>
+                                                <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
+                                                    <input type="number" step="0.01" value={formData.nonMemberFee} onChange={(e) => setFormData({ ...formData, nonMemberFee: e.target.value })}
+                                                        required placeholder="0.00"
+                                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 transition-all" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Section: Categories */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                                <ListPlus className="w-3.5 h-3.5" /> Weight Categories
+                                            </div>
+                                            <button type="button" onClick={addCategory}
+                                                className="text-xs text-yellow-400 hover:text-yellow-300 flex items-center gap-1 px-2 py-1 bg-yellow-500/10 hover:bg-yellow-500/20 rounded-lg transition-colors font-semibold">
+                                                <Plus className="w-3 h-3" /> Add Category
+                                            </button>
+                                        </div>
+                                        {formData.categories.length === 0 ? (
+                                            <p className="text-[11px] text-gray-600 flex items-center gap-1">
+                                                <Info className="w-3 h-3" /> No categories added. Click &quot;Add Category&quot; to define weight/age divisions.
+                                            </p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {formData.categories.map((category, index) => (
+                                                    <div key={index} className="flex gap-2">
+                                                        <input value={category} onChange={(e) => updateCategory(index, e.target.value)}
+                                                            placeholder={`e.g., Men's -${60 + index * 10}kg`}
+                                                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 transition-all" />
+                                                        <button type="button" onClick={() => removeCategory(index)}
+                                                            className="p-2.5 text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-colors">
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="flex justify-end gap-3 pt-4">
-                                    <Button type="button" onClick={() => { setShowCreateModal(false); setEditingTournament(null); resetForm(); }}
-                                        className="bg-white/5 hover:bg-white/10 border border-white/10 text-white">Cancel</Button>
-                                    <Button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white">
+
+                                {/* Footer Actions */}
+                                <div className="flex items-center justify-between px-6 py-4 border-t border-white/10 bg-white/[0.02]">
+                                    <button type="button" onClick={() => { setShowCreateModal(false); setEditingTournament(null); resetForm(); }}
+                                        className="px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+                                        Cancel
+                                    </button>
+                                    <button type="submit"
+                                        className="px-6 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-bold rounded-xl transition-colors flex items-center gap-2">
+                                        <Trophy className="w-4 h-4" />
                                         {editingTournament ? "Update Tournament" : "Create Tournament"}
-                                    </Button>
+                                    </button>
                                 </div>
                             </form>
                         </motion.div>

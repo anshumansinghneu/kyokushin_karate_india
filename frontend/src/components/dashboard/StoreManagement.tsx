@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Package, ShoppingBag, Plus, Edit2, Trash2, Loader2, Search,
     CheckCircle, Clock, Truck, MapPin, XCircle, ChevronDown, ChevronUp,
-    Save, X, ImagePlus
+    Save, X, ImagePlus, Tag, Ruler, IndianRupee, Info, Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
@@ -381,187 +381,210 @@ function ProductManagement() {
     // ===== EDITOR VIEW =====
     if (editing !== null) {
         return (
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-white">{editing.id ? "Edit Product" : "New Product"}</h2>
-                    <Button onClick={() => setEditing(null)} className="bg-white/5 text-gray-400 border border-white/10 hover:text-white" size="sm">
-                        <X className="w-4 h-4 mr-1" /> Cancel
-                    </Button>
+            <div className="bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden">
+                {/* Header */}
+                <div className="flex justify-between items-center px-6 py-4 border-b border-white/10 bg-white/[0.02]">
+                    <div>
+                        <h2 className="text-lg font-bold text-white">{editing.id ? "Edit Product" : "New Product"}</h2>
+                        <p className="text-xs text-gray-500 mt-0.5">{editing.id ? 'Update product details' : 'Add a new product to the store'}</p>
+                    </div>
+                    <button onClick={() => setEditing(null)} className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
 
-                <div className="bg-black/40 border border-white/10 rounded-2xl p-6 space-y-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Name *</label>
-                            <input
-                                value={form.name}
-                                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50"
-                                placeholder="Product name"
-                            />
+                <div className="p-6 space-y-6">
+                    {/* Section: Basic Info */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                            <Info className="w-3.5 h-3.5" /> Product Details
                         </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Category</label>
-                            <select
-                                value={form.category}
-                                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                                className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50"
-                            >
-                                <option value="APPAREL">Apparel</option>
-                                <option value="EQUIPMENT">Equipment</option>
-                                <option value="ACCESSORIES">Accessories</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Description</label>
-                        <textarea
-                            value={form.description}
-                            onChange={(e) => setForm({ ...form, description: e.target.value })}
-                            rows={3}
-                            className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50"
-                            placeholder="Product description"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Price (₹) *</label>
-                            <input
-                                type="number"
-                                value={form.price}
-                                onChange={(e) => setForm({ ...form, price: e.target.value })}
-                                className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50"
-                                placeholder="999"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Compare Price (₹)</label>
-                            <input
-                                type="number"
-                                value={form.comparePrice}
-                                onChange={(e) => setForm({ ...form, comparePrice: e.target.value })}
-                                className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50"
-                                placeholder="1299"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Stock Count</label>
-                            <input
-                                type="number"
-                                value={form.stockCount}
-                                onChange={(e) => setForm({ ...form, stockCount: e.target.value })}
-                                className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500/50"
-                                placeholder="10"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sizes</label>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((size) => {
-                                    const selected = form.sizes.split(',').map(s => s.trim()).filter(Boolean).includes(size);
-                                    return (
-                                        <button
-                                            key={size}
-                                            type="button"
-                                            onClick={() => {
-                                                const current = form.sizes.split(',').map(s => s.trim()).filter(Boolean);
-                                                const updated = selected ? current.filter(s => s !== size) : [...current, size];
-                                                setForm({ ...form, sizes: updated.join(',') });
-                                            }}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-bold border transition-all ${
-                                                selected
-                                                    ? 'bg-red-600 text-white border-red-600'
-                                                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
-                                            }`}
-                                        >
-                                            {size}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            {form.sizes && <p className="text-xs text-gray-500 mt-1">Selected: {form.sizes}</p>}
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Product Images</label>
-                            <div className="mt-2 space-y-2">
-                                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors text-gray-300 text-sm">
-                                    <ImagePlus className="w-4 h-4" />
-                                    Upload Image
-                                    <input
-                                        type="file"
-                                        className="hidden"
-                                        accept="image/*"
-                                        onChange={async (e) => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
-                                            const uploadData = new FormData();
-                                            uploadData.append('image', file);
-                                            try {
-                                                const res = await api.post('/upload', uploadData, {
-                                                    headers: { 'Content-Type': 'multipart/form-data' }
-                                                });
-                                                const url = res.data.data.url;
-                                                const current = form.images.split(',').map(s => s.trim()).filter(Boolean);
-                                                setForm({ ...form, images: [...current, url].join(',') });
-                                                showToast('Image uploaded!', 'success');
-                                            } catch {
-                                                showToast('Image upload failed', 'error');
-                                            }
-                                        }}
-                                    />
-                                </label>
-                                {form.images && (
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        {form.images.split(',').map(s => s.trim()).filter(Boolean).map((url, idx) => (
-                                            <div key={idx} className="relative group">
-                                                <img src={url} alt={`Product ${idx + 1}`} className="h-16 w-16 object-cover rounded-lg border border-white/10" />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const current = form.images.split(',').map(s => s.trim()).filter(Boolean);
-                                                        current.splice(idx, 1);
-                                                        setForm({ ...form, images: current.join(',') });
-                                                    }}
-                                                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-700"
-                                                >
-                                                    <X className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm text-gray-300 mb-1.5 block">Name <span className="text-red-400">*</span></label>
                                 <input
-                                    value={form.images}
-                                    onChange={(e) => setForm({ ...form, images: e.target.value })}
-                                    className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-red-500/50"
-                                    placeholder="Or paste URLs comma-separated"
+                                    value={form.name}
+                                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/20 transition-all"
+                                    placeholder="Product name"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-300 mb-1.5 block">Category</label>
+                                <select
+                                    value={form.category}
+                                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-pink-500/50 transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value="APPAREL" className="bg-zinc-900">Apparel</option>
+                                    <option value="EQUIPMENT" className="bg-zinc-900">Equipment</option>
+                                    <option value="ACCESSORIES" className="bg-zinc-900">Accessories</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-sm text-gray-300 mb-1.5 block">Description</label>
+                            <textarea
+                                value={form.description}
+                                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                                rows={3}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/20 transition-all resize-none"
+                                placeholder="Product description"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Section: Pricing */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                            <IndianRupee className="w-3.5 h-3.5" /> Pricing & Stock
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div>
+                                <label className="text-sm text-gray-300 mb-1.5 block">Price (₹) <span className="text-red-400">*</span></label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
+                                    <input
+                                        type="number"
+                                        value={form.price}
+                                        onChange={(e) => setForm({ ...form, price: e.target.value })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-4 py-3 text-sm text-white focus:outline-none focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/20 transition-all"
+                                        placeholder="999"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-300 mb-1.5 block">Compare Price</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
+                                    <input
+                                        type="number"
+                                        value={form.comparePrice}
+                                        onChange={(e) => setForm({ ...form, comparePrice: e.target.value })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-4 py-3 text-sm text-white focus:outline-none focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/20 transition-all"
+                                        placeholder="1299"
+                                    />
+                                </div>
+                                <p className="text-[11px] text-gray-600 mt-1">Shown as strikethrough</p>
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-300 mb-1.5 block">Stock Count</label>
+                                <input
+                                    type="number"
+                                    value={form.stockCount}
+                                    onChange={(e) => setForm({ ...form, stockCount: e.target.value })}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/20 transition-all"
+                                    placeholder="10"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    {/* Section: Sizes */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                            <Ruler className="w-3.5 h-3.5" /> Available Sizes
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((size) => {
+                                const selected = form.sizes.split(',').map(s => s.trim()).filter(Boolean).includes(size);
+                                return (
+                                    <button
+                                        key={size}
+                                        type="button"
+                                        onClick={() => {
+                                            const current = form.sizes.split(',').map(s => s.trim()).filter(Boolean);
+                                            const updated = selected ? current.filter(s => s !== size) : [...current, size];
+                                            setForm({ ...form, sizes: updated.join(',') });
+                                        }}
+                                        className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
+                                            selected
+                                                ? 'bg-pink-500/15 text-pink-400 border-pink-500/50 ring-1 ring-pink-500/20'
+                                                : 'bg-white/[0.03] text-gray-500 border-white/10 hover:bg-white/[0.06] hover:text-white'
+                                        }`}
+                                    >
+                                        {size}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Section: Images */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                            <ImagePlus className="w-3.5 h-3.5" /> Product Images
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                            {form.images.split(',').map(s => s.trim()).filter(Boolean).map((url, idx) => (
+                                <div key={idx} className="relative group rounded-xl overflow-hidden border border-white/10">
+                                    <img src={url} alt={`Product ${idx + 1}`} className="h-20 w-20 object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const current = form.images.split(',').map(s => s.trim()).filter(Boolean);
+                                            current.splice(idx, 1);
+                                            setForm({ ...form, images: current.join(',') });
+                                        }}
+                                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                    >
+                                        <Trash2 className="w-4 h-4 text-red-400" />
+                                    </button>
+                                </div>
+                            ))}
+                            <label className="cursor-pointer h-20 w-20 flex flex-col items-center justify-center gap-1 border-2 border-dashed border-white/15 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/25 transition-all">
+                                <ImagePlus className="w-5 h-5 text-gray-600" />
+                                <span className="text-[10px] text-gray-600">Upload</span>
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        const uploadData = new FormData();
+                                        uploadData.append('image', file);
+                                        try {
+                                            const res = await api.post('/upload', uploadData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                                            const url = res.data.data.url;
+                                            const current = form.images.split(',').map(s => s.trim()).filter(Boolean);
+                                            setForm({ ...form, images: [...current, url].join(',') });
+                                            showToast('Image uploaded!', 'success');
+                                        } catch { showToast('Upload failed', 'error'); }
+                                    }}
+                                />
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* Featured toggle */}
+                    <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/10 rounded-xl">
                         <input
                             type="checkbox"
                             id="featured"
                             checked={form.featured}
                             onChange={(e) => setForm({ ...form, featured: e.target.checked })}
-                            className="w-4 h-4 rounded bg-white/10 border-white/20 text-red-600 focus:ring-red-500"
+                            className="w-4 h-4 rounded bg-white/10 border-white/20 text-pink-600 focus:ring-pink-500"
                         />
-                        <label htmlFor="featured" className="text-sm text-gray-300">Featured product</label>
+                        <label htmlFor="featured" className="text-sm text-gray-300 flex items-center gap-1.5">
+                            <Star className="w-3.5 h-3.5 text-yellow-500" /> Mark as featured product
+                        </label>
                     </div>
+                </div>
 
-                    <div className="flex justify-end">
-                        <Button onClick={saveProduct} disabled={saving} className="bg-red-600 hover:bg-red-700 text-white">
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                            {editing.id ? "Update Product" : "Create Product"}
-                        </Button>
-                    </div>
+                {/* Footer */}
+                <div className="flex items-center justify-between px-6 py-4 border-t border-white/10 bg-white/[0.02]">
+                    <button type="button" onClick={() => setEditing(null)} className="px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+                        Cancel
+                    </button>
+                    <button
+                        onClick={saveProduct}
+                        disabled={saving}
+                        className="px-6 py-2.5 bg-pink-600 hover:bg-pink-700 disabled:bg-pink-600/50 text-white text-sm font-bold rounded-xl transition-colors flex items-center gap-2"
+                    >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {editing.id ? "Update Product" : "Create Product"}
+                    </button>
                 </div>
             </div>
         );
