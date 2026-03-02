@@ -10,3 +10,5 @@ frontend/.env.production
 /generated/prisma
 .vercel
 .env*.local
+.DS_Store
+backend/src/uploads/gallery/

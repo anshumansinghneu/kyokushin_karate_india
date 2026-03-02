@@ -7,18 +7,35 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Official platform for Kyokushin Karate Foundation of India. Full-contact karate training, dojos, tournaments & belt gradings.',
     start_url: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#000000',
     theme_color: '#dc2626',
+    categories: ['sports', 'education', 'fitness'],
     icons: [
       {
         src: '/kkfi-logo.avif',
         sizes: '192x192',
         type: 'image/avif',
+        purpose: 'any',
       },
       {
         src: '/kkfi-logo.avif',
         sizes: '512x512',
         type: 'image/avif',
+        purpose: 'any',
+      },
+      {
+        src: '/kkfi-logo.avif',
+        sizes: '512x512',
+        type: 'image/avif',
+        purpose: 'maskable',
+      },
+    ],
+    screenshots: [
+      {
+        src: '/og-image.png',
+        sizes: '1200x630',
+        type: 'image/png',
       },
     ],
   }

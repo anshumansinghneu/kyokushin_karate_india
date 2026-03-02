@@ -10,7 +10,7 @@ import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X, Download, A
 import Link from "next/link";
 import api from "@/lib/api";
 import { getUserProfileImage } from "@/lib/imageUtils";
-import { INDIAN_CITIES, CityData } from "@/lib/indianCities";
+import { searchCities, CityData } from "@/lib/india-locations";
 import BeltCertificate from "@/components/BeltCertificate";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -190,9 +190,7 @@ export default function ProfilePage() {
     }, [user]);
 
     const filteredCities = cityQuery.length >= 1
-        ? INDIAN_CITIES.filter((c) =>
-              c.city.toLowerCase().startsWith(cityQuery.toLowerCase())
-          ).slice(0, 20)
+        ? searchCities(cityQuery, 20)
         : [];
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

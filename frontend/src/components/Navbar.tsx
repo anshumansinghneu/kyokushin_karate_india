@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle, Receipt,
-    ShoppingBag, Calendar, MapPin, Users, Image, Heart, HandHeart, ShieldCheck, Radio, Swords, Shield
+    ShoppingBag, Calendar, MapPin, Users, Image, Heart, HandHeart, ShieldCheck, Radio, Swords, Shield, BookOpen, Award
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
@@ -195,6 +195,8 @@ export default function Navbar() {
     const exploreDropdown: NavDropdown = {
         name: "Explore",
         items: [
+            { name: "What is Kyokushin?", href: "/what-is-kyokushin", icon: BookOpen, description: "Learn the art" },
+            { name: "Belt System", href: "/belt-system", icon: Award, description: "Ranking guide" },
             { name: "Seminars", href: "/seminars", icon: Shield, description: "Self-defense workshops" },
             { name: "Gallery", href: "/gallery", icon: Image, description: "Photos & moments" },
             { name: "Instructors", href: "/instructors", icon: Users, description: "Our senseis" },
@@ -204,7 +206,7 @@ export default function Navbar() {
     };
 
     const navItems: NavItem[] = [
-        { name: "Dojos", href: "/dojos" },
+        { name: "Find a Dojo", href: "/find-a-dojo" },
         eventsDropdown,
         exploreDropdown,
         { name: "Store", href: "/store" },
@@ -215,7 +217,7 @@ export default function Navbar() {
     const mobileGroups = [
         {
             label: null,
-            items: [{ name: "Dojos", href: "/dojos", icon: MapPin }],
+            items: [{ name: "Find a Dojo", href: "/find-a-dojo", icon: MapPin }],
         },
         {
             label: "Events",
@@ -228,6 +230,8 @@ export default function Navbar() {
         {
             label: "Explore",
             items: [
+                { name: "What is Kyokushin?", href: "/what-is-kyokushin", icon: BookOpen },
+                { name: "Belt System", href: "/belt-system", icon: Award },
                 { name: "Seminars", href: "/seminars", icon: Shield },
                 { name: "Gallery", href: "/gallery", icon: Image },
                 { name: "Instructors", href: "/instructors", icon: Users },

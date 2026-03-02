@@ -10,6 +10,7 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import MobileBottomNav from "@/components/ui/MobileBottomNav";
 import BackToTop from "@/components/ui/BackToTop";
 import PageTransition from "@/components/PageTransition";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -103,8 +104,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="KKFI" />
+        <link rel="apple-touch-icon" href="/kkfi-logo.avif" />
+      </head>
       <body className={cn(montserrat.variable, "min-h-screen bg-black font-sans antialiased")}>
         <StructuredData />
+        <ServiceWorkerRegistrar />
         <ToastProvider>
           <ScrollProgress />
           <Navbar />

@@ -58,10 +58,12 @@ export default function Footer() {
                         <h3 className="text-white font-bold uppercase tracking-widest text-sm md:text-base mb-3 sm:mb-4 md:mb-6">Quick Links</h3>
                         <ul className="space-y-2 sm:space-y-3 md:space-y-4 text-sm md:text-base text-gray-400">
                             {[
-                                { href: "/dojos", label: "Find a Dojo" },
+                                { href: "/find-a-dojo", label: "Find a Dojo" },
                                 { href: "/events", label: "Upcoming Events" },
                                 { href: "/gallery", label: "Photo Gallery" },
                                 { href: "/syllabus", label: "Training Syllabus" },
+                                { href: "/belt-system", label: "Belt System" },
+                                { href: "/what-is-kyokushin", label: "What is Kyokushin?" },
                                 { href: "/calendar", label: "Calendar" },
                                 { href: "/contact", label: "Contact" },
                             ].map((link) => (
