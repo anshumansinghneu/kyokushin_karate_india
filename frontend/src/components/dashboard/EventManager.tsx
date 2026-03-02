@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Plus, Edit2, Trash2, X, Save, MapPin, Users, DollarSign } from "lucide-react";
+import { Calendar, Plus, Edit2, Trash2, X, Save, MapPin, Users, DollarSign, Search, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +37,8 @@ export default function EventManager() {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+    const [typeFilter, setTypeFilter] = useState<'ALL' | 'TOURNAMENT' | 'CAMP' | 'SEMINAR'>('ALL');
+    const [searchQuery, setSearchQuery] = useState("");
     const [formData, setFormData] = useState({
         name: "",
         type: "TOURNAMENT",
@@ -171,6 +173,36 @@ export default function EventManager() {
         }
     };
 
+    const getEventStatus = (event: Event) => {
+        const now = new Date();
+        const start = new Date(event.startDate);
+        const end = new Date(event.endDate);
+        if (now < start) return 'upcoming' as const;
+        if (now >= start && now <= end) return 'live' as const;
+        return 'past' as const;
+    };
+
+    const typeAccent: Record<string, { bar: string; badge: string }> = {
+        TOURNAMENT: { bar: 'bg-red-500', badge: 'bg-red-500/15 text-red-400 border border-red-500/30' },
+        CAMP: { bar: 'bg-emerald-500', badge: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' },
+        SEMINAR: { bar: 'bg-blue-500', badge: 'bg-blue-500/15 text-blue-400 border border-blue-500/30' },
+    };
+
+    const statusStyles: Record<string, { label: string; cls: string }> = {
+        upcoming: { label: 'Upcoming', cls: 'bg-emerald-500/15 text-emerald-400' },
+        live: { label: 'Live Now', cls: 'bg-red-500/15 text-red-400 animate-pulse' },
+        past: { label: 'Completed', cls: 'bg-gray-500/15 text-gray-400' },
+    };
+
+    const filteredEvents = events.filter(event => {
+        if (typeFilter !== 'ALL' && event.type !== typeFilter) return false;
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            return event.name.toLowerCase().includes(q) || event.location.toLowerCase().includes(q);
+        }
+        return true;
+    });
+
     return (
         <div className="space-y-6">
             {/* Delete Confirmation Modal */}
@@ -208,16 +240,47 @@ export default function EventManager() {
                 )}
             </AnimatePresence>
 
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <Calendar className="text-primary" /> Event Management
-                </h2>
-                <Button onClick={() => handleOpenModal()} className="bg-primary hover:bg-primary-dark text-white">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-black text-white flex items-center gap-2">
+                        <Calendar className="w-6 h-6 text-red-500" /> Event Management
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">{events.length} event{events.length !== 1 ? 's' : ''} total</p>
+                </div>
+                <Button onClick={() => handleOpenModal()} className="bg-red-600 hover:bg-red-700 text-white font-bold">
                     <Plus className="w-4 h-4 mr-2" /> Create Event
                 </Button>
             </div>
 
-            {events.length === 0 && !isLoading && (
+            {/* Search & Filters */}
+            <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <input
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search events by name or location..."
+                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
+                    />
+                </div>
+                <div className="flex gap-1.5 flex-shrink-0">
+                    {(['ALL', 'TOURNAMENT', 'CAMP', 'SEMINAR'] as const).map(type => (
+                        <button
+                            key={type}
+                            onClick={() => setTypeFilter(type)}
+                            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${
+                                typeFilter === type
+                                    ? 'bg-red-500/15 text-red-400 border border-red-500/30'
+                                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-transparent'
+                            }`}
+                        >
+                            {type === 'ALL' ? 'All' : type.charAt(0) + type.slice(1).toLowerCase()}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {filteredEvents.length === 0 && !isLoading && (
                 <div className="text-center py-16 glass-card">
                     <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-600" />
                     <p className="text-lg font-bold text-white">No events yet</p>
@@ -229,50 +292,95 @@ export default function EventManager() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {events.map((event) => (
-                    <motion.div
-                        key={event.id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="glass-card p-6 relative group"
-                    >
-                        <div className="absolute top-4 right-4 flex gap-2">
-                            <Button variant="ghost" className="h-8 w-8 p-0 text-blue-400 hover:bg-blue-500/20" onClick={() => handleOpenModal(event)}>
-                                <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/20" onClick={() => handleDeleteClick(event.id)}>
-                                <Trash2 className="w-4 h-4" />
-                            </Button>
-                        </div>
+                {filteredEvents.map((event) => {
+                    const status = getEventStatus(event);
+                    const statusCfg = statusStyles[status];
+                    const typeCfg = typeAccent[event.type] || typeAccent.TOURNAMENT;
+                    const deadline = new Date(event.registrationDeadline);
+                    const daysUntilDeadline = Math.ceil((deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className={`text-xs font-bold px-2 py-1 rounded-full border ${event.type === 'TOURNAMENT' ? 'border-red-500 text-red-400' : 'border-blue-500 text-blue-400'
-                                }`}>
-                                {event.type}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                                {new Date(event.startDate).toLocaleDateString()}
-                            </span>
-                        </div>
+                    return (
+                        <motion.div
+                            key={event.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all group"
+                        >
+                            {/* Color accent bar */}
+                            <div className={`h-1 ${typeCfg.bar}`} />
 
-                        <h3 className="text-xl font-bold text-white mb-1 truncate">{event.name}</h3>
+                            {/* Cover image */}
+                            {event.imageUrl && (
+                                <div className="relative h-36 overflow-hidden">
+                                    <img src={event.imageUrl} alt={event.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                                </div>
+                            )}
 
-                        <div className="space-y-2 text-sm text-gray-400 mt-4">
-                            <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4" />
-                                <span className="truncate">{event.location}</span>
+                            <div className="p-5">
+                                {/* Header: Type + Status */}
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${typeCfg.badge}`}>
+                                        {event.type}
+                                    </span>
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${statusCfg.cls}`}>
+                                        {statusCfg.label}
+                                    </span>
+                                </div>
+
+                                {/* Title & date */}
+                                <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">{event.name}</h3>
+                                <p className="text-xs text-gray-500 mb-4">
+                                    {new Date(event.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                    {event.startDate !== event.endDate && ` — ${new Date(event.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                                </p>
+
+                                {/* Details */}
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex items-center gap-2 text-gray-400">
+                                        <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                                        <span className="truncate">{event.location}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-gray-400">
+                                        <Users className="w-3.5 h-3.5 flex-shrink-0" />
+                                        <span>{event.maxParticipants} Max</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-gray-400">
+                                        <DollarSign className="w-3.5 h-3.5 flex-shrink-0" />
+                                        <span>₹{event.memberFee}</span>
+                                        {event.nonMemberFee > 0 && event.nonMemberFee !== event.memberFee && (
+                                            <span className="text-gray-600">/ ₹{event.nonMemberFee} non-member</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Deadline */}
+                                {status === 'upcoming' && daysUntilDeadline > 0 && (
+                                    <div className={`mt-3 pt-3 border-t border-white/5 text-xs ${daysUntilDeadline <= 7 ? 'text-amber-400' : 'text-gray-500'}`}>
+                                        <Clock className="w-3 h-3 inline mr-1" />
+                                        Registration closes in {daysUntilDeadline} day{daysUntilDeadline !== 1 ? 's' : ''}
+                                    </div>
+                                )}
+
+                                {/* Actions */}
+                                <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/5">
+                                    <button
+                                        onClick={() => handleOpenModal(event)}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors"
+                                    >
+                                        <Edit2 className="w-3 h-3" /> Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteClick(event.id)}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 className="w-3 h-3" /> Delete
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Users className="w-4 h-4" />
-                                {event.maxParticipants} Max
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <DollarSign className="w-4 h-4" />
-                                ₹{event.memberFee}
-                            </div>
-                        </div>
-                    </motion.div>
-                ))}
+                        </motion.div>
+                    );
+                })}
             </div>
 
             <AnimatePresence>

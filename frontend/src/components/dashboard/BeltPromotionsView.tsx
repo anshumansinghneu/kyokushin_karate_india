@@ -186,8 +186,10 @@ export default function BeltPromotionsView() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-white mb-2">Belt Promotions</h1>
-                    <p className="text-gray-400">Promote students to their next belt rank.</p>
+                    <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
+                        <Medal className="w-6 h-6 text-blue-500" /> Belt Promotions
+                    </h1>
+                    <p className="text-gray-500 text-sm">Promote students to their next belt rank.</p>
                 </div>
                 {selectedStudents.size > 0 && (
                     <Button

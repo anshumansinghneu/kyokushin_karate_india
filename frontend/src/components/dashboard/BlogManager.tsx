@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { Edit, Trash2, Plus, Save, X, Upload, Image, FileText, CheckCircle, Clock } from 'lucide-react';
+import { Edit, Trash2, Plus, Save, X, Upload, Image, FileText, CheckCircle, Clock, Search } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { motion } from 'framer-motion';
 import { useToast } from "@/contexts/ToastContext";
@@ -28,6 +28,7 @@ const BlogManager = () => {
     const [currentPost, setCurrentPost] = useState<Partial<Post>>({});
     const [uploading, setUploading] = useState(false);
     const [filter, setFilter] = useState<'ALL' | 'PUBLISHED' | 'PENDING'>('ALL');
+    const [blogSearch, setBlogSearch] = useState("");
     const [blocks, setBlocks] = useState<{ id: string; type: 'text' | 'image'; content: string }[]>([]);
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -207,8 +208,12 @@ const BlogManager = () => {
 
     // Filter posts
     const filteredPosts = posts.filter(post => {
-        if (filter === 'ALL') return true;
-        return post.status === filter;
+        if (filter !== 'ALL' && post.status !== filter) return false;
+        if (blogSearch) {
+            const q = blogSearch.toLowerCase();
+            return post.title.toLowerCase().includes(q) || post.author?.name?.toLowerCase().includes(q) || (post.excerpt || '').toLowerCase().includes(q);
+        }
+        return true;
     });
 
     if (isLoading) return <div className="text-white">Loading blogs...</div>;
@@ -417,6 +422,33 @@ const BlogManager = () => {
                 </div>
             )}
 
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-black text-white flex items-center gap-2">
+                        <FileText className="w-6 h-6 text-blue-500" /> Blog Management
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">{posts.length} post{posts.length !== 1 ? 's' : ''} total</p>
+                </div>
+                <button
+                    onClick={() => { setCurrentPost({}); setIsEditing(true); }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2 text-sm font-bold transition-colors"
+                >
+                    <Plus size={16} /> New Post
+                </button>
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <input
+                    value={blogSearch}
+                    onChange={(e) => setBlogSearch(e.target.value)}
+                    placeholder="Search by title, author or excerpt..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+                />
+            </div>
+
             {/* Stats Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="glass-card p-4 flex items-center justify-between">
@@ -448,18 +480,7 @@ const BlogManager = () => {
                 </div>
             </div>
 
-            <div className="glass-card overflow-hidden">
-                <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                    <h2 className="text-lg font-bold text-white">Blog Management</h2>
-                    <button
-                        onClick={() => { setCurrentPost({}); setIsEditing(true); }}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark flex items-center gap-2 text-sm font-bold transition-colors"
-                    >
-                        <Plus size={16} /> New Post
-                    </button>
-                </div>
-
-                {/* Filters */}
+            <div className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-white/10 flex gap-4">
                     <button
                         onClick={() => setFilter('ALL')}

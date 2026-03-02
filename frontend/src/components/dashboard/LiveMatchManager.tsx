@@ -205,11 +205,10 @@ export default function LiveMatchManager() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <div className="flex items-center gap-3 mb-1">
-                        <Radio className="w-6 h-6 text-red-500" />
-                        <h1 className="text-3xl font-black text-white">Live Control Center</h1>
-                    </div>
-                    <p className="text-gray-400">Manage matches, update scores, and publish results in real-time</p>
+                    <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-1">
+                        <Radio className="w-6 h-6 text-red-500" /> Live Control Center
+                    </h1>
+                    <p className="text-gray-500 text-sm">Manage matches, update scores, and publish results in real-time</p>
                 </div>
                 <Button onClick={fetchLiveMatches} className="bg-white/5 hover:bg-white/10 text-white border border-white/10">
                     <RefreshCw className="w-4 h-4 mr-2" /> Refresh

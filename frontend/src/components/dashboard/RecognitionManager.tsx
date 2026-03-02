@@ -150,8 +150,10 @@ export default function RecognitionManager() {
 
             <div className="flex justify-between items-end">
                 <div>
-                    <h2 className="text-3xl font-black text-white mb-2">Monthly Recognition</h2>
-                    <p className="text-gray-400">Manage Top Instructors and Students for <span className="text-white font-bold">{monthName} {monthInfo.year}</span></p>
+                    <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
+                        <Trophy className="w-6 h-6 text-yellow-500" /> Monthly Recognition
+                    </h1>
+                    <p className="text-gray-500 text-sm">Manage Top Instructors and Students for <span className="text-white font-bold">{monthName} {monthInfo.year}</span></p>
                 </div>
             </div>
 

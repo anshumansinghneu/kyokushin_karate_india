@@ -181,8 +181,10 @@ export default function PaymentManagement() {
         <div className="space-y-8">
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-black text-white mb-2">Payment Management</h1>
-                    <p className="text-gray-400">Track all payments, revenue, and transactions.</p>
+                    <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
+                        <IndianRupee className="w-6 h-6 text-green-500" /> Payment Management
+                    </h1>
+                    <p className="text-gray-500 text-sm">Track all payments, revenue, and transactions.</p>
                 </div>
                 <div className="flex gap-3">
                     <Button

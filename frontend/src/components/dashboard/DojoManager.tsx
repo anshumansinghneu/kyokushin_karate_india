@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Plus, Edit2, Trash2, X, Save, Building } from "lucide-react";
+import { MapPin, Plus, Edit2, Trash2, X, Save, Building, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +25,7 @@ export default function DojoManager() {
     const [dojos, setDojos] = useState<Dojo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const [editingDojo, setEditingDojo] = useState<Dojo | null>(null);
     const [formData, setFormData] = useState({
         name: "",
@@ -163,13 +164,27 @@ export default function DojoManager() {
                 )}
             </AnimatePresence>
 
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <Building className="text-primary" /> Dojo Management
-                </h2>
-                <Button onClick={() => handleOpenModal()} className="bg-primary hover:bg-primary-dark text-white">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-black text-white flex items-center gap-2">
+                        <Building className="w-6 h-6 text-green-500" /> Dojo Management
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">{dojos.length} dojo{dojos.length !== 1 ? 's' : ''} registered</p>
+                </div>
+                <Button onClick={() => handleOpenModal()} className="bg-red-600 hover:bg-red-700 text-white font-bold">
                     <Plus className="w-4 h-4 mr-2" /> Add New Dojo
                 </Button>
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search dojos by name, city, state or code..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50"
+                />
             </div>
 
             {dojos.length === 0 && !isLoading && (
@@ -184,29 +199,42 @@ export default function DojoManager() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {dojos.map((dojo) => (
+                {dojos.filter(d => {
+                    if (!searchQuery) return true;
+                    const q = searchQuery.toLowerCase();
+                    return d.name.toLowerCase().includes(q) || d.city.toLowerCase().includes(q) || d.state.toLowerCase().includes(q) || d.dojoCode.toLowerCase().includes(q);
+                }).map((dojo) => (
                     <motion.div
                         key={dojo.id}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="glass-card p-6 relative group"
+                        className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all"
                     >
-                        <div className="absolute top-4 right-4 flex gap-2">
-                            <Button variant="ghost" className="h-8 w-8 p-0 text-blue-400 hover:bg-blue-500/20" onClick={() => handleOpenModal(dojo)}>
-                                <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/20" onClick={() => handleDeleteClick(dojo.id)}>
-                                <Trash2 className="w-4 h-4" />
-                            </Button>
-                        </div>
+                        <div className="h-1 bg-green-500" />
+                        <div className="p-5">
+                            <div className="flex items-start justify-between mb-1">
+                                <h3 className="text-lg font-bold text-white">{dojo.name}</h3>
+                            </div>
+                            <span className="inline-block text-xs font-mono text-green-400 bg-green-500/10 px-2 py-0.5 rounded-md mb-3">{dojo.dojoCode}</span>
 
-                        <h3 className="text-xl font-bold text-white mb-1">{dojo.name}</h3>
-                        <p className="text-sm text-primary font-mono mb-4">{dojo.dojoCode}</p>
+                            <div className="flex items-center gap-2 text-sm text-gray-400">
+                                <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-gray-500" />
+                                <span>{dojo.city}, {dojo.state}</span>
+                            </div>
 
-                        <div className="space-y-2 text-sm text-gray-400">
-                            <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4" />
-                                {dojo.city}, {dojo.state}
+                            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/5">
+                                <button
+                                    onClick={() => handleOpenModal(dojo)}
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors"
+                                >
+                                    <Edit2 className="w-3 h-3" /> Edit
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteClick(dojo.id)}
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors"
+                                >
+                                    <Trash2 className="w-3 h-3" /> Delete
+                                </button>
                             </div>
                         </div>
                     </motion.div>

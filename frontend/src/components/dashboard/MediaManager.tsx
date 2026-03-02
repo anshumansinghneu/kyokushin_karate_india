@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit, Trash2, Save, X, Upload, ExternalLink, FileText, Newspaper } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Upload, ExternalLink, FileText, Newspaper, Search } from "lucide-react";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -24,6 +24,7 @@ const MediaManager = () => {
     const [currentPost, setCurrentPost] = useState<Partial<MediaPost>>({});
     const [uploading, setUploading] = useState(false);
     const [mediaType, setMediaType] = useState<'LINK' | 'PDF'>('LINK');
+    const [mediaSearch, setMediaSearch] = useState("");
 
     const fetchPosts = async () => {
         try {
@@ -265,7 +266,7 @@ const MediaManager = () => {
     }
 
     return (
-        <div className="bg-zinc-900 border border-white/10 rounded-xl shadow-sm overflow-hidden">
+        <div className="space-y-6">
             {/* Delete Confirmation Modal */}
             <AnimatePresence>
                 {deleteId && (
@@ -301,78 +302,99 @@ const MediaManager = () => {
                 )}
             </AnimatePresence>
 
-            <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-white">Media Mentions</h2>
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-black text-white flex items-center gap-2">
+                        <Newspaper className="w-6 h-6 text-purple-500" /> Media Mentions
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">{posts.length} mention{posts.length !== 1 ? 's' : ''} total</p>
+                </div>
                 <button
                     onClick={() => { setCurrentPost({}); setIsEditing(true); }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 text-sm font-medium"
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2 text-sm font-bold transition-colors"
                 >
                     <Plus size={16} /> Add Mention
                 </button>
             </div>
-            <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead className="bg-white/5">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Headline</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Source</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Content</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/10">
-                        {posts.length === 0 && (
-                            <tr>
-                                <td colSpan={4} className="px-6 py-12 text-center">
-                                    <Newspaper className="w-10 h-10 mx-auto mb-3 text-gray-600" />
-                                    <p className="text-gray-400 font-bold">No media mentions yet</p>
-                                    <p className="text-gray-500 text-sm mt-1">Add your first media mention.</p>
-                                </td>
-                            </tr>
-                        )}
-                        {posts.map((post) => (
-                            <tr key={post.id} className="hover:bg-white/5">
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        {post.imageUrl && (
-                                            <img src={post.imageUrl} alt="" className="h-10 w-10 rounded object-cover" />
-                                        )}
-                                        <div className="text-sm font-medium text-white">{post.title}</div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-sm text-gray-400">{post.sourceName}</td>
-                                <td className="px-6 py-4 text-sm text-blue-400">
-                                    {post.externalLink ? (
-                                        <a href={post.externalLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
-                                            Visit Link <ExternalLink size={12} />
-                                        </a>
-                                    ) : post.attachmentUrl ? (
-                                        <a href={post.attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline text-red-400">
-                                            View PDF <FileText size={12} />
-                                        </a>
-                                    ) : (
-                                        <span className="text-gray-400">-</span>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+
+            {/* Search */}
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <input
+                    value={mediaSearch}
+                    onChange={(e) => setMediaSearch(e.target.value)}
+                    placeholder="Search by headline or source..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50"
+                />
+            </div>
+
+            {/* Card Grid */}
+            {posts.filter(p => {
+                if (!mediaSearch) return true;
+                const q = mediaSearch.toLowerCase();
+                return p.title?.toLowerCase().includes(q) || p.sourceName?.toLowerCase().includes(q);
+            }).length === 0 ? (
+                <div className="text-center py-16 bg-black/40 border border-white/10 rounded-2xl">
+                    <Newspaper className="w-12 h-12 mx-auto mb-3 text-gray-600" />
+                    <p className="text-lg font-bold text-white">No media mentions yet</p>
+                    <p className="text-sm text-gray-400 mt-1">Add your first media mention to get started.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {posts.filter(p => {
+                        if (!mediaSearch) return true;
+                        const q = mediaSearch.toLowerCase();
+                        return p.title?.toLowerCase().includes(q) || p.sourceName?.toLowerCase().includes(q);
+                    }).map((post) => (
+                        <motion.div
+                            key={post.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all group"
+                        >
+                            <div className="h-1 bg-purple-500" />
+                            {post.imageUrl && (
+                                <div className="relative h-36 overflow-hidden">
+                                    <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                                </div>
+                            )}
+                            <div className="p-5">
+                                <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">{post.title}</h3>
+                                {post.sourceName && (
+                                    <p className="text-xs text-purple-400 font-medium mb-3">{post.sourceName}</p>
+                                )}
+
+                                {post.externalLink ? (
+                                    <a href={post.externalLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                                        <ExternalLink size={12} /> Visit Link
+                                    </a>
+                                ) : post.attachmentUrl ? (
+                                    <a href={post.attachmentUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors">
+                                        <FileText size={12} /> View PDF
+                                    </a>
+                                ) : null}
+
+                                <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/5">
                                     <button
                                         onClick={() => { setCurrentPost(post); setIsEditing(true); }}
-                                        className="text-blue-400 hover:text-blue-300 mr-4"
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors"
                                     >
-                                        <Edit size={16} />
+                                        <Edit className="w-3 h-3" /> Edit
                                     </button>
                                     <button
                                         onClick={() => handleDeleteClick(post.id)}
-                                        className="text-red-400 hover:text-red-300"
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors"
                                     >
-                                        <Trash2 size={16} />
+                                        <Trash2 className="w-3 h-3" /> Delete
                                     </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

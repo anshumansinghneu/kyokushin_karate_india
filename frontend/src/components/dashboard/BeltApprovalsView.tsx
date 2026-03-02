@@ -125,8 +125,10 @@ export default function BeltApprovalsView() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-black text-white mb-2">Belt Verifications</h1>
-                <p className="text-gray-400">Review and approve student belt advancement requests.</p>
+                <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
+                    <Medal className="w-6 h-6 text-amber-500" /> Belt Verifications
+                </h1>
+                <p className="text-gray-500 text-sm">{requests.length} pending request{requests.length !== 1 ? 's' : ''} to review.</p>
             </div>
 
             {requests.length === 0 ? (

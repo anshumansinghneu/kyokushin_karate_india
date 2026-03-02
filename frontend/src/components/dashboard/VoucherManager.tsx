@@ -147,8 +147,10 @@ export default function VoucherManager() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-white mb-2">Cash Vouchers</h1>
-                    <p className="text-gray-400">Create and manage one-time cash payment vouchers for students.</p>
+                    <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
+                        <Ticket className="w-6 h-6 text-orange-500" /> Cash Vouchers
+                    </h1>
+                    <p className="text-gray-500 text-sm">Create and manage one-time cash payment vouchers for students.</p>
                 </div>
                 <Button
                     onClick={() => setShowCreate(!showCreate)}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag, Ticket, RefreshCw } from "lucide-react";
+import { Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag, Ticket, RefreshCw, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -38,6 +38,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
     const validInitial = VALID_TABS.includes(initialTab as TabId) ? initialTab as TabId : 'overview';
     const [activeTab, setActiveTab] = useState<TabId>(validInitial);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
     const { logout } = useAuthStore();
     const [isStatsLoading, setIsStatsLoading] = useState(true);
@@ -83,26 +84,53 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
         fetchStats();
     }, [fetchStats]);
 
-    const menuItems = [
-        { id: 'overview', label: 'Overview', icon: BarChart },
-        { id: '_divider_people', label: 'PEOPLE', divider: true },
-        { id: 'users', label: 'User Management', icon: Users },
-        { id: 'belt-verifications', label: 'Belt Verifications', icon: Shield },
-        { id: 'belt-promotions', label: 'Belt Promotions', icon: Award },
-        { id: '_divider_finance', label: 'FINANCE', divider: true },
-        { id: 'payments', label: 'Payments', icon: IndianRupee },
-        { id: 'vouchers', label: 'Cash Vouchers', icon: Ticket },
-        { id: 'store', label: 'Merchandise', icon: ShoppingBag },
-        { id: '_divider_events', label: 'EVENTS', divider: true },
-        { id: 'dojos', label: 'Dojo Management', icon: Building },
-        { id: 'events', label: 'Event Management', icon: Calendar },
-        { id: 'tournaments', label: 'Tournaments', icon: Trophy },
-        { id: 'live-management', label: 'Live Control', icon: Radio },
-        { id: '_divider_content', label: 'CONTENT', divider: true },
-        { id: 'blogs', label: 'Blogs', icon: FileText },
-        { id: 'media', label: 'Media', icon: Newspaper },
-        { id: 'recognition', label: 'Monthly Recognition', icon: Trophy },
-        { id: 'announcements', label: 'Announcements', icon: Megaphone },
+    const toggleSection = (sectionId: string) => {
+        setCollapsedSections(prev => {
+            const next = new Set(prev);
+            if (next.has(sectionId)) next.delete(sectionId);
+            else next.add(sectionId);
+            return next;
+        });
+    };
+
+    const menuSections = [
+        {
+            items: [{ id: 'overview', label: 'Overview', icon: BarChart }]
+        },
+        {
+            id: 'people', header: 'PEOPLE',
+            items: [
+                { id: 'users', label: 'User Management', icon: Users },
+                { id: 'belt-verifications', label: 'Belt Verifications', icon: Shield, badge: stats.pending > 0 ? stats.pending : undefined },
+                { id: 'belt-promotions', label: 'Belt Promotions', icon: Award },
+            ]
+        },
+        {
+            id: 'finance', header: 'FINANCE',
+            items: [
+                { id: 'payments', label: 'Payments', icon: IndianRupee },
+                { id: 'vouchers', label: 'Cash Vouchers', icon: Ticket },
+                { id: 'store', label: 'Merchandise', icon: ShoppingBag },
+            ]
+        },
+        {
+            id: 'events-section', header: 'EVENTS',
+            items: [
+                { id: 'dojos', label: 'Dojo Management', icon: Building },
+                { id: 'events', label: 'Event Management', icon: Calendar },
+                { id: 'tournaments', label: 'Tournaments', icon: Trophy },
+                { id: 'live-management', label: 'Live Control', icon: Radio },
+            ]
+        },
+        {
+            id: 'content', header: 'CONTENT',
+            items: [
+                { id: 'blogs', label: 'Blogs', icon: FileText },
+                { id: 'media', label: 'Media', icon: Newspaper },
+                { id: 'recognition', label: 'Monthly Recognition', icon: Trophy },
+                { id: 'announcements', label: 'Announcements', icon: Megaphone },
+            ]
+        },
     ];
 
     return (
@@ -139,26 +167,55 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto py-6 px-3 space-y-1">
-                    {menuItems.map((item) => (
-                        'divider' in item && item.divider ? (
-                            <div key={item.id} className="pt-4 pb-1 px-4">
-                                <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">{item.label}</p>
+                <div className="flex-1 overflow-y-auto py-4 px-3">
+                    {menuSections.map((section, si) => {
+                        const sectionHasActive = section.items.some(item => item.id === activeTab);
+                        const isCollapsed = section.id ? collapsedSections.has(section.id) && !sectionHasActive : false;
+
+                        return (
+                            <div key={si} className={si > 0 ? 'mt-1' : ''}>
+                                {section.header && (
+                                    <button
+                                        onClick={() => section.id && toggleSection(section.id)}
+                                        className="w-full flex items-center justify-between px-4 py-2 mt-3 group cursor-pointer"
+                                    >
+                                        <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest group-hover:text-gray-400 transition-colors">
+                                            {section.header}
+                                        </p>
+                                        <ChevronDown className={`w-3 h-3 text-gray-600 group-hover:text-gray-400 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+                                    </button>
+                                )}
+                                <div className={`space-y-0.5 overflow-hidden transition-all duration-200 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}>
+                                    {section.items.map((item) => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => { handleTabChange(item.id as TabId); setIsSidebarOpen(false); }}
+                                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all relative ${
+                                                activeTab === item.id
+                                                    ? 'bg-red-500/15 text-white'
+                                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                            }`}
+                                        >
+                                            {activeTab === item.id && (
+                                                <motion.div
+                                                    layoutId="sidebarActiveIndicator"
+                                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-red-500 rounded-r-full"
+                                                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                                />
+                                            )}
+                                            <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${activeTab === item.id ? 'text-red-400' : 'text-gray-500'}`} />
+                                            <span className="truncate">{item.label}</span>
+                                            {'badge' in item && item.badge && (
+                                                <span className="ml-auto text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                                    {item.badge}
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        ) : (
-                        <button
-                            key={item.id}
-                            onClick={() => { handleTabChange(item.id as TabId); setIsSidebarOpen(false); }}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === item.id
-                                ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
-                                : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                }`}
-                        >
-                            {'icon' in item && item.icon && <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-gray-500 group-hover:text-white'}`} />}
-                            {item.label}
-                        </button>
-                        )
-                    ))}
+                        );
+                    })}
                 </div>
 
                 <div className="p-4 border-t border-white/10">

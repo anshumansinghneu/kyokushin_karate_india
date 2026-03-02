@@ -42,8 +42,10 @@ export default function StoreManagement() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-black text-white">Store Management</h1>
-                    <p className="text-gray-400 text-sm">Manage orders and products</p>
+                    <h1 className="text-2xl font-black text-white flex items-center gap-2">
+                        <ShoppingBag className="w-6 h-6 text-pink-500" /> Store Management
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1">Manage orders and products</p>
                 </div>
                 <div className="flex gap-2">
                     <Button

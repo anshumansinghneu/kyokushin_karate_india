@@ -876,11 +876,11 @@ export default function TournamentManager() {
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h2 className="text-2xl font-black text-white flex items-center gap-2">
                         <Trophy className="w-6 h-6 text-yellow-500" />
                         Tournament Management
                     </h2>
-                    <p className="text-gray-400 text-sm mt-1">Create and manage karate tournaments</p>
+                    <p className="text-gray-500 text-sm mt-1">Create and manage karate tournaments</p>
                 </div>
                 <Button onClick={() => setShowCreateModal(true)} className="bg-yellow-600 hover:bg-yellow-700 text-white">
                     <Plus className="w-4 h-4 mr-2" /> Create Tournament

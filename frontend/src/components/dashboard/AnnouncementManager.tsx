@@ -87,8 +87,10 @@ export default function AnnouncementManager() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-black text-white mb-2">Announcements</h1>
-                <p className="text-gray-400">Send bulk email announcements to members.</p>
+                <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
+                    <Send className="w-6 h-6 text-cyan-500" /> Announcements
+                </h1>
+                <p className="text-gray-500 text-sm">Send bulk email announcements to members.</p>
             </div>
 
             {/* Result Banner */}
