@@ -39,6 +39,8 @@ export default function PaymentManagement() {
     const [search, setSearch] = useState("");
     const [filterType, setFilterType] = useState<string>("all");
     const [filterStatus, setFilterStatus] = useState<string>("all");
+    const [dateFrom, setDateFrom] = useState<string>("");
+    const [dateTo, setDateTo] = useState<string>("");
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const pageSize = 25;
@@ -104,6 +106,18 @@ export default function PaymentManagement() {
             filtered = filtered.filter(p => p.status.toLowerCase() === filterStatus.toLowerCase());
         }
 
+        // Filter by date range
+        if (dateFrom) {
+            const from = new Date(dateFrom);
+            from.setHours(0, 0, 0, 0);
+            filtered = filtered.filter(p => new Date(p.createdAt) >= from);
+        }
+        if (dateTo) {
+            const to = new Date(dateTo);
+            to.setHours(23, 59, 59, 999);
+            filtered = filtered.filter(p => new Date(p.createdAt) <= to);
+        }
+
         // Filter by search
         if (search) {
             const lowerSearch = search.toLowerCase();
@@ -117,7 +131,7 @@ export default function PaymentManagement() {
 
         setFilteredPayments(filtered);
         setPage(1);
-    }, [search, filterType, filterStatus, payments]);
+    }, [search, filterType, filterStatus, dateFrom, dateTo, payments]);
 
     const paginatedPayments = filteredPayments.slice((page - 1) * pageSize, page * pageSize);
     const totalPages = Math.ceil(filteredPayments.length / pageSize);
@@ -242,7 +256,7 @@ export default function PaymentManagement() {
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 flex-wrap">
                         <select
                             value={filterType}
                             onChange={(e) => setFilterType(e.target.value)}
@@ -264,6 +278,32 @@ export default function PaymentManagement() {
                             <option value="created">Pending</option>
                             <option value="failed">Failed</option>
                         </select>
+                        <div className="flex items-center gap-2">
+                            <label className="text-xs text-gray-500 whitespace-nowrap">From</label>
+                            <input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => setDateFrom(e.target.value)}
+                                className="bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white text-sm"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <label className="text-xs text-gray-500 whitespace-nowrap">To</label>
+                            <input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => setDateTo(e.target.value)}
+                                className="bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white text-sm"
+                            />
+                        </div>
+                        {(dateFrom || dateTo) && (
+                            <button
+                                onClick={() => { setDateFrom(""); setDateTo(""); }}
+                                className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors"
+                            >
+                                Clear dates
+                            </button>
+                        )}
                     </div>
                 </div>
 

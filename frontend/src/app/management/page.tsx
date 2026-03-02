@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import InstructorDashboard from "@/components/dashboard/InstructorDashboard";
 import { Loader2 } from "lucide-react";
 
-export default function ManagementPage() {
+function ManagementContent() {
     const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const initialTab = searchParams.get('tab') || 'overview';
 
     useEffect(() => {
         // Only check auth if we're not already authenticated
@@ -45,9 +47,21 @@ export default function ManagementPage() {
             <div className="absolute inset-0 bg-[url('/dojo-bg.png')] bg-cover bg-center opacity-10 mix-blend-overlay" />
 
             <div className="container mx-auto px-4 py-8 relative z-10">
-                {user.role === 'ADMIN' && <AdminDashboard user={user} />}
+                {user.role === 'ADMIN' && <AdminDashboard user={user} initialTab={initialTab} />}
                 {user.role === 'INSTRUCTOR' && <InstructorDashboard user={user} />}
             </div>
         </div>
+    );
+}
+
+export default function ManagementPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen w-full bg-black flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            </div>
+        }>
+            <ManagementContent />
+        </Suspense>
     );
 }

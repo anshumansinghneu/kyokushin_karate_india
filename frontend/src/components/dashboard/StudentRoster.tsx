@@ -33,49 +33,37 @@ export default function StudentRoster() {
     useEffect(() => {
         const fetchStudents = async () => {
             try {
-                // Fetch all users
-                const response = await api.get('/users');
+                // Fetch all users with belt history included (single query)
+                const response = await api.get('/users', {
+                    params: { includeBeltHistory: 'true', limit: 100 }
+                });
                 const allUsers = response.data.data.users;
 
-                // Enhance student data with eligibility info
-                const enhancedStudents = await Promise.all(
-                    allUsers.map(async (student: any) => {
-                        if (student.role !== 'STUDENT') return null;
+                // Enhance student data with eligibility info (no extra API calls)
+                const now = new Date();
+                const enhancedStudents = allUsers
+                    .filter((student: any) => student.role === 'STUDENT')
+                    .map((student: any) => {
+                        const beltHistory = student.beltHistory || [];
+                        let daysSincePromotion = 0;
 
-                        try {
-                            // Fetch belt history for each student
-                            const beltHistoryRes = await api.get(`/belts/history/${student.id}`);
-                            const beltHistory = beltHistoryRes.data.data.beltHistory || [];
-
-                            let daysSincePromotion = 0;
-                            if (beltHistory.length > 0) {
-                                const lastPromotion = new Date(beltHistory[0].promotionDate);
-                                const now = new Date();
-                                daysSincePromotion = Math.floor((now.getTime() - lastPromotion.getTime()) / (1000 * 60 * 60 * 24));
-                            } else {
-                                const joinDate = new Date(student.createdAt);
-                                const now = new Date();
-                                daysSincePromotion = Math.floor((now.getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
-                            }
-
-                            return {
-                                ...student,
-                                daysSincePromotion,
-                                isEligible: daysSincePromotion >= 180,
-                                trainingSessionCount: student.trainingSessions?.length || 0,
-                            };
-                        } catch (error) {
-                            return {
-                                ...student,
-                                daysSincePromotion: 0,
-                                isEligible: false,
-                                trainingSessionCount: 0,
-                            };
+                        if (beltHistory.length > 0) {
+                            const lastPromotion = new Date(beltHistory[0].promotionDate);
+                            daysSincePromotion = Math.floor((now.getTime() - lastPromotion.getTime()) / (1000 * 60 * 60 * 24));
+                        } else {
+                            const joinDate = new Date(student.createdAt);
+                            daysSincePromotion = Math.floor((now.getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
                         }
-                    })
-                );
 
-                setStudents(enhancedStudents.filter(s => s !== null) as EnhancedStudent[]);
+                        return {
+                            ...student,
+                            daysSincePromotion,
+                            isEligible: daysSincePromotion >= 180,
+                            trainingSessionCount: student.trainingSessions?.length || 0,
+                        };
+                    });
+
+                setStudents(enhancedStudents as EnhancedStudent[]);
             } catch (error) {
                 console.error("Failed to fetch students", error);
                 showToast("Failed to fetch students", "error");

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag, Ticket } from "lucide-react";
+import { Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag, Ticket, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import UserManagementTable from "./UserManagementTable";
 import DojoManager from "./DojoManager";
@@ -26,12 +27,20 @@ import StoreManagement from './StoreManagement';
 import VoucherManager from './VoucherManager';
 import { useToast } from '@/contexts/ToastContext';
 
-export default function AdminDashboard({ user }: { user: any }) {
+type TabId = 'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers';
+
+const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers'];
+
+export default function AdminDashboard({ user, initialTab }: { user: any; initialTab?: string }) {
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers'>('overview');
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const validInitial = VALID_TABS.includes(initialTab as TabId) ? initialTab as TabId : 'overview';
+    const [activeTab, setActiveTab] = useState<TabId>(validInitial);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
     const { logout } = useAuthStore();
+    const [isStatsLoading, setIsStatsLoading] = useState(true);
     const [stats, setStats] = useState({
         users: [] as any[],
         usersCount: 0,
@@ -40,29 +49,39 @@ export default function AdminDashboard({ user }: { user: any }) {
         pending: 0
     });
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const [usersRes, dojosRes, eventsRes] = await Promise.all([
-                    api.get('/users'),
-                    api.get('/dojos'),
-                    api.get('/events')
-                ]);
+    const handleTabChange = useCallback((tab: TabId) => {
+        setActiveTab(tab);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('tab', tab);
+        router.replace(`/management?${params.toString()}`, { scroll: false });
+    }, [router, searchParams]);
 
-                setStats({
-                    users: usersRes.data.data.users,
-                    usersCount: usersRes.data.results,
-                    dojos: dojosRes.data.results,
-                    events: eventsRes.data.results,
-                    pending: usersRes.data.data.users.filter((u: any) => u.membershipStatus === 'PENDING').length
-                });
+    const fetchStats = useCallback(async () => {
+        setIsStatsLoading(true);
+        try {
+            const [usersRes, dojosRes, eventsRes] = await Promise.all([
+                api.get('/users'),
+                api.get('/dojos'),
+                api.get('/events')
+            ]);
 
-            } catch (error) {
-                console.error("Failed to fetch admin stats", error);
-            }
-        };
-        fetchStats();
+            setStats({
+                users: usersRes.data.data.users,
+                usersCount: usersRes.data.results,
+                dojos: dojosRes.data.results,
+                events: eventsRes.data.results,
+                pending: usersRes.data.data.users.filter((u: any) => u.membershipStatus === 'PENDING').length
+            });
+        } catch (error) {
+            console.error("Failed to fetch admin stats", error);
+        } finally {
+            setIsStatsLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchStats();
+    }, [fetchStats]);
 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: BarChart },
@@ -92,6 +111,14 @@ export default function AdminDashboard({ user }: { user: any }) {
                 {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
+            {/* Mobile Sidebar Backdrop */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
             <motion.div
                 className={`w-64 bg-black/80 backdrop-blur-xl border-r border-white/10 flex flex-col absolute lg:relative z-40 h-full transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
@@ -112,7 +139,7 @@ export default function AdminDashboard({ user }: { user: any }) {
                     {menuItems.map((item) => (
                         <button
                             key={item.id}
-                            onClick={() => { setActiveTab(item.id as any); setIsSidebarOpen(false); }}
+                            onClick={() => { handleTabChange(item.id as TabId); setIsSidebarOpen(false); }}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === item.id
                                 ? 'bg-red-600 text-white shadow-lg shadow-red-900/20'
                                 : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -155,9 +182,16 @@ export default function AdminDashboard({ user }: { user: any }) {
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                                     <div>
                                         <h1 className="text-3xl font-black text-white mb-2">Dashboard Overview</h1>
-                                        <p className="text-gray-400">Welcome back, Shihan. Here's what's happening today.</p>
+                                        <p className="text-gray-400">Welcome back, {user?.name || 'Admin'}. Here&apos;s what&apos;s happening today.</p>
                                     </div>
                                     <div className="flex gap-3">
+                                        <Button
+                                            className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                                            onClick={() => fetchStats()}
+                                            disabled={isStatsLoading}
+                                        >
+                                            <RefreshCw className={`w-4 h-4 mr-2 ${isStatsLoading ? 'animate-spin' : ''}`} /> Refresh
+                                        </Button>
                                         <Button
                                             className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
                                             onClick={() => {
@@ -178,7 +212,23 @@ export default function AdminDashboard({ user }: { user: any }) {
 
                                 {/* Stats Grid */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    {[
+                                    {isStatsLoading ? (
+                                        // Skeleton loading cards
+                                        Array.from({ length: 4 }).map((_, i) => (
+                                            <div key={i} className="p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm animate-pulse">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="space-y-3">
+                                                        <div className="h-3 w-24 bg-white/10 rounded" />
+                                                        <div className="h-10 w-16 bg-white/10 rounded" />
+                                                    </div>
+                                                    <div className="p-3 rounded-xl bg-white/5">
+                                                        <div className="w-6 h-6 bg-white/10 rounded" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                    [
                                         { label: "Total Users", value: stats.usersCount, icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
                                         { label: "Active Dojos", value: stats.dojos, icon: MapPin, color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/20" },
                                         { label: "Upcoming Events", value: stats.events, icon: Calendar, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
@@ -202,8 +252,44 @@ export default function AdminDashboard({ user }: { user: any }) {
                                             </div>
                                             <div className={`absolute -right-6 -bottom-6 w-32 h-32 rounded-full opacity-20 blur-3xl ${stat.color.replace('text-', 'bg-')}`} />
                                         </motion.div>
-                                    ))}
+                                    )))}
                                 </div>
+
+                                {/* Quick Actions - show when relevant stats are zero */}
+                                {!isStatsLoading && (stats.dojos === 0 || stats.events === 0 || stats.pending > 0) && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        {stats.dojos === 0 && (
+                                            <button
+                                                onClick={() => handleTabChange('dojos')}
+                                                className="p-4 rounded-xl border border-dashed border-green-500/30 bg-green-500/5 hover:bg-green-500/10 transition-colors text-left group"
+                                            >
+                                                <Building className="w-5 h-5 text-green-400 mb-2" />
+                                                <p className="text-sm font-bold text-white">Create First Dojo</p>
+                                                <p className="text-xs text-gray-500 mt-1">Set up your first training location</p>
+                                            </button>
+                                        )}
+                                        {stats.events === 0 && (
+                                            <button
+                                                onClick={() => handleTabChange('events')}
+                                                className="p-4 rounded-xl border border-dashed border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-colors text-left group"
+                                            >
+                                                <Calendar className="w-5 h-5 text-purple-400 mb-2" />
+                                                <p className="text-sm font-bold text-white">Schedule an Event</p>
+                                                <p className="text-xs text-gray-500 mt-1">Create your first event or seminar</p>
+                                            </button>
+                                        )}
+                                        {stats.pending > 0 && (
+                                            <button
+                                                onClick={() => handleTabChange('users')}
+                                                className="p-4 rounded-xl border border-dashed border-yellow-500/30 bg-yellow-500/5 hover:bg-yellow-500/10 transition-colors text-left group"
+                                            >
+                                                <Users className="w-5 h-5 text-yellow-400 mb-2" />
+                                                <p className="text-sm font-bold text-white">{stats.pending} Pending Approval{stats.pending > 1 ? 's' : ''}</p>
+                                                <p className="text-xs text-gray-500 mt-1">Review pending membership requests</p>
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
 
 
                                 {/* Organization Graph Section */}

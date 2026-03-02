@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Trash2, CheckCircle, XCircle, MoreVertical, Shield, User, Users, Edit2, Save, X, Pencil, Mail, Calendar, UserPlus, Eye, ChevronLeft, ChevronRight, IndianRupee } from "lucide-react";
+import { Search, Trash2, CheckCircle, XCircle, MoreVertical, Shield, User, Users, Edit2, Save, X, Pencil, Mail, Calendar, UserPlus, Eye, ChevronLeft, ChevronRight, IndianRupee, Filter, ArrowUpDown, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,9 @@ import { useToast } from '@/contexts/ToastContext';
 import Portal from "@/components/ui/portal";
 import { INDIAN_STATES, CITIES, COUNTRY_CODES, BELT_RANKS } from "@/lib/constants";
 import StudentDetailView from "./StudentDetailView";
+
+type SortField = 'name' | 'role' | 'membershipStatus' | 'currentBeltRank' | 'createdAt';
+type SortOrder = 'asc' | 'desc';
 
 export default function UserManagementTable() {
     const { showToast } = useToast();
@@ -21,8 +24,25 @@ export default function UserManagementTable() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
     const [page, setPage] = useState(1);
+    const [totalUsers, setTotalUsers] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
     const pageSize = 20;
     const [payments, setPayments] = useState<Record<string, any>>({});
+
+    // Filter state
+    const [filterRole, setFilterRole] = useState<string>("all");
+    const [filterStatus, setFilterStatus] = useState<string>("all");
+    const [filterBelt, setFilterBelt] = useState<string>("all");
+    const [filterDojo, setFilterDojo] = useState<string>("all");
+    const [showFilters, setShowFilters] = useState(false);
+
+    // Sort state
+    const [sortField, setSortField] = useState<SortField>('name');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+    // Bulk selection
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
     // Edit Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -61,16 +81,22 @@ export default function UserManagementTable() {
     });
     const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
 
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
         setIsLoading(true);
         try {
+            const params: any = { page, limit: pageSize };
+            if (filterRole !== 'all') params.role = filterRole;
+            if (filterStatus !== 'all') params.status = filterStatus;
+
             const [usersRes, dojosRes, paymentsRes] = await Promise.all([
-                api.get('/users'),
+                api.get('/users', { params }),
                 api.get('/dojos'),
                 api.get('/payments/all').catch(() => ({ data: { data: { payments: [] } } }))
             ]);
-            setUsers(usersRes.data.data.users);
-            setFilteredUsers(usersRes.data.data.users);
+            const fetchedUsers = usersRes.data.data.users;
+            setUsers(fetchedUsers);
+            setTotalUsers(usersRes.data.total || fetchedUsers.length);
+            setTotalPages(usersRes.data.pages || Math.ceil((usersRes.data.total || fetchedUsers.length) / pageSize));
             setDojos(dojosRes.data.data.dojos);
 
             // Build payment lookup by userId (latest payment)
@@ -86,25 +112,118 @@ export default function UserManagementTable() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [page, filterRole, filterStatus]);
 
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [fetchUsers]);
 
+    // Client-side filtering for search, belt, dojo, and sorting
     useEffect(() => {
-        const lowerSearch = search.toLowerCase();
-        const filtered = users.filter(user =>
-            user.name.toLowerCase().includes(lowerSearch) ||
-            user.email.toLowerCase().includes(lowerSearch) ||
-            (user.dojo?.name || "").toLowerCase().includes(lowerSearch)
-        );
-        setFilteredUsers(filtered);
-        setPage(1);
-    }, [search, users]);
+        let filtered = [...users];
 
-    const totalPages = Math.ceil(filteredUsers.length / pageSize);
-    const paginatedUsers = filteredUsers.slice((page - 1) * pageSize, page * pageSize);
+        // Text search
+        if (search) {
+            const lowerSearch = search.toLowerCase();
+            filtered = filtered.filter(user =>
+                user.name.toLowerCase().includes(lowerSearch) ||
+                user.email.toLowerCase().includes(lowerSearch) ||
+                (user.dojo?.name || "").toLowerCase().includes(lowerSearch)
+            );
+        }
+
+        // Belt filter (client-side since backend doesn't support it)
+        if (filterBelt !== 'all') {
+            filtered = filtered.filter(user => user.currentBeltRank === filterBelt);
+        }
+
+        // Dojo filter (client-side)
+        if (filterDojo !== 'all') {
+            filtered = filtered.filter(user => user.dojoId === filterDojo);
+        }
+
+        // Sort
+        filtered.sort((a, b) => {
+            const aVal = (a[sortField] || '').toString().toLowerCase();
+            const bVal = (b[sortField] || '').toString().toLowerCase();
+            const cmp = aVal.localeCompare(bVal);
+            return sortOrder === 'asc' ? cmp : -cmp;
+        });
+
+        setFilteredUsers(filtered);
+    }, [search, users, filterBelt, filterDojo, sortField, sortOrder]);
+
+    const paginatedUsers = filteredUsers;
+
+    const handleSort = (field: SortField) => {
+        if (sortField === field) {
+            setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortOrder('asc');
+        }
+    };
+
+    // Bulk actions
+    const toggleSelectAll = () => {
+        if (selectedIds.size === paginatedUsers.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(paginatedUsers.map(u => u.id)));
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        const next = new Set(selectedIds);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        setSelectedIds(next);
+    };
+
+    const handleBulkApprove = async () => {
+        if (selectedIds.size === 0) return;
+        setIsBulkProcessing(true);
+        try {
+            await Promise.all(Array.from(selectedIds).map(id => api.patch(`/users/${id}/approve`)));
+            showToast(`${selectedIds.size} user(s) approved`, "success");
+            setSelectedIds(new Set());
+            fetchUsers();
+        } catch {
+            showToast("Some approvals failed", "error");
+        } finally {
+            setIsBulkProcessing(false);
+        }
+    };
+
+    const handleBulkReject = async () => {
+        if (selectedIds.size === 0) return;
+        setIsBulkProcessing(true);
+        try {
+            await Promise.all(Array.from(selectedIds).map(id => api.patch(`/users/${id}/reject`)));
+            showToast(`${selectedIds.size} user(s) rejected`, "success");
+            setSelectedIds(new Set());
+            fetchUsers();
+        } catch {
+            showToast("Some rejections failed", "error");
+        } finally {
+            setIsBulkProcessing(false);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.size === 0) return;
+        setIsBulkProcessing(true);
+        try {
+            await Promise.all(Array.from(selectedIds).map(id => api.delete(`/users/${id}`)));
+            showToast(`${selectedIds.size} user(s) deleted`, "success");
+            setSelectedIds(new Set());
+            fetchUsers();
+        } catch {
+            showToast("Some deletions failed", "error");
+        } finally {
+            setIsBulkProcessing(false);
+        }
+    };
 
     const handleApprove = async (id: string) => {
         try {
@@ -175,8 +294,6 @@ export default function UserManagementTable() {
     const handleUpdateUser = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingUser) return;
-        console.log("Updating user:", editingUser.id, "with data:", editFormData);
-
         try {
             const updateData: any = {
                 name: editFormData.name,
@@ -188,8 +305,7 @@ export default function UserManagementTable() {
                 membershipStatus: editFormData.membershipStatus
             };
 
-            const res = await api.patch(`/users/${editingUser.id}`, updateData);
-            console.log("Update user response:", res);
+            await api.patch(`/users/${editingUser.id}`, updateData);
             setIsEditModalOpen(false);
             setEditingUser(null);
             fetchUsers();
@@ -292,10 +408,11 @@ export default function UserManagementTable() {
                 </AnimatePresence>
             </Portal>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary" />
                     User Management
+                    <span className="text-sm font-normal text-gray-500 ml-2">({totalUsers} total)</span>
                 </h3>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                     <div className="relative w-full sm:w-64">
@@ -308,6 +425,15 @@ export default function UserManagementTable() {
                         />
                     </div>
                     <Button
+                        variant="ghost"
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`flex items-center gap-2 text-sm ${showFilters ? 'text-primary' : 'text-gray-400'}`}
+                    >
+                        <Filter className="w-4 h-4" />
+                        Filters
+                        <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                    </Button>
+                    <Button
                         onClick={() => setIsCreateModalOpen(true)}
                         className="bg-primary hover:bg-primary-dark text-white font-bold flex items-center gap-2 whitespace-nowrap"
                     >
@@ -317,15 +443,144 @@ export default function UserManagementTable() {
                 </div>
             </div>
 
+            {/* Filter Row */}
+            <AnimatePresence>
+                {showFilters && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden mb-4"
+                    >
+                        <div className="flex flex-wrap gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
+                            <select
+                                value={filterRole}
+                                onChange={(e) => { setFilterRole(e.target.value); setPage(1); }}
+                                className="bg-black/50 border border-white/10 rounded-md h-9 px-3 text-white text-sm"
+                            >
+                                <option value="all">All Roles</option>
+                                <option value="STUDENT">Student</option>
+                                <option value="INSTRUCTOR">Instructor</option>
+                                <option value="ADMIN">Admin</option>
+                            </select>
+                            <select
+                                value={filterStatus}
+                                onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
+                                className="bg-black/50 border border-white/10 rounded-md h-9 px-3 text-white text-sm"
+                            >
+                                <option value="all">All Status</option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="EXPIRED">Expired</option>
+                                <option value="REJECTED">Rejected</option>
+                            </select>
+                            <select
+                                value={filterBelt}
+                                onChange={(e) => setFilterBelt(e.target.value)}
+                                className="bg-black/50 border border-white/10 rounded-md h-9 px-3 text-white text-sm"
+                            >
+                                <option value="all">All Belts</option>
+                                {BELT_RANKS.map(belt => (
+                                    <option key={belt} value={belt}>{belt}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={filterDojo}
+                                onChange={(e) => setFilterDojo(e.target.value)}
+                                className="bg-black/50 border border-white/10 rounded-md h-9 px-3 text-white text-sm"
+                            >
+                                <option value="all">All Dojos</option>
+                                {dojos.map((dojo: any) => (
+                                    <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
+                                ))}
+                            </select>
+                            {(filterRole !== 'all' || filterStatus !== 'all' || filterBelt !== 'all' || filterDojo !== 'all') && (
+                                <button
+                                    onClick={() => { setFilterRole('all'); setFilterStatus('all'); setFilterBelt('all'); setFilterDojo('all'); setPage(1); }}
+                                    className="text-xs text-gray-400 hover:text-white px-3 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors"
+                                >
+                                    Clear all
+                                </button>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Bulk Actions Bar */}
+            <AnimatePresence>
+                {selectedIds.size > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-3 p-3 mb-4 bg-blue-500/10 border border-blue-500/20 rounded-xl"
+                    >
+                        <span className="text-sm text-blue-400 font-bold">{selectedIds.size} selected</span>
+                        <div className="flex gap-2 ml-auto">
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-green-400 hover:bg-green-500/20 h-8 text-xs"
+                                onClick={handleBulkApprove}
+                                disabled={isBulkProcessing}
+                            >
+                                <CheckCircle className="w-3.5 h-3.5 mr-1" /> Approve
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-yellow-400 hover:bg-yellow-500/20 h-8 text-xs"
+                                onClick={handleBulkReject}
+                                disabled={isBulkProcessing}
+                            >
+                                <XCircle className="w-3.5 h-3.5 mr-1" /> Reject
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-red-400 hover:bg-red-500/20 h-8 text-xs"
+                                onClick={handleBulkDelete}
+                                disabled={isBulkProcessing}
+                            >
+                                <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
+                            </Button>
+                        </div>
+                        <button
+                            onClick={() => setSelectedIds(new Set())}
+                            className="text-gray-400 hover:text-white ml-2"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="text-xs font-bold text-gray-500 uppercase border-b border-white/10">
-                            <th className="py-3 px-4">User</th>
-                            <th className="py-3 px-4 hidden md:table-cell">Role</th>
+                            <th className="py-3 px-2 w-8">
+                                <input
+                                    type="checkbox"
+                                    checked={paginatedUsers.length > 0 && selectedIds.size === paginatedUsers.length}
+                                    onChange={toggleSelectAll}
+                                    className="rounded border-white/20 bg-transparent accent-primary"
+                                />
+                            </th>
+                            <th className="py-3 px-4 cursor-pointer hover:text-white select-none" onClick={() => handleSort('name')}>
+                                <span className="flex items-center gap-1">User {sortField === 'name' && <ArrowUpDown className="w-3 h-3" />}</span>
+                            </th>
+                            <th className="py-3 px-4 hidden md:table-cell cursor-pointer hover:text-white select-none" onClick={() => handleSort('role')}>
+                                <span className="flex items-center gap-1">Role {sortField === 'role' && <ArrowUpDown className="w-3 h-3" />}</span>
+                            </th>
                             <th className="py-3 px-4 hidden lg:table-cell">Dojo</th>
-                            <th className="py-3 px-4 hidden sm:table-cell">Belt</th>
-                            <th className="py-3 px-4">Status</th>
+                            <th className="py-3 px-4 hidden sm:table-cell cursor-pointer hover:text-white select-none" onClick={() => handleSort('currentBeltRank')}>
+                                <span className="flex items-center gap-1">Belt {sortField === 'currentBeltRank' && <ArrowUpDown className="w-3 h-3" />}</span>
+                            </th>
+                            <th className="py-3 px-4 cursor-pointer hover:text-white select-none" onClick={() => handleSort('membershipStatus')}>
+                                <span className="flex items-center gap-1">Status {sortField === 'membershipStatus' && <ArrowUpDown className="w-3 h-3" />}</span>
+                            </th>
                             <th className="py-3 px-4 hidden xl:table-cell">Payment</th>
                             <th className="py-3 px-4 text-right">Actions</th>
                         </tr>
@@ -338,8 +593,16 @@ export default function UserManagementTable() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, x: -10 }}
-                                    className="border-b border-white/5 hover:bg-white/5 transition-colors group"
+                                    className={`border-b border-white/5 hover:bg-white/5 transition-colors group ${selectedIds.has(user.id) ? 'bg-blue-500/5' : ''}`}
                                 >
+                                    <td className="py-3 px-2 w-8">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.has(user.id)}
+                                            onChange={() => toggleSelect(user.id)}
+                                            className="rounded border-white/20 bg-transparent accent-primary"
+                                        />
+                                    </td>
                                     <td className="py-3 px-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center font-bold text-white text-xs">
@@ -435,7 +698,7 @@ export default function UserManagementTable() {
             {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
                     <p className="text-sm text-gray-400">
-                        Showing {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, filteredUsers.length)} of {filteredUsers.length} users
+                        Page {page} of {totalPages} ({totalUsers} total users)
                     </p>
                     <div className="flex gap-2">
                         <Button

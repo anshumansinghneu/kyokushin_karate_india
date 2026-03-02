@@ -41,6 +41,8 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
     const skip = (page - 1) * limit;
 
+    const includeBeltHistory = req.query.includeBeltHistory === 'true';
+
     const [users, total] = await Promise.all([
         prisma.user.findMany({
             where,
@@ -48,7 +50,14 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
                 dojo: true,
                 primaryInstructor: {
                     select: { name: true }
-                }
+                },
+                ...(includeBeltHistory && {
+                    beltHistory: {
+                        orderBy: { promotionDate: 'desc' as const },
+                        take: 1,
+                        select: { promotionDate: true, newBelt: true }
+                    }
+                })
             },
             skip,
             take: limit,

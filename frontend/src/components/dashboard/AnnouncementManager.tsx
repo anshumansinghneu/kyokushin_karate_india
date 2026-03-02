@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Send, Users, Building, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Portal } from "@/components/ui/portal";
 import api from "@/lib/api";
 
 interface Dojo {
@@ -20,6 +21,7 @@ export default function AnnouncementManager() {
     const [dojoId, setDojoId] = useState("");
     const [dojos, setDojos] = useState<Dojo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
     const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
     const [error, setError] = useState("");
 
@@ -43,7 +45,9 @@ export default function AnnouncementManager() {
         { value: "dojo", label: "Specific Dojo", description: "Members of a specific dojo", icon: Building },
     ];
 
-    const handleSend = async () => {
+    const audienceLabel = audienceOptions.find(o => o.value === targetAudience)?.label || targetAudience;
+
+    const handlePreSend = () => {
         setError("");
         setResult(null);
         if (!subject.trim() || !body.trim()) {
@@ -54,6 +58,13 @@ export default function AnnouncementManager() {
             setError("Please select a dojo.");
             return;
         }
+        setShowConfirm(true);
+    };
+
+    const handleSend = async () => {
+        setShowConfirm(false);
+        setError("");
+        setResult(null);
 
         setIsLoading(true);
         try {
@@ -139,7 +150,7 @@ export default function AnnouncementManager() {
                         </div>
 
                         <Button
-                            onClick={handleSend}
+                            onClick={handlePreSend}
                             disabled={isLoading}
                             className="h-12 px-8 text-base font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl shadow-lg shadow-red-900/20 hover:shadow-red-900/40 transition-all"
                         >
@@ -232,6 +243,44 @@ export default function AnnouncementManager() {
                     </div>
                 </div>
             </div>
+
+            {/* Send Confirmation Dialog */}
+            <Portal>
+                <AnimatePresence>
+                    {showConfirm && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                            >
+                                <h3 className="text-xl font-bold text-white mb-2">Confirm Send</h3>
+                                <p className="text-gray-400 mb-1">
+                                    You are about to send an announcement to <span className="font-bold text-white">{audienceLabel}</span>.
+                                </p>
+                                <p className="text-gray-500 text-sm mb-6">
+                                    Subject: <span className="text-gray-300">{subject}</span>
+                                </p>
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        onClick={() => setShowConfirm(false)}
+                                        className="px-4 py-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors font-medium"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSend}
+                                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold flex items-center gap-2"
+                                    >
+                                        <Send className="w-4 h-4" /> Send Now
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+            </Portal>
         </div>
     );
 }
