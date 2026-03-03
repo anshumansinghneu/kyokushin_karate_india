@@ -345,6 +345,176 @@ export const redeemVoucherForRegistration = catchAsync(async (req: Request, res:
     });
 });
 
+// ─── Register Student on Behalf (Instructor/Admin — with voucher) ──────
+// Allows instructors to register students who can't use the website themselves
+export const registerStudentOnBehalf = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const instructor = req.user;
+    const {
+        voucherCode,
+        email, name, phone, dob, height, weight, city, state, country,
+        dojoId, currentBeltRank, beltExamDate, beltClaimReason,
+        countryCode, fatherName, fatherPhone, experienceYears, experienceMonths
+    } = req.body;
+
+    // Validation
+    if (!voucherCode) return next(new AppError('Voucher code is required', 400));
+    if (!email) return next(new AppError('Student email is required', 400));
+    if (!name) return next(new AppError('Student name is required', 400));
+    if (!phone) return next(new AppError('Student phone number is required', 400));
+
+    // Check email uniqueness
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) return next(new AppError('A user with this email already exists', 400));
+
+    // Validate voucher
+    const voucher = await prisma.cashVoucher.findUnique({
+        where: { code: voucherCode.trim().toUpperCase() },
+    });
+
+    if (!voucher) return next(new AppError('Invalid voucher code', 404));
+    if (!voucher.isActive) return next(new AppError('This voucher has been deactivated', 400));
+    if (voucher.isRedeemed) return next(new AppError('This voucher has already been used', 400));
+    if (new Date() > voucher.expiryDate) return next(new AppError('This voucher has expired', 400));
+    if (voucher.applicableTo !== 'MEMBERSHIP' && voucher.applicableTo !== 'ALL') {
+        return next(new AppError('This voucher is not valid for membership registration', 400));
+    }
+
+    const bcrypt = require('bcryptjs');
+    const { sendRegistrationEmail } = require('../services/emailService');
+    const cryptoModule = require('crypto');
+
+    // Generate a temporary password (student can reset later)
+    const tempPassword = 'Kkfi@' + cryptoModule.randomBytes(4).toString('hex');
+    const hashedPassword = await bcrypt.hash(tempPassword, 12);
+
+    const requestedBelt = currentBeltRank || 'White';
+    const isClaimingHigherBelt = requestedBelt !== 'White';
+
+    const membershipStartDate = new Date();
+    const membershipEndDate = new Date();
+    membershipEndDate.setDate(membershipEndDate.getDate() + PAYMENT_CONFIG.MEMBERSHIP_DURATION_DAYS);
+
+    const userId = await prisma.$transaction(async (tx: any) => {
+        // Resolve dojo — use instructor's dojo if not specified
+        const resolvedDojoId = (dojoId && dojoId !== 'fallback') ? dojoId : instructor.dojoId || undefined;
+
+        let verificationStatus: 'VERIFIED' | 'PENDING_VERIFICATION' = 'VERIFIED';
+        let initialBelt = 'White';
+        if (requestedBelt !== 'White') {
+            initialBelt = 'White';
+            verificationStatus = 'PENDING_VERIFICATION';
+        }
+
+        // Create student account
+        const user = await tx.user.create({
+            data: {
+                email,
+                passwordHash: hashedPassword,
+                name,
+                phone,
+                countryCode: countryCode || '+91',
+                dateOfBirth: dob ? new Date(dob) : undefined,
+                height: height ? parseFloat(height) : undefined,
+                weight: weight ? parseFloat(weight) : undefined,
+                city, state,
+                country: country || 'India',
+                dojoId: resolvedDojoId,
+                primaryInstructorId: instructor.id,
+                role: 'STUDENT',
+                membershipStatus: 'PENDING',
+                membershipStartDate,
+                membershipEndDate,
+                currentBeltRank: initialBelt,
+                verificationStatus,
+                fatherName: fatherName || undefined,
+                fatherPhone: fatherPhone || undefined,
+                experienceYears: experienceYears ? parseInt(experienceYears) : 0,
+                experienceMonths: experienceMonths ? parseInt(experienceMonths) : 0,
+            },
+        });
+
+        // Belt history/verification
+        if (isClaimingHigherBelt) {
+            await tx.beltVerificationRequest.create({
+                data: {
+                    studentId: user.id,
+                    requestedBelt,
+                    examDate: beltExamDate ? new Date(beltExamDate) : new Date(),
+                    reason: beltClaimReason || `Student claims ${requestedBelt} belt (registered by instructor ${instructor.name})`,
+                    status: 'PENDING',
+                },
+            });
+        } else {
+            await tx.beltHistory.create({
+                data: {
+                    studentId: user.id,
+                    oldBelt: null,
+                    newBelt: initialBelt,
+                    promotedBy: instructor.id,
+                    notes: `Initial registration by instructor ${instructor.name}`,
+                    promotionDate: new Date(),
+                },
+            });
+        }
+
+        // Create payment record
+        await tx.payment.create({
+            data: {
+                type: 'MEMBERSHIP',
+                amount: PAYMENT_CONFIG.MEMBERSHIP_FEE,
+                taxAmount: Math.round(PAYMENT_CONFIG.MEMBERSHIP_FEE * PAYMENT_CONFIG.GST_RATE * 100) / 100,
+                totalAmount: voucher.amount,
+                currency: 'INR',
+                status: 'PAID',
+                paidAt: new Date(),
+                userId: user.id,
+                description: `Annual Membership Fee - ${name} (Voucher: ${voucherCode}, By: ${instructor.name})`,
+            },
+        });
+
+        // Mark voucher as redeemed
+        await tx.cashVoucher.update({
+            where: { id: voucher.id },
+            data: {
+                isRedeemed: true,
+                redeemedBy: user.id,
+                redeemedAt: new Date(),
+            },
+        });
+
+        return user.id;
+    });
+
+    // Fetch created user
+    const newUser = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+            dojo: { select: { id: true, name: true, city: true, state: true } },
+        },
+    });
+
+    // Send welcome email to the student
+    if (newUser) {
+        sendRegistrationEmail(newUser.email, newUser.name);
+    }
+
+    if (newUser) (newUser as any).passwordHash = undefined;
+
+    res.status(201).json({
+        status: 'success',
+        message: `Student ${name} registered successfully! They can log in with the temporary password.`,
+        data: {
+            student: newUser,
+            tempPassword,
+            payment: {
+                amount: voucher.amount,
+                status: 'PAID',
+                method: 'CASH_VOUCHER',
+            },
+        },
+    });
+});
+
 // ─── Redeem Voucher for Event (Protected — logged in user) ─────────────
 export const redeemVoucherForEvent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const currentUser = req.user;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, ClipboardCheck, Medal, ChevronRight, Search, Activity, FileText, Edit, Shield, BarChart, Menu, X, LogOut, Trophy } from "lucide-react";
+import { Users, ClipboardCheck, Medal, ChevronRight, Search, Activity, FileText, Edit, Shield, BarChart, Menu, X, LogOut, Trophy, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
@@ -11,7 +11,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { useAuthStore } from "@/store/authStore";
 
 import StudentRoster from "./StudentRoster";
-import AddStudentModal from "./AddStudentModal";
+import RegisterStudentModal from "./RegisterStudentModal";
 import BlogManager from "./BlogManager";
 import BlogSubmission from "./BlogSubmission";
 import BeltApprovalsView from "./BeltApprovalsView";
@@ -85,10 +85,11 @@ export default function InstructorDashboard({ user }: { user: any }) {
         }
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions' | 'tournaments'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions' | 'tournaments' | 'register-student'>('overview');
 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: Activity },
+        { id: 'register-student', label: 'Register Student', icon: UserPlus },
         { id: 'belt-approvals', label: 'Belt Verifications', icon: ClipboardCheck },
         { id: 'belt-promotions', label: 'Belt Promotions', icon: Medal },
         { id: 'students', label: 'Student Roster', icon: Users },
@@ -99,7 +100,22 @@ export default function InstructorDashboard({ user }: { user: any }) {
 
     return (
         <div className="flex min-h-[80vh] bg-black/50 rounded-3xl border border-white/10 overflow-hidden relative">
-            <AddStudentModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
+            <RegisterStudentModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                instructorDojoId={user?.dojoId}
+                instructorDojoName={user?.dojo?.name}
+                onSuccess={async () => {
+                    try {
+                        const [studentsRes, pendingRes] = await Promise.all([
+                            api.get('/users'),
+                            api.get('/users?status=PENDING')
+                        ]);
+                        setStudents(studentsRes.data.data.users);
+                        setPendingStudents(pendingRes.data.data.users);
+                    } catch {}
+                }}
+            />
 
             {/* Mobile Sidebar Toggle */}
             <button
@@ -237,6 +253,29 @@ export default function InstructorDashboard({ user }: { user: any }) {
                             </div>
                         </motion.div>
                     )}
+                </motion.div>
+            )}
+
+            {activeTab === 'register-student' && (
+                <motion.div
+                    key="register-student"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-6"
+                >
+                    <div>
+                        <h1 className="text-3xl font-black text-white mb-2">Register Student</h1>
+                        <p className="text-gray-400">Register a student who can&apos;t use the website themselves. A voucher code is required.</p>
+                    </div>
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-orange-600 to-green-700 text-white font-bold rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-orange-900/20"
+                    >
+                        <UserPlus className="w-5 h-5" />
+                        Register New Student with Voucher
+                    </button>
                 </motion.div>
             )}
 

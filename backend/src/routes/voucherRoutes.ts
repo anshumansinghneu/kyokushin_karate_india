@@ -4,6 +4,7 @@ import {
     validateVoucher,
     redeemVoucherForRegistration,
     redeemVoucherForEvent,
+    registerStudentOnBehalf,
     getAllVouchers,
     deactivateVoucher,
 } from '../controllers/voucherController';
@@ -18,6 +19,7 @@ router.post('/redeem/registration', redeemVoucherForRegistration);   // Register
 // ── Protected Routes (login required) ──
 router.use(protect);
 router.post('/redeem/event/:eventId', redeemVoucherForEvent);        // Register for event with voucher
+router.post('/redeem/register-student', restrictTo('INSTRUCTOR', 'ADMIN'), registerStudentOnBehalf); // Instructor registers student with voucher
 
 // ── Admin Only ──
 router.use(restrictTo('ADMIN'));
