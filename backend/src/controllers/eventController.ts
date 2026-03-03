@@ -325,3 +325,153 @@ export const getEventRegistrations = catchAsync(async (req: Request, res: Respon
         },
     });
 });
+
+// ─── Enroll Student in Event (Instructor/Admin on behalf) ─────────────
+export const enrollStudentInEvent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const currentUser = req.user;
+    const { eventId } = req.params;
+    const { studentId, categoryAge, categoryWeight, categoryBelt, eventType, voucherCode } = req.body;
+
+    if (!studentId) return next(new AppError('Student ID is required', 400));
+
+    // Validate event
+    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    if (!event) return next(new AppError('Event not found', 404));
+
+    if (event.status === 'CANCELLED') return next(new AppError('This event has been cancelled', 400));
+    if (event.status === 'COMPLETED') return next(new AppError('This event has already been completed', 400));
+    if (new Date() > event.registrationDeadline) {
+        return next(new AppError('Registration deadline has passed', 400));
+    }
+
+    // Validate student belongs to instructor (unless admin)
+    const student = await prisma.user.findUnique({ where: { id: studentId } });
+    if (!student) return next(new AppError('Student not found', 404));
+
+    if (currentUser.role === 'INSTRUCTOR') {
+        if (student.primaryInstructorId !== currentUser.id) {
+            return next(new AppError('You can only enroll your own students', 403));
+        }
+    }
+
+    // Check student is active member
+    if (student.membershipStatus !== 'ACTIVE') {
+        return next(new AppError('Student must have an active membership to register for events', 400));
+    }
+
+    // Check duplicate registration
+    const existingReg = await prisma.eventRegistration.findUnique({
+        where: {
+            eventId_userId: { eventId, userId: studentId },
+        },
+    });
+    if (existingReg) return next(new AppError('This student is already registered for this event', 400));
+
+    // Check max participants
+    if (event.maxParticipants) {
+        const regCount = await prisma.eventRegistration.count({ where: { eventId } });
+        if (regCount >= event.maxParticipants) {
+            return next(new AppError('This event has reached maximum capacity', 400));
+        }
+    }
+
+    const fee = event.memberFee || 0;
+
+    // ── Handle voucher-based enrollment ──
+    if (voucherCode) {
+        const voucher = await prisma.cashVoucher.findUnique({
+            where: { code: voucherCode.trim().toUpperCase() },
+        });
+        if (!voucher) return next(new AppError('Invalid voucher code', 404));
+        if (!voucher.isActive) return next(new AppError('This voucher has been deactivated', 400));
+        if (voucher.isRedeemed) return next(new AppError('This voucher has already been used', 400));
+        if (new Date() > voucher.expiryDate) return next(new AppError('This voucher has expired', 400));
+
+        // Check applicability
+        if (voucher.applicableTo !== 'ALL') {
+            if (voucher.applicableTo !== event.type) {
+                return next(new AppError(`This voucher is not valid for ${event.type} events`, 400));
+            }
+        }
+        if (voucher.specificEventId && voucher.specificEventId !== eventId) {
+            return next(new AppError('This voucher is for a different event', 400));
+        }
+
+        const result = await prisma.$transaction(async (tx: any) => {
+            const payment = await tx.payment.create({
+                data: {
+                    type: 'TOURNAMENT',
+                    amount: fee,
+                    taxAmount: 0,
+                    totalAmount: fee,
+                    currency: 'INR',
+                    status: 'PAID',
+                    paidAt: new Date(),
+                    userId: studentId,
+                    eventId,
+                    description: `Event Registration - ${event.name} (Voucher: ${voucherCode}, enrolled by ${currentUser.name})`,
+                },
+            });
+
+            const registration = await tx.eventRegistration.create({
+                data: {
+                    eventId,
+                    userId: studentId,
+                    categoryAge: categoryAge || null,
+                    categoryWeight: categoryWeight || null,
+                    categoryBelt: categoryBelt || null,
+                    eventType: eventType || null,
+                    paymentStatus: 'PAID',
+                    paymentAmount: fee,
+                    voucherCodeUsed: voucherCode,
+                    discountAmount: fee,
+                    finalAmount: 0,
+                    approvalStatus: event.type === 'TOURNAMENT' ? 'PENDING' : 'APPROVED',
+                },
+            });
+
+            await tx.cashVoucher.update({
+                where: { id: voucher.id },
+                data: {
+                    isRedeemed: true,
+                    redeemedBy: studentId,
+                    redeemedAt: new Date(),
+                },
+            });
+
+            return { registration, payment };
+        });
+
+        sendEventRegistrationEmail(student.email, student.name, event.name);
+
+        return res.status(201).json({
+            status: 'success',
+            message: `${student.name} enrolled in ${event.name} with voucher.`,
+            data: { registration: result.registration, payment: result.payment },
+        });
+    }
+
+    // ── No voucher — create PENDING registration (pay later) ──
+    const registration = await prisma.eventRegistration.create({
+        data: {
+            eventId,
+            userId: studentId,
+            categoryAge: categoryAge || null,
+            categoryWeight: categoryWeight || null,
+            categoryBelt: categoryBelt || null,
+            eventType: eventType || null,
+            paymentStatus: fee > 0 ? 'PENDING' : 'PAID',
+            paymentAmount: fee,
+            finalAmount: fee,
+            approvalStatus: event.type === 'TOURNAMENT' ? 'PENDING' : 'APPROVED',
+        },
+    });
+
+    sendEventRegistrationEmail(student.email, student.name, event.name);
+
+    res.status(201).json({
+        status: 'success',
+        message: `${student.name} enrolled in ${event.name}.${fee > 0 ? ' Payment is pending.' : ''}`,
+        data: { registration },
+    });
+});

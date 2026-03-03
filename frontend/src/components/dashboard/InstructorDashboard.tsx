@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, ClipboardCheck, Medal, ChevronRight, Search, Activity, FileText, Edit, Shield, BarChart, Menu, X, LogOut, Trophy, UserPlus, Ticket, FileCheck, KeyRound, ArrowRight } from "lucide-react";
+import { Users, ClipboardCheck, Medal, ChevronRight, Search, Activity, FileText, Edit, Shield, BarChart, Menu, X, LogOut, Trophy, UserPlus, Ticket, FileCheck, KeyRound, ArrowRight, CalendarPlus, Calendar, MapPin, Tent, GraduationCap, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/authStore";
 
 import StudentRoster from "./StudentRoster";
 import RegisterStudentModal from "./RegisterStudentModal";
+import EnrollStudentModal from "./EnrollStudentModal";
 import BlogManager from "./BlogManager";
 import BlogSubmission from "./BlogSubmission";
 import BeltApprovalsView from "./BeltApprovalsView";
@@ -27,6 +28,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
     const [pendingStudents, setPendingStudents] = useState<any[]>([]);
     const [recentRegistrations, setRecentRegistrations] = useState<any[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
@@ -86,11 +88,12 @@ export default function InstructorDashboard({ user }: { user: any }) {
         }
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions' | 'tournaments' | 'register-student'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions' | 'tournaments' | 'register-student' | 'enroll-event'>('overview');
 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: Activity },
         { id: 'register-student', label: 'Register Student', icon: UserPlus },
+        { id: 'enroll-event', label: 'Enroll in Event', icon: CalendarPlus },
         { id: 'belt-approvals', label: 'Belt Verifications', icon: ClipboardCheck },
         { id: 'belt-promotions', label: 'Belt Promotions', icon: Medal },
         { id: 'students', label: 'Student Roster', icon: Users },
@@ -116,6 +119,11 @@ export default function InstructorDashboard({ user }: { user: any }) {
                         setPendingStudents(pendingRes.data.data.users);
                     } catch {}
                 }}
+            />
+
+            <EnrollStudentModal
+                isOpen={isEnrollModalOpen}
+                onClose={() => setIsEnrollModalOpen(false)}
             />
 
             {/* Mobile Sidebar Toggle */}
@@ -393,6 +401,111 @@ export default function InstructorDashboard({ user }: { user: any }) {
                                 </li>
                             </ul>
                         </motion.div>
+                    </div>
+                </motion.div>
+            )}
+
+            {activeTab === 'enroll-event' && (
+                <motion.div
+                    key="enroll-event"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-8"
+                >
+                    {/* Hero Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative overflow-hidden rounded-2xl border border-white/10"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-black/60 to-purple-700/20" />
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+                        <div className="relative px-8 py-10 sm:px-10 sm:py-12">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center shadow-2xl shadow-blue-900/30 flex-shrink-0">
+                                    <CalendarPlus className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                    <h1 className="text-2xl sm:text-3xl font-black text-white mb-2">Enroll Student in Event</h1>
+                                    <p className="text-gray-400 text-sm sm:text-base max-w-xl">
+                                        Register your students for upcoming tournaments, camps, and seminars. You can optionally use a voucher to cover the fee.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setIsEnrollModalOpen(true)}
+                                    className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-700 text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-blue-900/30 hover:shadow-blue-900/50 hover:scale-[1.02] active:scale-[0.98] flex-shrink-0 group"
+                                >
+                                    <CalendarPlus className="w-5 h-5" />
+                                    <span>Enroll Student</span>
+                                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* How It Works */}
+                    <div>
+                        <h2 className="text-lg font-black text-white mb-4 flex items-center gap-2">
+                            <span className="w-1 h-5 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full" />
+                            How It Works
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {[
+                                { step: "1", icon: Users, title: "Select Student", desc: "Choose an active student from your roster to enroll in an event" },
+                                { step: "2", icon: Calendar, title: "Pick an Event", desc: "Browse upcoming tournaments, camps and seminars with open registration" },
+                                { step: "3", icon: CheckCircle, title: "Confirm & Enroll", desc: "Review details, optionally apply a voucher, and confirm the enrollment" },
+                            ].map((item, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 + i * 0.08 }}
+                                    className="relative bg-white/[0.03] border border-white/[0.06] rounded-xl p-5 hover:bg-white/[0.06] hover:border-white/10 transition-all group"
+                                >
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600/20 to-purple-700/20 border border-blue-500/20 flex items-center justify-center text-xs font-black text-blue-400 group-hover:from-blue-600/30 group-hover:to-purple-700/30 transition-colors">
+                                            {item.step}
+                                        </div>
+                                        <item.icon className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-white mb-1">{item.title}</h3>
+                                    <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
+                                    {i < 2 && (
+                                        <div className="hidden md:block absolute top-1/2 -right-2.5 w-5 text-gray-700">
+                                            <ChevronRight className="w-5 h-5" />
+                                        </div>
+                                    )}
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Event Types Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[
+                            { icon: Trophy, title: "Tournaments", desc: "Competitive events with brackets for Kata and Kumite. Requires admin approval.", color: "text-red-400", bgColor: "bg-red-500/10", borderColor: "border-red-500/20" },
+                            { icon: Tent, title: "Camps", desc: "Training camps and workshops. Auto-approved on enrollment.", color: "text-blue-400", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/20" },
+                            { icon: GraduationCap, title: "Seminars", desc: "Educational seminars and grading events. Auto-approved on enrollment.", color: "text-purple-400", bgColor: "bg-purple-500/10", borderColor: "border-purple-500/20" },
+                        ].map((item, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 + i * 0.08 }}
+                                className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5"
+                            >
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className={`w-10 h-10 rounded-xl ${item.bgColor} border ${item.borderColor} flex items-center justify-center`}>
+                                        <item.icon className={`w-5 h-5 ${item.color}`} />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-white">{item.title}</h3>
+                                </div>
+                                <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
+                            </motion.div>
+                        ))}
                     </div>
                 </motion.div>
             )}

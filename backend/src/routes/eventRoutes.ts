@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllEvents, getEvent, createEvent, registerForEvent, approveRegistration, rejectRegistration, bulkApproveRegistrations, updateEvent, deleteEvent, getEventRegistrations } from '../controllers/eventController';
+import { getAllEvents, getEvent, createEvent, registerForEvent, enrollStudentInEvent, approveRegistration, rejectRegistration, bulkApproveRegistrations, updateEvent, deleteEvent, getEventRegistrations } from '../controllers/eventController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -17,6 +17,7 @@ router.delete('/:id', restrictTo('ADMIN'), deleteEvent);
 
 router.get('/:id/registrations', restrictTo('ADMIN', 'INSTRUCTOR'), getEventRegistrations);
 router.post('/:eventId/register', registerForEvent);
+router.post('/:eventId/enroll-student', restrictTo('INSTRUCTOR', 'ADMIN'), enrollStudentInEvent);
 router.post('/registrations/:registrationId/approve', restrictTo('ADMIN'), approveRegistration);
 router.post('/registrations/:registrationId/reject', restrictTo('ADMIN'), rejectRegistration);
 router.post('/registrations/bulk-approve', restrictTo('ADMIN'), bulkApproveRegistrations);
