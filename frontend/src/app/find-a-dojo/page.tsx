@@ -20,6 +20,8 @@ import {
   Filter,
   Clock,
   Shield,
+  Crosshair,
+  Sparkles,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
@@ -370,34 +372,162 @@ export default function FindADojoPage() {
 
       <div className="relative z-10">
         {/* Hero Header */}
-        <section className="pt-8 pb-4 md:pt-16 md:pb-8 px-4">
-          <div className="container mx-auto text-center max-w-3xl">
+        <section className="relative pt-8 pb-4 md:pt-16 md:pb-8 px-4 overflow-hidden">
+          {/* Animated radial glow behind heading */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <motion.div
+              className="w-[600px] h-[400px] md:w-[900px] md:h-[500px] rounded-full opacity-20"
+              style={{
+                background: 'radial-gradient(ellipse at center, rgba(220,38,38,0.4) 0%, rgba(220,38,38,0.08) 40%, transparent 70%)',
+              }}
+              animate={{
+                scale: [1, 1.08, 1],
+                opacity: [0.15, 0.25, 0.15],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+          </div>
+
+          {/* Floating decorative elements */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {/* Floating Map Pins */}
+            {[
+              { x: '8%', y: '20%', delay: 0, size: 20 },
+              { x: '88%', y: '25%', delay: 1.5, size: 16 },
+              { x: '15%', y: '75%', delay: 3, size: 14 },
+              { x: '82%', y: '70%', delay: 2, size: 18 },
+              { x: '5%', y: '50%', delay: 4, size: 12 },
+              { x: '92%', y: '50%', delay: 0.8, size: 14 },
+            ].map((pin, i) => (
+              <motion.div
+                key={i}
+                className="absolute text-red-600/20 hidden md:block"
+                style={{ left: pin.x, top: pin.y }}
+                animate={{
+                  y: [-8, 8, -8],
+                  rotate: [-5, 5, -5],
+                  opacity: [0.15, 0.3, 0.15],
+                }}
+                transition={{
+                  duration: 4 + i * 0.5,
+                  repeat: Infinity,
+                  delay: pin.delay,
+                  ease: 'easeInOut',
+                }}
+              >
+                <MapPin style={{ width: pin.size, height: pin.size }} />
+              </motion.div>
+            ))}
+
+            {/* Decorative Kanku mark (abstract circle with cross) */}
+            <motion.div
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:block"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
+            >
+              <svg width="500" height="500" viewBox="0 0 500 500" className="opacity-[0.03]">
+                <circle cx="250" cy="250" r="200" fill="none" stroke="white" strokeWidth="1" />
+                <circle cx="250" cy="250" r="150" fill="none" stroke="white" strokeWidth="0.5" />
+                <circle cx="250" cy="250" r="240" fill="none" stroke="white" strokeWidth="0.5" strokeDasharray="8 8" />
+                <line x1="250" y1="10" x2="250" y2="490" stroke="white" strokeWidth="0.5" />
+                <line x1="10" y1="250" x2="490" y2="250" stroke="white" strokeWidth="0.5" />
+              </svg>
+            </motion.div>
+
+            {/* Corner accent lines */}
+            <div className="absolute top-4 left-4 w-16 h-16 border-l border-t border-red-600/20 rounded-tl-lg hidden md:block" />
+            <div className="absolute top-4 right-4 w-16 h-16 border-r border-t border-red-600/20 rounded-tr-lg hidden md:block" />
+          </div>
+
+          <div className="container mx-auto text-center max-w-3xl relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-600/10 border border-red-600/20 text-red-400 text-xs font-bold uppercase tracking-widest mb-6">
-                <MapPin className="w-3.5 h-3.5" />
+              {/* Enhanced Badge */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-red-600/15 to-red-800/10 border border-red-500/25 text-red-400 text-xs font-bold uppercase tracking-[0.2em] mb-6 backdrop-blur-sm shadow-lg shadow-red-950/20"
+              >
+                <motion.span
+                  animate={{ scale: [1, 1.3, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <Crosshair className="w-3.5 h-3.5" />
+                </motion.span>
                 {dojos.length} Dojos Across India
-              </div>
+                <Sparkles className="w-3 h-3 text-red-500/60" />
+              </motion.div>
 
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-4">
-                FIND A{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700">
-                  DOJO
-                </span>{' '}
-                NEAR YOU
+              {/* Enhanced Heading */}
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-2">
+                <motion.span
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="inline-block text-white/90"
+                >
+                  FIND A
+                </motion.span>{' '}
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.35, type: 'spring', stiffness: 200 }}
+                  className="inline-block relative"
+                >
+                  <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-red-500 to-red-700">
+                    DOJO
+                  </span>
+                  {/* Glow behind DOJO */}
+                  <motion.span
+                    className="absolute inset-0 blur-2xl bg-red-600/30 rounded-lg -z-0"
+                    animate={{ opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                </motion.span>{' '}
+                <motion.span
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="inline-block text-white/90"
+                >
+                  NEAR YOU
+                </motion.span>
               </h1>
 
-              <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-8">
-                Locate the nearest Kyokushin Karate training center and begin your martial arts journey.
-              </p>
+              {/* Decorative line under heading */}
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="mx-auto mb-5 h-px w-32 bg-gradient-to-r from-transparent via-red-500 to-transparent"
+              />
 
-              {/* Search */}
-              <div className="relative max-w-xl mx-auto group">
-                <div className="absolute inset-0 bg-red-600/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative flex items-center bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/50 group-hover:border-red-500/30 transition-all">
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-8 leading-relaxed"
+              >
+                Locate the nearest <span className="text-white/70 font-medium">Kyokushin Karate</span> training center and begin your martial arts journey.
+              </motion.p>
+
+              {/* Enhanced Search */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                className="relative max-w-xl mx-auto group"
+              >
+                <div className="absolute -inset-1 bg-gradient-to-r from-red-600/20 via-red-500/10 to-red-600/20 blur-xl rounded-3xl opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-500" />
+                <div className="relative flex items-center bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/50 group-hover:border-red-500/30 group-focus-within:border-red-500/40 transition-all duration-300">
                   <Search className="absolute left-5 w-5 h-5 text-gray-400 group-focus-within:text-red-500 transition-colors" />
                   <Input
                     placeholder="Search by city, state, or dojo name..."
@@ -414,35 +544,43 @@ export default function FindADojoPage() {
                     </button>
                   )}
                 </div>
-              </div>
+              </motion.div>
 
               {/* State badges */}
               {states.length > 0 && (
-                <div className="flex flex-wrap justify-center gap-2 mt-5">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                  className="flex flex-wrap justify-center gap-2 mt-5"
+                >
                   <button
                     onClick={() => { setStateFilter('ALL'); setSearchQuery(''); }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all duration-200 ${
                       stateFilter === 'ALL' && !searchQuery
-                        ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/20'
-                        : 'bg-zinc-900/80 border-white/10 text-gray-400 hover:border-red-500/30 hover:text-white'
+                        ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/25 scale-105'
+                        : 'bg-zinc-900/80 border-white/10 text-gray-400 hover:border-red-500/30 hover:text-white hover:scale-105'
                     }`}
                   >
                     All States
                   </button>
-                  {states.map((state) => (
-                    <button
+                  {states.map((state, i) => (
+                    <motion.button
                       key={state}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.65 + i * 0.05 }}
                       onClick={() => { setStateFilter(state); setSearchQuery(''); }}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all duration-200 ${
                         stateFilter === state
-                          ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/20'
-                          : 'bg-zinc-900/80 border-white/10 text-gray-400 hover:border-red-500/30 hover:text-white'
+                          ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/25 scale-105'
+                          : 'bg-zinc-900/80 border-white/10 text-gray-400 hover:border-red-500/30 hover:text-white hover:scale-105'
                       }`}
                     >
                       {state}
-                    </button>
+                    </motion.button>
                   ))}
-                </div>
+                </motion.div>
               )}
             </motion.div>
           </div>
