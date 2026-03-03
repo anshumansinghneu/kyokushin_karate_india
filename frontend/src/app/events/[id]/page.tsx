@@ -25,6 +25,7 @@ export default function EventDetailPage() {
     const [paymentProcessing, setPaymentProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [eventType, setEventType] = useState<string>("");
+    const [selectedCategory, setSelectedCategory] = useState<{ name: string; age: string; weight: string } | null>(null);
 
     // Voucher state
     const [hasVoucher, setHasVoucher] = useState(false);
@@ -185,8 +186,8 @@ export default function EventDetailPage() {
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_signature: response.razorpay_signature,
                             eventType,
-                            categoryAge: null,
-                            categoryWeight: null,
+                            categoryAge: selectedCategory?.age || null,
+                            categoryWeight: selectedCategory?.weight || null,
                             categoryBelt: null,
                         });
                         setRegistrationStep(3);
@@ -395,9 +396,36 @@ export default function EventDetailPage() {
                                                 ))}
                                             </div>
                                         </div>
+
+                                        {/* Category Selection (if event has categories) */}
+                                        {categories.length > 0 && (
+                                            <div className="space-y-4 mb-6">
+                                                <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Competition Category *</label>
+                                                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                                    {categories.map((cat: any, i: number) => (
+                                                        <button
+                                                            key={i}
+                                                            onClick={() => setSelectedCategory(cat)}
+                                                            className={`w-full p-3 rounded-lg border text-left transition-all ${
+                                                                selectedCategory?.name === cat.name && selectedCategory?.age === cat.age
+                                                                    ? 'bg-primary/10 text-white border-primary'
+                                                                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                                                            }`}
+                                                        >
+                                                            <span className="font-bold text-sm">{cat.name}</span>
+                                                            <div className="flex gap-3 mt-1 text-xs text-gray-500">
+                                                                {cat.age && <span>Age: {cat.age}</span>}
+                                                                {cat.weight && <span>Weight: {cat.weight}</span>}
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <Button
                                             onClick={() => setRegistrationStep(2)}
-                                            disabled={!eventType}
+                                            disabled={!eventType || (categories.length > 0 && !selectedCategory)}
                                             className="w-full bg-primary hover:bg-primary-dark"
                                         >
                                             Continue
@@ -420,6 +448,12 @@ export default function EventDetailPage() {
                                                 <span>Type</span>
                                                 <span className="text-white font-bold">{eventType}</span>
                                             </div>
+                                            {selectedCategory && (
+                                                <div className="flex justify-between text-gray-400">
+                                                    <span>Category</span>
+                                                    <span className="text-white font-bold text-right">{selectedCategory.name}{selectedCategory.weight ? ` (${selectedCategory.weight})` : ''}</span>
+                                                </div>
+                                            )}
                                             {!voucherValid && (
                                                 <div className="flex justify-between text-gray-400 border-t border-white/10 pt-4">
                                                     <span>Total Amount</span>

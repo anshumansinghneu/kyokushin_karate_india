@@ -29,6 +29,8 @@ interface User {
     experienceMonths?: number;
     fatherName?: string;
     fatherPhone?: string;
+    verificationStatus?: 'VERIFIED' | 'PENDING_VERIFICATION' | 'REJECTED';
+    dob?: string;
     registrations?: any[];
     tournamentResults?: any[];
 }

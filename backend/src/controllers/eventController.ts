@@ -19,6 +19,7 @@ export const getAllEvents = catchAsync(async (req: Request, res: Response, next:
                 type: true,
                 name: true,
                 description: true,
+                imageUrl: true,
                 startDate: true,
                 endDate: true,
                 location: true,
@@ -27,6 +28,7 @@ export const getAllEvents = catchAsync(async (req: Request, res: Response, next:
                 memberFee: true,
                 nonMemberFee: true,
                 status: true,
+                categories: true,
                 createdAt: true,
                 updatedAt: true,
                 dojoId: true,
@@ -84,7 +86,7 @@ export const createEvent = catchAsync(async (req: Request, res: Response, next: 
 
     const {
         type, name, description, imageUrl, startDate, endDate, location, dojoId,
-        registrationDeadline, maxParticipants, memberFee, nonMemberFee, categories
+        registrationDeadline, maxParticipants, memberFee, nonMemberFee, categories, status
     } = req.body;
 
     const newEvent = await prisma.event.create({
@@ -103,7 +105,7 @@ export const createEvent = catchAsync(async (req: Request, res: Response, next: 
             nonMemberFee,
             categories,
             createdBy: currentUser.id,
-            status: 'UPCOMING'
+            status: status || 'UPCOMING'
         },
     });
 

@@ -427,22 +427,130 @@ const STATS = [
     { label: "States Covered", value: "3+", icon: MapPin },
 ];
 
+/* ─── DB Seminar Section (for seminars from database) ─── */
+function DBSeminarSection({ seminar, index }: { seminar: any; index: number }) {
+    const [lightbox, setLightbox] = useState<number | null>(null);
+    const images: string[] = seminar.galleryImages || [];
+
+    if (images.length === 0) return null;
+
+    return (
+        <>
+            <AnimatePresence>
+                {lightbox !== null && (
+                    <Lightbox images={images} index={lightbox} onClose={() => setLightbox(null)} />
+                )}
+            </AnimatePresence>
+
+            <motion.section
+                initial={{ opacity: 0, y: 60 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.7, delay: index * 0.1 }}
+                className="relative"
+            >
+                <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 to-red-900/40 rounded-3xl blur-3xl opacity-30 -z-10" />
+
+                <div className="bg-zinc-900/60 backdrop-blur-sm border border-white/[0.06] rounded-3xl overflow-hidden">
+                    <div className="p-6 md:p-10 pb-0 md:pb-0">
+                        <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6 mb-6">
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-red-500/10 border border-red-500/20 text-red-400 shrink-0">
+                                <Shield size={22} />
+                            </div>
+                            <div className="flex-1 space-y-3">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 uppercase tracking-wider">
+                                        Seminar
+                                    </span>
+                                    <span className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
+                                        <Camera size={12} />
+                                        {images.length} Photos
+                                    </span>
+                                </div>
+                                <h3 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight">
+                                    {seminar.name}
+                                </h3>
+                                {seminar.description && (
+                                    <p className="text-gray-400 text-sm md:text-base leading-relaxed max-w-3xl">
+                                        {seminar.description}
+                                    </p>
+                                )}
+                                <div className="flex flex-wrap gap-4 text-sm pt-1">
+                                    <div className="flex items-center gap-2 text-gray-300 bg-white/5 rounded-full px-3 py-1.5">
+                                        <Calendar size={14} className="text-red-500" />
+                                        {new Date(seminar.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+                                    </div>
+                                    {seminar.location && (
+                                        <div className="flex items-center gap-2 text-gray-300 bg-white/5 rounded-full px-3 py-1.5">
+                                            <MapPin size={14} className="text-red-500" />
+                                            {seminar.location}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="p-4 md:p-6 pt-4">
+                        {images.length >= 5 ? (
+                            <MosaicGallery6
+                                images={images.slice(0, 6)}
+                                title={seminar.name}
+                                onImageClick={setLightbox}
+                            />
+                        ) : (
+                            <MosaicGallery3
+                                images={images.slice(0, 3)}
+                                title={seminar.name}
+                                onImageClick={setLightbox}
+                            />
+                        )}
+                    </div>
+                </div>
+            </motion.section>
+        </>
+    );
+}
+
 /* ─── Main Page ─── */
 export default function SeminarsPage() {
-    const [events, setEvents] = useState<any[]>([]);
+    const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+    const [completedSeminars, setCompletedSeminars] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchEvents = useCallback(async () => {
         setIsLoading(true);
         try {
             const res = await api.get("/events");
-            const seminars = res.data.data.events.filter(
+            const seminars = (res.data.data.events || []).filter(
                 (e: any) => e.type === "SEMINAR"
             );
-            setEvents(seminars);
+            
+            const now = new Date();
+            const upcoming = seminars.filter((s: any) => s.status === "UPCOMING" || s.status === "ONGOING" || new Date(s.startDate) > now);
+            const completed = seminars.filter((s: any) => s.status === "COMPLETED" || (new Date(s.endDate) < now && s.status !== "UPCOMING"));
+
+            // Fetch gallery images for completed seminars
+            const completedWithGallery = await Promise.all(
+                completed.map(async (sem: any) => {
+                    try {
+                        const galleryRes = await api.get(`/gallery?eventId=${sem.id}&limit=6`);
+                        return {
+                            ...sem,
+                            galleryImages: (galleryRes.data.data.items || []).map((i: any) => i.imageUrl),
+                        };
+                    } catch {
+                        return { ...sem, galleryImages: [] };
+                    }
+                })
+            );
+
+            setUpcomingEvents(upcoming);
+            setCompletedSeminars(completedWithGallery);
         } catch (err) {
             console.error("Failed to fetch seminars", err);
-            setEvents([]);
+            setUpcomingEvents([]);
+            setCompletedSeminars([]);
         } finally {
             setIsLoading(false);
         }
@@ -518,8 +626,14 @@ export default function SeminarsPage() {
                     </motion.div>
 
                     <div className="space-y-12 md:space-y-16">
+                        {/* DB-fetched completed seminars (with gallery) */}
+                        {completedSeminars.filter((s: any) => s.galleryImages?.length > 0).map((sem: any, i: number) => (
+                            <DBSeminarSection key={sem.id} seminar={sem} index={i} />
+                        ))}
+
+                        {/* Original hardcoded showcase seminars (fallback) */}
                         {PAST_SEMINARS.map((seminar, i) => (
-                            <SeminarSection key={seminar.id} seminar={seminar} index={i} />
+                            <SeminarSection key={seminar.id} seminar={seminar} index={completedSeminars.length + i} />
                         ))}
                     </div>
                 </div>
@@ -576,9 +690,9 @@ export default function SeminarsPage() {
                         <div className="flex justify-center py-16">
                             <div className="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                         </div>
-                    ) : events.length > 0 ? (
+                    ) : upcomingEvents.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {events.map((event) => (
+                            {upcomingEvents.map((event) => (
                                 <Link
                                     href={`/events/${event.id}`}
                                     key={event.id}

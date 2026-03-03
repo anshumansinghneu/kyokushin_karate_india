@@ -33,7 +33,10 @@ const BELT_PROGRESSION = [
     { name: "Yellow", color: "bg-yellow-400 text-yellow-900", value: 3 },
     { name: "Green", color: "bg-green-600 text-white", value: 4 },
     { name: "Brown", color: "bg-amber-700 text-white", value: 5 },
-    { name: "Black", color: "bg-black text-white border border-yellow-400", value: 6, match: (b: string) => b.startsWith('Black') },
+    { name: "Black 1st Dan", color: "bg-black text-white border border-yellow-400", value: 6 },
+    { name: "Black 2nd Dan", color: "bg-black text-white border border-yellow-400", value: 7 },
+    { name: "Black 3rd Dan", color: "bg-black text-white border border-yellow-400", value: 8 },
+    { name: "Black 4th Dan", color: "bg-black text-white border border-yellow-400", value: 9 },
 ];
 
 export default function BeltPromotionsView() {
@@ -69,13 +72,15 @@ export default function BeltPromotionsView() {
     };
 
     const getNextBelt = (currentBelt: string): string | null => {
-        const currentIndex = BELT_PROGRESSION.findIndex(b => b.name === currentBelt);
+        // Handle legacy "Black" value
+        const normalized = currentBelt === 'Black' ? 'Black 1st Dan' : currentBelt;
+        const currentIndex = BELT_PROGRESSION.findIndex(b => b.name === normalized);
         if (currentIndex === -1 || currentIndex >= BELT_PROGRESSION.length - 1) return null;
         return BELT_PROGRESSION[currentIndex + 1].name;
     };
 
     const getBeltColor = (belt: string) => {
-        const beltData = BELT_PROGRESSION.find(b => b.name === belt);
+        const beltData = BELT_PROGRESSION.find(b => b.name === belt || (belt.startsWith('Black') && b.name.startsWith('Black')));
         return beltData?.color || "bg-gray-500 text-white";
     };
 

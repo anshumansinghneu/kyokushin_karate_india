@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X, Download, Award } from "lucide-react";
+import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X, Download, Award, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { getUserProfileImage } from "@/lib/imageUtils";
@@ -181,7 +181,7 @@ export default function ProfilePage() {
             if (!user?.id) return;
             try {
                 const res = await api.get(`/belts/history/${user.id}`);
-                setBeltHistory(res.data.data.beltHistory || []);
+                setBeltHistory(res.data.data.history || []);
             } catch (error) {
                 console.error("Failed to fetch belt history", error);
             }
@@ -514,6 +514,37 @@ export default function ProfilePage() {
                             <Download className="w-4 h-4" />
                             Download Membership Card
                         </Button>
+
+                        {/* Belt Verification Status */}
+                        {user?.verificationStatus && user.verificationStatus !== 'VERIFIED' && (
+                            <div className={`mt-4 p-4 rounded-xl border ${
+                                user.verificationStatus === 'PENDING_VERIFICATION'
+                                    ? 'bg-yellow-500/10 border-yellow-500/20'
+                                    : 'bg-red-500/10 border-red-500/20'
+                            }`}>
+                                <div className="flex items-center gap-3">
+                                    {user.verificationStatus === 'PENDING_VERIFICATION' ? (
+                                        <Loader2 className="w-5 h-5 text-yellow-400 animate-spin" />
+                                    ) : (
+                                        <AlertCircle className="w-5 h-5 text-red-400" />
+                                    )}
+                                    <div>
+                                        <p className={`text-sm font-bold ${
+                                            user.verificationStatus === 'PENDING_VERIFICATION' ? 'text-yellow-400' : 'text-red-400'
+                                        }`}>
+                                            {user.verificationStatus === 'PENDING_VERIFICATION'
+                                                ? 'Belt Verification Pending'
+                                                : 'Belt Verification Rejected'}
+                                        </p>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            {user.verificationStatus === 'PENDING_VERIFICATION'
+                                                ? 'Your belt rank claim is being reviewed by your instructor.'
+                                                : 'Your belt rank claim was not approved. You have been assigned White belt. Contact your instructor for details.'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </motion.div>
 
                     {/* Right Column: Details & History */}

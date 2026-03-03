@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Plus, Edit2, Trash2, X, Save, MapPin, Users, DollarSign, Search, Clock, Trophy, Tent, BookOpen, ImagePlus, Info, IndianRupee, CalendarClock, Loader2 } from "lucide-react";
+import { Calendar, Plus, Edit2, Trash2, X, Save, MapPin, Users, DollarSign, Search, Clock, Trophy, Tent, BookOpen, ImagePlus, Info, IndianRupee, CalendarClock, Loader2, Tag, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ interface Event {
     id: string;
     name: string;
     type: 'TOURNAMENT' | 'CAMP' | 'SEMINAR';
+    status: 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'DRAFT' | 'CANCELLED';
     startDate: string;
     endDate: string;
     location: string;
@@ -23,6 +24,13 @@ interface Event {
     dojoId?: string;
     dojo?: { name: string };
     imageUrl?: string;
+    categories?: { name: string; age: string; weight: string }[];
+}
+
+interface CategoryRow {
+    name: string;
+    age: string;
+    weight: string;
 }
 
 interface Dojo {
@@ -43,6 +51,7 @@ export default function EventManager() {
     const [formData, setFormData] = useState({
         name: "",
         type: "TOURNAMENT",
+        status: "UPCOMING" as string,
         description: "",
         imageUrl: "",
         startDate: "",
@@ -53,7 +62,7 @@ export default function EventManager() {
         maxParticipants: 100,
         memberFee: 0,
         nonMemberFee: 0,
-        categories: [] // Simplified for now
+        categories: [] as CategoryRow[]
     });
 
     // Smart auto-fill: when start date changes, auto-set end date (+1 day) and deadline (-7 days)
@@ -114,17 +123,21 @@ export default function EventManager() {
     const handleOpenModal = async (event?: Event) => {
         if (event) {
             setEditingEvent(event);
-            // Fetch full event details to get description
+            // Fetch full event details to get description + categories
             let description = "";
+            let cats: CategoryRow[] = [];
             try {
                 const res = await api.get(`/events/${event.id}`);
-                description = res.data.data.event?.description || "";
+                const fullEvent = res.data.data.event;
+                description = fullEvent?.description || "";
+                cats = Array.isArray(fullEvent?.categories) ? fullEvent.categories : [];
             } catch {
-                // Fallback: use empty description if fetch fails
+                // Fallback: use empty description/categories if fetch fails
             }
             setFormData({
                 name: event.name,
                 type: event.type,
+                status: event.status || 'UPCOMING',
                 description,
                 imageUrl: event.imageUrl || "",
                 startDate: new Date(event.startDate).toISOString().split('T')[0],
@@ -135,13 +148,14 @@ export default function EventManager() {
                 maxParticipants: event.maxParticipants,
                 memberFee: event.memberFee,
                 nonMemberFee: event.nonMemberFee,
-                categories: []
+                categories: cats
             });
         } else {
             setEditingEvent(null);
             setFormData({
                 name: "",
                 type: "TOURNAMENT",
+                status: "UPCOMING",
                 description: "",
                 imageUrl: "",
                 startDate: "",
@@ -213,6 +227,13 @@ export default function EventManager() {
     };
 
     const getEventStatus = (event: Event) => {
+        // Use the actual status from DB if available
+        const s = event.status;
+        if (s === 'DRAFT') return 'draft' as const;
+        if (s === 'CANCELLED') return 'cancelled' as const;
+        if (s === 'COMPLETED') return 'past' as const;
+        if (s === 'ONGOING') return 'live' as const;
+        // Fallback: compute from dates for UPCOMING
         const now = new Date();
         const start = new Date(event.startDate);
         const end = new Date(event.endDate);
@@ -231,6 +252,8 @@ export default function EventManager() {
         upcoming: { label: 'Upcoming', cls: 'bg-emerald-500/15 text-emerald-400' },
         live: { label: 'Live Now', cls: 'bg-red-500/15 text-red-400 animate-pulse' },
         past: { label: 'Completed', cls: 'bg-gray-500/15 text-gray-400' },
+        draft: { label: 'Draft', cls: 'bg-yellow-500/15 text-yellow-400' },
+        cancelled: { label: 'Cancelled', cls: 'bg-orange-500/15 text-orange-400 line-through' },
     };
 
     const filteredEvents = events.filter(event => {
@@ -681,6 +704,122 @@ export default function EventManager() {
                                         </div>
                                     </div>
 
+                                    {/* Section: Status */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <Tag className="w-3.5 h-3.5" /> Event Status
+                                        </div>
+                                        <div className="grid grid-cols-5 gap-2">
+                                            {[
+                                                { value: 'DRAFT', label: 'Draft', color: 'gray' },
+                                                { value: 'UPCOMING', label: 'Upcoming', color: 'emerald' },
+                                                { value: 'ONGOING', label: 'Ongoing', color: 'blue' },
+                                                { value: 'COMPLETED', label: 'Completed', color: 'purple' },
+                                                { value: 'CANCELLED', label: 'Cancelled', color: 'red' },
+                                            ].map(s => (
+                                                <button
+                                                    key={s.value}
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, status: s.value })}
+                                                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all text-center ${
+                                                        formData.status === s.value
+                                                            ? s.color === 'gray' ? 'bg-gray-500/20 text-gray-300 border-gray-500/40'
+                                                            : s.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                                                            : s.color === 'blue' ? 'bg-blue-500/20 text-blue-400 border-blue-500/40'
+                                                            : s.color === 'purple' ? 'bg-purple-500/20 text-purple-400 border-purple-500/40'
+                                                            : 'bg-red-500/20 text-red-400 border-red-500/40'
+                                                            : 'bg-white/5 text-gray-500 border-white/10 hover:bg-white/10 hover:text-gray-300'
+                                                    }`}
+                                                >
+                                                    {s.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Section: Categories (mainly for tournaments) */}
+                                    {formData.type === 'TOURNAMENT' && (
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                                    <ListChecks className="w-3.5 h-3.5" /> Competition Categories
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, categories: [...formData.categories, { name: '', age: '', weight: '' }] })}
+                                                    className="text-xs text-red-400 hover:text-red-300 font-bold flex items-center gap-1 transition-colors"
+                                                >
+                                                    <Plus className="w-3 h-3" /> Add Category
+                                                </button>
+                                            </div>
+                                            {formData.categories.length === 0 && (
+                                                <div className="text-center py-4 border border-dashed border-white/10 rounded-xl">
+                                                    <p className="text-xs text-gray-500">No categories yet. Add competition categories for age/weight divisions.</p>
+                                                </div>
+                                            )}
+                                            <div className="space-y-2">
+                                                {formData.categories.map((cat, idx) => (
+                                                    <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
+                                                        <div>
+                                                            {idx === 0 && <label className="text-[11px] text-gray-500 mb-1 block">Category Name</label>}
+                                                            <input
+                                                                value={cat.name}
+                                                                onChange={(e) => {
+                                                                    const updated = [...formData.categories];
+                                                                    updated[idx] = { ...updated[idx], name: e.target.value };
+                                                                    setFormData({ ...formData, categories: updated });
+                                                                }}
+                                                                placeholder="e.g. Men's Lightweight"
+                                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-all"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            {idx === 0 && <label className="text-[11px] text-gray-500 mb-1 block">Age Range</label>}
+                                                            <input
+                                                                value={cat.age}
+                                                                onChange={(e) => {
+                                                                    const updated = [...formData.categories];
+                                                                    updated[idx] = { ...updated[idx], age: e.target.value };
+                                                                    setFormData({ ...formData, categories: updated });
+                                                                }}
+                                                                placeholder="e.g. 18-35"
+                                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-all"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            {idx === 0 && <label className="text-[11px] text-gray-500 mb-1 block">Weight Class</label>}
+                                                            <input
+                                                                value={cat.weight}
+                                                                onChange={(e) => {
+                                                                    const updated = [...formData.categories];
+                                                                    updated[idx] = { ...updated[idx], weight: e.target.value };
+                                                                    setFormData({ ...formData, categories: updated });
+                                                                }}
+                                                                placeholder="e.g. <70kg"
+                                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 transition-all"
+                                                            />
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const updated = formData.categories.filter((_, i) => i !== idx);
+                                                                setFormData({ ...formData, categories: updated });
+                                                            }}
+                                                            className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {formData.categories.length > 0 && (
+                                                <p className="text-[11px] text-gray-600 flex items-center gap-1">
+                                                    <Info className="w-3 h-3" /> Categories will be shown on the event detail page. Participants can select during registration.
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+
                                     {/* Live Summary */}
                                     {formData.name && (
                                         <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4">
@@ -688,6 +827,15 @@ export default function EventManager() {
                                             <div className="flex flex-wrap items-center gap-2 text-sm">
                                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${typeAccent[formData.type]?.badge || 'bg-gray-500/15 text-gray-400'}`}>
                                                     {formData.type}
+                                                </span>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                                    formData.status === 'DRAFT' ? 'bg-yellow-500/15 text-yellow-400' :
+                                                    formData.status === 'ONGOING' ? 'bg-blue-500/15 text-blue-400' :
+                                                    formData.status === 'COMPLETED' ? 'bg-gray-500/15 text-gray-400' :
+                                                    formData.status === 'CANCELLED' ? 'bg-orange-500/15 text-orange-400' :
+                                                    'bg-emerald-500/15 text-emerald-400'
+                                                }`}>
+                                                    {formData.status}
                                                 </span>
                                                 <span className="text-white font-semibold">{formData.name}</span>
                                                 {formData.location && <span className="text-gray-500">· {formData.location}</span>}

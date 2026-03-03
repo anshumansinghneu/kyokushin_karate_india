@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag, Ticket, RefreshCw, ChevronDown, Search, ChevronRight, Loader2 } from "lucide-react";
+import { Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag, Ticket, RefreshCw, ChevronDown, Search, ChevronRight, Loader2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -23,6 +23,7 @@ const PaymentManagement = lazy(() => import('./PaymentManagement'));
 const LiveMatchManager = lazy(() => import('./LiveMatchManager'));
 const StoreManagement = lazy(() => import('./StoreManagement'));
 const VoucherManager = lazy(() => import('./VoucherManager'));
+const SeminarManager = lazy(() => import('./SeminarManager'));
 
 import OrganizationGraph from "./OrganizationGraph";
 import GlobalSearch from "./GlobalSearch";
@@ -37,9 +38,9 @@ function TabLoader() {
     );
 }
 
-type TabId = 'overview' | 'dojos' | 'events' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers';
+type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers';
 
-const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers'];
+const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers'];
 
 export default function AdminDashboard({ user, initialTab }: { user: any; initialTab?: string }) {
     const { showToast } = useToast();
@@ -129,6 +130,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
             items: [
                 { id: 'dojos', label: 'Dojo Management', icon: Building },
                 { id: 'events', label: 'Event Management', icon: Calendar },
+                { id: 'seminars', label: 'Seminars', icon: BookOpen },
                 { id: 'tournaments', label: 'Tournaments', icon: Trophy },
                 { id: 'live-management', label: 'Live Control', icon: Radio },
             ]
@@ -423,6 +425,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                         {activeTab === 'belt-promotions' && <motion.div key="belt-promotions" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><BeltPromotionsView /></Suspense></motion.div>}
                         {activeTab === 'dojos' && <motion.div key="dojos" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><DojoManager /></Suspense></motion.div>}
                         {activeTab === 'events' && <motion.div key="events" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><EventManager /></Suspense></motion.div>}
+                        {activeTab === 'seminars' && <motion.div key="seminars" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><SeminarManager /></Suspense></motion.div>}
                         {activeTab === 'tournaments' && <motion.div key="tournaments" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><TournamentManager /></Suspense></motion.div>}
                         {activeTab === 'live-management' && <motion.div key="live-management" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><LiveMatchManager /></Suspense></motion.div>}
                         {activeTab === 'store' && <motion.div key="store" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><StoreManagement /></Suspense></motion.div>}
