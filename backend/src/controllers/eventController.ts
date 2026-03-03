@@ -377,6 +377,11 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
 
     const fee = event.memberFee || 0;
 
+    // Voucher is mandatory for paid events
+    if (fee > 0 && !voucherCode) {
+        return next(new AppError('A voucher code is required for paid events', 400));
+    }
+
     // ── Handle voucher-based enrollment ──
     if (voucherCode) {
         const voucher = await prisma.cashVoucher.findUnique({
@@ -451,7 +456,7 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
         });
     }
 
-    // ── No voucher — create PENDING registration (pay later) ──
+    // ── Free event — no voucher needed ──
     const registration = await prisma.eventRegistration.create({
         data: {
             eventId,
@@ -460,9 +465,9 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
             categoryWeight: categoryWeight || null,
             categoryBelt: categoryBelt || null,
             eventType: eventType || null,
-            paymentStatus: fee > 0 ? 'PENDING' : 'PAID',
-            paymentAmount: fee,
-            finalAmount: fee,
+            paymentStatus: 'PAID',
+            paymentAmount: 0,
+            finalAmount: 0,
             approvalStatus: event.type === 'TOURNAMENT' ? 'PENDING' : 'APPROVED',
         },
     });
@@ -471,7 +476,7 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
 
     res.status(201).json({
         status: 'success',
-        message: `${student.name} enrolled in ${event.name}.${fee > 0 ? ' Payment is pending.' : ''}`,
+        message: `${student.name} enrolled in ${event.name}.`,
         data: { registration },
     });
 });

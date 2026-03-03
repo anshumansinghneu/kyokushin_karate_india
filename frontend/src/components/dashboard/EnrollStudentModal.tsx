@@ -78,7 +78,6 @@ export default function EnrollStudentModal({ isOpen, onClose, onSuccess }: Enrol
     const [categoryBelt, setCategoryBelt] = useState("");
 
     // Voucher
-    const [useVoucher, setUseVoucher] = useState(false);
     const [voucherCode, setVoucherCode] = useState("");
     const [voucherValidating, setVoucherValidating] = useState(false);
     const [voucherValid, setVoucherValid] = useState(false);
@@ -155,7 +154,7 @@ export default function EnrollStudentModal({ isOpen, onClose, onSuccess }: Enrol
                 categoryWeight: categoryWeight || undefined,
                 categoryBelt: categoryBelt || undefined,
             };
-            if (useVoucher && voucherValid) {
+            if (hasFee && voucherValid) {
                 payload.voucherCode = voucherCode.trim().toUpperCase();
             }
             const res = await api.post(`/events/${selectedEvent.id}/enroll-student`, payload);
@@ -179,7 +178,6 @@ export default function EnrollStudentModal({ isOpen, onClose, onSuccess }: Enrol
         setCategoryAge("");
         setCategoryWeight("");
         setCategoryBelt("");
-        setUseVoucher(false);
         setVoucherCode("");
         setVoucherValid(false);
         setVoucherError("");
@@ -196,6 +194,8 @@ export default function EnrollStudentModal({ isOpen, onClose, onSuccess }: Enrol
     const filteredEvents = events.filter(e =>
         eventFilter === "ALL" ? true : e.type === eventFilter
     );
+
+    const hasFee = selectedEvent ? selectedEvent.memberFee > 0 : false;
 
     if (!isOpen) return null;
 
@@ -282,10 +282,16 @@ export default function EnrollStudentModal({ isOpen, onClose, onSuccess }: Enrol
                                             <span className="text-gray-400">Event</span>
                                             <span className="text-white font-semibold truncate ml-4">{selectedEvent?.name}</span>
                                         </div>
-                                        {useVoucher && voucherValid && (
+                                        {hasFee && voucherValid && (
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-gray-400">Payment</span>
                                                 <span className="text-green-400 font-semibold">Paid via Voucher</span>
+                                            </div>
+                                        )}
+                                        {!hasFee && (
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-400">Payment</span>
+                                                <span className="text-green-400 font-semibold">Free Event</span>
                                             </div>
                                         )}
                                     </div>
@@ -512,67 +518,68 @@ export default function EnrollStudentModal({ isOpen, onClose, onSuccess }: Enrol
                                         </div>
                                     )}
 
-                                    {/* Voucher toggle */}
+                                    {/* Voucher — mandatory for paid events */}
                                     {selectedEvent && selectedEvent.memberFee > 0 && (
                                         <div className="space-y-3">
-                                            <label className="flex items-center gap-3 cursor-pointer group">
-                                                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${useVoucher ? 'bg-blue-600 border-blue-600' : 'border-gray-600 group-hover:border-gray-400'}`}>
-                                                    {useVoucher && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                                            <div className="flex items-center gap-2">
+                                                <Ticket className="w-4 h-4 text-blue-400" />
+                                                <p className="text-xs font-bold text-gray-400">Voucher Code <span className="text-red-400">*</span></p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <div className="relative flex-1">
+                                                    <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                                    <input
+                                                        value={voucherCode}
+                                                        onChange={(e) => {
+                                                            setVoucherCode(e.target.value.toUpperCase());
+                                                            setVoucherError("");
+                                                            setVoucherValid(false);
+                                                        }}
+                                                        placeholder="KKFI-XXXXXXXX"
+                                                        className={`${inputCls} pl-10 font-mono tracking-wider`}
+                                                    />
                                                 </div>
-                                                <span className="text-sm text-gray-300 font-semibold">Pay with voucher</span>
-                                            </label>
-
-                                            {useVoucher && (
-                                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2">
-                                                    <div className="flex gap-2">
-                                                        <div className="relative flex-1">
-                                                            <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                                                            <input
-                                                                value={voucherCode}
-                                                                onChange={(e) => {
-                                                                    setVoucherCode(e.target.value.toUpperCase());
-                                                                    setVoucherError("");
-                                                                    setVoucherValid(false);
-                                                                }}
-                                                                placeholder="KKFI-XXXXXXXX"
-                                                                className={`${inputCls} pl-10 font-mono tracking-wider`}
-                                                            />
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={handleValidateVoucher}
-                                                            disabled={voucherValidating || !voucherCode.trim()}
-                                                            className="px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-all disabled:opacity-50 flex-shrink-0"
-                                                        >
-                                                            {voucherValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
-                                                        </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleValidateVoucher}
+                                                    disabled={voucherValidating || !voucherCode.trim()}
+                                                    className="px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-all disabled:opacity-50 flex-shrink-0"
+                                                >
+                                                    {voucherValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
+                                                </button>
+                                            </div>
+                                            {voucherError && (
+                                                <div className="flex items-center gap-2 text-red-400 text-sm">
+                                                    <AlertCircle className="w-4 h-4 flex-shrink-0" /> {voucherError}
+                                                </div>
+                                            )}
+                                            {voucherValid && (
+                                                <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
+                                                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                                                    <div>
+                                                        <p className="text-sm font-bold text-green-400">Voucher Valid!</p>
+                                                        <p className="text-xs text-gray-400">Event fee of ₹{selectedEvent.memberFee} will be covered by this voucher.</p>
                                                     </div>
-                                                    {voucherError && (
-                                                        <div className="flex items-center gap-2 text-red-400 text-sm">
-                                                            <AlertCircle className="w-4 h-4 flex-shrink-0" /> {voucherError}
-                                                        </div>
-                                                    )}
-                                                    {voucherValid && (
-                                                        <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
-                                                            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                                                            <div>
-                                                                <p className="text-sm font-bold text-green-400">Voucher Valid!</p>
-                                                                <p className="text-xs text-gray-400">Event fee will be covered.</p>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </motion.div>
+                                                </div>
+                                            )}
+                                            {!voucherValid && (
+                                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                                                    <p className="text-[11px] text-amber-400 flex items-center gap-1.5">
+                                                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                                                        A valid voucher is required to enroll in paid events. Please verify the voucher code above.
+                                                    </p>
+                                                </div>
                                             )}
                                         </div>
                                     )}
 
-                                    {/* Info: no voucher → pending payment */}
-                                    {selectedEvent && selectedEvent.memberFee > 0 && !useVoucher && (
-                                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
-                                            <p className="text-[11px] text-amber-400 flex items-center gap-1.5">
-                                                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                                                Without a voucher, the enrollment will be created with payment pending. Student can pay later.
-                                            </p>
+                                    {selectedEvent && selectedEvent.memberFee === 0 && (
+                                        <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
+                                            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-bold text-green-400">Free Event</p>
+                                                <p className="text-xs text-gray-400">No payment or voucher required for this event.</p>
+                                            </div>
                                         </div>
                                     )}
 
@@ -635,7 +642,7 @@ export default function EnrollStudentModal({ isOpen, onClose, onSuccess }: Enrol
                                 {step === 3 && (
                                     <button
                                         onClick={handleSubmit}
-                                        disabled={isSubmitting || (useVoucher && !voucherValid)}
+                                        disabled={isSubmitting || (hasFee && !voucherValid)}
                                         className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-700 text-white text-sm font-bold rounded-xl transition-all hover:opacity-90 disabled:opacity-40 hover:shadow-lg hover:shadow-blue-900/20 active:scale-95"
                                     >
                                         {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
