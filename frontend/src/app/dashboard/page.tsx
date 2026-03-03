@@ -42,7 +42,7 @@ export default function DashboardPage() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-red-900/20 via-black to-black" />
             <div className="absolute inset-0 bg-[url('/dojo-bg.png')] bg-cover bg-center opacity-10 mix-blend-overlay" />
 
-            <div className="container mx-auto px-4 py-8 relative z-10">
+            <div className="container-responsive py-8 relative z-10">
                 {/* Membership Expiry Banner */}
                 {isExpired && user.role !== "ADMIN" && (
                     <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

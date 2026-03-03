@@ -199,7 +199,7 @@ export default function SponsorsPage() {
                 <div className="absolute bottom-[10%] left-[20%] w-[40%] h-[40%] bg-green-600/5 blur-[150px] rounded-full" />
             </div>
 
-            <div className="container mx-auto px-4 py-24 relative z-10">
+            <div className="container-responsive py-24 relative z-10">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}

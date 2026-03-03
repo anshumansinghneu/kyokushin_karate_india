@@ -116,7 +116,7 @@ export default function RootLayout({
         <ToastProvider>
           <ScrollProgress />
           <Navbar />
-          <main className="min-h-screen pt-24 pb-20 md:pb-0">
+          <main className="min-h-screen pt-14 md:pt-24 pb-20 md:pb-0">
             <PageTransition>{children}</PageTransition>
           </main>
           <Footer />

@@ -129,7 +129,7 @@ export default function DojoListPage() {
             <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black pointer-events-none" />
             <div className="fixed top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-[0.03] pointer-events-none" />
 
-            <div className="container mx-auto px-4 py-8 sm:py-12 md:py-24 relative z-10">
+            <div className="container-responsive py-8 sm:py-12 md:py-24 relative z-10">
                 {/* Header */}
                 <div className="text-center mb-10 md:mb-20">
                     <motion.h1

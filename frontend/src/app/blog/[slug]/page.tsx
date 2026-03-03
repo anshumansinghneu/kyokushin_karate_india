@@ -136,7 +136,7 @@ export default function BlogPost() {
                         </motion.div>
 
                         <div className="absolute bottom-0 left-0 right-0 z-20 pb-16 pt-32 bg-gradient-to-t from-black via-black/80 to-transparent">
-                            <div className="container mx-auto px-4 max-w-5xl">
+                            <div className="container-responsive max-w-5xl">
                                 <Link href="/blog" className="inline-flex items-center gap-2 text-white/70 hover:text-white mb-6 transition-colors group font-medium">
                                     <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
                                     Back to Chronicles
@@ -177,7 +177,7 @@ export default function BlogPost() {
                     </div>
 
                     {/* CONTENT SECTION */}
-                    <article className="container mx-auto px-4 max-w-5xl py-16">
+                    <article className="container-responsive max-w-5xl py-16">
                         {renderBlocks()}
 
                         {/* SHARE / FOOTER */}

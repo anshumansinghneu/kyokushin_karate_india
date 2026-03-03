@@ -45,7 +45,7 @@ function ManagementContent() {
             {/* Background Elements */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black" />
 
-            <div className="container mx-auto px-4 py-8 relative z-10">
+            <div className="container-responsive py-8 relative z-10">
                 {user.role === 'ADMIN' && <AdminDashboard user={user} initialTab={initialTab} />}
                 {user.role === 'INSTRUCTOR' && <InstructorDashboard user={user} />}
             </div>

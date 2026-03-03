@@ -97,7 +97,7 @@ export default function DojoDetailPage() {
                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black" />
                 </div>
 
-                <div className="absolute inset-0 container mx-auto px-4 flex flex-col justify-end pb-20 z-10">
+                <div className="absolute inset-0 container-responsive flex flex-col justify-end pb-20 z-10">
                     <Link href="/dojos" className="absolute top-8 left-4 md:left-8 text-white/70 hover:text-white flex items-center gap-2 transition-colors bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 hover:bg-black/40">
                         <ArrowLeft className="w-4 h-4" /> Back to Dojos
                     </Link>
@@ -136,7 +136,7 @@ export default function DojoDetailPage() {
             </div>
 
             {/* CLEAN GRID LAYOUT */}
-            <div className="container mx-auto px-4 py-12 pb-32">
+            <div className="container-responsive py-12 pb-32">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                     {/* LEFT COLUMN - Main Content */}

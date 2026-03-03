@@ -13,7 +13,7 @@ export default function LeadershipSection() {
             {/* Red Glow Effect */}
             <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-red-900/20 blur-[120px] rounded-full pointer-events-none" />
 
-            <div className="container mx-auto px-4 relative z-10">
+            <div className="container-responsive relative z-10">
 
                 {/* DAIHYO RYUKO TAKE SECTION */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">

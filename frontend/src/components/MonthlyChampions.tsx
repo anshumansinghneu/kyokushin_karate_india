@@ -78,7 +78,7 @@ export default function MonthlyChampions() {
                 className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-red-900/10 rounded-full blur-[120px] pointer-events-none"
             />
 
-            <div className="container mx-auto px-4 relative z-10">
+            <div className="container-responsive relative z-10">
                 <div className="text-center mb-20">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

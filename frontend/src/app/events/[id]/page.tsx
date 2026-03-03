@@ -242,7 +242,7 @@ export default function EventDetailPage() {
                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black" />
                 </div>
 
-                <div className="absolute inset-0 container mx-auto px-6 md:px-4 flex flex-col justify-end pb-12 z-10">
+                <div className="absolute inset-0 container-responsive flex flex-col justify-end pb-12 z-10">
                     <Link href="/events" className="text-gray-400 hover:text-white flex items-center gap-2 mb-6 transition-colors w-fit">
                         <ArrowLeft className="w-4 h-4" /> Back to Events
                     </Link>
@@ -264,7 +264,7 @@ export default function EventDetailPage() {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="container-responsive py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
                 {/* Left Column: Details */}
                 <div className="lg:col-span-2 space-y-12">
                     {/* Description */}

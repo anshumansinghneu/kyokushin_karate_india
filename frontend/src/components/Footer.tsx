@@ -36,7 +36,7 @@ export default function Footer() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: "-60px" }}
-                className="container mx-auto px-3 sm:px-4 lg:px-8 pt-10 sm:pt-14 md:pt-16 relative z-10"
+                className="container-responsive pt-10 sm:pt-14 md:pt-16 relative z-10"
             >
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 md:gap-12 mb-8 sm:mb-12 md:mb-16">
                     {/* Brand */}

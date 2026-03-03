@@ -181,7 +181,7 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
 
             {/* Main Content with 3D Tilt */}
             <motion.div
-                className="relative z-30 container mx-auto px-4 text-center flex flex-col items-center justify-center h-full transform-style-3d will-change-transform gpu-accelerate"
+                className="relative z-30 container-responsive text-center flex flex-col items-center justify-center h-full transform-style-3d will-change-transform gpu-accelerate"
                 style={{ rotateX, rotateY }}
             >
                 <motion.div

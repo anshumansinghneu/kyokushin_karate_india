@@ -463,7 +463,7 @@ export default function SeminarsPage() {
                     <div className="absolute top-40 right-0 w-[400px] h-[400px] bg-blue-600/5 rounded-full blur-[100px]" />
                 </div>
 
-                <div className="container mx-auto px-4 relative z-10">
+                <div className="container-responsive relative z-10">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -497,7 +497,7 @@ export default function SeminarsPage() {
 
             {/* ─── Seminars Showcase ─── */}
             <section className="py-8 md:py-16">
-                <div className="container mx-auto px-4">
+                <div className="container-responsive">
                     <motion.div
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
@@ -527,7 +527,7 @@ export default function SeminarsPage() {
 
             {/* ─── Stats ─── */}
             <section className="py-12 md:py-16">
-                <div className="container mx-auto px-4">
+                <div className="container-responsive">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -558,7 +558,7 @@ export default function SeminarsPage() {
 
             {/* ─── Upcoming Seminars ─── */}
             <section className="py-16 md:py-24">
-                <div className="container mx-auto px-4">
+                <div className="container-responsive">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-5xl font-black mb-4">
                             UPCOMING{" "}
@@ -641,7 +641,7 @@ export default function SeminarsPage() {
 
             {/* ─── CTA ─── */}
             <section className="py-16 md:py-20">
-                <div className="container mx-auto px-4">
+                <div className="container-responsive">
                     <div className="relative bg-zinc-900/60 backdrop-blur-sm border border-white/[0.06] rounded-3xl p-8 md:p-16 text-center overflow-hidden">
                         {/* Background glow */}
                         <div className="absolute inset-0 bg-gradient-to-br from-red-950/30 via-transparent to-transparent" />

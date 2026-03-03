@@ -34,6 +34,7 @@ export default function Home() {
   const [mediaMentions, setMediaMentions] = useState<any[]>([]);
   const [content, setContent] = useState<Record<string, any>>({});
   const [newEventFlash, setNewEventFlash] = useState<Event | null>(null);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const { isAuthenticated } = useAuthStore();
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -82,6 +83,8 @@ export default function Home() {
       } else {
         console.error("Failed to fetch media mentions", mediaRes.reason);
       }
+
+      setDataLoaded(true);
     };
     fetchData();
   }, []);
@@ -109,7 +112,7 @@ export default function Home() {
 
           {/* PHILOSOPHY SECTION (Parallax) */}
           <section className="py-10 sm:py-16 md:py-32 relative">
-            <div className="container mx-auto px-3 sm:px-4">
+            <div className="container-responsive">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-16 items-center">
                 <motion.div
                   initial={{ opacity: 0, x: -50 }}
@@ -207,9 +210,27 @@ export default function Home() {
           <TestimonialsSection />
 
           {/* LATEST NEWS SECTION - only render when there are blog posts */}
-          {latestBlogs.length > 0 && (
+          {!dataLoaded ? (
+            <section className="py-10 sm:py-16 md:py-24 bg-black">
+              <div className="container-responsive">
+                <div className="h-8 w-64 bg-white/5 rounded-lg mb-8 animate-pulse" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 animate-pulse">
+                      <div className="aspect-video bg-white/5" />
+                      <div className="p-6 space-y-3">
+                        <div className="h-3 w-20 bg-white/5 rounded" />
+                        <div className="h-5 w-full bg-white/5 rounded" />
+                        <div className="h-3 w-3/4 bg-white/5 rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          ) : latestBlogs.length > 0 && (
             <section className="py-10 sm:py-16 md:py-24 bg-black relative">
-              <div className="container mx-auto px-3 sm:px-4">
+              <div className="container-responsive">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 sm:mb-8 md:mb-12 gap-4">
                   <h2 className="text-2xl sm:text-3xl md:text-5xl font-black tracking-tighter">
                     DOJO <span className="text-red-600">CHRONICLES</span>
@@ -244,9 +265,9 @@ export default function Home() {
           )}
 
           {/* MEDIA SECTION - only render when there are media mentions */}
-          {mediaMentions.length > 0 && (
+          {dataLoaded && mediaMentions.length > 0 && (
             <section className="py-10 sm:py-16 md:py-24 bg-zinc-950 relative">
-              <div className="container mx-auto px-3 sm:px-4">
+              <div className="container-responsive">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 sm:mb-8 md:mb-12 gap-4">
                   <h2 className="text-2xl sm:text-3xl md:text-5xl font-black tracking-tighter">
                     IN THE <span className="text-red-600">MEDIA</span>
@@ -281,7 +302,7 @@ export default function Home() {
           {/* CTA SECTION */}
           <section className="py-12 sm:py-20 md:py-32 relative overflow-hidden flex items-center justify-center">
             <div className="absolute inset-0 bg-red-900/20" />
-            <div className="container mx-auto px-3 sm:px-4 text-center relative z-10">
+            <div className="container-responsive text-center relative z-10">
               <h2 className="text-3xl sm:text-5xl md:text-8xl font-black tracking-tighter mb-6 sm:mb-8 opacity-20 select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full pointer-events-none hidden sm:block">
                 KYOKUSHIN
               </h2>

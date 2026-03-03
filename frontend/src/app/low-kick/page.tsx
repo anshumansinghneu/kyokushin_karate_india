@@ -96,7 +96,7 @@ export default function LowKickPage() {
 
             {/* FOUNDER SECTION */}
             <section className="py-32 bg-zinc-950 relative overflow-hidden">
-                <div className="container mx-auto px-4">
+                <div className="container-responsive">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
                         {/* Image */}
@@ -156,7 +156,7 @@ export default function LowKickPage() {
 
             {/* SPLIT NAVIGATION SECTION */}
             <section className="py-24 bg-zinc-950 relative">
-                <div className="container mx-auto px-4">
+                <div className="container-responsive">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
 
                         {/* REGISTRATION CARD (BLUE) */}

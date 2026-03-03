@@ -322,8 +322,8 @@ export default function StorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-28 pb-20">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-black text-white pb-20">
+      <div className="container-responsive">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
           <div>
@@ -479,7 +479,7 @@ export default function StorePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+              className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
               onClick={() => setSelectedProduct(null)}
             >
               <motion.div
@@ -587,7 +587,7 @@ export default function StorePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+              className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm"
               onClick={() => setCartOpen(false)}
             >
               <motion.div
@@ -721,55 +721,79 @@ export default function StorePage() {
                     ) : (
                       <div className="space-y-3">
                         <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Shipping Details</p>
-                        <div className="relative">
-                          <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                          <input
-                            type="text"
-                            placeholder="Full Name"
-                            value={shipping.name}
-                            onChange={(e) => setShipping({ ...shipping, name: e.target.value })}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none"
+                        <div>
+                          <label htmlFor="ship-name" className="text-xs text-gray-500 mb-1 block">Full Name</label>
+                          <div className="relative">
+                            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                            <input
+                              id="ship-name"
+                              type="text"
+                              placeholder="Full Name"
+                              value={shipping.name}
+                              onChange={(e) => setShipping({ ...shipping, name: e.target.value })}
+                              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label htmlFor="ship-phone" className="text-xs text-gray-500 mb-1 block">Phone</label>
+                          <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                            <input
+                              id="ship-phone"
+                              type="tel"
+                              placeholder="Phone"
+                              value={shipping.phone}
+                              onChange={(e) => setShipping({ ...shipping, phone: e.target.value })}
+                              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label htmlFor="ship-address" className="text-xs text-gray-500 mb-1 block">Full Address</label>
+                          <textarea
+                            id="ship-address"
+                            placeholder="Full Address"
+                            value={shipping.address}
+                            onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
+                            rows={2}
+                            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all resize-none"
                           />
                         </div>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                          <input
-                            type="tel"
-                            placeholder="Phone"
-                            value={shipping.phone}
-                            onChange={(e) => setShipping({ ...shipping, phone: e.target.value })}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none"
-                          />
-                        </div>
-                        <textarea
-                          placeholder="Full Address"
-                          value={shipping.address}
-                          onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
-                          rows={2}
-                          className="w-full px-4 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none resize-none"
-                        />
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          <input
-                            type="text"
-                            placeholder="City"
-                            value={shipping.city}
-                            onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
-                            className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none"
-                          />
-                          <input
-                            type="text"
-                            placeholder="State"
-                            value={shipping.state}
-                            onChange={(e) => setShipping({ ...shipping, state: e.target.value })}
-                            className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none"
-                          />
-                          <input
-                            type="text"
-                            placeholder="PIN Code"
-                            value={shipping.pincode}
-                            onChange={(e) => setShipping({ ...shipping, pincode: e.target.value })}
-                            className="px-3 py-2.5 rounded-lg bg-zinc-800 border border-white/10 text-white text-sm focus:border-red-500/50 focus:outline-none"
-                          />
+                          <div>
+                            <label htmlFor="ship-city" className="text-xs text-gray-500 mb-1 block">City</label>
+                            <input
+                              id="ship-city"
+                              type="text"
+                              placeholder="City"
+                              value={shipping.city}
+                              onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
+                              className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="ship-state" className="text-xs text-gray-500 mb-1 block">State</label>
+                            <input
+                              id="ship-state"
+                              type="text"
+                              placeholder="State"
+                              value={shipping.state}
+                              onChange={(e) => setShipping({ ...shipping, state: e.target.value })}
+                              className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="ship-pincode" className="text-xs text-gray-500 mb-1 block">PIN Code</label>
+                            <input
+                              id="ship-pincode"
+                              type="text"
+                              placeholder="PIN Code"
+                              value={shipping.pincode}
+                              onChange={(e) => setShipping({ ...shipping, pincode: e.target.value })}
+                              className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all"
+                            />
+                          </div>
                         </div>
                         <Button
                           onClick={handleCheckout}

@@ -65,7 +65,7 @@ export default function BlogList() {
 
     return (
         <div className="min-h-screen bg-black text-white pt-24 pb-12">
-            <div className="container mx-auto px-4">
+            <div className="container-responsive">
                 <h1 className="text-4xl md:text-6xl font-black mb-4 text-center tracking-tight text-white">
                     DOJO <span className="text-red-600">CHRONICLES</span>
                 </h1>

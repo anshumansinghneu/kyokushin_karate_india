@@ -493,7 +493,7 @@ export default function GalleryPage() {
             </div>
 
             {/* ── FILTERS & GALLERY ──────────────────────────────────────────── */}
-            <div className="container mx-auto px-4 pt-8 pb-16 relative z-10">
+            <div className="container-responsive pt-8 pb-16 relative z-10">
                 {/* Filter bar */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

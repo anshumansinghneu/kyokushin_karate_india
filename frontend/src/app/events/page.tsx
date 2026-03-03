@@ -52,7 +52,7 @@ export default function EventsPage() {
             {/* Background Elements */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_var(--tw-gradient-stops))] from-red-900/20 via-black to-black" />
 
-            <div className="container mx-auto px-4 py-12 relative z-10">
+            <div className="container-responsive py-12 relative z-10">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-6">
                     <div>
@@ -182,7 +182,7 @@ export default function EventsPage() {
                                 <span className="w-2 h-6 bg-zinc-600 rounded-full" />
                                 Past Events
                             </h2>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 opacity-70">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                                 {pastEvents.map((event, index) => {
                                     const dateObj = formatDate(event.startDate);
                                     return (
@@ -192,7 +192,7 @@ export default function EventsPage() {
                                             whileInView={{ opacity: 1, y: 0 }}
                                             viewport={{ once: true, amount: 0.2 }}
                                             transition={{ delay: index * 0.05, duration: 0.5 }}
-                                            className="group relative min-h-[280px] md:h-[300px] rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-zinc-600/50 transition-colors active:scale-[0.98]"
+                                            className="group relative min-h-[280px] md:h-[300px] rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-zinc-600/50 transition-colors active:scale-[0.98] grayscale-[30%] hover:grayscale-0"
                                         >
                                             <div className="absolute inset-0 bg-gray-900">
                                                 <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/50 via-zinc-900 to-black" />

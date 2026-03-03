@@ -169,7 +169,7 @@ export default function LivePage() {
 
   return (
     <div className="min-h-screen bg-black text-white pt-28 pb-20">
-      <div className="container mx-auto px-4">
+      <div className="container-responsive">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
           <div>
