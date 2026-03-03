@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Calendar, Trophy, Activity, ChevronRight, User, CheckCircle, Clock, Zap, MapPin, FileText, Edit, CreditCard, CalendarDays, ShieldCheck, ShoppingBag } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    Calendar, Trophy, Activity, ChevronRight, User, CheckCircle,
+    Clock, Zap, MapPin, FileText, Edit, CreditCard, CalendarDays,
+    ShieldCheck, ShoppingBag, Sparkles
+} from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/contexts/ToastContext";
 
 import MembershipCard from "./MembershipCard";
@@ -15,13 +18,32 @@ import ProfileCompletionBar from "@/components/ui/ProfileCompletionBar";
 import MyOrders from "./MyOrders";
 import BeltTimeline from "./BeltTimeline";
 
+const TABS = [
+    { key: 'overview', label: 'Overview', icon: Activity },
+    { key: 'blogs', label: 'My Blogs', icon: FileText },
+    { key: 'submit', label: 'Write Blog', icon: Edit },
+    { key: 'orders', label: 'My Orders', icon: ShoppingBag },
+] as const;
+
+type TabKey = typeof TABS[number]['key'];
+
 export default function StudentDashboard({ user }: { user: any }) {
     const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
     const [nextEvent, setNextEvent] = useState<any>(null);
-    const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number }>({ days: 0, hours: 0, minutes: 0 });
-    const greeting = "Osu";
+    const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
     const { showToast } = useToast();
+
+    // Time-based greeting
+    const greeting = useMemo(() => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Ohayō";
+        if (hour < 17) return "Osu";
+        return "Konbanwa";
+    }, []);
+
+    const firstName = user?.name?.split(' ')[0] || 'Karateka';
 
     useEffect(() => {
         const fetchEvents = async () => {
@@ -58,7 +80,8 @@ export default function StudentDashboard({ user }: { user: any }) {
             setTimeLeft({
                 days: Math.floor(distance / (1000 * 60 * 60 * 24)),
                 hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+                minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+                seconds: Math.floor((distance % (1000 * 60)) / 1000),
             });
         }, 1000);
 
@@ -72,272 +95,350 @@ export default function StudentDashboard({ user }: { user: any }) {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
-            transition: {
-                staggerChildren: 0.15
-            }
+            transition: { staggerChildren: 0.1 }
         }
     };
 
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0 }
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
     };
-
-    const [activeTab, setActiveTab] = useState<'overview' | 'blogs' | 'submit' | 'orders'>('overview');
 
     return (
         <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="space-y-8"
+            className="space-y-6 md:space-y-8"
         >
-            {/* Welcome Section */}
-            <motion.div variants={itemVariants} className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-b border-white/10 pb-6">
-                <div>
-                    <p className="text-gray-400 text-sm uppercase tracking-widest font-bold mb-1">Dojo Dashboard</p>
-                    <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight">
-                        <motion.span
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6 }}
+            {/* ═══════════════════ Welcome Header ═══════════════════ */}
+            <motion.div variants={itemVariants} className="relative">
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-500/30 to-transparent" />
+
+                <div className="pt-4 pb-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+                    {/* Left: Avatar + Greeting */}
+                    <div className="flex items-center gap-4">
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
+                            className="relative flex-shrink-0"
                         >
-                            {greeting},{" "}
-                        </motion.span>
-                        <motion.span
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.6, delay: 0.3 }}
-                            className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800"
-                        >
-                            {user?.name?.split(' ')[0]}
-                        </motion.span>
-                    </h1>
+                            <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-white font-black text-xl md:text-2xl shadow-lg shadow-red-900/30 ring-2 ring-white/10 overflow-hidden">
+                                {user?.profilePhotoUrl ? (
+                                    <img src={user.profilePhotoUrl} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                    firstName[0]?.toUpperCase()
+                                )}
+                            </div>
+                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-black" />
+                        </motion.div>
+
+                        <div>
+                            <p className="text-gray-500 text-xs uppercase tracking-[0.2em] font-bold mb-0.5 flex items-center gap-1.5">
+                                <Sparkles className="w-3 h-3 text-red-500" />
+                                Dojo Dashboard
+                            </p>
+                            <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight leading-tight">
+                                <span className="text-white/80">{greeting}, </span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">{firstName}</span>
+                            </h1>
+                            {user?.dojo?.name && (
+                                <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" />
+                                    {user.dojo.name}{user.dojo.city ? `, ${user.dojo.city}` : ''}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right: Tab Navigation */}
+                    <div className="flex gap-1.5 items-center overflow-x-auto pb-1 md:pb-0 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 w-full md:w-auto">
+                        {TABS.map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === tab.key;
+                            return (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setActiveTab(tab.key)}
+                                    className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 whitespace-nowrap min-h-[44px] ${
+                                        isActive
+                                            ? 'bg-red-600 text-white shadow-lg shadow-red-600/25'
+                                            : 'bg-white/[0.04] text-gray-400 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]'
+                                    }`}
+                                >
+                                    <Icon className="w-4 h-4" />
+                                    <span className="hidden sm:inline">{tab.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
-                <div className="flex gap-2 md:gap-3 items-center overflow-x-auto pb-2 md:pb-0 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-                    <Button
-                        onClick={() => setActiveTab('overview')}
-                        className={`backdrop-blur-sm border ${activeTab === 'overview' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
-                    >
-                        <Activity className="w-4 h-4 mr-2" /> <span className="whitespace-nowrap">Overview</span>
-                    </Button>
-                    <Button
-                        onClick={() => setActiveTab('blogs')}
-                        className={`backdrop-blur-sm border flex-shrink-0 ${activeTab === 'blogs' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
-                    >
-                        <FileText className="w-4 h-4 mr-2" /> <span className="whitespace-nowrap">My Blogs</span>
-                    </Button>
-                    <Button
-                        onClick={() => setActiveTab('submit')}
-                        className={`backdrop-blur-sm border flex-shrink-0 ${activeTab === 'submit' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
-                    >
-                        <Edit className="w-4 h-4 mr-2" /> <span className="whitespace-nowrap">Write Blog</span>
-                    </Button>
-                    <Button
-                        onClick={() => setActiveTab('orders')}
-                        className={`backdrop-blur-sm border flex-shrink-0 ${activeTab === 'orders' ? 'bg-red-600 border-red-600 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
-                    >
-                        <ShoppingBag className="w-4 h-4 mr-2" /> <span className="whitespace-nowrap">My Orders</span>
-                    </Button>
-                </div>
+
+                <div className="h-px bg-gradient-to-r from-white/5 via-white/10 to-white/5" />
             </motion.div>
 
-            {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Left Column: Membership & Stats (4 cols) */}
-                    <div className="lg:col-span-4 space-y-8">
-                        <motion.div variants={itemVariants} data-tour="membership-card">
-                            <MembershipCard user={user} />
-                        </motion.div>
+            {/* ═══════════════════ Tab Content ═══════════════════ */}
+            <AnimatePresence mode="wait">
+                {activeTab === 'overview' && (
+                    <motion.div
+                        key="overview"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8"
+                    >
+                        {/* ───── Left Column (4 cols) ───── */}
+                        <div className="lg:col-span-4 space-y-6">
+                            <motion.div variants={itemVariants} data-tour="membership-card">
+                                <MembershipCard user={user} />
+                            </motion.div>
 
-                        {/* Profile Completion */}
-                        <motion.div variants={itemVariants}>
-                            <ProfileCompletionBar user={user} />
-                        </motion.div>
-
-                        {/* Quick Stats Grid */}
-                        <motion.div variants={itemVariants} data-tour="quick-stats" className="grid grid-cols-2 gap-4">
-                            <div className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-red-500/30 transition-colors">
-                                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center mb-2 group-hover:bg-red-500/20 transition-colors">
-                                    <Activity className="w-5 h-5 text-red-500" />
-                                </div>
-                                <p className="text-2xl font-black text-white">{user?.currentBeltRank || 'White'}</p>
-                                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Current Rank</p>
-                            </div>
-                            <div className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-blue-500/30 transition-colors">
-                                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-2 group-hover:bg-blue-500/20 transition-colors">
-                                    <Trophy className="w-5 h-5 text-blue-500" />
-                                </div>
-                                <p className="text-2xl font-black text-white">{tournamentResults.length}</p>
-                                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Tournaments</p>
-                            </div>
-                            <div className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-green-500/30 transition-colors">
-                                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center mb-2 group-hover:bg-green-500/20 transition-colors">
-                                    <CheckCircle className="w-5 h-5 text-green-500" />
-                                </div>
-                                <p className="text-2xl font-black text-white">{registeredEvents.length}</p>
-                                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Events</p>
-                            </div>
-                            <div className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-yellow-500/30 transition-colors">
-                                <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center mb-2 group-hover:bg-yellow-500/20 transition-colors">
-                                    <Zap className="w-5 h-5 text-yellow-500" />
-                                </div>
-                                <p className="text-2xl font-black text-white">Active</p>
-                                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Status</p>
-                            </div>
-                        </motion.div>
-
-                        {/* Quick Links */}
-                        <motion.div variants={itemVariants} data-tour="quick-links" className="grid grid-cols-3 gap-3">
-                            <Link href="/payments" className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-green-500/30 transition-all hover:scale-[1.02]">
-                                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center mb-2 group-hover:bg-green-500/20 transition-colors">
-                                    <CreditCard className="w-5 h-5 text-green-500" />
-                                </div>
-                                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Payments</p>
-                            </Link>
-                            <Link href="/calendar" className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-purple-500/30 transition-all hover:scale-[1.02]">
-                                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mb-2 group-hover:bg-purple-500/20 transition-colors">
-                                    <CalendarDays className="w-5 h-5 text-purple-500" />
-                                </div>
-                                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Calendar</p>
-                            </Link>
-                            <Link href="/verify" className="glass-card p-4 flex flex-col items-center justify-center text-center group hover:border-cyan-500/30 transition-all hover:scale-[1.02]">
-                                <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center mb-2 group-hover:bg-cyan-500/20 transition-colors">
-                                    <ShieldCheck className="w-5 h-5 text-cyan-500" />
-                                </div>
-                                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Verify</p>
-                            </Link>
-                        </motion.div>
-                    </div>
-                    <div className="lg:col-span-8 space-y-8">
-
-                        {/* Fight Record */}
-                        <motion.div variants={itemVariants}>
-                            <FightRecordCard />
-                        </motion.div>
-
-                        {/* Belt Progression Timeline */}
-                        {user?.id && (
                             <motion.div variants={itemVariants}>
-                                <BeltTimeline userId={user.id} />
+                                <ProfileCompletionBar user={user} />
                             </motion.div>
-                        )}
 
-                        {/* Next Event Hero Card */}
-                        {nextEvent && (
-                            <motion.div variants={itemVariants} className="relative overflow-hidden rounded-3xl border border-white/10 group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-red-900/80 to-black/80 z-10" />
-                                <div className="absolute inset-0 bg-[url('/training-bg.png')] bg-cover bg-center opacity-50 group-hover:scale-105 transition-transform duration-700" />
-
-                                <div className="relative z-20 p-6 md:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-8">
-                                    <div className="w-full md:w-auto">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500 text-white text-xs font-bold uppercase tracking-wider mb-4">
-                                            <Clock className="w-3 h-3" /> Next Event
-                                        </div>
-                                        <h3 className="text-2xl md:text-4xl font-black text-white mb-2 leading-tight">{nextEvent.name}</h3>
-                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-300 text-sm font-medium">
-                                            <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(nextEvent.startDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                                            <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {nextEvent.location}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-2 sm:gap-3 w-full md:w-auto justify-between md:justify-start">
-                                        <div className="bg-black/40 backdrop-blur-md rounded-xl p-2 sm:p-3 text-center flex-1 md:flex-none md:min-w-[70px] border border-white/10">
-                                            <span className="block text-2xl sm:text-3xl font-black text-white">{timeLeft.days}</span>
-                                            <span className="text-[10px] uppercase text-gray-400 font-bold">Days</span>
-                                        </div>
-                                        <div className="bg-black/40 backdrop-blur-md rounded-xl p-2 sm:p-3 text-center flex-1 md:flex-none md:min-w-[70px] border border-white/10">
-                                            <span className="block text-2xl sm:text-3xl font-black text-white">{timeLeft.hours}</span>
-                                            <span className="text-[10px] uppercase text-gray-400 font-bold">Hrs</span>
-                                        </div>
-                                        <div className="bg-black/40 backdrop-blur-md rounded-xl p-2 sm:p-3 text-center flex-1 md:flex-none md:min-w-[70px] border border-white/10">
-                                            <span className="block text-2xl sm:text-3xl font-black text-white">{timeLeft.minutes}</span>
-                                            <span className="text-[10px] uppercase text-gray-400 font-bold">Mins</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Upcoming Events List */}
-                            <motion.div variants={itemVariants} className="glass-card p-6 h-full">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <Calendar className="w-5 h-5 text-red-500" />
-                                        Upcoming
-                                    </h3>
-                                    <Link href="/events" className="text-xs font-bold text-gray-400 hover:text-white transition-colors">View All</Link>
-                                </div>
-                                <div className="space-y-4">
-                                    {upcomingEvents.map((event, i) => (
-                                        <Link href={`/events/${event.id}`} key={i} className="block group">
-                                            <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
-                                                <div className="w-12 h-12 rounded-lg bg-white/5 flex flex-col items-center justify-center border border-white/10 group-hover:border-red-500/50 transition-colors">
-                                                    <span className="text-[10px] font-bold text-red-500 uppercase">{new Date(event.startDate).toLocaleString('default', { month: 'short' })}</span>
-                                                    <span className="text-lg font-black text-white leading-none">{new Date(event.startDate).getDate()}</span>
+                            {/* Quick Stats */}
+                            <motion.div variants={itemVariants} data-tour="quick-stats" className="grid grid-cols-2 gap-3">
+                                {[
+                                    { icon: Activity, value: user?.currentBeltRank || 'White', label: 'Current Rank', color: 'red', bg: 'bg-red-500/10', hoverBg: 'group-hover:bg-red-500/20', text: 'text-red-500', border: 'hover:border-red-500/30', glow: 'from-red-500/20 to-red-600/5' },
+                                    { icon: Trophy, value: tournamentResults.length, label: 'Tournaments', color: 'blue', bg: 'bg-blue-500/10', hoverBg: 'group-hover:bg-blue-500/20', text: 'text-blue-500', border: 'hover:border-blue-500/30', glow: 'from-blue-500/20 to-blue-600/5' },
+                                    { icon: CheckCircle, value: registeredEvents.length, label: 'Events', color: 'green', bg: 'bg-green-500/10', hoverBg: 'group-hover:bg-green-500/20', text: 'text-green-500', border: 'hover:border-green-500/30', glow: 'from-green-500/20 to-green-600/5' },
+                                    { icon: Zap, value: user?.membershipStatus === 'ACTIVE' ? 'Active' : 'Inactive', label: 'Status', color: 'yellow', bg: 'bg-yellow-500/10', hoverBg: 'group-hover:bg-yellow-500/20', text: 'text-yellow-500', border: 'hover:border-yellow-500/30', glow: 'from-yellow-500/20 to-yellow-600/5' },
+                                ].map((stat, i) => {
+                                    const Icon = stat.icon;
+                                    return (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: 0.15 + i * 0.07 }}
+                                            className={`relative overflow-hidden rounded-2xl border border-white/[0.08] p-4 flex flex-col items-center justify-center text-center group ${stat.border} transition-all duration-300 hover:scale-[1.02]`}
+                                        >
+                                            <div className={`absolute inset-0 bg-gradient-to-br ${stat.glow} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                                            <div className="relative z-10">
+                                                <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center mb-2 ${stat.hoverBg} transition-colors`}>
+                                                    <Icon className={`w-5 h-5 ${stat.text}`} />
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-bold text-white truncate group-hover:text-red-500 transition-colors">{event.name}</h4>
-                                                    <p className="text-xs text-gray-500 truncate">{event.location}</p>
-                                                </div>
-                                                <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
+                                                <p className="text-xl font-black text-white leading-tight">{stat.value}</p>
+                                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-0.5">{stat.label}</p>
                                             </div>
-                                        </Link>
-                                    ))}
-                                    {upcomingEvents.length === 0 && <p className="text-gray-500 text-sm text-center py-4">No upcoming events.</p>}
-                                </div>
+                                        </motion.div>
+                                    );
+                                })}
                             </motion.div>
 
-                            {/* Recent Achievements / Records */}
-                            <motion.div variants={itemVariants} className="glass-card p-6 h-full">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <Trophy className="w-5 h-5 text-yellow-500" />
-                                        Achievements
-                                    </h3>
-                                </div>
-                                <div className="space-y-4">
-                                    {tournamentResults.slice(0, 3).map((result: any, i: number) => (
-                                        <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-2 h-8 rounded-full ${result.medal === 'GOLD' ? 'bg-yellow-500' :
-                                                    result.medal === 'SILVER' ? 'bg-gray-300' :
-                                                        result.medal === 'BRONZE' ? 'bg-orange-600' : 'bg-gray-700'
-                                                    }`} />
-                                                <div>
-                                                    <h4 className="text-sm font-bold text-white">{result.event.name}</h4>
-                                                    <p className="text-xs text-gray-500">{result.categoryName}</p>
+                            {/* Quick Links */}
+                            <motion.div variants={itemVariants} data-tour="quick-links">
+                                <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-3">Quick Access</p>
+                                <div className="grid grid-cols-3 gap-2.5">
+                                    {[
+                                        { href: '/payments', icon: CreditCard, label: 'Payments', bg: 'bg-green-500/10', hoverBg: 'group-hover:bg-green-500/20', text: 'text-green-500', border: 'hover:border-green-500/30' },
+                                        { href: '/calendar', icon: CalendarDays, label: 'Calendar', bg: 'bg-purple-500/10', hoverBg: 'group-hover:bg-purple-500/20', text: 'text-purple-500', border: 'hover:border-purple-500/30' },
+                                        { href: '/verify', icon: ShieldCheck, label: 'Verify', bg: 'bg-cyan-500/10', hoverBg: 'group-hover:bg-cyan-500/20', text: 'text-cyan-500', border: 'hover:border-cyan-500/30' },
+                                    ].map((link, i) => {
+                                        const Icon = link.icon;
+                                        return (
+                                            <Link
+                                                key={i}
+                                                href={link.href}
+                                                className={`group relative overflow-hidden rounded-xl border border-white/[0.06] p-3.5 flex flex-col items-center justify-center text-center ${link.border} transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]`}
+                                            >
+                                                <div className={`w-9 h-9 rounded-lg ${link.bg} flex items-center justify-center mb-1.5 ${link.hoverBg} transition-colors`}>
+                                                    <Icon className={`w-4 h-4 ${link.text}`} />
                                                 </div>
-                                            </div>
-                                            <span className="text-sm font-black text-white">#{result.finalRank}</span>
-                                        </div>
-                                    ))}
-                                    {tournamentResults.length === 0 && <p className="text-gray-500 text-sm text-center py-4">No achievements yet.</p>}
+                                                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold group-hover:text-white transition-colors">{link.label}</p>
+                                            </Link>
+                                        );
+                                    })}
                                 </div>
                             </motion.div>
                         </div>
-                    </div>
-                </div>
-            )}
 
-            {activeTab === 'blogs' && (
-                <motion.div variants={itemVariants}>
-                    <BlogManager />
-                </motion.div>
-            )}
+                        {/* ───── Right Column (8 cols) ───── */}
+                        <div className="lg:col-span-8 space-y-6">
+                            {/* Fight Record */}
+                            <motion.div variants={itemVariants}>
+                                <FightRecordCard />
+                            </motion.div>
 
-            {activeTab === 'submit' && (
-                <motion.div variants={itemVariants}>
-                    <BlogSubmission />
-                </motion.div>
-            )}
+                            {/* Belt Timeline */}
+                            {user?.id && (
+                                <motion.div variants={itemVariants}>
+                                    <BeltTimeline userId={user.id} />
+                                </motion.div>
+                            )}
 
-            {activeTab === 'orders' && (
-                <motion.div variants={itemVariants}>
-                    <MyOrders />
-                </motion.div>
-            )}
+                            {/* Next Event Countdown */}
+                            {nextEvent && (
+                                <motion.div
+                                    variants={itemVariants}
+                                    className="relative overflow-hidden rounded-2xl border border-white/[0.08] group"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-br from-red-950/80 via-black/90 to-black/80" />
+                                    <div className="absolute inset-0 bg-[url('/training-bg.png')] bg-cover bg-center opacity-30 group-hover:opacity-40 group-hover:scale-105 transition-all duration-700" />
+                                    <div className="absolute top-0 right-0 w-72 h-72 bg-red-600/10 rounded-full blur-3xl" />
+
+                                    <div className="relative z-10 p-5 md:p-8">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/30 text-red-400 text-[10px] font-bold uppercase tracking-widest mb-4">
+                                            <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                                                <Clock className="w-3 h-3" />
+                                            </motion.div>
+                                            Next Event
+                                        </div>
+
+                                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight truncate">{nextEvent.name}</h3>
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-400 text-sm">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Calendar className="w-4 h-4 text-red-500/70" />
+                                                        {new Date(nextEvent.startDate).toLocaleDateString(undefined, { weekday: 'short', month: 'long', day: 'numeric' })}
+                                                    </span>
+                                                    {nextEvent.location && (
+                                                        <span className="flex items-center gap-1.5">
+                                                            <MapPin className="w-4 h-4 text-red-500/70" />
+                                                            {nextEvent.location}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Countdown */}
+                                            <div className="flex gap-2 w-full md:w-auto">
+                                                {[
+                                                    { value: timeLeft.days, label: 'Days' },
+                                                    { value: timeLeft.hours, label: 'Hrs' },
+                                                    { value: timeLeft.minutes, label: 'Min' },
+                                                    { value: timeLeft.seconds, label: 'Sec' },
+                                                ].map((unit, i) => (
+                                                    <div key={i} className="flex-1 md:flex-none md:min-w-[60px] bg-black/50 backdrop-blur-md rounded-xl p-2.5 text-center border border-white/[0.08]">
+                                                        <span className="block text-2xl md:text-3xl font-black text-white tabular-nums leading-none">{String(unit.value).padStart(2, '0')}</span>
+                                                        <span className="text-[9px] uppercase text-gray-500 font-bold tracking-wider mt-1 block">{unit.label}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Events & Achievements Row */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Upcoming Events */}
+                                <motion.div variants={itemVariants} className="rounded-2xl border border-white/[0.08] overflow-hidden">
+                                    <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+                                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                                            <div className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center">
+                                                <Calendar className="w-4 h-4 text-red-500" />
+                                            </div>
+                                            Upcoming Events
+                                        </h3>
+                                        <Link href="/events" className="text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-wider flex items-center gap-1">
+                                            All <ChevronRight className="w-3 h-3" />
+                                        </Link>
+                                    </div>
+                                    <div className="p-3 space-y-1">
+                                        {upcomingEvents.map((event, i) => (
+                                            <Link href={`/events/${event.id}`} key={i} className="block group">
+                                                <div className="flex items-center gap-3.5 p-3 rounded-xl hover:bg-white/[0.04] transition-colors">
+                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] flex flex-col items-center justify-center border border-white/[0.08] group-hover:border-red-500/30 transition-colors flex-shrink-0">
+                                                        <span className="text-[9px] font-bold text-red-500 uppercase leading-none">{new Date(event.startDate).toLocaleString('default', { month: 'short' })}</span>
+                                                        <span className="text-lg font-black text-white leading-none">{new Date(event.startDate).getDate()}</span>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="text-sm font-bold text-white truncate group-hover:text-red-400 transition-colors">{event.name}</h4>
+                                                        <p className="text-[11px] text-gray-500 truncate">{event.location}</p>
+                                                    </div>
+                                                    <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-white group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                                                </div>
+                                            </Link>
+                                        ))}
+                                        {upcomingEvents.length === 0 && (
+                                            <div className="text-center py-8">
+                                                <Calendar className="w-8 h-8 text-gray-700 mx-auto mb-2" />
+                                                <p className="text-gray-600 text-sm">No upcoming events</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+
+                                {/* Achievements */}
+                                <motion.div variants={itemVariants} className="rounded-2xl border border-white/[0.08] overflow-hidden">
+                                    <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+                                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                                            <div className="w-7 h-7 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                                                <Trophy className="w-4 h-4 text-yellow-500" />
+                                            </div>
+                                            Achievements
+                                        </h3>
+                                    </div>
+                                    <div className="p-3 space-y-1">
+                                        {tournamentResults.slice(0, 3).map((result: any, i: number) => (
+                                            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-1.5 h-10 rounded-full ${
+                                                        result.medal === 'GOLD' ? 'bg-gradient-to-b from-yellow-400 to-yellow-600' :
+                                                        result.medal === 'SILVER' ? 'bg-gradient-to-b from-gray-300 to-gray-500' :
+                                                        result.medal === 'BRONZE' ? 'bg-gradient-to-b from-orange-500 to-orange-700' :
+                                                        'bg-gray-700'
+                                                    }`} />
+                                                    <div>
+                                                        <h4 className="text-sm font-bold text-white">{result.event.name}</h4>
+                                                        <p className="text-[11px] text-gray-500">{result.categoryName}</p>
+                                                    </div>
+                                                </div>
+                                                <span className="text-sm font-black text-white tabular-nums">#{result.finalRank}</span>
+                                            </div>
+                                        ))}
+                                        {tournamentResults.length === 0 && (
+                                            <div className="text-center py-8">
+                                                <Trophy className="w-8 h-8 text-gray-700 mx-auto mb-2" />
+                                                <p className="text-gray-600 text-sm">No achievements yet</p>
+                                                <p className="text-gray-700 text-xs mt-1">Compete in a tournament!</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'blogs' && (
+                    <motion.div
+                        key="blogs"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                    >
+                        <BlogManager />
+                    </motion.div>
+                )}
+
+                {activeTab === 'submit' && (
+                    <motion.div
+                        key="submit"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                    >
+                        <BlogSubmission />
+                    </motion.div>
+                )}
+
+                {activeTab === 'orders' && (
+                    <motion.div
+                        key="orders"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                    >
+                        <MyOrders />
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Onboarding Tour */}
             {/* OnboardingTour removed */}
