@@ -28,10 +28,10 @@ interface Dojo {
 }
 
 const STEPS = [
-    { id: 1, label: "Basic Info" },
-    { id: 2, label: "Details" },
-    { id: 3, label: "Location" },
-    { id: 4, label: "Voucher" },
+    { id: 1, label: "Basic Info", desc: "Name, contact & guardian" },
+    { id: 2, label: "Training", desc: "Belt, physique & experience" },
+    { id: 3, label: "Location", desc: "State, city & dojo" },
+    { id: 4, label: "Voucher", desc: "Verify & register" },
 ];
 
 export default function RegisterStudentModal({ isOpen, onClose, onSuccess, instructorDojoId, instructorDojoName }: RegisterStudentModalProps) {
@@ -179,7 +179,7 @@ export default function RegisterStudentModal({ isOpen, onClose, onSuccess, instr
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col"
+                    className="relative w-full max-w-xl bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl max-h-[92vh] overflow-hidden flex flex-col"
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-gradient-to-r from-orange-600/10 to-green-700/10 flex-shrink-0">
@@ -199,22 +199,25 @@ export default function RegisterStudentModal({ isOpen, onClose, onSuccess, instr
 
                     {/* Stepper (hide on success) */}
                     {!successData && (
-                        <div className="px-6 py-3 border-b border-white/5 flex-shrink-0">
-                            <div className="flex items-center gap-1">
+                        <div className="px-6 py-4 border-b border-white/5 flex-shrink-0">
+                            <div className="flex items-center gap-0">
                                 {STEPS.map((s, i) => (
                                     <div key={s.id} className="flex items-center flex-1">
-                                        <div className={`flex items-center gap-1.5 ${step >= s.id ? 'text-orange-400' : 'text-gray-600'}`}>
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-colors ${
-                                                step > s.id ? 'bg-green-600 border-green-600 text-white' :
-                                                step === s.id ? 'border-orange-500 text-orange-400' :
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black border-2 transition-all flex-shrink-0 ${
+                                                step > s.id ? 'bg-green-600 border-green-600 text-white scale-90' :
+                                                step === s.id ? 'border-orange-500 text-orange-400 shadow-lg shadow-orange-500/20' :
                                                 'border-gray-700 text-gray-600'
                                             }`}>
                                                 {step > s.id ? <CheckCircle className="w-3.5 h-3.5" /> : s.id}
                                             </div>
-                                            <span className="text-[11px] font-bold hidden sm:inline">{s.label}</span>
+                                            <div className="hidden sm:block min-w-0">
+                                                <p className={`text-[11px] font-bold leading-none truncate ${step === s.id ? 'text-white' : step > s.id ? 'text-green-400' : 'text-gray-600'}`}>{s.label}</p>
+                                                <p className="text-[9px] text-gray-600 mt-0.5 truncate">{s.desc}</p>
+                                            </div>
                                         </div>
                                         {i < STEPS.length - 1 && (
-                                            <div className={`flex-1 h-[2px] mx-2 rounded-full transition-colors ${step > s.id ? 'bg-green-600' : 'bg-white/10'}`} />
+                                            <div className={`flex-1 h-[2px] mx-3 rounded-full transition-colors ${step > s.id ? 'bg-green-600' : 'bg-white/[0.06]'}`} />
                                         )}
                                     </div>
                                 ))}
@@ -223,17 +226,22 @@ export default function RegisterStudentModal({ isOpen, onClose, onSuccess, instr
                     )}
 
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto px-6 py-5">
+                    <div className="flex-1 overflow-y-auto px-6 py-6">
                         <AnimatePresence mode="wait">
 
                             {/* SUCCESS STATE */}
                             {successData && (
-                                <motion.div key="success" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-6">
-                                    <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-                                        <CheckCircle className="w-8 h-8 text-green-500" />
-                                    </div>
-                                    <h3 className="text-2xl font-black text-white mb-2">Student Registered!</h3>
-                                    <p className="text-gray-400 mb-6">{successData.studentName} has been registered successfully.</p>
+                                <motion.div key="success" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-4">
+                                    <motion.div 
+                                        initial={{ scale: 0 }} 
+                                        animate={{ scale: 1 }} 
+                                        transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
+                                        className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500/20 to-green-600/10 border-2 border-green-500/30 flex items-center justify-center mx-auto mb-5"
+                                    >
+                                        <CheckCircle className="w-10 h-10 text-green-500" />
+                                    </motion.div>
+                                    <h3 className="text-2xl font-black text-white mb-1">Registration Complete!</h3>
+                                    <p className="text-gray-400 text-sm mb-6">{successData.studentName} is now registered under your dojo.</p>
 
                                     <div className="bg-white/5 border border-white/10 rounded-xl p-5 text-left space-y-4 mb-6">
                                         <div>
@@ -273,7 +281,11 @@ export default function RegisterStudentModal({ isOpen, onClose, onSuccess, instr
 
                             {/* STEP 1: Basic Info */}
                             {!successData && step === 1 && (
-                                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <User className="w-4 h-4 text-orange-400" />
+                                        <p className="text-xs font-bold text-gray-400">Enter the student&apos;s personal information</p>
+                                    </div>
                                     <div>
                                         <label className={labelCls}>Full Name *</label>
                                         <div className="relative">
@@ -352,7 +364,11 @@ export default function RegisterStudentModal({ isOpen, onClose, onSuccess, instr
 
                             {/* STEP 2: Belt & Physical Details */}
                             {!successData && step === 2 && (
-                                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Shield className="w-4 h-4 text-orange-400" />
+                                        <p className="text-xs font-bold text-gray-400">Training background &amp; physique</p>
+                                    </div>
                                     <div>
                                         <label className={labelCls}>Current Belt Rank</label>
                                         <div className="relative">
@@ -452,7 +468,7 @@ export default function RegisterStudentModal({ isOpen, onClose, onSuccess, instr
 
                             {/* STEP 3: Location & Dojo */}
                             {!successData && step === 3 && (
-                                <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                                <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
                                     {instructorDojoName && (
                                         <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3">
                                             <p className="text-xs text-green-400 font-bold">Your dojo: {instructorDojoName}</p>
@@ -590,41 +606,46 @@ export default function RegisterStudentModal({ isOpen, onClose, onSuccess, instr
                             {step > 1 ? (
                                 <button
                                     onClick={() => setStep(step - 1)}
-                                    className="flex items-center gap-1.5 px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                                    className="flex items-center gap-1.5 px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all active:scale-95"
                                 >
                                     <ChevronLeft className="w-4 h-4" /> Back
                                 </button>
                             ) : (
                                 <button
                                     onClick={handleClose}
-                                    className="px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                                    className="px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all active:scale-95"
                                 >
                                     Cancel
                                 </button>
                             )}
 
-                            {step < 4 ? (
-                                <button
-                                    onClick={() => setStep(step + 1)}
-                                    disabled={
-                                        (step === 1 && !canProceedStep1) ||
-                                        (step === 2 && !canProceedStep2) ||
-                                        (step === 3 && !canProceedStep3)
-                                    }
-                                    className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-orange-600 to-green-700 text-white text-sm font-bold rounded-xl transition-opacity hover:opacity-90 disabled:opacity-40"
-                                >
-                                    Next <ChevronRight className="w-4 h-4" />
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={handleSubmit}
-                                    disabled={!canSubmitStep4 || isSubmitting}
-                                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-600 to-green-700 text-white text-sm font-bold rounded-xl transition-opacity hover:opacity-90 disabled:opacity-40"
-                                >
-                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                                    {isSubmitting ? "Registering..." : "Register Student"}
-                                </button>
-                            )}
+                            <div className="flex items-center gap-3">
+                                {step < 4 && (
+                                    <span className="text-[11px] text-gray-600">Step {step} of 4</span>
+                                )}
+                                {step < 4 ? (
+                                    <button
+                                        onClick={() => setStep(step + 1)}
+                                        disabled={
+                                            (step === 1 && !canProceedStep1) ||
+                                            (step === 2 && !canProceedStep2) ||
+                                            (step === 3 && !canProceedStep3)
+                                        }
+                                        className="flex items-center gap-1.5 px-6 py-2.5 bg-gradient-to-r from-orange-600 to-green-700 text-white text-sm font-bold rounded-xl transition-all hover:opacity-90 disabled:opacity-40 hover:shadow-lg hover:shadow-orange-900/20 active:scale-95"
+                                    >
+                                        Next <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleSubmit}
+                                        disabled={!canSubmitStep4 || isSubmitting}
+                                        className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-600 to-green-700 text-white text-sm font-bold rounded-xl transition-all hover:opacity-90 disabled:opacity-40 hover:shadow-lg hover:shadow-orange-900/20 active:scale-95"
+                                    >
+                                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                                        {isSubmitting ? "Registering..." : "Register Student"}
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     )}
                 </motion.div>

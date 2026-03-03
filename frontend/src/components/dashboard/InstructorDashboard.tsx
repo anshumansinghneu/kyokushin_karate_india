@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, ClipboardCheck, Medal, ChevronRight, Search, Activity, FileText, Edit, Shield, BarChart, Menu, X, LogOut, Trophy, UserPlus } from "lucide-react";
+import { Users, ClipboardCheck, Medal, ChevronRight, Search, Activity, FileText, Edit, Shield, BarChart, Menu, X, LogOut, Trophy, UserPlus, Ticket, FileCheck, KeyRound, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
@@ -25,6 +25,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
     const { logout } = useAuthStore();
     const [students, setStudents] = useState<any[]>([]);
     const [pendingStudents, setPendingStudents] = useState<any[]>([]);
+    const [recentRegistrations, setRecentRegistrations] = useState<any[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -263,19 +264,136 @@ export default function InstructorDashboard({ user }: { user: any }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="space-y-6"
+                    className="space-y-8"
                 >
-                    <div>
-                        <h1 className="text-3xl font-black text-white mb-2">Register Student</h1>
-                        <p className="text-gray-400">Register a student who can&apos;t use the website themselves. A voucher code is required.</p>
-                    </div>
-                    <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-orange-600 to-green-700 text-white font-bold rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-orange-900/20"
+                    {/* Hero Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative overflow-hidden rounded-2xl border border-white/10"
                     >
-                        <UserPlus className="w-5 h-5" />
-                        Register New Student with Voucher
-                    </button>
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 via-black/60 to-green-700/20" />
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-green-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+                        <div className="relative px-8 py-10 sm:px-10 sm:py-12">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-orange-600 to-green-700 flex items-center justify-center shadow-2xl shadow-orange-900/30 flex-shrink-0">
+                                    <UserPlus className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                    <h1 className="text-2xl sm:text-3xl font-black text-white mb-2">Register Student</h1>
+                                    <p className="text-gray-400 text-sm sm:text-base max-w-xl">
+                                        Register students who can&apos;t use the website themselves. You&apos;ll need a membership voucher code to complete the registration.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-orange-600 to-green-700 text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-orange-900/30 hover:shadow-orange-900/50 hover:scale-[1.02] active:scale-[0.98] flex-shrink-0 group"
+                                >
+                                    <UserPlus className="w-5 h-5" />
+                                    <span>Register New Student</span>
+                                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* How It Works */}
+                    <div>
+                        <h2 className="text-lg font-black text-white mb-4 flex items-center gap-2">
+                            <span className="w-1 h-5 bg-gradient-to-b from-orange-500 to-green-600 rounded-full" />
+                            How It Works
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {[
+                                { step: "1", icon: UserPlus, title: "Student Info", desc: "Enter the student's name, email, phone and personal details" },
+                                { step: "2", icon: Shield, title: "Belt & Details", desc: "Set their current belt rank, height, weight and experience" },
+                                { step: "3", icon: FileCheck, title: "Location & Dojo", desc: "Select their state, city and assign them to your dojo" },
+                                { step: "4", icon: Ticket, title: "Apply Voucher", desc: "Enter a valid membership voucher code to complete registration" },
+                            ].map((item, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 + i * 0.08 }}
+                                    className="relative bg-white/[0.03] border border-white/[0.06] rounded-xl p-5 hover:bg-white/[0.06] hover:border-white/10 transition-all group"
+                                >
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-600/20 to-green-700/20 border border-orange-500/20 flex items-center justify-center text-xs font-black text-orange-400 group-hover:from-orange-600/30 group-hover:to-green-700/30 transition-colors">
+                                            {item.step}
+                                        </div>
+                                        <item.icon className="w-4 h-4 text-gray-500 group-hover:text-orange-400 transition-colors" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-white mb-1">{item.title}</h3>
+                                    <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
+                                    {i < 3 && (
+                                        <div className="hidden md:block absolute top-1/2 -right-2.5 w-5 text-gray-700">
+                                            <ChevronRight className="w-5 h-5" />
+                                        </div>
+                                    )}
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Info Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                                    <Ticket className="w-5 h-5 text-amber-400" />
+                                </div>
+                                <h3 className="text-sm font-bold text-white">About Vouchers</h3>
+                            </div>
+                            <ul className="space-y-2.5 text-xs text-gray-400">
+                                <li className="flex items-start gap-2">
+                                    <span className="w-1 h-1 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />
+                                    Each voucher is single-use and covers the membership fee
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="w-1 h-1 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />
+                                    Voucher must be of type <span className="text-orange-400 font-semibold">MEMBERSHIP</span> or <span className="text-orange-400 font-semibold">ALL</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="w-1 h-1 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />
+                                    Contact an admin if you need new vouchers issued
+                                </li>
+                            </ul>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                            className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                                    <KeyRound className="w-5 h-5 text-blue-400" />
+                                </div>
+                                <h3 className="text-sm font-bold text-white">After Registration</h3>
+                            </div>
+                            <ul className="space-y-2.5 text-xs text-gray-400">
+                                <li className="flex items-start gap-2">
+                                    <span className="w-1 h-1 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+                                    A temporary password is generated for the student
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="w-1 h-1 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+                                    Share the login email &amp; password with the student
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="w-1 h-1 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+                                    Student is auto-assigned to your dojo &amp; appears in your roster
+                                </li>
+                            </ul>
+                        </motion.div>
+                    </div>
                 </motion.div>
             )}
 
