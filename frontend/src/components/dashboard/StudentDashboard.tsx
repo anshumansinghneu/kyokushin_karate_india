@@ -191,16 +191,16 @@ export default function StudentDashboard({ user }: { user: any }) {
                     >
                         {/* ───── Left Column (4 cols) ───── */}
                         <div className="lg:col-span-4 space-y-6">
-                            <motion.div variants={itemVariants} data-tour="membership-card">
+                            <div data-tour="membership-card">
                                 <MembershipCard user={user} />
-                            </motion.div>
+                            </div>
 
-                            <motion.div variants={itemVariants}>
+                            <div>
                                 <ProfileCompletionBar user={user} />
-                            </motion.div>
+                            </div>
 
                             {/* Quick Stats */}
-                            <motion.div variants={itemVariants} data-tour="quick-stats" className="grid grid-cols-2 gap-3">
+                            <div data-tour="quick-stats" className="grid grid-cols-2 gap-3">
                                 {[
                                     { icon: Activity, value: user?.currentBeltRank || 'White', label: 'Current Rank', color: 'red', bg: 'bg-red-500/10', hoverBg: 'group-hover:bg-red-500/20', text: 'text-red-500', border: 'hover:border-red-500/30', glow: 'from-red-500/20 to-red-600/5' },
                                     { icon: Trophy, value: tournamentResults.length, label: 'Tournaments', color: 'blue', bg: 'bg-blue-500/10', hoverBg: 'group-hover:bg-blue-500/20', text: 'text-blue-500', border: 'hover:border-blue-500/30', glow: 'from-blue-500/20 to-blue-600/5' },
@@ -227,10 +227,10 @@ export default function StudentDashboard({ user }: { user: any }) {
                                         </motion.div>
                                     );
                                 })}
-                            </motion.div>
+                            </div>
 
                             {/* Quick Links */}
-                            <motion.div variants={itemVariants} data-tour="quick-links">
+                            <div data-tour="quick-links">
                                 <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold mb-3">Quick Access</p>
                                 <div className="grid grid-cols-3 gap-2.5">
                                     {[
@@ -253,29 +253,26 @@ export default function StudentDashboard({ user }: { user: any }) {
                                         );
                                     })}
                                 </div>
-                            </motion.div>
+                            </div>
                         </div>
 
                         {/* ───── Right Column (8 cols) ───── */}
                         <div className="lg:col-span-8 space-y-6">
                             {/* Fight Record */}
-                            <motion.div variants={itemVariants}>
+                            <div>
                                 <FightRecordCard />
-                            </motion.div>
+                            </div>
 
                             {/* Belt Timeline */}
                             {user?.id && (
-                                <motion.div variants={itemVariants}>
+                                <div>
                                     <BeltTimeline userId={user.id} />
-                                </motion.div>
+                                </div>
                             )}
 
                             {/* Next Event Countdown */}
                             {nextEvent && (
-                                <motion.div
-                                    variants={itemVariants}
-                                    className="relative overflow-hidden rounded-2xl border border-white/[0.08] group"
-                                >
+                                <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] group">
                                     <div className="absolute inset-0 bg-gradient-to-br from-red-950/80 via-black/90 to-black/80" />
                                     <div className="absolute inset-0 bg-[url('/training-bg.png')] bg-cover bg-center opacity-30 group-hover:opacity-40 group-hover:scale-105 transition-all duration-700" />
                                     <div className="absolute top-0 right-0 w-72 h-72 bg-red-600/10 rounded-full blur-3xl" />
@@ -321,13 +318,13 @@ export default function StudentDashboard({ user }: { user: any }) {
                                             </div>
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
                             )}
 
                             {/* Events & Achievements Row */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Upcoming Events */}
-                                <motion.div variants={itemVariants} className="rounded-2xl border border-white/[0.08] overflow-hidden">
+                                <div className="rounded-2xl border border-white/[0.08] overflow-hidden">
                                     <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
                                         <h3 className="text-sm font-bold text-white flex items-center gap-2">
                                             <div className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center">
@@ -362,10 +359,10 @@ export default function StudentDashboard({ user }: { user: any }) {
                                             </div>
                                         )}
                                     </div>
-                                </motion.div>
+                                </div>
 
                                 {/* Achievements */}
-                                <motion.div variants={itemVariants} className="rounded-2xl border border-white/[0.08] overflow-hidden">
+                                <div className="rounded-2xl border border-white/[0.08] overflow-hidden">
                                     <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
                                         <h3 className="text-sm font-bold text-white flex items-center gap-2">
                                             <div className="w-7 h-7 rounded-lg bg-yellow-500/10 flex items-center justify-center">
@@ -400,7 +397,7 @@ export default function StudentDashboard({ user }: { user: any }) {
                                             </div>
                                         )}
                                     </div>
-                                </motion.div>
+                                </div>
                             </div>
                         </div>
                     </motion.div>
