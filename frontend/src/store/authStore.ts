@@ -52,11 +52,14 @@ interface AuthState {
     updateProfile: (data: any) => Promise<void>;
 }
 
+// Read token synchronously so first render already knows auth state
+const _initialToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
-    token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
-    isAuthenticated: false,
-    isLoading: true,
+    token: _initialToken,
+    isAuthenticated: !!_initialToken, // Optimistic: treat token presence as authenticated
+    isLoading: !!_initialToken, // Only loading if we need to verify a token
     error: null,
 
     login: async (credentials) => {

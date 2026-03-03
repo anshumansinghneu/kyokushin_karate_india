@@ -17,17 +17,19 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
     const containerRef = useRef<HTMLDivElement>(null);
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
-    const [isHovered, setIsHovered] = useState(false);
-    const [isTouchDevice, setIsTouchDevice] = useState(false);
-
-    // Detect touch device and auto-enable effects
-    useEffect(() => {
-        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-        setIsTouchDevice(isTouch);
-        if (isTouch) {
-            setIsHovered(true); // Always show effects on touch devices
+    // Initialize touch state without causing re-render flash
+    const [isHovered, setIsHovered] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         }
-    }, []);
+        return false;
+    });
+    const [isTouchDevice] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        }
+        return false;
+    });
 
     // Smooth mouse movement for spotlight
     const smoothX = useSpring(mouseX, { stiffness: 100, damping: 20 });
@@ -152,7 +154,7 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
 
             {/* Atmospheric Particles (Sparks/Dust) - "Embers" turn to "Fire" */}
             <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
-                {[...Array(40)].map((_, i) => (
+                {[...Array(15)].map((_, i) => (
                     <motion.div
                         key={i}
                         className="absolute rounded-full blur-[1px]"

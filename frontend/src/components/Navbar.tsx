@@ -118,10 +118,13 @@ export default function Navbar() {
     const router = useRouter();
     const { user, logout, isAuthenticated, checkAuth } = useAuthStore();
 
-    // Check auth status on mount
+    // Check auth status on mount (only if not already authenticated)
     useEffect(() => {
-        checkAuth();
-    }, [checkAuth]);
+        if (!isAuthenticated) {
+            checkAuth();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Check for live matches periodically
     useEffect(() => {

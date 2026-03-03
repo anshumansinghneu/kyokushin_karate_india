@@ -24,7 +24,16 @@ export default function DashboardPage() {
         }
     }, [isLoading, isAuthenticated, router]);
 
-    if (isLoading) {
+    // Show minimal placeholder while loading user data (token exists but no user yet)
+    if (!user && isAuthenticated) {
+        return (
+            <div className="min-h-screen w-full bg-black flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            </div>
+        );
+    }
+
+    if (isLoading && !isAuthenticated) {
         return (
             <div className="min-h-screen w-full bg-black flex items-center justify-center">
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />

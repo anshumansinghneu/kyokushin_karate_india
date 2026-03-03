@@ -23,12 +23,17 @@ interface Event {
 }
 
 export default function Home() {
-  const [showSplash, setShowSplash] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return !sessionStorage.getItem('splash_seen');
+  const [showSplash, setShowSplash] = useState(false);
+  const [splashChecked, setSplashChecked] = useState(false);
+
+  // Check splash in useEffect to avoid hydration mismatch
+  useEffect(() => {
+    const seen = sessionStorage.getItem('splash_seen');
+    if (!seen) {
+      setShowSplash(true);
     }
-    return true;
-  });
+    setSplashChecked(true);
+  }, []);
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
   const [latestBlogs, setLatestBlogs] = useState<any[]>([]);
   const [mediaMentions, setMediaMentions] = useState<any[]>([]);
@@ -100,8 +105,8 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {!showSplash && (
-        <div className="animate-fade-in">
+      {splashChecked && !showSplash && (
+        <div>
 
           {/* CINEMATIC HERO SECTION - V2 "BESTTT" */}
           <HeroSectionV2
