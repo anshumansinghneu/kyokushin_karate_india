@@ -13,14 +13,6 @@ import { INDIAN_STATES, CITIES, BELT_RANKS, COUNTRY_CODES } from "@/lib/constant
 
 const ADMIN_INSTRUCTOR_ID = "42b18481-85ee-49ed-8b3c-dc4f707fe29e"; // Sihan Vasant Kumar Singh
 
-// Razorpay types
-declare global {
-    interface Window {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        Razorpay: any;
-    }
-}
-
 export default function RegisterPage() {
     const [role, setRole] = useState<"STUDENT" | "INSTRUCTOR">("STUDENT");
     const [showPassword, setShowPassword] = useState(false);
@@ -67,16 +59,15 @@ export default function RegisterPage() {
     const [, setAge] = useState<number | null>(null); // Derived age state
 
     // Voucher state
-    const [hasVoucher, setHasVoucher] = useState(false);
     const [voucherCode, setVoucherCode] = useState("");
     const [voucherValidating, setVoucherValidating] = useState(false);
     const [voucherValid, setVoucherValid] = useState<{ amount: number; code: string } | null>(null);
     const [voucherError, setVoucherError] = useState("");
 
-    const { registerWithPayment, completeRegistration, registerWithVoucher, isLoading, error: authError } = useAuthStore();
+    const { registerWithVoucher, isLoading, error: authError } = useAuthStore();
     const router = useRouter();
 
-    // Fetch Locations on Mount + Load Razorpay Script + Fetch Payment Config
+    // Fetch Locations on Mount + Fetch Payment Config
     useEffect(() => {
         const fetchLocations = async () => {
             try {
@@ -89,12 +80,6 @@ export default function RegisterPage() {
             }
         };
         fetchLocations();
-
-        // Load Razorpay checkout script
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.async = true;
-        document.body.appendChild(script);
 
         // Fetch payment config
         const fetchPaymentConfig = async () => {
@@ -112,10 +97,6 @@ export default function RegisterPage() {
             }
         };
         fetchPaymentConfig();
-
-        return () => {
-            if (script.parentNode) script.parentNode.removeChild(script);
-        };
     }, []);
 
     // Fetch Dojos when City changes
@@ -355,78 +336,19 @@ export default function RegisterPage() {
                 delete payload.yearsOfExperience;
             }
 
-            // ── VOUCHER PATH: Skip Razorpay ──
-            if (voucherValid) {
-                setPaymentStep("verifying");
-                await registerWithVoucher({
-                    ...payload,
-                    voucherCode: voucherValid.code,
-                });
-                setPaymentStep("done");
-                setTimeout(() => router.push("/dashboard"), 1500);
+            // ── VOUCHER PATH (mandatory) ──
+            if (!voucherValid) {
+                useAuthStore.setState({ error: 'Please validate a voucher code to complete registration.' });
                 return;
             }
 
-            // ── RAZORPAY PATH ──
-            // ── Step 1: Create Payment Order ──
-            setPaymentStep("paying");
-            const orderData = await registerWithPayment(payload);
-
-            // ── Step 2: Open Razorpay Checkout ──
-            if (!window.Razorpay) {
-                throw new Error("Payment gateway not loaded. Please refresh and try again.");
-            }
-
-            const options = {
-                key: orderData.keyId,
-                amount: Math.round(orderData.totalAmount * 100), // in paise
-                currency: "INR",
-                name: "Kyokushin Karate India",
-                description: "Annual Membership Fee",
-                order_id: orderData.orderId,
-                prefill: {
-                    name: formData.name,
-                    email: formData.email,
-                    contact: formData.phone,
-                },
-                notes: {
-                    type: "membership_registration",
-                },
-                theme: {
-                    color: "#DC2626",
-                },
-                modal: {
-                    ondismiss: () => {
-                        setPaymentStep("form");
-                    },
-                },
-                handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
-                    // ── Step 3: Verify Payment & Create Account ──
-                    try {
-                        setPaymentStep("verifying");
-                        await completeRegistration({
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                        });
-                        setPaymentStep("done");
-                        setTimeout(() => router.push("/dashboard"), 1500);
-                    } catch {
-                        setPaymentStep("form");
-                    }
-                },
-            };
-
-            const razorpay = new window.Razorpay(options);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            razorpay.on("payment.failed", (response: any) => {
-                console.error("Payment failed:", response.error);
-                setPaymentStep("form");
-                useAuthStore.setState({
-                    error: `Payment failed: ${response.error.description || "Please try again"}`,
-                });
+            setPaymentStep("verifying");
+            await registerWithVoucher({
+                ...payload,
+                voucherCode: voucherValid.code,
             });
-            razorpay.open();
+            setPaymentStep("done");
+            setTimeout(() => router.push("/dashboard"), 1500);
 
         } catch {
             setPaymentStep("form");
@@ -1095,85 +1017,64 @@ export default function RegisterPage() {
                                     </div>
                                 </div>
 
-                                {/* Voucher Section */}
+                                {/* Voucher Section — Mandatory */}
                                 <div className="space-y-3 sm:space-y-4">
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
                                         <div className="w-1 h-4 bg-green-500 rounded-full"></div>
-                                        Have a Cash Voucher?
+                                        Voucher Code <span className="text-red-400">*</span>
                                     </h3>
+                                    <p className="text-xs text-zinc-500">Enter your cash voucher code to complete registration. Contact your instructor if you don&apos;t have one.</p>
 
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="Enter voucher code (e.g. KKFI-ABCD1234)"
+                                            value={voucherCode}
+                                            onChange={(e) => {
+                                                setVoucherCode(e.target.value.toUpperCase());
+                                                setVoucherError("");
+                                                setVoucherValid(null);
+                                            }}
+                                            className="bg-zinc-950/50 border-white/10 focus:border-green-500 h-11 rounded-lg text-white placeholder:text-zinc-600 font-mono tracking-wider"
+                                        />
                                         <button
                                             type="button"
-                                            onClick={() => {
-                                                setHasVoucher(!hasVoucher);
-                                                if (hasVoucher) {
-                                                    setVoucherCode("");
-                                                    setVoucherValid(null);
-                                                    setVoucherError("");
-                                                }
-                                            }}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${hasVoucher ? 'bg-green-600' : 'bg-zinc-700'}`}
+                                            onClick={handleValidateVoucher}
+                                            disabled={voucherValidating || !voucherCode.trim()}
+                                            className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold transition-all disabled:opacity-50 whitespace-nowrap"
                                         >
-                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hasVoucher ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            {voucherValidating ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : "Verify"}
                                         </button>
-                                        <span className="text-sm text-zinc-400">I have a voucher code for cash payment</span>
                                     </div>
 
-                                    <AnimatePresence>
-                                        {hasVoucher && (
-                                            <motion.div
-                                                initial={{ opacity: 0, height: 0 }}
-                                                animate={{ opacity: 1, height: 'auto' }}
-                                                exit={{ opacity: 0, height: 0 }}
-                                                className="space-y-3"
-                                            >
-                                                <div className="flex gap-2">
-                                                    <Input
-                                                        placeholder="Enter voucher code (e.g. KKFI-ABCD1234)"
-                                                        value={voucherCode}
-                                                        onChange={(e) => {
-                                                            setVoucherCode(e.target.value.toUpperCase());
-                                                            setVoucherError("");
-                                                            setVoucherValid(null);
-                                                        }}
-                                                        className="bg-zinc-950/50 border-white/10 focus:border-green-500 h-11 rounded-lg text-white placeholder:text-zinc-600 font-mono tracking-wider"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleValidateVoucher}
-                                                        disabled={voucherValidating || !voucherCode.trim()}
-                                                        className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold transition-all disabled:opacity-50 whitespace-nowrap"
-                                                    >
-                                                        {voucherValidating ? (
-                                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                                        ) : "Verify"}
-                                                    </button>
-                                                </div>
+                                    {voucherError && (
+                                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-red-400 text-sm">
+                                            <AlertCircle className="w-4 h-4" />
+                                            {voucherError}
+                                        </motion.div>
+                                    )}
 
-                                                {voucherError && (
-                                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-red-400 text-sm">
-                                                        <AlertCircle className="w-4 h-4" />
-                                                        {voucherError}
-                                                    </motion.div>
-                                                )}
+                                    {voucherValid && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -5 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3"
+                                        >
+                                            <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-bold text-green-400">Voucher Valid!</p>
+                                                <p className="text-xs text-zinc-400">This voucher covers ₹{voucherValid.amount} — your membership fee is covered.</p>
+                                            </div>
+                                        </motion.div>
+                                    )}
 
-                                                {voucherValid && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, y: -5 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3"
-                                                    >
-                                                        <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
-                                                        <div>
-                                                            <p className="text-sm font-bold text-green-400">Voucher Valid!</p>
-                                                            <p className="text-xs text-zinc-400">This voucher covers ₹{voucherValid.amount} — no online payment needed.</p>
-                                                        </div>
-                                                    </motion.div>
-                                                )}
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                    {!voucherValid && (
+                                        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-2 text-amber-400 text-xs">
+                                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                            <span>A valid voucher is required to complete registration. Please verify your voucher code above.</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Payment Info Section */}
@@ -1189,7 +1090,7 @@ export default function RegisterPage() {
                                             </div>
                                             <div>
                                                 <h4 className="text-sm font-bold text-white">Annual Membership Fee</h4>
-                                                <p className="text-xs text-zinc-400">One-time payment via UPI / Card / Net Banking</p>
+                                                <p className="text-xs text-zinc-400">Payable via cash voucher from your instructor</p>
                                             </div>
                                         </div>
                                         <div className="space-y-1 text-sm">
@@ -1208,7 +1109,7 @@ export default function RegisterPage() {
                                         </div>
                                         <div className="flex items-center gap-2 mt-3 text-xs text-zinc-500">
                                             <Shield className="w-3 h-3" />
-                                            <span>Secure payment powered by Razorpay • Valid for 1 year</span>
+                                            <span>Valid for 1 year from registration date</span>
                                         </div>
                                     </motion.div>
                                 )}
@@ -1221,43 +1122,34 @@ export default function RegisterPage() {
                                         </button>
                                         <Button
                                             type="submit"
-                                            className={`flex-1 h-12 text-base font-bold transition-all duration-200 shadow-lg rounded-lg btn-shine ${voucherValid ? 'bg-green-600 hover:bg-green-700 hover:shadow-green-600/50' : 'bg-red-600 hover:bg-red-700 hover:shadow-red-600/50'}`}
-                                        disabled={isLoading || paymentStep !== "form"}
-                                    >
-                                        {paymentStep === "paying" ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                Opening Payment...
-                                            </>
-                                        ) : paymentStep === "verifying" ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                {voucherValid ? 'Redeeming Voucher...' : 'Verifying Payment...'}
-                                            </>
-                                        ) : paymentStep === "done" ? (
-                                            <>
-                                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                                Registration Complete!
-                                            </>
-                                        ) : isLoading ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                Processing...
-                                            </>
-                                        ) : voucherValid ? (
-                                            <>
-                                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                                Register with Voucher
-                                            </>
-                                        ) : (
-                                            <>
-                                                Pay ₹{paymentInfo?.totalAmount || 295} & Register
-                                            </>
-                                        )}
-                                    </Button>
+                                            className="flex-1 h-12 text-base font-bold transition-all duration-200 shadow-lg rounded-lg btn-shine bg-green-600 hover:bg-green-700 hover:shadow-green-600/50"
+                                            disabled={isLoading || paymentStep !== "form" || !voucherValid}
+                                        >
+                                            {paymentStep === "verifying" ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                    Redeeming Voucher...
+                                                </>
+                                            ) : paymentStep === "done" ? (
+                                                <>
+                                                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                                                    Registration Complete!
+                                                </>
+                                            ) : isLoading ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                    Processing...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                                                    Register with Voucher
+                                                </>
+                                            )}
+                                        </Button>
                                     </div>
                                     <p className="text-center text-xs text-zinc-500 mt-4">
-                                        By registering, you agree to our Terms of Service. Your membership is valid for 1 year from the date of payment.
+                                        By registering, you agree to our Terms of Service. Your membership is valid for 1 year from the date of registration.
                                     </p>
                                 </div>
 
@@ -1269,40 +1161,31 @@ export default function RegisterPage() {
                                         </button>
                                         <Button
                                             type="submit"
-                                            className={`flex-1 h-14 text-base font-bold transition-all duration-200 shadow-lg rounded-xl btn-shine ${voucherValid ? 'bg-green-600 hover:bg-green-700 shadow-green-600/30' : 'bg-red-600 hover:bg-red-700 shadow-red-600/30'}`}
-                                        disabled={isLoading || paymentStep !== "form"}
-                                    >
-                                        {paymentStep === "paying" ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                Opening Payment...
-                                            </>
-                                        ) : paymentStep === "verifying" ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                {voucherValid ? 'Redeeming...' : 'Verifying...'}
-                                            </>
-                                        ) : paymentStep === "done" ? (
-                                            <>
-                                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                                Done!
-                                            </>
-                                        ) : isLoading ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                Processing...
-                                            </>
-                                        ) : voucherValid ? (
-                                            <>
-                                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                                Register with Voucher
-                                            </>
-                                        ) : (
-                                            <>
-                                                Pay ₹{paymentInfo?.totalAmount || 295} & Register
-                                            </>
-                                        )}
-                                    </Button>
+                                            className="flex-1 h-14 text-base font-bold transition-all duration-200 shadow-lg rounded-xl btn-shine bg-green-600 hover:bg-green-700 shadow-green-600/30"
+                                            disabled={isLoading || paymentStep !== "form" || !voucherValid}
+                                        >
+                                            {paymentStep === "verifying" ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                    Redeeming...
+                                                </>
+                                            ) : paymentStep === "done" ? (
+                                                <>
+                                                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                                                    Done!
+                                                </>
+                                            ) : isLoading ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                    Processing...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                                                    Register with Voucher
+                                                </>
+                                            )}
+                                        </Button>
                                     </div>
                                 </div>
                                 </motion.div>

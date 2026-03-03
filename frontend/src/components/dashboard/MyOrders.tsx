@@ -179,7 +179,7 @@ export default function MyOrders() {
                                     {order.razorpayPaymentId && (
                                         <div className="bg-white/5 rounded-xl p-4">
                                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Info</p>
-                                            <p className="text-sm text-white">Payment ID: {order.razorpayPaymentId}</p>
+                                            <p className="text-sm text-white">Transaction ID: {order.razorpayPaymentId}</p>
                                             <p className="text-xs text-gray-400">Total: ₹{order.totalAmount}</p>
                                         </div>
                                     )}

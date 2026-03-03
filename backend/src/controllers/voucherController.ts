@@ -612,6 +612,88 @@ export const redeemVoucherForEvent = catchAsync(async (req: Request, res: Respon
     });
 });
 
+// ─── Redeem Voucher for Membership Renewal ─────────────────────────────
+export const redeemVoucherForRenewal = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const currentUser = req.user;
+    const { voucherCode } = req.body;
+
+    if (!voucherCode) {
+        return next(new AppError('Voucher code is required', 400));
+    }
+
+    // Find and validate voucher
+    const voucher = await prisma.cashVoucher.findUnique({
+        where: { code: voucherCode.trim().toUpperCase() },
+    });
+
+    if (!voucher) return next(new AppError('Invalid voucher code', 404));
+    if (!voucher.isActive) return next(new AppError('This voucher has been deactivated', 400));
+    if (voucher.isRedeemed) return next(new AppError('This voucher has already been used', 400));
+    if (new Date() > voucher.expiryDate) return next(new AppError('This voucher has expired', 400));
+    if (voucher.applicableTo !== 'MEMBERSHIP' && voucher.applicableTo !== 'ALL') {
+        return next(new AppError('This voucher is not applicable for membership renewal', 400));
+    }
+
+    const { amount, taxAmount, totalAmount } = calculateTotal(PAYMENT_CONFIG.MEMBERSHIP_FEE);
+
+    // Check voucher covers the fee
+    if (voucher.amount < totalAmount) {
+        return next(new AppError(`Voucher covers ₹${voucher.amount} but renewal costs ₹${totalAmount}`, 400));
+    }
+
+    // Extend membership by 1 year from today
+    const now = new Date();
+    const newStartDate = now;
+    const newEndDate = new Date(now);
+    newEndDate.setDate(newEndDate.getDate() + PAYMENT_CONFIG.MEMBERSHIP_DURATION_DAYS);
+
+    await prisma.$transaction(async (tx) => {
+        // Mark voucher as redeemed
+        await tx.cashVoucher.update({
+            where: { id: voucher.id },
+            data: {
+                isRedeemed: true,
+                redeemedBy: currentUser.id,
+                redeemedAt: new Date(),
+            },
+        });
+
+        // Create payment record
+        await tx.payment.create({
+            data: {
+                type: 'RENEWAL',
+                amount,
+                taxAmount,
+                totalAmount,
+                currency: 'INR',
+                userId: currentUser.id,
+                status: 'PAID',
+                paidAt: now,
+                description: `Annual Membership Renewal - ${currentUser.name} (Voucher: ${voucher.code})`,
+            },
+        });
+
+        // Update user membership
+        await tx.user.update({
+            where: { id: currentUser.id },
+            data: {
+                membershipStatus: 'ACTIVE',
+                membershipStartDate: newStartDate,
+                membershipEndDate: newEndDate,
+            },
+        });
+    });
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Membership renewed successfully via voucher!',
+        data: {
+            membershipStartDate: newStartDate,
+            membershipEndDate: newEndDate,
+        },
+    });
+});
+
 // ─── Get All Vouchers (Admin Only) ─────────────────────────────────────
 export const getAllVouchers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const vouchers = await prisma.cashVoucher.findMany({

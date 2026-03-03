@@ -24,10 +24,6 @@ import { useToast } from "@/contexts/ToastContext";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-declare global {
-  interface Window { Razorpay: any; }
-}
-
 interface Product {
   id: string;
   name: string;
@@ -114,16 +110,6 @@ export default function StorePage() {
       }));
     }
   }, [user]);
-
-  // Load Razorpay checkout script
-  useEffect(() => {
-    if (!document.querySelector('script[src*="checkout.razorpay.com"]')) {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      document.body.appendChild(script);
-    }
-  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -215,108 +201,23 @@ export default function StorePage() {
         quantity: i.quantity,
       }));
 
-      // Step 1: Create order with Razorpay
-      let razorpayOrderId: string, amount: number, currency: string, keyId: string;
-      try {
-        const res = await api.post("/merch/orders", {
-          items,
-          shippingName: shipping.name,
-          shippingPhone: shipping.phone,
-          shippingAddress: shipping.address,
-          shippingCity: shipping.city,
-          shippingState: shipping.state,
-          shippingPincode: shipping.pincode,
-        });
-        ({ razorpayOrderId, amount, currency, keyId } = res.data.data);
-      } catch (apiErr: any) {
-        const msg = apiErr.response?.data?.message || apiErr.message || "Failed to create order";
-        console.error("Create order failed:", msg, apiErr.response?.status);
-        showToast(msg, "error");
-        setCheckingOut(false);
-        return;
-      }
-
-      // Step 2: Load Razorpay SDK if needed
-      if (!window.Razorpay) {
-        try {
-          await new Promise<void>((resolve, reject) => {
-            const existing = document.querySelector('script[src*="checkout.razorpay.com"]') as HTMLScriptElement;
-            if (existing) {
-              if (window.Razorpay) { resolve(); return; }
-              existing.addEventListener('load', () => resolve());
-              existing.addEventListener('error', () => reject(new Error('Failed to load payment gateway')));
-              setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
-            } else {
-              const s = document.createElement('script');
-              s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-              s.onload = () => resolve();
-              s.onerror = () => reject(new Error('Failed to load payment gateway'));
-              document.body.appendChild(s);
-              setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
-            }
-          });
-        } catch (scriptErr: any) {
-          showToast(scriptErr.message, "error");
-          setCheckingOut(false);
-          return;
-        }
-      }
-      if (!window.Razorpay) {
-        showToast("Payment gateway not loaded. Please refresh.", "error");
-        setCheckingOut(false);
-        return;
-      }
-
-      // Step 2: Open Razorpay
-      const options = {
-        key: keyId,
-        amount: Math.round(amount * 100),
-        currency: currency || "INR",
-        name: "KKFI Store",
-        description: `Merchandise Order (${cart.length} items)`,
-        order_id: razorpayOrderId,
-        prefill: {
-          name: shipping.name,
-          email: user?.email || "",
-          contact: shipping.phone,
-        },
-        notes: { type: "merchandise" },
-        theme: { color: "#DC2626" },
-        modal: {
-          ondismiss: () => {
-            setCheckingOut(false);
-            showToast("Payment cancelled", "error");
-          },
-        },
-        handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
-          // Step 3: Verify payment
-          try {
-            await api.post("/merch/orders/verify", {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-            showToast("Order confirmed! Check your email for details.", "success");
-            setCart([]);
-            setCartOpen(false);
-            setShowShipping(false);
-          } catch (err: any) {
-            showToast(err.response?.data?.message || "Payment verification failed", "error");
-          } finally {
-            setCheckingOut(false);
-          }
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.on("payment.failed", (resp: any) => {
-        setCheckingOut(false);
-        showToast(`Payment failed: ${resp.error?.description || "Please try again"}`, "error");
+      await api.post("/merch/orders", {
+        items,
+        shippingName: shipping.name,
+        shippingPhone: shipping.phone,
+        shippingAddress: shipping.address,
+        shippingCity: shipping.city,
+        shippingState: shipping.state,
+        shippingPincode: shipping.pincode,
       });
-      razorpay.open();
+
+      showToast("Order placed! You will be contacted for payment details.", "success");
+      setCart([]);
+      setCartOpen(false);
+      setShowShipping(false);
     } catch (err: any) {
-      console.error("Checkout flow error:", err);
-      showToast(err.response?.data?.message || err.message || "Failed to create order", "error");
+      showToast(err.response?.data?.message || err.message || "Failed to place order", "error");
+    } finally {
       setCheckingOut(false);
     }
   };
@@ -801,9 +702,9 @@ export default function StorePage() {
                           className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 rounded-xl text-lg"
                         >
                           {checkingOut ? (
-                            <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Processing...</>
+                            <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Placing Order...</>
                           ) : (
-                            `Pay ₹${cartTotal.toLocaleString()}`
+                            `Place Order — ₹${cartTotal.toLocaleString()}`
                           )}
                         </Button>
                         <button

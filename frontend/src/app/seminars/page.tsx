@@ -525,7 +525,7 @@ export default function SeminarsPage() {
             const seminars = (res.data.data.events || []).filter(
                 (e: any) => e.type === "SEMINAR"
             );
-            
+
             const now = new Date();
             const upcoming = seminars.filter((s: any) => s.status === "UPCOMING" || s.status === "ONGOING" || new Date(s.startDate) > now);
             const completed = seminars.filter((s: any) => s.status === "COMPLETED" || (new Date(s.endDate) < now && s.status !== "UPCOMING"));

@@ -232,9 +232,9 @@ export default function RegisterStudentModal({ isOpen, onClose, onSuccess, instr
                             {/* SUCCESS STATE */}
                             {successData && (
                                 <motion.div key="success" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-4">
-                                    <motion.div 
-                                        initial={{ scale: 0 }} 
-                                        animate={{ scale: 1 }} 
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
                                         transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
                                         className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500/20 to-green-600/10 border-2 border-green-500/30 flex items-center justify-center mx-auto mb-5"
                                     >

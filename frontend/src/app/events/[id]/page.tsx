@@ -10,10 +10,6 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 
-declare global {
-    interface Window { Razorpay: any; }
-}
-
 export default function EventDetailPage() {
     const { id } = useParams();
     const { user } = useAuthStore();
@@ -28,7 +24,6 @@ export default function EventDetailPage() {
     const [selectedCategory, setSelectedCategory] = useState<{ name: string; age: string; weight: string } | null>(null);
 
     // Voucher state
-    const [hasVoucher, setHasVoucher] = useState(false);
     const [voucherCode, setVoucherCode] = useState("");
     const [voucherValidating, setVoucherValidating] = useState(false);
     const [voucherValid, setVoucherValid] = useState<{ amount: number; code: string } | null>(null);
@@ -47,14 +42,6 @@ export default function EventDetailPage() {
             }
         };
         if (id) fetchEvent();
-
-        // Load Razorpay checkout script
-        if (!document.querySelector('script[src*="checkout.razorpay.com"]')) {
-            const script = document.createElement('script');
-            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-            script.async = true;
-            document.body.appendChild(script);
-        }
     }, [id]);
 
     const handleRegister = () => {
@@ -111,108 +98,21 @@ export default function EventDetailPage() {
         }
     };
 
-    const handlePayment = async () => {
+    // Direct registration for free events
+    const handleFreeRegistration = async () => {
         setPaymentProcessing(true);
         try {
-            // Step 1: Create Razorpay order via backend
-            let orderData: any;
-            try {
-                const orderRes = await api.post(`/payments/tournament/${id}/create-order`);
-                orderData = orderRes.data.data;
-            } catch (apiErr: any) {
-                const msg = apiErr.response?.data?.message || apiErr.message || "Failed to create payment order";
-                console.error("Create order failed:", msg, apiErr.response?.status);
-                showToast(msg, "error");
-                setPaymentProcessing(false);
-                return;
-            }
-
-            // Step 2: Load Razorpay SDK if needed
-            if (!window.Razorpay) {
-                try {
-                    await new Promise<void>((resolve, reject) => {
-                        const existing = document.querySelector('script[src*="checkout.razorpay.com"]') as HTMLScriptElement;
-                        if (existing) {
-                            if (window.Razorpay) { resolve(); return; }
-                            existing.addEventListener('load', () => resolve());
-                            existing.addEventListener('error', () => reject(new Error('Failed to load payment gateway')));
-                            setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
-                        } else {
-                            const s = document.createElement('script');
-                            s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-                            s.onload = () => resolve();
-                            s.onerror = () => reject(new Error('Failed to load payment gateway'));
-                            document.body.appendChild(s);
-                            setTimeout(() => reject(new Error('Payment gateway load timeout')), 10000);
-                        }
-                    });
-                } catch (scriptErr: any) {
-                    showToast(scriptErr.message, "error");
-                    setPaymentProcessing(false);
-                    return;
-                }
-            }
-            if (!window.Razorpay) {
-                showToast("Payment gateway not loaded. Please refresh and try again.", "error");
-                setPaymentProcessing(false);
-                return;
-            }
-
-            const options = {
-                key: orderData.keyId,
-                amount: Math.round(orderData.totalAmount * 100),
-                currency: orderData.currency || "INR",
-                name: "Kyokushin Karate India",
-                description: `Event Registration - ${orderData.eventName || event.name}`,
-                order_id: orderData.orderId,
-                prefill: {
-                    name: user?.name || "",
-                    email: user?.email || "",
-                    contact: user?.phone || "",
-                },
-                notes: { type: "tournament_registration", eventId: id },
-                theme: { color: "#DC2626" },
-                modal: {
-                    ondismiss: () => {
-                        setPaymentProcessing(false);
-                        showToast("Payment cancelled.", "error");
-                    },
-                },
-                handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
-                    // Step 3: Verify payment & complete registration
-                    try {
-                        await api.post("/payments/tournament/verify", {
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                            eventType,
-                            categoryAge: selectedCategory?.age || null,
-                            categoryWeight: selectedCategory?.weight || null,
-                            categoryBelt: null,
-                        });
-                        setRegistrationStep(3);
-                        showToast("Registration successful! Payment verified.", "success");
-                    } catch (err: any) {
-                        console.error("Payment verification failed", err);
-                        showToast(err.response?.data?.message || "Payment verification failed.", "error");
-                    } finally {
-                        setPaymentProcessing(false);
-                    }
-                },
-            };
-
-            const razorpay = new window.Razorpay(options);
-            razorpay.on("payment.failed", (response: any) => {
-                console.error("Payment failed:", response.error);
-                setPaymentProcessing(false);
-                showToast(`Payment failed: ${response.error?.description || "Please try again."}`, "error");
+            await api.post(`/events/${id}/register`, {
+                eventType,
+                categoryAge: selectedCategory?.age || null,
+                categoryWeight: selectedCategory?.weight || null,
             });
-            razorpay.open();
-
-        } catch (error: any) {
-            console.error("Payment flow error:", error);
+            setRegistrationStep(3);
+            showToast("Registration successful!", "success");
+        } catch (err: any) {
+            showToast(err.response?.data?.message || "Registration failed.", "error");
+        } finally {
             setPaymentProcessing(false);
-            showToast(error.response?.data?.message || error.message || "Registration failed. Please try again.", "error");
         }
     };
 
@@ -462,76 +362,73 @@ export default function EventDetailPage() {
                                             )}
                                         </div>
 
-                                        {/* Voucher Section */}
-                                        <div className="mb-6 space-y-3">
-                                            <div className="flex items-center gap-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setHasVoucher(!hasVoucher);
-                                                        if (hasVoucher) {
-                                                            setVoucherCode("");
-                                                            setVoucherValid(null);
+                                        {/* Voucher Section - mandatory for paid events */}
+                                        {event.memberFee > 0 ? (
+                                            <div className="mb-6 space-y-3">
+                                                <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Cash Voucher Code *</label>
+                                                <p className="text-xs text-zinc-500">Enter the voucher code provided by your instructor</p>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        placeholder="e.g. KKFI-XXXX-XXXX"
+                                                        value={voucherCode}
+                                                        onChange={(e) => {
+                                                            setVoucherCode(e.target.value.toUpperCase());
                                                             setVoucherError("");
-                                                        }
-                                                    }}
-                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${hasVoucher ? 'bg-green-600' : 'bg-zinc-700'}`}
-                                                >
-                                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hasVoucher ? 'translate-x-6' : 'translate-x-1'}`} />
-                                                </button>
-                                                <span className="text-sm text-gray-400">I have a cash voucher</span>
-                                            </div>
-
-                                            {hasVoucher && (
-                                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-3">
-                                                    <div className="flex gap-2">
-                                                        <input
-                                                            placeholder="Enter voucher code"
-                                                            value={voucherCode}
-                                                            onChange={(e) => {
-                                                                setVoucherCode(e.target.value.toUpperCase());
-                                                                setVoucherError("");
+                                                            setVoucherValid(null);
+                                                        }}
+                                                        disabled={!!voucherValid}
+                                                        className="flex-1 bg-zinc-950/50 border border-white/10 focus:border-green-500 h-10 rounded-lg text-white placeholder:text-zinc-600 font-mono tracking-wider px-3 text-sm outline-none"
+                                                    />
+                                                    {voucherValid ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
                                                                 setVoucherValid(null);
+                                                                setVoucherCode("");
+                                                                setVoucherError("");
                                                             }}
-                                                            className="flex-1 bg-zinc-950/50 border border-white/10 focus:border-green-500 h-10 rounded-lg text-white placeholder:text-zinc-600 font-mono tracking-wider px-3 text-sm outline-none"
-                                                        />
+                                                            className="px-3 py-2 rounded-lg bg-zinc-700 text-zinc-300 text-sm font-medium hover:bg-zinc-600 transition-colors"
+                                                        >
+                                                            Change
+                                                        </button>
+                                                    ) : (
                                                         <button
                                                             type="button"
                                                             onClick={handleValidateEventVoucher}
                                                             disabled={voucherValidating || !voucherCode.trim()}
                                                             className="px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold transition-all disabled:opacity-50"
                                                         >
-                                                            {voucherValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
+                                                            {voucherValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Validate"}
                                                         </button>
+                                                    )}
+                                                </div>
+
+                                                {voucherError && (
+                                                    <div className="flex items-center gap-2 text-red-400 text-sm">
+                                                        <AlertCircle className="w-4 h-4" />
+                                                        {voucherError}
                                                     </div>
+                                                )}
 
-                                                    {voucherError && (
-                                                        <div className="flex items-center gap-2 text-red-400 text-sm">
-                                                            <AlertCircle className="w-4 h-4" />
-                                                            {voucherError}
+                                                {voucherValid && (
+                                                    <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
+                                                        <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+                                                        <div>
+                                                            <p className="text-sm font-bold text-green-400">Voucher Valid!</p>
+                                                            <p className="text-xs text-gray-400">Covers ₹{voucherValid.amount} — registration fee covered.</p>
                                                         </div>
-                                                    )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : null}
 
-                                                    {voucherValid && (
-                                                        <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
-                                                            <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
-                                                            <div>
-                                                                <p className="text-sm font-bold text-green-400">Voucher Valid!</p>
-                                                                <p className="text-xs text-gray-400">Covers ₹{voucherValid.amount} — no online payment needed.</p>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </motion.div>
-                                            )}
-                                        </div>
-
-                                        {voucherValid ? (
-                                            <Button onClick={handleVoucherRedemption} disabled={paymentProcessing} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50">
+                                        {event.memberFee > 0 ? (
+                                            <Button onClick={handleVoucherRedemption} disabled={paymentProcessing || !voucherValid} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50">
                                                 {paymentProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Redeeming...</> : <><CheckCircle className="w-4 h-4 mr-2" /> Register with Voucher</>}
                                             </Button>
                                         ) : (
-                                            <Button onClick={handlePayment} disabled={paymentProcessing} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50">
-                                                {paymentProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</> : `Confirm & Pay ₹${event.memberFee}`}
+                                            <Button onClick={handleFreeRegistration} disabled={paymentProcessing} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50">
+                                                {paymentProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Registering...</> : <><CheckCircle className="w-4 h-4 mr-2" /> Register (Free)</>}
                                             </Button>
                                         )}
                                         <Button variant="ghost" onClick={() => setRegistrationStep(1)} className="w-full mt-2">
@@ -546,7 +443,7 @@ export default function EventDetailPage() {
                                             <CheckCircle className="w-8 h-8 text-green-500" />
                                         </div>
                                         <h3 className="text-2xl font-bold text-white mb-2">Registration Successful!</h3>
-                                        <p className="text-gray-400 mb-6">Payment verified. Your spot has been confirmed. Good luck!</p>
+                                        <p className="text-gray-400 mb-6">Your spot has been confirmed. Good luck!</p>
                                         <Link href="/dashboard">
                                             <Button className="w-full">Go to Dashboard</Button>
                                         </Link>

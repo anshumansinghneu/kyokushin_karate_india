@@ -235,8 +235,8 @@ function OrderManagement() {
 
                                         {/* Payment */}
                                         <div className="flex gap-4 text-xs text-gray-500">
-                                            {order.razorpayPaymentId && <span>Payment: {order.razorpayPaymentId}</span>}
-                                            {order.razorpayOrderId && <span>Razorpay Order: {order.razorpayOrderId}</span>}
+                                            {order.razorpayPaymentId && <span>Payment ID: {order.razorpayPaymentId}</span>}
+                                            {order.razorpayOrderId && <span>Order Ref: {order.razorpayOrderId}</span>}
                                         </div>
 
                                         {/* Status Actions */}

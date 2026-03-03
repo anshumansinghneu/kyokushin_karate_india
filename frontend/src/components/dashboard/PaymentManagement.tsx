@@ -140,7 +140,7 @@ export default function PaymentManagement() {
     const formatDate = (date: string) => new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     const handleExportCSV = () => {
-        const headers = "Date,Name,Email,Membership #,Type,Amount,Status,Razorpay ID,Voucher\n";
+        const headers = "Date,Name,Email,Membership #,Type,Amount,Status,Transaction ID,Voucher\n";
         const rows = filteredPayments.map(p =>
             `${formatDate(p.createdAt)},${p.user?.name || 'Unknown'},${p.user?.email || 'N/A'},${p.user?.membershipNumber || 'N/A'},${p.type},${p.amount.toFixed(2)},${p.status},${p.razorpayPaymentId || 'N/A'},${extractVoucherCode(p.description) || 'N/A'}`
         ).join("\n");
@@ -342,7 +342,7 @@ export default function PaymentManagement() {
                                 <th className="py-3 px-4">Amount</th>
                                 <th className="py-3 px-4">Status</th>
                                 <th className="py-3 px-4 hidden md:table-cell">Voucher</th>
-                                <th className="py-3 px-4 hidden lg:table-cell">Razorpay ID</th>
+                                <th className="py-3 px-4 hidden lg:table-cell">Transaction ID</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm text-gray-300">

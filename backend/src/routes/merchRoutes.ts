@@ -6,7 +6,6 @@ import {
     updateProduct,
     deleteProduct,
     createOrder,
-    verifyMerchPayment,
     getMyOrders,
     getAllOrders,
     updateOrderStatus,
@@ -24,7 +23,6 @@ router.use(protect);
 
 // User routes
 router.post('/orders', createOrder);
-router.post('/orders/verify', verifyMerchPayment);
 router.get('/orders/mine', getMyOrders);
 
 // Admin routes

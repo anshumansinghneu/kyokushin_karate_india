@@ -12,6 +12,14 @@ import {
   X,
   ChevronRight,
   ExternalLink,
+  List,
+  Map as MapIcon,
+  Globe,
+  Users,
+  Building2,
+  Filter,
+  Clock,
+  Shield,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
@@ -80,6 +88,8 @@ export default function FindADojoPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDojo, setSelectedDojo] = useState<Dojo | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [mobileView, setMobileView] = useState<'map' | 'list'>('list');
+  const [stateFilter, setStateFilter] = useState<string>('ALL');
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -110,12 +120,16 @@ export default function FindADojoPage() {
   const filteredDojos = useMemo(
     () =>
       dojos.filter(
-        (dojo) =>
-          dojo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          dojo.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (dojo.state && dojo.state.toLowerCase().includes(searchQuery.toLowerCase()))
+        (dojo) => {
+          const matchesSearch =
+            dojo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            dojo.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (dojo.state && dojo.state.toLowerCase().includes(searchQuery.toLowerCase()));
+          const matchesState = stateFilter === 'ALL' || dojo.state === stateFilter;
+          return matchesSearch && matchesState;
+        }
       ),
-    [dojos, searchQuery]
+    [dojos, searchQuery, stateFilter]
   );
 
   // Get coordinates for a dojo
@@ -166,6 +180,11 @@ export default function FindADojoPage() {
   const states = useMemo(() => {
     const stateSet = new Set(dojos.map((d) => d.state).filter(Boolean));
     return Array.from(stateSet).sort() as string[];
+  }, [dojos]);
+
+  // Unique cities count
+  const cityCount = useMemo(() => {
+    return new Set(dojos.map((d) => d.city?.toLowerCase()).filter(Boolean)).size;
   }, [dojos]);
 
   // Initialize / update map
@@ -298,7 +317,12 @@ export default function FindADojoPage() {
   return (
     <div className="min-h-screen w-full bg-black text-white relative overflow-hidden selection:bg-red-600 selection:text-white">
       {/* Background */}
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black pointer-events-none" />
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_var(--tw-gradient-stops))] from-red-950/20 via-black to-black" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,_var(--tw-gradient-stops))] from-zinc-800/10 via-transparent to-transparent" />
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+      </div>
 
       {/* Structured Data */}
       {dojoStructuredData.length > 0 && (
@@ -322,7 +346,7 @@ export default function FindADojoPage() {
 
       <div className="relative z-10">
         {/* Hero Header */}
-        <section className="pt-8 pb-6 md:pt-16 md:pb-10 px-4">
+        <section className="pt-8 pb-4 md:pt-16 md:pb-8 px-4">
           <div className="container mx-auto text-center max-w-3xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -344,24 +368,23 @@ export default function FindADojoPage() {
 
               <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-8">
                 Locate the nearest Kyokushin Karate training center and begin your martial arts journey.
-                Classes available for all ages and skill levels.
               </p>
 
               {/* Search */}
               <div className="relative max-w-xl mx-auto group">
                 <div className="absolute inset-0 bg-red-600/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative flex items-center bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl shadow-black/50 group-hover:border-red-500/30 transition-all">
+                <div className="relative flex items-center bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/50 group-hover:border-red-500/30 transition-all">
                   <Search className="absolute left-5 w-5 h-5 text-gray-400 group-focus-within:text-red-500 transition-colors" />
                   <Input
                     placeholder="Search by city, state, or dojo name..."
-                    className="w-full h-14 pl-14 pr-6 rounded-full bg-transparent border-none text-lg text-white placeholder:text-gray-500 focus:ring-0"
+                    className="w-full h-14 pl-14 pr-6 rounded-2xl bg-transparent border-none text-lg text-white placeholder:text-gray-500 focus:ring-0"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-5 p-1 rounded-full hover:bg-white/10"
+                      className="absolute right-5 p-1.5 rounded-full hover:bg-white/10 transition-colors"
                     >
                       <X className="w-4 h-4 text-gray-400" />
                     </button>
@@ -372,14 +395,24 @@ export default function FindADojoPage() {
               {/* State badges */}
               {states.length > 0 && (
                 <div className="flex flex-wrap justify-center gap-2 mt-5">
-                  {states.slice(0, 8).map((state) => (
+                  <button
+                    onClick={() => { setStateFilter('ALL'); setSearchQuery(''); }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                      stateFilter === 'ALL' && !searchQuery
+                        ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/20'
+                        : 'bg-zinc-900/80 border-white/10 text-gray-400 hover:border-red-500/30 hover:text-white'
+                    }`}
+                  >
+                    All States
+                  </button>
+                  {states.map((state) => (
                     <button
                       key={state}
-                      onClick={() => setSearchQuery(state)}
+                      onClick={() => { setStateFilter(state); setSearchQuery(''); }}
                       className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                        searchQuery === state
-                          ? 'bg-red-600 border-red-600 text-white'
-                          : 'bg-zinc-900 border-white/10 text-gray-400 hover:border-red-500/30 hover:text-white'
+                        stateFilter === state
+                          ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/20'
+                          : 'bg-zinc-900/80 border-white/10 text-gray-400 hover:border-red-500/30 hover:text-white'
                       }`}
                     >
                       {state}
@@ -391,6 +424,36 @@ export default function FindADojoPage() {
           </div>
         </section>
 
+        {/* Stats Strip */}
+        {!isLoading && (
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="px-4 pb-6"
+          >
+            <div className="container mx-auto max-w-4xl">
+              <div className="grid grid-cols-3 gap-3 md:gap-4">
+                {[
+                  { icon: Building2, label: 'Total Dojos', value: dojos.length, color: 'text-red-400' },
+                  { icon: Globe, label: 'States', value: states.length, color: 'text-amber-400' },
+                  { icon: MapPin, label: 'Cities', value: cityCount, color: 'text-emerald-400' },
+                ].map((stat, i) => (
+                  <div
+                    key={i}
+                    className="relative overflow-hidden bg-zinc-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-3 md:p-4 text-center group hover:border-white/10 transition-all"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent" />
+                    <stat.icon className={`w-5 h-5 ${stat.color} mx-auto mb-1.5 opacity-70 group-hover:opacity-100 transition-opacity`} />
+                    <p className="text-xl md:text-2xl font-black text-white">{stat.value}</p>
+                    <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider font-medium">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.section>
+        )}
+
         {/* Main Content: Map + Sidebar */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 h-[50vh]">
@@ -399,56 +462,138 @@ export default function FindADojoPage() {
         ) : (
           <section className="px-4 pb-16">
             <div className="container mx-auto">
-              <div className="flex flex-col lg:flex-row gap-4 lg:gap-0 h-auto lg:h-[600px] rounded-2xl overflow-hidden border border-white/10">
+              {/* Mobile View Toggle */}
+              <div className="lg:hidden flex items-center justify-between mb-3">
+                <p className="text-sm text-gray-400">
+                  <span className="text-white font-bold">{sortedDojos.length}</span> dojos found
+                </p>
+                <div className="flex bg-zinc-900 border border-white/10 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setMobileView('list')}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-all ${
+                      mobileView === 'list'
+                        ? 'bg-red-600 text-white'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <List className="w-3.5 h-3.5" /> List
+                  </button>
+                  <button
+                    onClick={() => setMobileView('map')}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-all ${
+                      mobileView === 'map'
+                        ? 'bg-red-600 text-white'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <MapIcon className="w-3.5 h-3.5" /> Map
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col lg:flex-row gap-0 h-auto lg:h-[620px] rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/40">
                 {/* Sidebar - Dojo List */}
-                <div className="w-full lg:w-[380px] bg-zinc-950 overflow-y-auto border-b lg:border-b-0 lg:border-r border-white/10 max-h-[300px] lg:max-h-none">
-                  <div className="sticky top-0 bg-zinc-950/95 backdrop-blur-sm p-4 border-b border-white/10 z-10">
-                    <p className="text-sm text-gray-400">
-                      <span className="text-white font-bold">{sortedDojos.length}</span>{' '}
-                      {sortedDojos.length === 1 ? 'dojo' : 'dojos'} found
+                <div className={`w-full lg:w-[400px] bg-zinc-950/80 backdrop-blur-sm overflow-y-auto border-b lg:border-b-0 lg:border-r border-white/10 ${
+                  mobileView === 'map' ? 'hidden lg:block' : ''
+                } ${mobileView === 'list' ? 'max-h-[500px] lg:max-h-none' : 'max-h-[300px] lg:max-h-none'}`}>
+                  {/* Sidebar Header */}
+                  <div className="sticky top-0 bg-zinc-950/95 backdrop-blur-xl p-4 border-b border-white/10 z-10">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-gray-400">
+                        <span className="text-white font-bold">{sortedDojos.length}</span>{' '}
+                        {sortedDojos.length === 1 ? 'dojo' : 'dojos'} found
+                      </p>
                       {userLocation && (
-                        <span className="text-red-400 ml-1">• sorted by distance</span>
+                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-medium bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                          <Navigation className="w-3 h-3" /> Nearest first
+                        </span>
                       )}
-                    </p>
+                    </div>
                   </div>
 
                   {sortedDojos.length === 0 ? (
-                    <div className="p-8 text-center">
-                      <MapPin className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-                      <p className="text-gray-500 text-sm">No dojos found for &quot;{searchQuery}&quot;</p>
+                    <div className="p-10 text-center">
+                      <div className="w-16 h-16 rounded-full bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+                        <MapPin className="w-7 h-7 text-gray-600" />
+                      </div>
+                      <p className="text-gray-400 font-medium text-sm">No dojos found</p>
+                      <p className="text-gray-600 text-xs mt-1">Try a different search term or state</p>
+                      <button
+                        onClick={() => { setSearchQuery(''); setStateFilter('ALL'); }}
+                        className="mt-4 text-xs text-red-400 hover:text-red-300 font-bold transition-colors"
+                      >
+                        Clear filters
+                      </button>
                     </div>
                   ) : (
-                    <div>
-                      {sortedDojos.map((dojo) => {
+                    <div className="divide-y divide-white/5">
+                      {sortedDojos.map((dojo, index) => {
                         const distLabel = getDistanceLabel(dojo);
+                        const isSelected = selectedDojo?.id === dojo.id;
+                        const initials = dojo.name
+                          .split(' ')
+                          .filter((w) => w.length > 0)
+                          .slice(0, 2)
+                          .map((w) => w[0])
+                          .join('')
+                          .toUpperCase();
+
                         return (
-                          <button
+                          <motion.button
                             key={dojo.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: Math.min(index * 0.03, 0.3) }}
                             onClick={() => panToDojo(dojo)}
-                            className={`w-full text-left p-4 border-b border-white/5 hover:bg-white/5 transition-all ${
-                              selectedDojo?.id === dojo.id ? 'bg-red-600/10 border-l-2 border-l-red-500' : ''
+                            className={`w-full text-left p-4 hover:bg-white/[0.03] transition-all group relative ${
+                              isSelected
+                                ? 'bg-red-600/10 border-l-[3px] border-l-red-500'
+                                : 'border-l-[3px] border-l-transparent'
                             }`}
                           >
-                            <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-start gap-3">
+                              {/* Avatar */}
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black shrink-0 transition-all ${
+                                isSelected
+                                  ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
+                                  : 'bg-zinc-800 text-gray-400 group-hover:bg-red-600/20 group-hover:text-red-400'
+                              }`}>
+                                {initials}
+                              </div>
+
                               <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-sm text-white truncate">{dojo.name}</h3>
-                                <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                                  <MapPin className="w-3 h-3 text-red-500 shrink-0" />
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-bold text-sm text-white truncate group-hover:text-red-400 transition-colors">
+                                    {dojo.name}
+                                  </h3>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-red-500/60 shrink-0" />
                                   <span className="truncate">
                                     {dojo.city}
                                     {dojo.state ? `, ${dojo.state}` : ''}
                                   </span>
                                 </p>
-                                {distLabel && (
-                                  <p className="text-xs text-red-400 font-semibold mt-1">
-                                    <Navigation className="w-3 h-3 inline mr-1" />
-                                    {distLabel}
-                                  </p>
-                                )}
+                                <div className="flex items-center gap-3 mt-1.5">
+                                  {distLabel && (
+                                    <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
+                                      <Navigation className="w-3 h-3" />
+                                      {distLabel}
+                                    </span>
+                                  )}
+                                  {dojo.dojoCode && (
+                                    <span className="text-[10px] text-gray-600 font-mono bg-zinc-800/80 px-1.5 py-0.5 rounded">
+                                      {dojo.dojoCode}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              <ChevronRight className="w-4 h-4 text-gray-600 shrink-0 mt-1" />
+
+                              <ChevronRight className={`w-4 h-4 shrink-0 mt-1 transition-all ${
+                                isSelected ? 'text-red-400 translate-x-0.5' : 'text-gray-700 group-hover:text-gray-400'
+                              }`} />
                             </div>
-                          </button>
+                          </motion.button>
                         );
                       })}
                     </div>
@@ -456,78 +601,113 @@ export default function FindADojoPage() {
                 </div>
 
                 {/* Map */}
-                <div className="flex-1 relative min-h-[350px] lg:min-h-0">
-                  <div ref={mapRef} className="w-full h-full" style={{ background: '#1a1a2e' }} />
+                <div className={`flex-1 relative ${
+                  mobileView === 'list' ? 'hidden lg:block' : ''
+                } min-h-[400px] lg:min-h-0`}>
+                  <div ref={mapRef} className="w-full h-full" style={{ background: '#111118' }} />
+
+                  {/* Map legend */}
+                  <div className="absolute top-3 left-3 z-[500] bg-zinc-900/90 backdrop-blur-sm border border-white/10 rounded-xl px-3 py-2 hidden md:flex items-center gap-3 text-[11px]">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-gradient-to-br from-red-500 to-red-800 border border-white/50"></span>
+                      <span className="text-gray-400">Dojo</span>
+                    </span>
+                    {userLocation && (
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-blue-500 border border-white/50"></span>
+                        <span className="text-gray-400">You</span>
+                      </span>
+                    )}
+                  </div>
 
                   {/* Selected dojo detail overlay */}
                   <AnimatePresence>
                     {selectedDojo && (
                       <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        className="absolute bottom-4 left-4 right-4 md:left-4 md:right-auto md:w-[340px] z-[1000]"
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        className="absolute bottom-4 left-4 right-4 md:left-4 md:right-auto md:w-[360px] z-[1000]"
                       >
-                        <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl">
-                          <button
-                            onClick={() => setSelectedDojo(null)}
-                            className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10"
-                          >
-                            <X className="w-4 h-4 text-gray-400" />
-                          </button>
+                        <div className="bg-zinc-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/60 overflow-hidden">
+                          {/* Accent bar */}
+                          <div className="h-1 bg-gradient-to-r from-red-600 via-red-500 to-orange-500" />
 
-                          <h3 className="font-black text-lg text-white pr-8">{selectedDojo.name}</h3>
-                          <p className="text-sm text-gray-400 mt-1 flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                            {selectedDojo.address || `${selectedDojo.city}${selectedDojo.state ? ', ' + selectedDojo.state : ''}`}
-                          </p>
-
-                          {getDistanceLabel(selectedDojo) && (
-                            <p className="text-sm text-red-400 font-bold mt-2">
-                              <Navigation className="w-3.5 h-3.5 inline mr-1" />
-                              {getDistanceLabel(selectedDojo)}
-                            </p>
-                          )}
-
-                          <div className="flex flex-col gap-2 mt-4">
-                            {selectedDojo.contactPhone && (
-                              <a
-                                href={`tel:${selectedDojo.contactPhone}`}
-                                className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors"
-                              >
-                                <Phone className="w-3.5 h-3.5 text-red-500" />
-                                {selectedDojo.contactPhone}
-                              </a>
-                            )}
-                            {selectedDojo.contactEmail && (
-                              <a
-                                href={`mailto:${selectedDojo.contactEmail}`}
-                                className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors"
-                              >
-                                <Mail className="w-3.5 h-3.5 text-red-500" />
-                                {selectedDojo.contactEmail}
-                              </a>
-                            )}
-                          </div>
-
-                          <div className="flex gap-2 mt-5">
-                            <Link
-                              href={`/dojos/${selectedDojo.id}`}
-                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-all active:scale-95"
+                          <div className="p-5">
+                            <button
+                              onClick={() => setSelectedDojo(null)}
+                              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-white/10 transition-colors"
                             >
-                              View Details <ArrowRight className="w-3.5 h-3.5" />
-                            </Link>
-                            {getDojoCoords(selectedDojo) && (
-                              <a
-                                href={`https://www.google.com/maps/dir/?api=1&destination=${getDojoCoords(selectedDojo)![0]},${getDojoCoords(selectedDojo)![1]}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center justify-center px-3 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-full text-sm font-bold transition-all"
-                                title="Get Directions"
+                              <X className="w-4 h-4 text-gray-400" />
+                            </button>
+
+                            <div className="flex items-start gap-3 mb-3">
+                              <div className="w-11 h-11 rounded-xl bg-red-600/20 flex items-center justify-center shrink-0">
+                                <Building2 className="w-5 h-5 text-red-400" />
+                              </div>
+                              <div className="min-w-0">
+                                <h3 className="font-black text-lg text-white leading-tight pr-8">{selectedDojo.name}</h3>
+                                {selectedDojo.dojoCode && (
+                                  <span className="text-[10px] text-gray-500 font-mono bg-zinc-800 px-1.5 py-0.5 rounded mt-1 inline-block">
+                                    {selectedDojo.dojoCode}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 mb-4">
+                              <p className="text-sm text-gray-400 flex items-center gap-2">
+                                <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                                {selectedDojo.address || `${selectedDojo.city}${selectedDojo.state ? ', ' + selectedDojo.state : ''}`}
+                              </p>
+
+                              {getDistanceLabel(selectedDojo) && (
+                                <p className="text-sm text-emerald-400 font-bold flex items-center gap-2">
+                                  <Navigation className="w-3.5 h-3.5" />
+                                  {getDistanceLabel(selectedDojo)}
+                                </p>
+                              )}
+
+                              {selectedDojo.contactPhone && (
+                                <a
+                                  href={`tel:${selectedDojo.contactPhone}`}
+                                  className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+                                >
+                                  <Phone className="w-3.5 h-3.5 text-red-500/70" />
+                                  {selectedDojo.contactPhone}
+                                </a>
+                              )}
+                              {selectedDojo.contactEmail && (
+                                <a
+                                  href={`mailto:${selectedDojo.contactEmail}`}
+                                  className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors truncate"
+                                >
+                                  <Mail className="w-3.5 h-3.5 text-red-500/70" />
+                                  {selectedDojo.contactEmail}
+                                </a>
+                              )}
+                            </div>
+
+                            <div className="flex gap-2">
+                              <Link
+                                href={`/dojos/${selectedDojo.id}`}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold transition-all active:scale-[0.97] shadow-lg shadow-red-600/20"
                               >
-                                <ExternalLink className="w-4 h-4" />
-                              </a>
-                            )}
+                                View Details <ArrowRight className="w-3.5 h-3.5" />
+                              </Link>
+                              {getDojoCoords(selectedDojo) && (
+                                <a
+                                  href={`https://www.google.com/maps/dir/?api=1&destination=${getDojoCoords(selectedDojo)![0]},${getDojoCoords(selectedDojo)![1]}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-center px-3.5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-sm font-bold transition-all"
+                                  title="Get Directions"
+                                >
+                                  <ExternalLink className="w-4 h-4" />
+                                </a>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </motion.div>
@@ -541,29 +721,50 @@ export default function FindADojoPage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="mt-16 text-center"
+                className="mt-16"
               >
-                <div className="bg-gradient-to-r from-red-600/10 via-red-600/5 to-red-600/10 border border-red-600/20 rounded-2xl p-8 md:p-12 max-w-3xl mx-auto">
-                  <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
-                    NO DOJO NEAR YOU?
-                  </h2>
-                  <p className="text-gray-400 mb-6 max-w-lg mx-auto">
-                    We&apos;re expanding across India. Contact us to express interest in opening a dojo
-                    in your city, or start training online.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Link
-                      href="/contact"
-                      className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition-all active:scale-95"
-                    >
-                      Contact Us <ArrowRight className="w-4 h-4" />
-                    </Link>
-                    <Link
-                      href="/register"
-                      className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full font-bold transition-all"
-                    >
-                      Register Online
-                    </Link>
+                <div className="relative overflow-hidden bg-zinc-900/50 border border-white/10 rounded-2xl max-w-4xl mx-auto">
+                  {/* Decorative gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 via-transparent to-amber-600/5 pointer-events-none" />
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/5 rounded-full blur-3xl pointer-events-none" />
+
+                  <div className="relative p-8 md:p-12 flex flex-col md:flex-row items-center gap-8">
+                    {/* Left: Icons */}
+                    <div className="hidden md:flex flex-col gap-3">
+                      <div className="w-14 h-14 rounded-2xl bg-red-600/10 border border-red-600/20 flex items-center justify-center">
+                        <Shield className="w-7 h-7 text-red-400" />
+                      </div>
+                      <div className="w-14 h-14 rounded-2xl bg-amber-600/10 border border-amber-600/20 flex items-center justify-center">
+                        <Users className="w-7 h-7 text-amber-400" />
+                      </div>
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-600/10 border border-emerald-600/20 flex items-center justify-center">
+                        <Clock className="w-7 h-7 text-emerald-400" />
+                      </div>
+                    </div>
+
+                    {/* Right: Content */}
+                    <div className="flex-1 text-center md:text-left">
+                      <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-2">
+                        NO DOJO NEAR YOU?
+                      </h2>
+                      <p className="text-gray-400 mb-6 max-w-lg">
+                        We&apos;re expanding across India. Contact us about opening a dojo in your city, or register to begin your journey.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                        <Link
+                          href="/contact"
+                          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all active:scale-[0.97] shadow-lg shadow-red-600/20"
+                        >
+                          Contact Us <ArrowRight className="w-4 h-4" />
+                        </Link>
+                        <Link
+                          href="/register"
+                          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl font-bold transition-all"
+                        >
+                          Register Online
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>

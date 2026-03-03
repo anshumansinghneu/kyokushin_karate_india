@@ -4,6 +4,7 @@ import {
     validateVoucher,
     redeemVoucherForRegistration,
     redeemVoucherForEvent,
+    redeemVoucherForRenewal,
     registerStudentOnBehalf,
     getAllVouchers,
     deactivateVoucher,
@@ -14,11 +15,12 @@ const router = express.Router();
 
 // ── Public Routes (no auth needed) ──
 router.post('/validate', validateVoucher);                           // Validate a voucher code
-router.post('/redeem/registration', redeemVoucherForRegistration);   // Register with voucher (instead of Razorpay)
+router.post('/redeem/registration', redeemVoucherForRegistration);   // Register with voucher
 
 // ── Protected Routes (login required) ──
 router.use(protect);
 router.post('/redeem/event/:eventId', redeemVoucherForEvent);        // Register for event with voucher
+router.post('/redeem/renewal', redeemVoucherForRenewal);             // Renew membership with voucher
 router.post('/redeem/register-student', restrictTo('INSTRUCTOR', 'ADMIN'), registerStudentOnBehalf); // Instructor registers student with voucher
 
 // ── Admin Only ──
