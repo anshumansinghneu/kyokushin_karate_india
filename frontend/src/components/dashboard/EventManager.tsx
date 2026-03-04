@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Plus, Edit2, Trash2, X, Save, MapPin, Users, DollarSign, Search, Clock, Trophy, Tent, BookOpen, ImagePlus, Info, IndianRupee, CalendarClock, Loader2, Tag, ListChecks } from "lucide-react";
+import { Calendar, Plus, Edit2, Trash2, X, Save, MapPin, Users, DollarSign, Search, Clock, Trophy, Tent, BookOpen, Shield, ImagePlus, Info, IndianRupee, CalendarClock, Loader2, Tag, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import { useToast } from "@/contexts/ToastContext";
 interface Event {
     id: string;
     name: string;
-    type: 'TOURNAMENT' | 'CAMP' | 'SEMINAR';
+    type: 'TOURNAMENT' | 'CAMP' | 'SEMINAR' | 'BELT_EXAM';
     status: 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'DRAFT' | 'CANCELLED';
     startDate: string;
     endDate: string;
@@ -45,7 +45,7 @@ export default function EventManager() {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-    const [typeFilter, setTypeFilter] = useState<'ALL' | 'TOURNAMENT' | 'CAMP' | 'SEMINAR'>('ALL');
+    const [typeFilter, setTypeFilter] = useState<'ALL' | 'TOURNAMENT' | 'CAMP' | 'SEMINAR' | 'BELT_EXAM'>('ALL');
     const [searchQuery, setSearchQuery] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({
@@ -98,6 +98,7 @@ export default function EventManager() {
         { value: 'TOURNAMENT', label: 'Tournament', icon: Trophy, color: 'red' },
         { value: 'CAMP', label: 'Camp', icon: Tent, color: 'emerald' },
         { value: 'SEMINAR', label: 'Seminar', icon: BookOpen, color: 'blue' },
+        { value: 'BELT_EXAM', label: 'Belt Exam', icon: Shield, color: 'amber' },
     ] as const;
 
     const fetchEvents = async () => {
@@ -246,6 +247,7 @@ export default function EventManager() {
         TOURNAMENT: { bar: 'bg-red-500', badge: 'bg-red-500/15 text-red-400 border border-red-500/30' },
         CAMP: { bar: 'bg-emerald-500', badge: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' },
         SEMINAR: { bar: 'bg-blue-500', badge: 'bg-blue-500/15 text-blue-400 border border-blue-500/30' },
+        BELT_EXAM: { bar: 'bg-amber-500', badge: 'bg-amber-500/15 text-amber-400 border border-amber-500/30' },
     };
 
     const statusStyles: Record<string, { label: string; cls: string }> = {
@@ -326,7 +328,7 @@ export default function EventManager() {
                     />
                 </div>
                 <div className="flex gap-1.5 flex-shrink-0">
-                    {(['ALL', 'TOURNAMENT', 'CAMP', 'SEMINAR'] as const).map(type => (
+                    {(['ALL', 'TOURNAMENT', 'CAMP', 'SEMINAR', 'BELT_EXAM'] as const).map(type => (
                         <button
                             key={type}
                             onClick={() => setTypeFilter(type)}
@@ -336,7 +338,7 @@ export default function EventManager() {
                                     : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-transparent'
                             }`}
                         >
-                            {type === 'ALL' ? 'All' : type.charAt(0) + type.slice(1).toLowerCase()}
+                            {type === 'ALL' ? 'All' : type === 'BELT_EXAM' ? 'Belt Exam' : type.charAt(0) + type.slice(1).toLowerCase()}
                         </button>
                     ))}
                 </div>
@@ -476,7 +478,7 @@ export default function EventManager() {
                                     {/* Section: Event Type - visual selector */}
                                     <div>
                                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Event Type</label>
-                                        <div className="grid grid-cols-3 gap-3">
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                             {typeOptions.map(opt => {
                                                 const Icon = opt.icon;
                                                 const isActive = formData.type === opt.value;
@@ -484,13 +486,24 @@ export default function EventManager() {
                                                     red: { active: 'bg-red-500/15 border-red-500/50', ring: 'ring-red-500/30', icon: 'text-red-400' },
                                                     emerald: { active: 'bg-emerald-500/15 border-emerald-500/50', ring: 'ring-emerald-500/30', icon: 'text-emerald-400' },
                                                     blue: { active: 'bg-blue-500/15 border-blue-500/50', ring: 'ring-blue-500/30', icon: 'text-blue-400' },
+                                                    amber: { active: 'bg-amber-500/15 border-amber-500/50', ring: 'ring-amber-500/30', icon: 'text-amber-400' },
                                                 };
                                                 const c = colorMap[opt.color];
                                                 return (
                                                     <button
                                                         key={opt.value}
                                                         type="button"
-                                                        onClick={() => setFormData({ ...formData, type: opt.value })}
+                                                        onClick={() => {
+                                                            const updates: Record<string, unknown> = { type: opt.value };
+                                                            // Auto-fill template for Belt Exam (only when creating new)
+                                                            if (opt.value === 'BELT_EXAM' && !editingEvent && !formData.name) {
+                                                                updates.name = 'Belt Grading Examination';
+                                                                updates.description = 'Official KKFI belt grading examination. Students will be tested on kata, kumite, and kihon for promotion to the next belt rank.';
+                                                                updates.memberFee = 0;
+                                                                updates.nonMemberFee = 0;
+                                                            }
+                                                            setFormData(prev => ({ ...prev, ...updates }));
+                                                        }}
                                                         className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
                                                             isActive ? `${c.active} ring-2 ${c.ring}` : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20'
                                                         }`}

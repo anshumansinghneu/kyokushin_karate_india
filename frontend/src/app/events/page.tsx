@@ -12,7 +12,7 @@ export default function EventsPage() {
     const [events, setEvents] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [filter, setFilter] = useState<"ALL" | "TOURNAMENT" | "CAMP">("ALL");
+    const [filter, setFilter] = useState<"ALL" | "TOURNAMENT" | "CAMP" | "SEMINAR" | "BELT_EXAM">("ALL");
 
     const fetchEvents = async () => {
         setIsLoading(true);
@@ -68,7 +68,9 @@ export default function EventsPage() {
 
                     {/* Filter Tabs */}
                     <div className="flex p-1 bg-white/5 rounded-full border border-white/10 backdrop-blur-md overflow-x-auto">
-                        {["ALL", "TOURNAMENT", "CAMP"].map((tab) => (
+                        {(["ALL", "TOURNAMENT", "CAMP", "SEMINAR", "BELT_EXAM"] as const).map((tab) => {
+                            const label = tab === 'BELT_EXAM' ? 'BELT EXAM' : tab;
+                            return (
                             <button
                                 key={tab}
                                 onClick={() => setFilter(tab as any)}
@@ -77,9 +79,10 @@ export default function EventsPage() {
                                     : "text-gray-400 hover:text-white"
                                     }`}
                             >
-                                {tab}
+                                {label}
                             </button>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 

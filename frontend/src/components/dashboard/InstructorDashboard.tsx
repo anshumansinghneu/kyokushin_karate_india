@@ -17,6 +17,7 @@ import BlogManager from "./BlogManager";
 import BlogSubmission from "./BlogSubmission";
 import BeltApprovalsView from "./BeltApprovalsView";
 import BeltPromotionsView from "./BeltPromotionsView";
+import BeltExamGrading from "./BeltExamGrading";
 import TournamentManager from "./TournamentManager";
 import GlobalSearch from "./GlobalSearch";
 import StudentDetailView from "./StudentDetailView";
@@ -88,7 +89,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
         }
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions' | 'tournaments' | 'register-student' | 'enroll-event'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'register-student' | 'enroll-event'>('overview');
 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: Activity },
@@ -96,6 +97,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
         { id: 'enroll-event', label: 'Enroll in Event', icon: CalendarPlus },
         { id: 'belt-approvals', label: 'Belt Verifications', icon: ClipboardCheck },
         { id: 'belt-promotions', label: 'Belt Promotions', icon: Medal },
+        { id: 'belt-exam-grading', label: 'Belt Exam Grading', icon: Shield },
         { id: 'students', label: 'Student Roster', icon: Users },
         { id: 'tournaments', label: 'Tournaments', icon: Trophy },
         { id: 'blogs', label: 'My Blogs', icon: FileText },
@@ -531,6 +533,18 @@ export default function InstructorDashboard({ user }: { user: any }) {
                     transition={{ duration: 0.2 }}
                 >
                     <BeltPromotionsView />
+                </motion.div>
+            )}
+
+            {activeTab === 'belt-exam-grading' && (
+                <motion.div
+                    key="belt-exam-grading"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <BeltExamGrading />
                 </motion.div>
             )}
 

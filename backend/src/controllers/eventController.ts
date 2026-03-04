@@ -149,6 +149,9 @@ export const registerForEvent = catchAsync(async (req: Request, res: Response, n
     // Non-member logic would be different (likely a separate public endpoint or flag)
     const fee = event.memberFee;
 
+    // For belt exams, auto-set the category to the student's current belt
+    const beltCategory = event.type === 'BELT_EXAM' ? (currentUser.currentBeltRank || 'White') : categoryBelt;
+
     // Create registration
     const registration = await prisma.eventRegistration.create({
         data: {
@@ -156,11 +159,12 @@ export const registerForEvent = catchAsync(async (req: Request, res: Response, n
             userId: currentUser.id,
             categoryAge,
             categoryWeight,
-            categoryBelt,
+            categoryBelt: beltCategory,
             eventType,
             paymentStatus: 'PENDING', // Mock payment for now
             paymentAmount: fee,
-            approvalStatus: event.type === 'TOURNAMENT' ? 'PENDING' : 'APPROVED' // Camps auto-approve
+            // Belt exams & camps auto-approve; tournaments require approval
+            approvalStatus: event.type === 'TOURNAMENT' ? 'PENDING' : 'APPROVED'
         }
     });
 
@@ -377,6 +381,9 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
 
     const fee = event.memberFee || 0;
 
+    // For belt exams, auto-set category to student's current belt
+    const resolvedCategoryBelt = event.type === 'BELT_EXAM' ? (student.currentBeltRank || 'White') : (categoryBelt || null);
+
     // Voucher is mandatory for paid events
     if (fee > 0 && !voucherCode) {
         return next(new AppError('A voucher code is required for paid events', 400));
@@ -424,7 +431,7 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
                     userId: studentId,
                     categoryAge: categoryAge || null,
                     categoryWeight: categoryWeight || null,
-                    categoryBelt: categoryBelt || null,
+                    categoryBelt: resolvedCategoryBelt,
                     eventType: eventType || null,
                     paymentStatus: 'PAID',
                     paymentAmount: fee,
@@ -463,7 +470,7 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
             userId: studentId,
             categoryAge: categoryAge || null,
             categoryWeight: categoryWeight || null,
-            categoryBelt: categoryBelt || null,
+            categoryBelt: resolvedCategoryBelt,
             eventType: eventType || null,
             paymentStatus: 'PAID',
             paymentAmount: 0,

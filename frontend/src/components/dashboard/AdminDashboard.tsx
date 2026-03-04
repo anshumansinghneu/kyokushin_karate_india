@@ -17,6 +17,7 @@ const MediaManager = lazy(() => import("./MediaManager"));
 const RecognitionManager = lazy(() => import("./RecognitionManager"));
 const BeltPromotionsView = lazy(() => import("./BeltPromotionsView"));
 const BeltApprovalsView = lazy(() => import("./BeltApprovalsView"));
+const BeltExamGrading = lazy(() => import("./BeltExamGrading"));
 const TournamentManager = lazy(() => import("./TournamentManager"));
 const AnnouncementManager = lazy(() => import('./AnnouncementManager'));
 const PaymentManagement = lazy(() => import('./PaymentManagement'));
@@ -38,9 +39,9 @@ function TabLoader() {
     );
 }
 
-type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers';
+type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers';
 
-const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers'];
+const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers'];
 
 export default function AdminDashboard({ user, initialTab }: { user: any; initialTab?: string }) {
     const { showToast } = useToast();
@@ -115,6 +116,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                 { id: 'users', label: 'User Management', icon: Users },
                 { id: 'belt-verifications', label: 'Belt Verifications', icon: Shield, badge: stats.pending > 0 ? stats.pending : undefined },
                 { id: 'belt-promotions', label: 'Belt Promotions', icon: Award },
+                { id: 'belt-exam-grading', label: 'Belt Exam Grading', icon: Shield },
             ]
         },
         {
@@ -423,6 +425,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                         {activeTab === 'users' && <motion.div key="users" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><UserManagementTable /></Suspense></motion.div>}
                         {activeTab === 'belt-verifications' && <motion.div key="belt-verifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><BeltApprovalsView /></Suspense></motion.div>}
                         {activeTab === 'belt-promotions' && <motion.div key="belt-promotions" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><BeltPromotionsView /></Suspense></motion.div>}
+                        {activeTab === 'belt-exam-grading' && <motion.div key="belt-exam-grading" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><BeltExamGrading /></Suspense></motion.div>}
                         {activeTab === 'dojos' && <motion.div key="dojos" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><DojoManager /></Suspense></motion.div>}
                         {activeTab === 'events' && <motion.div key="events" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><EventManager /></Suspense></motion.div>}
                         {activeTab === 'seminars' && <motion.div key="seminars" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><SeminarManager /></Suspense></motion.div>}
