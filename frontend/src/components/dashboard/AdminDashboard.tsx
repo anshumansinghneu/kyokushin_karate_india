@@ -6,8 +6,9 @@ import {
     Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper,
     LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag,
     Ticket, RefreshCw, ChevronDown, Search, ChevronRight, Loader2, BookOpen,
-    PanelLeftClose, PanelLeftOpen, UserCheck, AlertCircle
+    PanelLeftClose, PanelLeftOpen, UserCheck, AlertCircle, Home
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -298,6 +299,14 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
 
                 {/* Sidebar Footer */}
                 <div className="border-t border-white/[0.06] p-2">
+                    <Link
+                        href="/dashboard"
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-gray-600 hover:text-blue-400 hover:bg-blue-950/20 transition-all ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                        title="Back to Profile"
+                    >
+                        <Home className="w-[18px] h-[18px]" />
+                        {!isSidebarCollapsed && <span>My Profile</span>}
+                    </Link>
                     <button
                         onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                         className="hidden lg:flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-gray-600 hover:text-gray-300 hover:bg-white/[0.03] transition-all justify-center lg:justify-start"

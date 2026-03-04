@@ -7,8 +7,9 @@ import {
     Users, ClipboardCheck, Medal, ChevronRight, Activity, FileText, Edit, Shield,
     Menu, X, LogOut, Trophy, UserPlus, Ticket, FileCheck, KeyRound, ArrowRight,
     CalendarPlus, Calendar, Tent, GraduationCap, CheckCircle, AlertTriangle,
-    PanelLeftClose, PanelLeftOpen, Search
+    PanelLeftClose, PanelLeftOpen, Search, Home
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
@@ -256,6 +257,14 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
 
                 {/* Sidebar Footer */}
                 <div className="border-t border-white/[0.06] p-2">
+                    <Link
+                        href="/dashboard"
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-gray-600 hover:text-blue-400 hover:bg-blue-950/20 transition-all ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                        title="Back to Profile"
+                    >
+                        <Home className="w-[18px] h-[18px]" />
+                        {!isSidebarCollapsed && <span>My Profile</span>}
+                    </Link>
                     <button
                         onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                         className="hidden lg:flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-gray-600 hover:text-gray-300 hover:bg-white/[0.03] transition-all justify-center lg:justify-start"
