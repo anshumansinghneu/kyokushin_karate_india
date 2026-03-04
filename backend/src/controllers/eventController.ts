@@ -251,7 +251,7 @@ export const updateEvent = catchAsync(async (req: Request, res: Response, next: 
     if (startDate !== undefined) updateData.startDate = new Date(startDate);
     if (endDate !== undefined) updateData.endDate = new Date(endDate);
     if (location !== undefined) updateData.location = location;
-    if (dojoId !== undefined) updateData.dojoId = dojoId;
+    if (dojoId !== undefined) updateData.dojoId = dojoId || null;
     if (registrationDeadline !== undefined) updateData.registrationDeadline = new Date(registrationDeadline);
     if (maxParticipants !== undefined) updateData.maxParticipants = maxParticipants;
     if (memberFee !== undefined) updateData.memberFee = memberFee;

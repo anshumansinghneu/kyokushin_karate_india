@@ -179,10 +179,12 @@ export default function EventManager() {
         try {
             const payload = {
                 ...formData,
+                dojoId: formData.dojoId || null,
+                imageUrl: formData.imageUrl || null,
                 startDate: new Date(formData.startDate).toISOString(),
                 endDate: new Date(formData.endDate).toISOString(),
                 registrationDeadline: new Date(formData.registrationDeadline).toISOString(),
-                maxParticipants: Number(formData.maxParticipants),
+                maxParticipants: Number(formData.maxParticipants) || null,
                 memberFee: Number(formData.memberFee),
                 nonMemberFee: Number(formData.nonMemberFee)
             };
@@ -228,13 +230,14 @@ export default function EventManager() {
     };
 
     const getEventStatus = (event: Event) => {
-        // Use the actual status from DB if available
+        // Respect the actual status from DB
         const s = event.status;
         if (s === 'DRAFT') return 'draft' as const;
         if (s === 'CANCELLED') return 'cancelled' as const;
         if (s === 'COMPLETED') return 'past' as const;
         if (s === 'ONGOING') return 'live' as const;
-        // Fallback: compute from dates for UPCOMING
+        if (s === 'UPCOMING') return 'upcoming' as const;
+        // Fallback: compute from dates only if status is missing
         const now = new Date();
         const start = new Date(event.startDate);
         const end = new Date(event.endDate);
