@@ -207,7 +207,7 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                                     </span>
                                 </div>
                                 <h2 className="text-base sm:text-2xl font-black text-white uppercase tracking-tight leading-[1.1]">
-                                    {roleTitle !== 'KARATEKA' ? `${roleTitle} ` : ''}{user?.name}
+                                    {roleTitle !== 'KARATEKA' ? `${roleTitle} ` : ''}{user?.name?.replace(new RegExp(`^${roleTitle}\\s+`, 'i'), '')}
                                 </h2>
                             </div>
 
