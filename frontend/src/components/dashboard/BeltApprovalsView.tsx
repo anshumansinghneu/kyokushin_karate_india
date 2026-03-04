@@ -125,17 +125,20 @@ export default function BeltApprovalsView() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
-                    <Medal className="w-6 h-6 text-amber-500" /> Belt Verifications
+                <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-700 flex items-center justify-center shadow-lg shadow-amber-900/30">
+                        <Medal className="w-5 h-5 text-white" />
+                    </div>
+                    Belt Verifications
                 </h1>
-                <p className="text-gray-500 text-sm">{requests.length} pending request{requests.length !== 1 ? 's' : ''} to review.</p>
+                <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">{requests.length} pending request{requests.length !== 1 ? 's' : ''} to review.</p>
             </div>
 
             {requests.length === 0 ? (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="glass-card p-12 text-center"
+                    className="border border-dashed border-white/[0.08] rounded-2xl p-12 text-center"
                 >
                     <Medal className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-white mb-2">No Pending Requests</h3>
@@ -149,7 +152,7 @@ export default function BeltApprovalsView() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="glass-card p-6 hover:bg-white/10 transition-all group"
+                            className="border border-white/[0.06] bg-white/[0.01] rounded-2xl p-6 hover:bg-white/[0.04] hover:border-white/[0.12] transition-all group"
                         >
                             <div className="flex items-start justify-between gap-6">
                                 {/* Student Info */}

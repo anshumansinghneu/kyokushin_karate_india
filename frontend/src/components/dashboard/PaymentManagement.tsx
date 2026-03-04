@@ -181,73 +181,72 @@ export default function PaymentManagement() {
         <div className="space-y-8">
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
-                        <IndianRupee className="w-6 h-6 text-green-500" /> Payment Management
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-green-900/30">
+                            <IndianRupee className="w-5 h-5 text-white" />
+                        </div>
+                        Payment Management
                     </h1>
-                    <p className="text-gray-500 text-sm">Track all payments, revenue, and transactions.</p>
+                    <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">Track all payments, revenue, and transactions.</p>
                 </div>
                 <div className="flex gap-3">
-                    <Button
-                        className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                    <button
+                        className="flex items-center gap-2 px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white text-xs font-semibold rounded-lg transition-all border border-white/[0.06]"
                         onClick={handleExportCSV}
                     >
-                        <Download className="w-4 h-4 mr-2" /> Export CSV
-                    </Button>
-                    <Button
-                        className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                        <Download className="w-4 h-4" /> Export CSV
+                    </button>
+                    <button
+                        className="flex items-center gap-2 px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white text-xs font-semibold rounded-lg transition-all border border-white/[0.06]"
                         onClick={fetchPayments}
                     >
-                        <RefreshCw className="w-4 h-4 mr-2" /> Refresh
-                    </Button>
+                        <RefreshCw className="w-4 h-4" /> Refresh
+                    </button>
                 </div>
             </div>
 
             {/* Revenue Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                    { label: "Total Revenue", value: formatAmount(stats.totalRevenue), icon: IndianRupee, color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/20" },
-                    { label: "Membership", value: formatAmount(stats.membershipRevenue), icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
-                    { label: "Renewals", value: formatAmount(stats.renewalRevenue), icon: RefreshCw, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
-                    { label: "Tournaments", value: formatAmount(stats.tournamentRevenue), icon: TrendingUp, color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20" },
+                    { label: "Total Revenue", value: formatAmount(stats.totalRevenue), color: "text-emerald-400", dot: "bg-emerald-500" },
+                    { label: "Membership", value: formatAmount(stats.membershipRevenue), color: "text-blue-400", dot: "bg-blue-500" },
+                    { label: "Renewals", value: formatAmount(stats.renewalRevenue), color: "text-purple-400", dot: "bg-purple-500" },
+                    { label: "Tournaments", value: formatAmount(stats.tournamentRevenue), color: "text-orange-400", dot: "bg-orange-500" },
                 ].map((stat, i) => (
                     <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className={`p-6 rounded-2xl border ${stat.border} ${stat.bg} backdrop-blur-sm relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300`}
+                        transition={{ delay: i * 0.05 }}
+                        className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]"
                     >
-                        <div className="relative z-10 flex justify-between items-start">
-                            <div>
-                                <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${stat.color} opacity-80`}>{stat.label}</p>
-                                <p className="text-3xl font-black text-white">{stat.value}</p>
-                            </div>
-                            <div className={`p-3 rounded-xl bg-white/5 ${stat.color}`}>
-                                <stat.icon className="w-6 h-6" />
-                            </div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-1.5 h-1.5 rounded-full ${stat.dot}`} />
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">{stat.label}</span>
                         </div>
+                        <p className={`text-2xl font-black ${stat.color}`}>{stat.value}</p>
                     </motion.div>
                 ))}
             </div>
 
             {/* Transaction Summary */}
-            <div className="grid grid-cols-3 gap-4">
-                <div className="glass-card p-4 text-center">
-                    <p className="text-2xl font-black text-green-400">{stats.successfulTransactions}</p>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Successful</p>
+            <div className="grid grid-cols-3 gap-3">
+                <div className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] text-center">
+                    <p className="text-2xl font-black text-emerald-400">{stats.successfulTransactions}</p>
+                    <p className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold mt-1">Successful</p>
                 </div>
-                <div className="glass-card p-4 text-center">
-                    <p className="text-2xl font-black text-yellow-400">{stats.pendingTransactions}</p>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Pending</p>
+                <div className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] text-center">
+                    <p className="text-2xl font-black text-amber-400">{stats.pendingTransactions}</p>
+                    <p className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold mt-1">Pending</p>
                 </div>
-                <div className="glass-card p-4 text-center">
+                <div className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] text-center">
                     <p className="text-2xl font-black text-red-400">{stats.failedTransactions}</p>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Failed</p>
+                    <p className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold mt-1">Failed</p>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="glass-card p-6">
+            <div className="border border-white/[0.06] rounded-2xl bg-white/[0.01] p-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
                     <div className="relative flex-1 w-full">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />

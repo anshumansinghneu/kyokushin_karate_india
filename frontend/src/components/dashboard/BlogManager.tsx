@@ -460,14 +460,17 @@ const BlogManager = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-white flex items-center gap-2">
-                        <FileText className="w-6 h-6 text-blue-500" /> Blog Management
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-900/30">
+                            <FileText className="w-5 h-5 text-white" />
+                        </div>
+                        Blog Management
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">{posts.length} post{posts.length !== 1 ? 's' : ''} total</p>
+                    <p className="text-sm text-gray-500 mt-1.5 ml-[52px]">{posts.length} post{posts.length !== 1 ? 's' : ''} total</p>
                 </div>
                 <button
                     onClick={() => { setCurrentPost({}); setIsEditing(true); }}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2 text-sm font-bold transition-colors"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20"
                 >
                     <Plus size={16} /> New Post
                 </button>
@@ -480,75 +483,52 @@ const BlogManager = () => {
                     value={blogSearch}
                     onChange={(e) => setBlogSearch(e.target.value)}
                     placeholder="Search by title, author or excerpt..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+                    className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/30 focus:bg-white/[0.05] transition-all"
                 />
             </div>
 
             {/* Stats Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="glass-card p-4 flex items-center justify-between">
-                    <div>
-                        <p className="text-sm text-gray-400 uppercase tracking-wider font-bold">Total Posts</p>
-                        <p className="text-3xl font-black text-white">{posts.length}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                    { label: 'Total Posts', count: posts.length, color: 'text-white', dot: 'bg-gray-400' },
+                    { label: 'Published', count: posts.filter(p => p.status === 'PUBLISHED').length, color: 'text-emerald-400', dot: 'bg-emerald-500' },
+                    { label: 'Pending', count: posts.filter(p => p.status === 'PENDING').length, color: 'text-amber-400', dot: 'bg-amber-500' },
+                ].map((s, i) => (
+                    <div key={i} className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">{s.label}</span>
+                        </div>
+                        <p className={`text-2xl font-black ${s.color}`}>{s.count}</p>
                     </div>
-                    <div className="p-3 bg-blue-500/20 rounded-xl text-blue-400">
-                        <FileText className="w-6 h-6" />
-                    </div>
-                </div>
-                <div className="glass-card p-4 flex items-center justify-between">
-                    <div>
-                        <p className="text-sm text-gray-400 uppercase tracking-wider font-bold">Published</p>
-                        <p className="text-3xl font-black text-white">{posts.filter(p => p.status === 'PUBLISHED').length}</p>
-                    </div>
-                    <div className="p-3 bg-green-500/20 rounded-xl text-green-400">
-                        <CheckCircle className="w-6 h-6" />
-                    </div>
-                </div>
-                <div className="glass-card p-4 flex items-center justify-between">
-                    <div>
-                        <p className="text-sm text-gray-400 uppercase tracking-wider font-bold">Pending</p>
-                        <p className="text-3xl font-black text-white">{posts.filter(p => p.status === 'PENDING').length}</p>
-                    </div>
-                    <div className="p-3 bg-yellow-500/20 rounded-xl text-yellow-400">
-                        <Clock className="w-6 h-6" />
-                    </div>
-                </div>
+                ))}
             </div>
 
-            <div className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-white/10 flex gap-4">
-                    <button
-                        onClick={() => setFilter('ALL')}
-                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${filter === 'ALL' ? 'bg-white text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                    >
-                        All
-                    </button>
-                    <button
-                        onClick={() => setFilter('PUBLISHED')}
-                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${filter === 'PUBLISHED' ? 'bg-green-500 text-white' : 'bg-green-500/10 text-green-500 hover:bg-green-500/20'}`}
-                    >
-                        Published
-                    </button>
-                    <button
-                        onClick={() => setFilter('PENDING')}
-                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${filter === 'PENDING' ? 'bg-yellow-500 text-white' : 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20'}`}
-                    >
-                        Pending
-                    </button>
+            <div className="border border-white/[0.06] rounded-2xl overflow-hidden bg-white/[0.01]">
+                <div className="px-6 py-4 border-b border-white/[0.06] flex gap-2">
+                    {(['ALL', 'PUBLISHED', 'PENDING'] as const).map(f => (
+                        <button
+                            key={f}
+                            onClick={() => setFilter(f)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filter === f ? 'bg-white/10 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
+                        >
+                            {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
+                        </button>
+                    ))}
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-white/5">
+                        <thead className="bg-white/[0.02]">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Title</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Author</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Published</th>
-                                <th className="px-6 py-3 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
+                                <th className="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Title</th>
+                                <th className="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Author</th>
+                                <th className="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Published</th>
+                                <th className="px-6 py-3 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/10">
+                        <tbody className="divide-y divide-white/[0.04]">
                             {filteredPosts.map((post) => (
                                 <tr key={post.id} className="hover:bg-white/5 transition-colors">
                                     <td className="px-6 py-4">

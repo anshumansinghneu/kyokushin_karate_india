@@ -87,10 +87,13 @@ export default function AnnouncementManager() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
-                    <Send className="w-6 h-6 text-cyan-500" /> Announcements
+                <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-700 flex items-center justify-center shadow-lg shadow-cyan-900/30">
+                        <Send className="w-5 h-5 text-white" />
+                    </div>
+                    Announcements
                 </h1>
-                <p className="text-gray-500 text-sm">Send bulk email announcements to members.</p>
+                <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">Send bulk email announcements to members.</p>
             </div>
 
             {/* Result Banner */}
@@ -124,9 +127,9 @@ export default function AnnouncementManager() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left: Compose */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-black/40 border border-white/10 rounded-2xl p-6 space-y-5">
+                    <div className="border border-white/[0.06] bg-white/[0.02] rounded-2xl p-6 space-y-5">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="h-6 w-1 bg-red-600 rounded-full" />
+                            <div className="h-6 w-1 bg-gradient-to-b from-cyan-500 to-teal-600 rounded-full" />
                             <h2 className="text-lg font-bold text-white">Compose Message</h2>
                         </div>
 
@@ -163,7 +166,7 @@ export default function AnnouncementManager() {
                                     }
                                     e.target.value = "";
                                 }}
-                                className="w-full h-10 bg-white/5 border border-white/10 rounded-xl text-white text-sm px-3 focus:border-red-500/50 focus:outline-none"
+                                className="w-full h-10 bg-white/[0.03] border border-white/[0.06] rounded-xl text-white text-sm px-3 focus:border-cyan-500/30 focus:outline-none"
                             >
                                 <option value="" className="bg-black">Choose a template...</option>
                                 <option value="tournament" className="bg-black">Tournament Announcement</option>
@@ -180,7 +183,7 @@ export default function AnnouncementManager() {
                                 value={subject}
                                 onChange={(e) => setSubject(e.target.value)}
                                 placeholder="e.g. Important: Upcoming Tournament Information"
-                                className="h-12 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-gray-600 focus:border-red-500/50 focus:ring-red-500/20"
+                                className="h-12 bg-white/[0.03] border-white/[0.06] rounded-xl text-white placeholder:text-gray-600 focus:border-cyan-500/30 focus:ring-cyan-500/20"
                             />
                         </div>
 
@@ -191,14 +194,14 @@ export default function AnnouncementManager() {
                                 onChange={(e) => setBody(e.target.value)}
                                 placeholder="Write your announcement message here..."
                                 rows={8}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-600 focus:border-red-500/50 focus:ring-red-500/20 focus:outline-none resize-none p-4 text-sm"
+                                className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl text-white placeholder:text-gray-600 focus:border-cyan-500/30 focus:ring-cyan-500/20 focus:outline-none resize-none p-4 text-sm"
                             />
                         </div>
 
                         <Button
                             onClick={handlePreSend}
                             disabled={isLoading}
-                            className="h-12 px-8 text-base font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl shadow-lg shadow-red-900/20 hover:shadow-red-900/40 transition-all"
+                            className="h-12 px-8 text-base font-bold bg-gradient-to-r from-cyan-600 to-teal-700 hover:from-cyan-500 hover:to-teal-600 text-white rounded-xl shadow-lg shadow-cyan-900/20 hover:shadow-cyan-900/40 transition-all"
                         >
                             {isLoading ? (
                                 <span className="flex items-center gap-2">
@@ -217,9 +220,9 @@ export default function AnnouncementManager() {
 
                 {/* Right: Audience Selection */}
                 <div className="space-y-6">
-                    <div className="bg-black/40 border border-white/10 rounded-2xl p-6 space-y-4">
+                    <div className="border border-white/[0.06] bg-white/[0.02] rounded-2xl p-6 space-y-4">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="h-6 w-1 bg-red-600 rounded-full" />
+                            <div className="h-6 w-1 bg-gradient-to-b from-cyan-500 to-teal-600 rounded-full" />
                             <h2 className="text-lg font-bold text-white">Target Audience</h2>
                         </div>
 
@@ -230,8 +233,8 @@ export default function AnnouncementManager() {
                                     onClick={() => setTargetAudience(opt.value)}
                                     className={`w-full text-left p-3 rounded-xl border transition-all ${
                                         targetAudience === opt.value
-                                            ? "bg-red-500/10 border-red-500/30 text-white"
-                                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white"
+                                            ? "bg-white/10 border-white/20 text-white shadow-sm"
+                                            : "bg-white/[0.01] border-white/[0.06] text-gray-400 hover:bg-white/[0.04] hover:text-white"
                                     }`}
                                 >
                                     <div className="flex items-center gap-3">
@@ -256,7 +259,7 @@ export default function AnnouncementManager() {
                                 <select
                                     value={dojoId}
                                     onChange={(e) => setDojoId(e.target.value)}
-                                    className="w-full h-10 bg-white/5 border border-white/10 rounded-xl text-white text-sm px-3 focus:border-red-500/50 focus:outline-none"
+                                    className="w-full h-10 bg-white/[0.03] border border-white/[0.06] rounded-xl text-white text-sm px-3 focus:border-cyan-500/30 focus:outline-none"
                                 >
                                     <option value="" className="bg-black">Choose a dojo...</option>
                                     {dojos.map((d) => (

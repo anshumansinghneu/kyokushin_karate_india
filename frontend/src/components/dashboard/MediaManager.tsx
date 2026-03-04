@@ -345,14 +345,17 @@ const MediaManager = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-white flex items-center gap-2">
-                        <Newspaper className="w-6 h-6 text-purple-500" /> Media Mentions
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-violet-700 flex items-center justify-center shadow-lg shadow-purple-900/30">
+                            <Newspaper className="w-5 h-5 text-white" />
+                        </div>
+                        Media Mentions
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">{posts.length} mention{posts.length !== 1 ? 's' : ''} total</p>
+                    <p className="text-sm text-gray-500 mt-1.5 ml-[52px]">{posts.length} mention{posts.length !== 1 ? 's' : ''} total</p>
                 </div>
                 <button
                     onClick={() => { setCurrentPost({}); setIsEditing(true); }}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2 text-sm font-bold transition-colors"
+                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-700 hover:from-purple-500 hover:to-violet-600 text-white rounded-xl flex items-center gap-2 text-sm font-bold transition-all shadow-lg shadow-purple-900/20"
                 >
                     <Plus size={16} /> Add Mention
                 </button>
@@ -365,7 +368,7 @@ const MediaManager = () => {
                     value={mediaSearch}
                     onChange={(e) => setMediaSearch(e.target.value)}
                     placeholder="Search by headline or source..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50"
+                    className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/30 focus:bg-white/[0.05] transition-all"
                 />
             </div>
 
@@ -375,7 +378,7 @@ const MediaManager = () => {
                 const q = mediaSearch.toLowerCase();
                 return p.title?.toLowerCase().includes(q) || p.sourceName?.toLowerCase().includes(q);
             }).length === 0 ? (
-                <div className="text-center py-16 bg-black/40 border border-white/10 rounded-2xl">
+                <div className="text-center py-16 border border-dashed border-white/[0.08] rounded-2xl">
                     <Newspaper className="w-12 h-12 mx-auto mb-3 text-gray-600" />
                     <p className="text-lg font-bold text-white">No media mentions yet</p>
                     <p className="text-sm text-gray-400 mt-1">Add your first media mention to get started.</p>
@@ -391,7 +394,7 @@ const MediaManager = () => {
                             key={post.id}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all group"
+                            className="border border-white/[0.06] bg-white/[0.01] rounded-2xl overflow-hidden hover:border-white/[0.12] transition-all group"
                         >
                             <div className="h-1 bg-purple-500" />
                             {post.imageUrl && (

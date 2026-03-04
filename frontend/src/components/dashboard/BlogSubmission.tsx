@@ -51,10 +51,15 @@ export default function BlogSubmission() {
     };
 
     return (
-        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 md:p-8">
+        <div className="border border-white/[0.06] bg-white/[0.02] rounded-2xl p-6 md:p-8">
             <div className="mb-8">
-                <h2 className="text-2xl font-black text-white mb-2">Submit a Blog Post</h2>
-                <p className="text-gray-400">Share your knowledge and experiences with the community. All posts are reviewed before publishing.</p>
+                <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-900/30">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    </div>
+                    Submit a Blog Post
+                </h2>
+                <p className="text-gray-500 mt-1.5 ml-[52px]">Share your knowledge and experiences with the community. All posts are reviewed before publishing.</p>
             </div>
 
             {status === 'success' && (
@@ -86,7 +91,7 @@ export default function BlogSubmission() {
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         placeholder="Enter an engaging title..."
-                        className="bg-black/50 border-white/10 text-white h-12"
+                        className="bg-white/[0.03] border-white/[0.06] text-white h-12"
                         required
                     />
                 </div>
@@ -97,7 +102,7 @@ export default function BlogSubmission() {
                         value={formData.excerpt}
                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, excerpt: e.target.value })}
                         placeholder="A brief summary of your post..."
-                        className="bg-black/50 border-white/10 text-white min-h-[80px]"
+                        className="bg-white/[0.03] border-white/[0.06] text-white min-h-[80px]"
                         required
                     />
                 </div>
@@ -108,7 +113,7 @@ export default function BlogSubmission() {
                         value={formData.content}
                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, content: e.target.value })}
                         placeholder="Write your full article here..."
-                        className="bg-black/50 border-white/10 text-white min-h-[300px]"
+                        className="bg-white/[0.03] border-white/[0.06] text-white min-h-[300px]"
                         required
                     />
                 </div>
@@ -121,14 +126,14 @@ export default function BlogSubmission() {
                         value={formData.imageUrl}
                         onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                         placeholder="https://example.com/image.jpg"
-                        className="bg-black/50 border-white/10 text-white h-12"
+                        className="bg-white/[0.03] border-white/[0.06] text-white h-12"
                     />
                 </div>
 
                 <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+                    className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/20"
                 >
                     {loading ? "Submitting..." : (
                         <>

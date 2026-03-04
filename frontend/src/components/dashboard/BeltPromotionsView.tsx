@@ -191,10 +191,13 @@ export default function BeltPromotionsView() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
-                        <Medal className="w-6 h-6 text-blue-500" /> Belt Promotions
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-900/30">
+                            <Medal className="w-5 h-5 text-white" />
+                        </div>
+                        Belt Promotions
                     </h1>
-                    <p className="text-gray-500 text-sm">Promote students to their next belt rank.</p>
+                    <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">Promote students to their next belt rank.</p>
                 </div>
                 {selectedStudents.size > 0 && (
                     <Button
@@ -216,13 +219,13 @@ export default function BeltPromotionsView() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search by name or membership number..."
-                        className="pl-10 bg-white/5 border-white/10 text-white placeholder-gray-500"
+                        className="pl-10 bg-white/[0.03] border-white/[0.06] text-white placeholder-gray-600"
                     />
                 </div>
                 <Button
                     onClick={() => setFilterEligible(!filterEligible)}
                     variant="outline"
-                    className={`border-white/10 ${filterEligible ? 'bg-primary text-white' : 'text-gray-400 hover:text-white'}`}
+                    className={`border-white/[0.06] ${filterEligible ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}
                 >
                     <Filter className="w-4 h-4 mr-2" />
                     {filterEligible ? 'Eligible Only' : 'All Students'}
@@ -230,21 +233,20 @@ export default function BeltPromotionsView() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="glass-card p-4">
-                    <p className="text-sm text-gray-400 mb-1">Total Students</p>
-                    <p className="text-2xl font-black text-white">{students.length}</p>
-                </div>
-                <div className="glass-card p-4">
-                    <p className="text-sm text-gray-400 mb-1">Eligible for Promotion</p>
-                    <p className="text-2xl font-black text-green-400">
-                        {students.filter(s => s.isEligible).length}
-                    </p>
-                </div>
-                <div className="glass-card p-4">
-                    <p className="text-sm text-gray-400 mb-1">Selected</p>
-                    <p className="text-2xl font-black text-primary">{selectedStudents.size}</p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                    { label: 'Total Students', count: students.length, color: 'text-white', dot: 'bg-gray-400' },
+                    { label: 'Eligible for Promotion', count: students.filter(s => s.isEligible).length, color: 'text-emerald-400', dot: 'bg-emerald-500' },
+                    { label: 'Selected', count: selectedStudents.size, color: 'text-blue-400', dot: 'bg-blue-500' },
+                ].map((s, i) => (
+                    <div key={i} className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">{s.label}</span>
+                        </div>
+                        <p className={`text-2xl font-black ${s.color}`}>{s.count}</p>
+                    </div>
+                ))}
             </div>
 
             {/* Students List */}
@@ -252,7 +254,7 @@ export default function BeltPromotionsView() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="glass-card p-12 text-center"
+                    className="border border-dashed border-white/[0.08] rounded-2xl p-12 text-center"
                 >
                     <User className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-white mb-2">No Students Found</h3>
@@ -270,7 +272,7 @@ export default function BeltPromotionsView() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: Math.min(index * 0.03, 0.5) }}
-                                className={`glass-card p-6 hover:bg-white/10 transition-all group ${isSelected ? 'ring-2 ring-primary' : ''}`}
+                                className={`border border-white/[0.06] bg-white/[0.01] rounded-2xl p-6 hover:bg-white/[0.04] transition-all group ${isSelected ? 'ring-2 ring-primary' : ''}`}
                             >
                                 <div className="flex items-start gap-6">
                                     {/* Checkbox */}

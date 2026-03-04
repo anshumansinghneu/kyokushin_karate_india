@@ -150,16 +150,19 @@ export default function RecognitionManager() {
 
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
-                        <Trophy className="w-6 h-6 text-yellow-500" /> Monthly Recognition
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-700 flex items-center justify-center shadow-lg shadow-yellow-900/30">
+                            <Trophy className="w-5 h-5 text-white" />
+                        </div>
+                        Monthly Recognition
                     </h1>
-                    <p className="text-gray-500 text-sm">Manage Top Instructors and Students for <span className="text-white font-bold">{monthName} {monthInfo.year}</span></p>
+                    <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">Manage Top Instructors and Students for <span className="text-white font-bold">{monthName} {monthInfo.year}</span></p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Search & Assign Section */}
-                <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
+                <div className="border border-white/[0.06] bg-white/[0.02] rounded-2xl p-6">
                     <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                         <Search className="w-5 h-5 text-red-500" />
                         Find & Assign
@@ -173,14 +176,14 @@ export default function RecognitionManager() {
                             className="bg-black/50 border-white/10 text-white"
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                         />
-                        <Button onClick={handleSearch} disabled={loading} className="bg-red-600 hover:bg-red-700">
+                        <Button onClick={handleSearch} disabled={loading} className="bg-gradient-to-r from-yellow-600 to-amber-700 hover:from-yellow-500 hover:to-amber-600">
                             {loading ? "..." : "Search"}
                         </Button>
                     </div>
 
                     <div className="space-y-4">
                         {searchResults.map(user => (
-                            <div key={user.id} className="flex items-center justify-between p-4 bg-black/30 rounded-xl border border-white/5">
+                            <div key={user.id} className="flex items-center justify-between p-4 border border-white/[0.06] bg-white/[0.01] rounded-xl">
                                 <div>
                                     <p className="font-bold text-white">{user.name}</p>
                                     <p className="text-xs text-gray-500">{user.email} • {user.currentBeltRank} Belt</p>
@@ -214,7 +217,7 @@ export default function RecognitionManager() {
                 {/* Current Winners Section */}
                 <div className="space-y-6">
                     {/* Instructors */}
-                    <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
+                    <div className="border border-white/[0.06] bg-white/[0.02] rounded-2xl p-6">
                         <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                             <Medal className="w-5 h-5 text-yellow-500" />
                             Top Instructors ({recognitions.instructors.length}/2)
@@ -247,7 +250,7 @@ export default function RecognitionManager() {
                     </div>
 
                     {/* Students */}
-                    <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
+                    <div className="border border-white/[0.06] bg-white/[0.02] rounded-2xl p-6">
                         <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                             <Trophy className="w-5 h-5 text-blue-500" />
                             Top Students ({recognitions.students.length}/2)

@@ -328,17 +328,22 @@ export default function SeminarManager() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-black text-white tracking-tight">Seminar Management</h2>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-900/30">
+                            <BookOpen className="w-5 h-5 text-white" />
+                        </div>
+                        Seminar Management
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">
                         {seminars.length} total · {upcomingSeminars.length} upcoming · {pastSeminars.length} completed
                     </p>
                 </div>
-                <Button
+                <button
                     onClick={openCreateModal}
-                    className="bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl h-11 px-6 flex items-center gap-2 shadow-lg shadow-blue-900/20"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20"
                 >
                     <Plus className="w-5 h-5" /> New Seminar
-                </Button>
+                </button>
             </div>
 
             {/* Status Filter */}
@@ -347,10 +352,10 @@ export default function SeminarManager() {
                     <button
                         key={opt.value}
                         onClick={() => setStatusFilter(opt.value)}
-                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                        className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${
                             statusFilter === opt.value
-                                ? "bg-blue-600 text-white shadow-lg"
-                                : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10"
+                                ? "bg-white/10 text-white border-white/20 shadow-sm"
+                                : "bg-transparent text-gray-500 border-white/[0.06] hover:bg-white/[0.04] hover:text-white"
                         }`}
                     >
                         {opt.label}
@@ -380,7 +385,7 @@ export default function SeminarManager() {
                                 key={seminar.id}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="group bg-white/5 rounded-2xl border border-white/10 overflow-hidden hover:border-blue-500/30 transition-all"
+                                className="group border border-white/[0.06] bg-white/[0.01] rounded-2xl overflow-hidden hover:border-white/[0.12] transition-all"
                             >
                                 {/* Cover Image */}
                                 <div className="relative h-40 bg-gradient-to-br from-blue-900/30 to-black overflow-hidden">

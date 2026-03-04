@@ -205,10 +205,13 @@ export default function LiveMatchManager() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-1">
-                        <Radio className="w-6 h-6 text-red-500" /> Live Control Center
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-rose-700 flex items-center justify-center shadow-lg shadow-red-900/30">
+                            <Radio className="w-5 h-5 text-white" />
+                        </div>
+                        Live Control Center
                     </h1>
-                    <p className="text-gray-500 text-sm">Manage matches, update scores, and publish results in real-time</p>
+                    <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">Manage matches, update scores, and publish results in real-time</p>
                 </div>
                 <Button onClick={fetchLiveMatches} className="bg-white/5 hover:bg-white/10 text-white border border-white/10">
                     <RefreshCw className="w-4 h-4 mr-2" /> Refresh
@@ -239,7 +242,7 @@ export default function LiveMatchManager() {
             </div>
 
             {/* Tournament Selector */}
-            <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6">
+            <div className="border border-white/[0.06] bg-white/[0.02] rounded-2xl p-6">
                 <h2 className="text-xl font-bold text-white mb-4">Select Tournament</h2>
                 {loading ? (
                     <div className="flex items-center gap-2 text-gray-400"><RefreshCw className="w-4 h-4 animate-spin" /> Loading...</div>
@@ -252,8 +255,8 @@ export default function LiveMatchManager() {
                                 key={t.id}
                                 onClick={() => handleSelectTournament(t.id)}
                                 className={`p-4 rounded-xl border text-left transition-all ${selectedTournament === t.id
-                                    ? 'bg-red-600/20 border-red-500/50 text-white'
-                                    : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
+                                    ? 'bg-white/10 border-white/20 text-white shadow-sm'
+                                    : 'bg-white/[0.01] border-white/[0.06] text-gray-300 hover:bg-white/[0.04]'
                                     }`}
                             >
                                 <p className="font-bold truncate">{t.name}</p>
@@ -268,34 +271,28 @@ export default function LiveMatchManager() {
             {selectedTournament && (
                 <div className="space-y-6">
                     {/* Stats Bar */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4 text-center">
-                            <Users className="w-5 h-5 text-blue-400 mx-auto mb-1" />
-                            <p className="text-2xl font-black text-white">{brackets.length}</p>
-                            <p className="text-xs text-gray-400">Categories</p>
-                        </div>
-                        <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4 text-center">
-                            <Clock className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
-                            <p className="text-2xl font-black text-white">{scheduledMatches.length}</p>
-                            <p className="text-xs text-gray-400">Upcoming</p>
-                        </div>
-                        <div className="bg-zinc-900/50 border border-red-500/20 rounded-xl p-4 text-center">
-                            <Radio className="w-5 h-5 text-red-400 mx-auto mb-1" />
-                            <p className="text-2xl font-black text-white">{liveMatches.length}</p>
-                            <p className="text-xs text-gray-400">Live Now</p>
-                        </div>
-                        <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4 text-center">
-                            <CheckCircle className="w-5 h-5 text-green-400 mx-auto mb-1" />
-                            <p className="text-2xl font-black text-white">{completedMatches.length}</p>
-                            <p className="text-xs text-gray-400">Completed</p>
-                        </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {[
+                            { label: 'Categories', count: brackets.length, dot: 'bg-blue-500' },
+                            { label: 'Upcoming', count: scheduledMatches.length, dot: 'bg-amber-500' },
+                            { label: 'Live Now', count: liveMatches.length, dot: 'bg-red-500' },
+                            { label: 'Completed', count: completedMatches.length, dot: 'bg-emerald-500' },
+                        ].map((s, i) => (
+                            <div key={i} className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                                    <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">{s.label}</span>
+                                </div>
+                                <p className="text-2xl font-black text-white">{s.count}</p>
+                            </div>
+                        ))}
                     </div>
 
                     {/* Category Filter */}
                     <div className="flex flex-wrap gap-2">
                         <button
                             onClick={() => setSelectedBracket(null)}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${!selectedBracket ? 'bg-red-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${!selectedBracket ? 'bg-white/10 text-white border-white/20 shadow-sm' : 'bg-transparent text-gray-500 border-white/[0.06] hover:bg-white/[0.04] hover:text-white'}`}
                         >
                             All Categories
                         </button>
@@ -303,7 +300,7 @@ export default function LiveMatchManager() {
                             <button
                                 key={b.id}
                                 onClick={() => setSelectedBracket(b.id)}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${selectedBracket === b.id ? 'bg-red-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                                className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${selectedBracket === b.id ? 'bg-white/10 text-white border-white/20 shadow-sm' : 'bg-transparent text-gray-500 border-white/[0.06] hover:bg-white/[0.04] hover:text-white'}`}
                             >
                                 {b.categoryName}
                             </button>
@@ -311,7 +308,7 @@ export default function LiveMatchManager() {
                     </div>
 
                     {/* View Tabs */}
-                    <div className="flex gap-1 bg-zinc-900/50 p-1 rounded-xl border border-white/10 w-fit">
+                    <div className="flex gap-1 border border-white/[0.06] bg-white/[0.02] p-1 rounded-xl w-fit">
                         {[
                             { id: 'live' as const, label: 'Live', icon: Radio, count: liveMatches.length },
                             { id: 'fixtures' as const, label: 'Fixtures', icon: Clock, count: scheduledMatches.length },
@@ -409,10 +406,10 @@ function LiveMatchCard({
     return (
         <motion.div
             layout
-            className="bg-zinc-900 border border-red-500/30 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(239,68,68,0.1)]"
+            className="border border-red-500/20 bg-white/[0.01] rounded-xl overflow-hidden shadow-[0_0_20px_rgba(239,68,68,0.05)]"
         >
             {/* LIVE Header */}
-            <div className="bg-red-600 px-4 py-2 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-red-600 to-rose-700 px-4 py-2 flex justify-between items-center">
                 <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                     <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
                     LIVE
@@ -538,7 +535,7 @@ function FixtureCard({
     const canStart = match.fighterAId && match.fighterBId;
 
     return (
-        <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4 hover:border-white/20 transition-all">
+        <div className="border border-white/[0.06] bg-white/[0.01] rounded-xl p-4 hover:border-white/[0.12] transition-all">
             <div className="flex justify-between items-start mb-3">
                 <div>
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -589,7 +586,7 @@ function ResultCard({ match }: { match: Match }) {
     const loserScore = match.winnerId === match.fighterAId ? match.fighterBScore : match.fighterAScore;
 
     return (
-        <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-4 flex items-center gap-4">
+        <div className="border border-white/[0.06] bg-white/[0.01] rounded-xl p-4 flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
                 <Award className="w-5 h-5 text-green-500" />
             </div>

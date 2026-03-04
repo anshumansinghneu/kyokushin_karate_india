@@ -42,24 +42,27 @@ export default function StoreManagement() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-black text-white flex items-center gap-2">
-                        <ShoppingBag className="w-6 h-6 text-pink-500" /> Store Management
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-700 flex items-center justify-center shadow-lg shadow-pink-900/30">
+                            <ShoppingBag className="w-5 h-5 text-white" />
+                        </div>
+                        Store Management
                     </h1>
-                    <p className="text-gray-500 text-sm mt-1">Manage orders and products</p>
+                    <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">Manage orders and products</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button
+                    <button
                         onClick={() => setSubTab("orders")}
-                        className={`${subTab === "orders" ? "bg-red-600 text-white" : "bg-white/5 text-gray-400 hover:text-white"} border border-white/10`}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${subTab === "orders" ? "bg-white/10 text-white border-white/20 shadow-sm" : "bg-transparent text-gray-500 border-white/[0.06] hover:text-white hover:bg-white/[0.04]"}`}
                     >
-                        <ShoppingBag className="w-4 h-4 mr-2" /> Orders
-                    </Button>
-                    <Button
+                        <ShoppingBag className="w-4 h-4" /> Orders
+                    </button>
+                    <button
                         onClick={() => setSubTab("products")}
-                        className={`${subTab === "products" ? "bg-red-600 text-white" : "bg-white/5 text-gray-400 hover:text-white"} border border-white/10`}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${subTab === "products" ? "bg-white/10 text-white border-white/20 shadow-sm" : "bg-transparent text-gray-500 border-white/[0.06] hover:text-white hover:bg-white/[0.04]"}`}
                     >
-                        <Package className="w-4 h-4 mr-2" /> Products
-                    </Button>
+                        <Package className="w-4 h-4" /> Products
+                    </button>
                 </div>
             </div>
 
@@ -142,7 +145,7 @@ function OrderManagement() {
             <div className="flex flex-wrap gap-2">
                 <button
                     onClick={() => setStatusFilter("ALL")}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${statusFilter === "ALL" ? "bg-red-600 text-white border-red-600" : "bg-white/5 text-gray-400 border-white/10 hover:text-white"}`}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${statusFilter === "ALL" ? "bg-white/10 text-white border-white/20 shadow-sm" : "bg-transparent text-gray-500 border-white/[0.06] hover:text-white"}`}
                 >
                     All ({orders.length})
                 </button>
@@ -151,7 +154,7 @@ function OrderManagement() {
                         <button
                             key={key}
                             onClick={() => setStatusFilter(key)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${statusFilter === key ? `${cfg.bg} ${cfg.color} ${cfg.border}` : "bg-white/5 text-gray-400 border-white/10 hover:text-white"}`}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${statusFilter === key ? `bg-white/10 text-white border-white/20 shadow-sm` : "bg-transparent text-gray-500 border-white/[0.06] hover:text-white"}`}
                         >
                             {cfg.label} ({statusCounts[key]})
                         </button>
@@ -166,7 +169,7 @@ function OrderManagement() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by order ID, name, email or phone..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
+                    className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-pink-500/30 focus:bg-white/[0.05] transition-all"
                 />
             </div>
 
@@ -182,7 +185,7 @@ function OrderManagement() {
                         const nextStatuses = STATUS_FLOW[order.status] || [];
 
                         return (
-                            <div key={order.id} className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden">
+                            <div key={order.id} className="border border-white/[0.06] bg-white/[0.01] rounded-2xl overflow-hidden">
                                 <button
                                     onClick={() => setExpandedId(isExpanded ? null : order.id)}
                                     className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"

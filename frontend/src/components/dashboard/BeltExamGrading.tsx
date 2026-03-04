@@ -195,7 +195,7 @@ export default function BeltExamGrading() {
 
         if (beltExams.length === 0) {
             return (
-                <div className="glass-card p-12 text-center">
+                <div className="border border-dashed border-white/[0.08] rounded-2xl p-12 text-center">
                     <Shield className="w-16 h-16 text-amber-500/30 mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-white mb-2">No Belt Exams Found</h3>
                     <p className="text-gray-400 max-w-md mx-auto">
@@ -208,10 +208,13 @@ export default function BeltExamGrading() {
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-black text-white flex items-center gap-2">
-                        <Shield className="w-6 h-6 text-amber-500" /> Belt Exam Grading
+                    <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-700 flex items-center justify-center shadow-lg shadow-amber-900/30">
+                            <Shield className="w-5 h-5 text-white" />
+                        </div>
+                        Belt Exam Grading
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1">Select an exam to grade participants</p>
+                    <p className="text-sm text-gray-500 mt-1.5 ml-[52px]">Select an exam to grade participants</p>
                 </div>
 
                 <div className="grid gap-4">
@@ -227,7 +230,7 @@ export default function BeltExamGrading() {
                             >
                                 <button
                                     onClick={() => fetchParticipants(exam.id)}
-                                    className="w-full glass-card p-5 hover:bg-white/10 transition-all group text-left"
+                                    className="w-full border border-white/[0.06] bg-white/[0.01] rounded-2xl p-5 hover:bg-white/[0.04] hover:border-white/[0.12] transition-all group text-left"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
@@ -277,8 +280,11 @@ export default function BeltExamGrading() {
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
-                        <h2 className="text-2xl font-black text-white flex items-center gap-2">
-                            <Shield className="w-6 h-6 text-amber-500" /> {selectedEvent?.name || "Belt Exam"}
+                        <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-700 flex items-center justify-center shadow-lg shadow-amber-900/30">
+                                <Shield className="w-5 h-5 text-white" />
+                            </div>
+                            {selectedEvent?.name || "Belt Exam"}
                         </h2>
                         <p className="text-sm text-gray-500 mt-0.5">
                             {selectedEvent && new Date(selectedEvent.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
@@ -296,15 +302,13 @@ export default function BeltExamGrading() {
                     {/* Summary Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {[
-                            { label: "Total", value: summary.total, icon: Users, color: "text-white", bg: "bg-white/10" },
-                            { label: "Passed", value: summary.passed, icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/15" },
-                            { label: "Failed", value: summary.failed, icon: XCircle, color: "text-red-400", bg: "bg-red-500/15" },
-                            { label: "Pending", value: summary.pending, icon: Clock, color: "text-amber-400", bg: "bg-amber-500/15" },
+                            { label: "Total", value: summary.total, icon: Users, color: "text-white", dot: "bg-gray-400" },
+                            { label: "Passed", value: summary.passed, icon: CheckCircle, color: "text-emerald-400", dot: "bg-emerald-500" },
+                            { label: "Failed", value: summary.failed, icon: XCircle, color: "text-red-400", dot: "bg-red-500" },
+                            { label: "Pending", value: summary.pending, icon: Clock, color: "text-amber-400", dot: "bg-amber-500" },
                         ].map(stat => (
-                            <div key={stat.label} className="glass-card p-4 flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-lg ${stat.bg} flex items-center justify-center`}>
-                                    <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                                </div>
+                            <div key={stat.label} className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] flex items-center gap-3">
+                                <div className={`w-1.5 h-1.5 rounded-full ${stat.dot}`} />
                                 <div>
                                     <p className="text-2xl font-black text-white">{stat.value}</p>
                                     <p className="text-xs text-gray-500 font-medium">{stat.label}</p>
@@ -321,7 +325,7 @@ export default function BeltExamGrading() {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search by name, email, or membership..."
-                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
+                                className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/30 focus:bg-white/[0.05] transition-all"
                             />
                         </div>
                         <div className="flex gap-1.5 flex-shrink-0">
@@ -331,8 +335,8 @@ export default function BeltExamGrading() {
                                     onClick={() => setResultFilter(f)}
                                     className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${
                                         resultFilter === f
-                                            ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
-                                            : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-transparent"
+                                            ? "bg-white/10 text-white border border-white/20 shadow-sm"
+                                            : "bg-transparent text-gray-500 hover:text-white hover:bg-white/[0.04] border border-white/[0.06]"
                                     }`}
                                 >
                                     {f === "ALL" ? "All" : f === "PASS" ? "Passed" : f === "FAIL" ? "Failed" : "Pending"}
@@ -346,7 +350,7 @@ export default function BeltExamGrading() {
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="glass-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-amber-500/30"
+                            className="border border-amber-500/20 bg-white/[0.02] rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
                         >
                             <p className="text-sm text-white font-medium">
                                 {selectedStudents.size} student{selectedStudents.size !== 1 ? "s" : ""} selected
@@ -380,7 +384,7 @@ export default function BeltExamGrading() {
 
                     {/* Participant Cards */}
                     {filteredParticipants.length === 0 ? (
-                        <div className="glass-card p-12 text-center">
+                        <div className="border border-dashed border-white/[0.08] rounded-2xl p-12 text-center">
                             <AlertCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                             <h3 className="text-lg font-bold text-white mb-1">No Participants</h3>
                             <p className="text-gray-400 text-sm">
@@ -421,7 +425,7 @@ export default function BeltExamGrading() {
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: -8 }}
                                             transition={{ delay: i * 0.03 }}
-                                            className="glass-card overflow-hidden"
+                                            className="border border-white/[0.06] bg-white/[0.01] rounded-2xl overflow-hidden"
                                         >
                                             <div className="p-4 flex items-center gap-4">
                                                 {/* Checkbox */}

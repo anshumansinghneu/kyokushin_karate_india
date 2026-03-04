@@ -139,67 +139,67 @@ export default function StudentRoster() {
     const eligibleCount = students.filter(s => s.isEligible).length;
 
     return (
-        <div className="glass-card p-6">
-            <div className="flex flex-col gap-4 mb-6">
+        <div className="space-y-6">
+            <div className="flex flex-col gap-4">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
-                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                            <User className="w-5 h-5 text-primary" />
+                        <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shadow-lg shadow-violet-900/30">
+                                <User className="w-5 h-5 text-white" />
+                            </div>
                             Student Roster
-                        </h3>
-                        <p className="text-sm text-gray-400 mt-1">
+                        </h1>
+                        <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">
                             {isInstructor ? 'View students who selected you as their primary instructor' : 'Manage all students in the system'}
                         </p>
                     </div>
                     {!isInstructor && (
-                        <Button onClick={() => setShowInviteModal(true)} className="bg-primary hover:bg-primary-dark text-white">
-                            <Plus className="w-4 h-4 mr-2" /> Invite Student
-                        </Button>
+                        <button onClick={() => setShowInviteModal(true)} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-violet-900/20">
+                            <Plus className="w-4 h-4" /> Invite Student
+                        </button>
                     )}
                 </div>
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-                        <p className="text-xs text-gray-400">Total Students</p>
-                        <p className="text-2xl font-bold text-white">{students.length}</p>
-                    </div>
-                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-                        <p className="text-xs text-green-400">Eligible</p>
-                        <p className="text-2xl font-bold text-green-400">{eligibleCount}</p>
-                    </div>
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                        <p className="text-xs text-blue-400">Active</p>
-                        <p className="text-2xl font-bold text-blue-400">{students.filter(s => s.membershipStatus === 'ACTIVE').length}</p>
-                    </div>
-                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-                        <p className="text-xs text-yellow-400">Pending</p>
-                        <p className="text-2xl font-bold text-yellow-400">{students.filter(s => s.membershipStatus === 'PENDING').length}</p>
-                    </div>
+                    {[
+                        { label: 'Total Students', count: students.length, color: 'text-white', dot: 'bg-gray-400' },
+                        { label: 'Eligible', count: eligibleCount, color: 'text-emerald-400', dot: 'bg-emerald-500' },
+                        { label: 'Active', count: students.filter(s => s.membershipStatus === 'ACTIVE').length, color: 'text-blue-400', dot: 'bg-blue-500' },
+                        { label: 'Pending', count: students.filter(s => s.membershipStatus === 'PENDING').length, color: 'text-amber-400', dot: 'bg-amber-500' },
+                    ].map((s, i) => (
+                        <div key={i} className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">{s.label}</span>
+                            </div>
+                            <p className={`text-2xl font-black ${s.color}`}>{s.count}</p>
+                        </div>
+                    ))}
                 </div>
 
                 {/* Search and Filters */}
                 <div className="flex flex-col sm:flex-row gap-3">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                        <Input
+                        <input
                             placeholder="Search students..."
-                            className="pl-10 input-glass"
+                            className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500/30 focus:bg-white/[0.05] transition-all"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
-                    <Button
+                    <button
                         onClick={() => setShowEligibleOnly(!showEligibleOnly)}
-                        className={`${showEligibleOnly ? 'bg-green-600 hover:bg-green-700' : 'bg-white/5 hover:bg-white/10'} border border-white/10`}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${showEligibleOnly ? 'bg-white/10 text-white border-white/20 shadow-sm' : 'bg-transparent text-gray-500 border-white/[0.06] hover:text-white hover:bg-white/[0.04]'}`}
                     >
-                        <Filter className="w-4 h-4 mr-2" />
+                        <Filter className="w-4 h-4" />
                         Eligible Only
-                    </Button>
+                    </button>
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
-                        className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm hover:bg-white/10 transition-colors"
+                        className="px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-sm hover:bg-white/[0.05] transition-colors focus:outline-none focus:border-violet-500/30"
                     >
                         <option value="name">Sort by Name</option>
                         <option value="eligibility">Sort by Eligibility</option>
@@ -215,7 +215,7 @@ export default function StudentRoster() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
-                        className="p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group relative overflow-hidden"
+                        className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.04] hover:border-white/[0.12] transition-all group relative overflow-hidden"
                     >
                         <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-3">

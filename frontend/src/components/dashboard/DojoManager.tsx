@@ -170,14 +170,17 @@ export default function DojoManager() {
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-white flex items-center gap-2">
-                        <Building className="w-6 h-6 text-green-500" /> Dojo Management
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center shadow-lg shadow-emerald-900/30">
+                            <Building className="w-5 h-5 text-white" />
+                        </div>
+                        Dojo Management
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">{dojos.length} dojo{dojos.length !== 1 ? 's' : ''} registered</p>
+                    <p className="text-sm text-gray-500 mt-1.5 ml-[52px]">{dojos.length} dojo{dojos.length !== 1 ? 's' : ''} registered</p>
                 </div>
-                <Button onClick={() => handleOpenModal()} className="bg-red-600 hover:bg-red-700 text-white font-bold">
-                    <Plus className="w-4 h-4 mr-2" /> Add New Dojo
-                </Button>
+                <button onClick={() => handleOpenModal()} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-emerald-900/20">
+                    <Plus className="w-4 h-4" /> Add New Dojo
+                </button>
             </div>
 
             {/* Search */}
@@ -187,18 +190,20 @@ export default function DojoManager() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search dojos by name, city, state or code..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50"
+                    className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/30 focus:bg-white/[0.05] transition-all"
                 />
             </div>
 
             {dojos.length === 0 && !isLoading && (
-                <div className="text-center py-16 glass-card">
-                    <Building className="w-12 h-12 mx-auto mb-3 text-gray-600" />
-                    <p className="text-lg font-bold text-white">No dojos yet</p>
-                    <p className="text-sm text-gray-400 mt-1">Create your first dojo to get started.</p>
-                    <Button onClick={() => handleOpenModal()} className="bg-primary hover:bg-primary-dark text-white mt-4">
-                        <Plus className="w-4 h-4 mr-2" /> Add New Dojo
-                    </Button>
+                <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/[0.08] rounded-2xl">
+                    <div className="w-16 h-16 rounded-2xl bg-emerald-500/[0.06] flex items-center justify-center mb-4">
+                        <Building className="w-8 h-8 text-emerald-500/40" />
+                    </div>
+                    <p className="text-gray-400 font-medium mb-1">No dojos yet</p>
+                    <p className="text-gray-600 text-sm mb-4">Create your first dojo to get started</p>
+                    <button onClick={() => handleOpenModal()} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors">
+                        <Plus className="w-4 h-4" /> Add New Dojo
+                    </button>
                 </div>
             )}
 
@@ -212,9 +217,9 @@ export default function DojoManager() {
                         key={dojo.id}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all"
+                        className="border border-white/[0.06] hover:border-white/[0.12] rounded-2xl overflow-hidden bg-white/[0.01] hover:bg-white/[0.025] transition-all"
                     >
-                        <div className="h-1 bg-green-500" />
+                        <div className="h-1 bg-gradient-to-r from-emerald-500 to-green-600" />
                         <div className="p-5">
                             <div className="flex items-start justify-between mb-1">
                                 <h3 className="text-lg font-bold text-white">{dojo.name}</h3>

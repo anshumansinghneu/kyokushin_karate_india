@@ -147,33 +147,37 @@ export default function VoucherManager() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-white flex items-center gap-2 mb-2">
-                        <Ticket className="w-6 h-6 text-orange-500" /> Cash Vouchers
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-700 flex items-center justify-center shadow-lg shadow-amber-900/30">
+                            <Ticket className="w-5 h-5 text-white" />
+                        </div>
+                        Cash Vouchers
                     </h1>
-                    <p className="text-gray-500 text-sm">Create and manage one-time cash payment vouchers for students.</p>
+                    <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">Create and manage one-time cash payment vouchers for students.</p>
                 </div>
-                <Button
+                <button
                     onClick={() => setShowCreate(!showCreate)}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-500 hover:to-orange-600 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-amber-900/20"
                 >
-                    <Plus className="w-4 h-4 mr-2" /> Create Voucher
-                </Button>
+                    <Plus className="w-4 h-4" /> Create Voucher
+                </button>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20">
-                    <p className="text-xs font-bold text-green-400 uppercase tracking-wider mb-1">Active</p>
-                    <p className="text-3xl font-black text-white">{activeVouchers.length}</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20">
-                    <p className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Redeemed</p>
-                    <p className="text-3xl font-black text-white">{usedVouchers.length}</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Created</p>
-                    <p className="text-3xl font-black text-white">{vouchers.length}</p>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                    { label: 'Active', count: activeVouchers.length, color: 'text-emerald-400', dot: 'bg-emerald-500' },
+                    { label: 'Redeemed', count: usedVouchers.length, color: 'text-blue-400', dot: 'bg-blue-500' },
+                    { label: 'Total Created', count: vouchers.length, color: 'text-white', dot: 'bg-gray-400' },
+                ].map((s, i) => (
+                    <div key={i} className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">{s.label}</span>
+                        </div>
+                        <p className={`text-2xl font-black ${s.color}`}>{s.count}</p>
+                    </div>
+                ))}
             </div>
 
             {/* Create Form */}
@@ -185,7 +189,7 @@ export default function VoucherManager() {
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                     >
-                        <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-6">
+                        <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-6">
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                 <Ticket className="w-5 h-5 text-red-500" />
                                 Create New Voucher
@@ -321,7 +325,7 @@ export default function VoucherManager() {
                             value={voucherSearch}
                             onChange={(e) => setVoucherSearch(e.target.value)}
                             placeholder="Search by code, redeemed user..."
-                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
+                            className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/30 focus:bg-white/[0.05] transition-all"
                         />
                     </div>
                     <div className="flex gap-2 flex-wrap">
@@ -337,8 +341,8 @@ export default function VoucherManager() {
                                 onClick={() => setVoucherFilter(f.key)}
                                 className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
                                     voucherFilter === f.key
-                                        ? 'bg-red-600 text-white border-red-600'
-                                        : 'bg-white/5 text-gray-400 border-white/10 hover:text-white'
+                                        ? 'bg-white/10 text-white border-white/20 shadow-sm'
+                                        : 'bg-transparent text-gray-500 border-white/[0.06] hover:text-white hover:bg-white/[0.04]'
                                 }`}
                             >
                                 {f.label}

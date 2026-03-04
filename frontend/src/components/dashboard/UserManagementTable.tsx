@@ -370,7 +370,7 @@ export default function UserManagementTable() {
     };
 
     return (
-        <div className="glass-card p-6">
+        <div className="space-y-6">
             {/* Delete Confirmation Modal */}
             <Portal>
                 <AnimatePresence>
@@ -409,37 +409,40 @@ export default function UserManagementTable() {
             </Portal>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Users className="w-5 h-5 text-primary" />
-                    User Management
-                    <span className="text-sm font-normal text-gray-500 ml-2">({totalUsers} total)</span>
-                </h3>
+                <div>
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-700 flex items-center justify-center shadow-lg shadow-cyan-900/30">
+                            <Users className="w-5 h-5 text-white" />
+                        </div>
+                        User Management
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">{totalUsers} total users</p>
+                </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                     <div className="relative w-full sm:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                        <Input
+                        <input
                             placeholder="Search users..."
-                            className="pl-10 input-glass"
+                            className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/30 focus:bg-white/[0.05] transition-all"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
-                    <Button
-                        variant="ghost"
+                    <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`flex items-center gap-2 text-sm ${showFilters ? 'text-primary' : 'text-gray-400'}`}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all ${showFilters ? 'bg-white/10 text-white border-white/20' : 'bg-transparent text-gray-500 border-white/[0.06] hover:text-white hover:bg-white/[0.04]'}`}
                     >
                         <Filter className="w-4 h-4" />
                         Filters
                         <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                    </Button>
-                    <Button
+                    </button>
+                    <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="bg-primary hover:bg-primary-dark text-white font-bold flex items-center gap-2 whitespace-nowrap"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-cyan-900/20 whitespace-nowrap"
                     >
                         <UserPlus className="w-4 h-4" />
                         Create User
-                    </Button>
+                    </button>
                 </div>
             </div>
 
@@ -452,11 +455,11 @@ export default function UserManagementTable() {
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden mb-4"
                     >
-                        <div className="flex flex-wrap gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
+                        <div className="flex flex-wrap gap-3 p-4 bg-white/[0.02] rounded-xl border border-white/[0.06]">
                             <select
                                 value={filterRole}
                                 onChange={(e) => { setFilterRole(e.target.value); setPage(1); }}
-                                className="bg-black/50 border border-white/10 rounded-md h-9 px-3 text-white text-sm"
+                                className="bg-white/[0.03] border border-white/[0.06] rounded-xl h-9 px-3 text-white text-sm focus:outline-none focus:border-cyan-500/30"
                             >
                                 <option value="all">All Roles</option>
                                 <option value="STUDENT">Student</option>
@@ -466,7 +469,7 @@ export default function UserManagementTable() {
                             <select
                                 value={filterStatus}
                                 onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-                                className="bg-black/50 border border-white/10 rounded-md h-9 px-3 text-white text-sm"
+                                className="bg-white/[0.03] border border-white/[0.06] rounded-xl h-9 px-3 text-white text-sm focus:outline-none focus:border-cyan-500/30"
                             >
                                 <option value="all">All Status</option>
                                 <option value="ACTIVE">Active</option>
@@ -477,7 +480,7 @@ export default function UserManagementTable() {
                             <select
                                 value={filterBelt}
                                 onChange={(e) => setFilterBelt(e.target.value)}
-                                className="bg-black/50 border border-white/10 rounded-md h-9 px-3 text-white text-sm"
+                                className="bg-white/[0.03] border border-white/[0.06] rounded-xl h-9 px-3 text-white text-sm focus:outline-none focus:border-cyan-500/30"
                             >
                                 <option value="all">All Belts</option>
                                 {BELT_RANKS.map(belt => (
@@ -487,7 +490,7 @@ export default function UserManagementTable() {
                             <select
                                 value={filterDojo}
                                 onChange={(e) => setFilterDojo(e.target.value)}
-                                className="bg-black/50 border border-white/10 rounded-md h-9 px-3 text-white text-sm"
+                                className="bg-white/[0.03] border border-white/[0.06] rounded-xl h-9 px-3 text-white text-sm focus:outline-none focus:border-cyan-500/30"
                             >
                                 <option value="all">All Dojos</option>
                                 {dojos.map((dojo: any) => (
@@ -559,7 +562,7 @@ export default function UserManagementTable() {
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr className="text-xs font-bold text-gray-500 uppercase border-b border-white/10">
+                        <tr className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-white/[0.06]">
                             <th className="py-3 px-2 w-8">
                                 <input
                                     type="checkbox"
@@ -593,7 +596,7 @@ export default function UserManagementTable() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, x: -10 }}
-                                    className={`border-b border-white/5 hover:bg-white/5 transition-colors group ${selectedIds.has(user.id) ? 'bg-blue-500/5' : ''}`}
+                                    className={`border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors group ${selectedIds.has(user.id) ? 'bg-blue-500/5' : ''}`}
                                 >
                                     <td className="py-3 px-2 w-8">
                                         <input
