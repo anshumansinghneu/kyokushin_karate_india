@@ -714,3 +714,20 @@ model PasswordResetToken {
   @@index([userId])
   @@index([tokenHash])
 }
+
+model SiteVisit {
+  id          String   @id @default(uuid())
+  fingerprint String                         // browser fingerprint or sessionId for uniqueness
+  ip          String?
+  country     String?
+  city        String?
+  region      String?
+  userAgent   String?
+  path        String?                        // page path visited
+  referrer    String?
+  createdAt   DateTime @default(now())
+
+  @@index([fingerprint])
+  @@index([createdAt])
+  @@index([country])
+}

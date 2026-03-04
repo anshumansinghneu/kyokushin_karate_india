@@ -6,7 +6,7 @@ import {
     Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper,
     LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag,
     Ticket, RefreshCw, ChevronDown, Search, ChevronRight, Loader2, BookOpen,
-    PanelLeftClose, PanelLeftOpen, UserCheck, AlertCircle, Home
+    PanelLeftClose, PanelLeftOpen, UserCheck, AlertCircle, Home, Activity
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ const LiveMatchManager = lazy(() => import('./LiveMatchManager'));
 const StoreManagement = lazy(() => import('./StoreManagement'));
 const VoucherManager = lazy(() => import('./VoucherManager'));
 const SeminarManager = lazy(() => import('./SeminarManager'));
+const SiteAnalytics = lazy(() => import('./SiteAnalytics'));
 
 import OrganizationGraph from "./OrganizationGraph";
 import GlobalSearch from "./GlobalSearch";
@@ -48,9 +49,9 @@ function TabLoader() {
     );
 }
 
-type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers';
+type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers' | 'analytics';
 
-const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers'];
+const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers', 'analytics'];
 
 export default function AdminDashboard({ user, initialTab }: { user: any; initialTab?: string }) {
     const { showToast } = useToast();
@@ -155,6 +156,12 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                 { id: 'media', label: 'Media', icon: Newspaper },
                 { id: 'recognition', label: 'Monthly Recognition', icon: Trophy },
                 { id: 'announcements', label: 'Announcements', icon: Megaphone },
+            ]
+        },
+        {
+            id: 'insights', header: 'INSIGHTS',
+            items: [
+                { id: 'analytics', label: 'Site Analytics', icon: Activity },
             ]
         },
     ];
@@ -662,6 +669,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                         {activeTab === 'announcements' && <motion.div key="announcements" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><AnnouncementManager /></Suspense></motion.div>}
                         {activeTab === 'payments' && <motion.div key="payments" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><PaymentManagement /></Suspense></motion.div>}
                         {activeTab === 'vouchers' && <motion.div key="vouchers" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><VoucherManager /></Suspense></motion.div>}
+                        {activeTab === 'analytics' && <motion.div key="analytics" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><SiteAnalytics /></Suspense></motion.div>}
                     </AnimatePresence>
                     </div>
                 </div>
