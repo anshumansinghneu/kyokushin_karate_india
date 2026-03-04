@@ -118,9 +118,9 @@ export default function Navbar() {
     const router = useRouter();
     const { user, logout, isAuthenticated, checkAuth } = useAuthStore();
 
-    // Check auth status on mount (only if not already authenticated)
+    // Fetch user data on mount if token exists but user hasn't been hydrated
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (!user && isAuthenticated) {
             checkAuth();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps

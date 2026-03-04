@@ -13,10 +13,13 @@ export default function DashboardPage() {
     const router = useRouter();
 
     useEffect(() => {
-        // Only check auth if we're not already authenticated
-        if (!isAuthenticated) {
+        // Always call checkAuth on mount when user hasn't been fetched yet.
+        // The old code checked `!isAuthenticated`, which was already true from
+        // localStorage token — so checkAuth was never called and user stayed null.
+        if (!user) {
             checkAuth();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {

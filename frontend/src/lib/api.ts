@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
@@ -20,13 +20,77 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Add a response interceptor to handle 401 (expired/invalid token)
+// ── 401 interceptor with silent token refresh ──────────────
+let _isRefreshing = false;
+let _refreshQueue: Array<{ resolve: (v: any) => void; reject: (e: any) => void }> = [];
+
+function processQueue(error: any, token: string | null = null) {
+    _refreshQueue.forEach(({ resolve, reject }) => {
+        if (error) reject(error);
+        else resolve(token);
+    });
+    _refreshQueue = [];
+}
+
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
+    async (error: AxiosError) => {
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+        // Skip refresh for auth endpoints to avoid infinite loops
+        const isAuthEndpoint = originalRequest?.url?.includes('/auth/login') ||
+            originalRequest?.url?.includes('/auth/register') ||
+            originalRequest?.url?.includes('/auth/refresh');
+
+        if (error.response?.status === 401 && !originalRequest?._retry && !isAuthEndpoint) {
+            const refreshToken = localStorage.getItem('refreshToken');
+
+            if (refreshToken) {
+                if (_isRefreshing) {
+                    // Another refresh is in flight — queue this request
+                    return new Promise((resolve, reject) => {
+                        _refreshQueue.push({ resolve, reject });
+                    }).then((newToken) => {
+                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                        return api(originalRequest);
+                    });
+                }
+
+                originalRequest._retry = true;
+                _isRefreshing = true;
+
+                try {
+                    const resp = await axios.post(
+                        `${api.defaults.baseURL}/auth/refresh`,
+                        { refreshToken },
+                        { headers: { 'Content-Type': 'application/json' } }
+                    );
+                    const { token: newToken, refreshToken: newRT } = resp.data;
+                    localStorage.setItem('token', newToken);
+                    if (newRT) localStorage.setItem('refreshToken', newRT);
+
+                    processQueue(null, newToken);
+                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                    return api(originalRequest);
+                } catch (refreshErr) {
+                    processQueue(refreshErr, null);
+                    // Refresh failed — clear everything and redirect
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('refreshToken');
+                    if (typeof window !== 'undefined' &&
+                        !window.location.pathname.includes('/login') &&
+                        !window.location.pathname.includes('/register')) {
+                        window.location.href = '/login';
+                    }
+                    return Promise.reject(refreshErr);
+                } finally {
+                    _isRefreshing = false;
+                }
+            }
+
+            // No refresh token — hard redirect
             localStorage.removeItem('token');
-            // Only redirect if not already on login/register page
+            localStorage.removeItem('refreshToken');
             if (typeof window !== 'undefined' &&
                 !window.location.pathname.includes('/login') &&
                 !window.location.pathname.includes('/register')) {
