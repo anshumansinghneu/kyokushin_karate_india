@@ -478,38 +478,120 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                 </div>
 
                                 {/* Quick Actions */}
-                                {!isStatsLoading && (stats.dojos === 0 || stats.events === 0 || stats.pending > 0) && (
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        {stats.dojos === 0 && (
+                                {!isStatsLoading && (
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="h-6 w-1 bg-red-600 rounded-full" />
+                                            <h2 className="text-lg font-bold text-white">Quick Actions</h2>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                             <button
                                                 onClick={() => handleTabChange('dojos')}
-                                                className="p-4 rounded-xl border border-dashed border-emerald-500/20 bg-emerald-500/[0.03] hover:bg-emerald-500/[0.06] transition-colors text-left"
+                                                className="group p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-emerald-500/[0.05] hover:border-emerald-500/20 transition-all text-left"
                                             >
-                                                <Building className="w-5 h-5 text-emerald-400 mb-2" />
-                                                <p className="text-sm font-bold text-white">Create First Dojo</p>
-                                                <p className="text-xs text-gray-500 mt-1">Set up your first training location</p>
+                                                <div className="flex items-center gap-3 mb-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+                                                        <Building className="w-5 h-5 text-emerald-400" />
+                                                    </div>
+                                                    <ChevronRight className="w-4 h-4 text-gray-700 ml-auto group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+                                                </div>
+                                                <h3 className="text-sm font-bold text-white mb-1">Manage Dojos</h3>
+                                                <p className="text-xs text-gray-500">{stats.dojos} active location{stats.dojos !== 1 ? 's' : ''}</p>
                                             </button>
-                                        )}
-                                        {stats.events === 0 && (
+
                                             <button
                                                 onClick={() => handleTabChange('events')}
-                                                className="p-4 rounded-xl border border-dashed border-violet-500/20 bg-violet-500/[0.03] hover:bg-violet-500/[0.06] transition-colors text-left"
+                                                className="group p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-violet-500/[0.05] hover:border-violet-500/20 transition-all text-left"
                                             >
-                                                <Calendar className="w-5 h-5 text-violet-400 mb-2" />
-                                                <p className="text-sm font-bold text-white">Schedule an Event</p>
-                                                <p className="text-xs text-gray-500 mt-1">Create your first event or seminar</p>
+                                                <div className="flex items-center gap-3 mb-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center group-hover:bg-violet-500/20 transition-colors">
+                                                        <Calendar className="w-5 h-5 text-violet-400" />
+                                                    </div>
+                                                    <ChevronRight className="w-4 h-4 text-gray-700 ml-auto group-hover:text-violet-400 group-hover:translate-x-0.5 transition-all" />
+                                                </div>
+                                                <h3 className="text-sm font-bold text-white mb-1">Event Manager</h3>
+                                                <p className="text-xs text-gray-500">{stats.events} event{stats.events !== 1 ? 's' : ''} scheduled</p>
                                             </button>
-                                        )}
-                                        {stats.pending > 0 && (
+
+                                            {stats.pending > 0 ? (
+                                                <button
+                                                    onClick={() => handleTabChange('belt-verifications')}
+                                                    className="group p-5 rounded-2xl border border-amber-500/10 bg-amber-500/[0.03] hover:bg-amber-500/[0.06] hover:border-amber-500/20 transition-all text-left"
+                                                >
+                                                    <div className="flex items-center gap-3 mb-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                                                            <UserCheck className="w-5 h-5 text-amber-400" />
+                                                        </div>
+                                                        <span className="ml-auto text-[10px] font-bold bg-amber-500/80 text-white px-1.5 py-0.5 rounded-full">{stats.pending}</span>
+                                                    </div>
+                                                    <h3 className="text-sm font-bold text-white mb-1">Pending Approvals</h3>
+                                                    <p className="text-xs text-gray-500">Review membership requests</p>
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleTabChange('vouchers')}
+                                                    className="group p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-amber-500/[0.05] hover:border-amber-500/20 transition-all text-left"
+                                                >
+                                                    <div className="flex items-center gap-3 mb-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                                                            <Ticket className="w-5 h-5 text-amber-400" />
+                                                        </div>
+                                                        <ChevronRight className="w-4 h-4 text-gray-700 ml-auto group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+                                                    </div>
+                                                    <h3 className="text-sm font-bold text-white mb-1">Cash Vouchers</h3>
+                                                    <p className="text-xs text-gray-500">Issue & manage vouchers</p>
+                                                </button>
+                                            )}
+
                                             <button
-                                                onClick={() => handleTabChange('users')}
-                                                className="p-4 rounded-xl border border-dashed border-amber-500/20 bg-amber-500/[0.03] hover:bg-amber-500/[0.06] transition-colors text-left"
+                                                onClick={() => handleTabChange('announcements')}
+                                                className="group p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-cyan-500/[0.05] hover:border-cyan-500/20 transition-all text-left"
                                             >
-                                                <UserCheck className="w-5 h-5 text-amber-400 mb-2" />
-                                                <p className="text-sm font-bold text-white">{stats.pending} Pending Approval{stats.pending > 1 ? 's' : ''}</p>
-                                                <p className="text-xs text-gray-500 mt-1">Review pending membership requests</p>
+                                                <div className="flex items-center gap-3 mb-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+                                                        <Megaphone className="w-5 h-5 text-cyan-400" />
+                                                    </div>
+                                                    <ChevronRight className="w-4 h-4 text-gray-700 ml-auto group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all" />
+                                                </div>
+                                                <h3 className="text-sm font-bold text-white mb-1">Announcements</h3>
+                                                <p className="text-xs text-gray-500">Broadcast to members</p>
                                             </button>
-                                        )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Membership Breakdown */}
+                                {!isStatsLoading && stats.users.length > 0 && (
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="h-6 w-1 bg-red-600 rounded-full" />
+                                            <h2 className="text-lg font-bold text-white">Membership Breakdown</h2>
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            {(() => {
+                                                const roles = { ADMIN: 0, INSTRUCTOR: 0, STUDENT: 0, OTHER: 0 };
+                                                stats.users.forEach((u: any) => {
+                                                    if (u.role === 'ADMIN') roles.ADMIN++;
+                                                    else if (u.role === 'INSTRUCTOR') roles.INSTRUCTOR++;
+                                                    else if (u.role === 'STUDENT') roles.STUDENT++;
+                                                    else roles.OTHER++;
+                                                });
+                                                return [
+                                                    { label: 'Admins', count: roles.ADMIN, color: 'text-red-400', dot: 'bg-red-500' },
+                                                    { label: 'Instructors', count: roles.INSTRUCTOR, color: 'text-orange-400', dot: 'bg-orange-500' },
+                                                    { label: 'Students', count: roles.STUDENT, color: 'text-blue-400', dot: 'bg-blue-500' },
+                                                    { label: 'Active', count: stats.users.filter((u: any) => u.membershipStatus === 'APPROVED').length, color: 'text-emerald-400', dot: 'bg-emerald-500' },
+                                                ].map((item, i) => (
+                                                    <div key={i} className="p-4 rounded-xl border border-white/[0.04] bg-white/[0.01]">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <div className={`w-2 h-2 rounded-full ${item.dot}`} />
+                                                            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">{item.label}</span>
+                                                        </div>
+                                                        <p className={`text-2xl font-black ${item.color}`}>{item.count}</p>
+                                                    </div>
+                                                ));
+                                            })()}
+                                        </div>
                                     </div>
                                 )}
 

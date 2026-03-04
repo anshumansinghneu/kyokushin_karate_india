@@ -2,15 +2,10 @@ import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import ScrollProgress from "@/components/ScrollProgress";
 import StructuredData from "@/components/StructuredData";
 import { ToastProvider } from "@/contexts/ToastContext";
-import MobileBottomNav from "@/components/ui/MobileBottomNav";
-import BackToTop from "@/components/ui/BackToTop";
-import PageTransition from "@/components/PageTransition";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import LayoutShell from "@/components/LayoutShell";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -114,14 +109,7 @@ export default function RootLayout({
         <StructuredData />
         <ServiceWorkerRegistrar />
         <ToastProvider>
-          <ScrollProgress />
-          <Navbar />
-          <main className="min-h-screen pt-14 md:pt-24 pb-20 md:pb-0">
-            <PageTransition>{children}</PageTransition>
-          </main>
-          <Footer />
-          <MobileBottomNav />
-          <BackToTop />
+          <LayoutShell>{children}</LayoutShell>
         </ToastProvider>
       </body>
     </html>

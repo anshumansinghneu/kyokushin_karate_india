@@ -113,20 +113,42 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
         }
     };
 
-    const menuItems = [
-        { id: 'overview', label: 'Overview', icon: Activity },
-        { id: 'students', label: 'Student Roster', icon: Users },
-        { id: 'belt-approvals', label: 'Belt Verifications', icon: ClipboardCheck },
-        { id: 'belt-promotions', label: 'Belt Promotions', icon: Medal },
-        { id: 'belt-exam-grading', label: 'Belt Exam Grading', icon: Shield },
-        { id: 'tournaments', label: 'Tournaments', icon: Trophy },
-        { id: 'register-student', label: 'Register Student', icon: UserPlus },
-        { id: 'enroll-event', label: 'Enroll in Event', icon: CalendarPlus },
-        { id: 'blogs', label: 'My Blogs', icon: FileText },
-        { id: 'submit', label: 'Write Blog', icon: Edit },
+    const menuSections = [
+        {
+            items: [{ id: 'overview', label: 'Overview', icon: Activity }]
+        },
+        {
+            header: 'STUDENTS',
+            items: [
+                { id: 'students', label: 'Student Roster', icon: Users },
+                { id: 'register-student', label: 'Register Student', icon: UserPlus },
+                { id: 'enroll-event', label: 'Enroll in Event', icon: CalendarPlus },
+            ]
+        },
+        {
+            header: 'BELTS',
+            items: [
+                { id: 'belt-approvals', label: 'Belt Verifications', icon: ClipboardCheck },
+                { id: 'belt-promotions', label: 'Belt Promotions', icon: Medal },
+                { id: 'belt-exam-grading', label: 'Belt Exam Grading', icon: Shield },
+            ]
+        },
+        {
+            header: 'COMPETITION',
+            items: [
+                { id: 'tournaments', label: 'Tournaments', icon: Trophy },
+            ]
+        },
+        {
+            header: 'CONTENT',
+            items: [
+                { id: 'blogs', label: 'My Blogs', icon: FileText },
+                { id: 'submit', label: 'Write Blog', icon: Edit },
+            ]
+        },
     ];
 
-    const activeLabel = menuItems.find(i => i.id === activeTab)?.label || 'Overview';
+    const activeLabel = menuSections.flatMap(s => s.items).find(i => i.id === activeTab)?.label || 'Overview';
 
     return (
         <div className="flex h-screen overflow-hidden">
@@ -187,35 +209,49 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
                 </div>
 
                 {/* Sidebar Navigation */}
-                <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 scrollbar-thin">
-                    {menuItems.map((item) => {
-                        const isActive = activeTab === item.id;
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => { setActiveTab(item.id as any); setIsSidebarOpen(false); }}
-                                title={isSidebarCollapsed ? item.label : undefined}
-                                className={`
-                                    w-full flex items-center gap-2.5 rounded-lg text-[13px] font-medium transition-all relative group
-                                    ${isSidebarCollapsed ? 'px-0 py-2.5 justify-center' : 'px-3 py-2'}
-                                    ${isActive
-                                        ? 'bg-orange-500/10 text-white'
-                                        : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.03]'
-                                    }
-                                `}
-                            >
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="instructorActiveTab"
-                                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-orange-500 rounded-r-full"
-                                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                                    />
-                                )}
-                                <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-orange-400' : 'text-gray-600 group-hover:text-gray-400'}`} />
-                                {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
-                            </button>
-                        );
-                    })}
+                <nav className="flex-1 overflow-y-auto py-2 px-2 scrollbar-thin">
+                    {menuSections.map((section, si) => (
+                        <div key={si} className={si > 0 ? 'mt-1' : ''}>
+                            {section.header && !isSidebarCollapsed && (
+                                <p className="px-3 py-2 mt-3 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
+                                    {section.header}
+                                </p>
+                            )}
+                            {isSidebarCollapsed && section.header && (
+                                <div className="h-px bg-white/[0.04] mx-2 mt-3 mb-1" />
+                            )}
+                            <div className="space-y-0.5">
+                                {section.items.map((item) => {
+                                    const isActive = activeTab === item.id;
+                                    return (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => { setActiveTab(item.id as any); setIsSidebarOpen(false); }}
+                                            title={isSidebarCollapsed ? item.label : undefined}
+                                            className={`
+                                                w-full flex items-center gap-2.5 rounded-lg text-[13px] font-medium transition-all relative group
+                                                ${isSidebarCollapsed ? 'px-0 py-2.5 justify-center' : 'px-3 py-2'}
+                                                ${isActive
+                                                    ? 'bg-orange-500/10 text-white'
+                                                    : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.03]'
+                                                }
+                                            `}
+                                        >
+                                            {isActive && (
+                                                <motion.div
+                                                    layoutId="instructorActiveTab"
+                                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-orange-500 rounded-r-full"
+                                                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                                />
+                                            )}
+                                            <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-orange-400' : 'text-gray-600 group-hover:text-gray-400'}`} />
+                                            {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
                 </nav>
 
                 {/* Sidebar Footer */}
@@ -390,6 +426,83 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
                             </div>
                         </motion.div>
                     )}
+
+                    {/* Quick Actions */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="h-6 w-1 bg-gradient-to-b from-orange-500 to-green-600 rounded-full" />
+                            <h2 className="text-lg font-bold text-white">Quick Actions</h2>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <button
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="group p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-orange-500/[0.05] hover:border-orange-500/20 transition-all text-left"
+                            >
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
+                                        <UserPlus className="w-5 h-5 text-orange-400" />
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 text-gray-700 ml-auto group-hover:text-orange-400 group-hover:translate-x-0.5 transition-all" />
+                                </div>
+                                <h3 className="text-sm font-bold text-white mb-1">Register Student</h3>
+                                <p className="text-xs text-gray-500">Add a new student to your dojo</p>
+                            </button>
+
+                            <button
+                                onClick={() => setIsEnrollModalOpen(true)}
+                                className="group p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-blue-500/[0.05] hover:border-blue-500/20 transition-all text-left"
+                            >
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                                        <CalendarPlus className="w-5 h-5 text-blue-400" />
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 text-gray-700 ml-auto group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
+                                </div>
+                                <h3 className="text-sm font-bold text-white mb-1">Enroll in Event</h3>
+                                <p className="text-xs text-gray-500">Register students for events</p>
+                            </button>
+
+                            <button
+                                onClick={() => setActiveTab('submit')}
+                                className="group p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-purple-500/[0.05] hover:border-purple-500/20 transition-all text-left"
+                            >
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                                        <Edit className="w-5 h-5 text-purple-400" />
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 text-gray-700 ml-auto group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
+                                </div>
+                                <h3 className="text-sm font-bold text-white mb-1">Write Blog</h3>
+                                <p className="text-xs text-gray-500">Share knowledge with the community</p>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Quick Navigation */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="h-6 w-1 bg-gradient-to-b from-orange-500 to-green-600 rounded-full" />
+                            <h2 className="text-lg font-bold text-white">Navigation</h2>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                            {[
+                                { id: 'students' as TabId, label: 'Student Roster', icon: Users, color: 'text-blue-400', bg: 'hover:bg-blue-500/5' },
+                                { id: 'belt-approvals' as TabId, label: 'Belt Verifications', icon: ClipboardCheck, color: 'text-orange-400', bg: 'hover:bg-orange-500/5' },
+                                { id: 'belt-promotions' as TabId, label: 'Belt Promotions', icon: Medal, color: 'text-amber-400', bg: 'hover:bg-amber-500/5' },
+                                { id: 'tournaments' as TabId, label: 'Tournaments', icon: Trophy, color: 'text-red-400', bg: 'hover:bg-red-500/5' },
+                                { id: 'blogs' as TabId, label: 'My Blogs', icon: FileText, color: 'text-purple-400', bg: 'hover:bg-purple-500/5' },
+                            ].map((item) => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setActiveTab(item.id)}
+                                    className={`flex items-center gap-3 p-3.5 rounded-xl border border-white/[0.04] bg-white/[0.01] ${item.bg} transition-all text-left group`}
+                                >
+                                    <item.icon className={`w-4 h-4 ${item.color} flex-shrink-0`} />
+                                    <span className="text-sm font-medium text-gray-400 group-hover:text-white transition-colors truncate">{item.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </motion.div>
             )}
 
