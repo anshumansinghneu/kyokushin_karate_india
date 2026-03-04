@@ -94,28 +94,210 @@ export default function MembershipCard({ user, showDownload = true }: Membership
         : '--/--';
 
     const handleDownload = useCallback(async () => {
-        if (!cardRef.current) return;
         setIsDownloading(true);
         try {
-            const html2canvas = (await import('html2canvas')).default;
-            const canvas = await html2canvas(cardRef.current, {
-                backgroundColor: null,
-                scale: 3,
-                useCORS: true,
-                logging: false,
-                width: cardRef.current.scrollWidth,
-                height: cardRef.current.scrollHeight,
+            const [{ jsPDF }, QRCode] = await Promise.all([
+                import('jspdf'),
+                import('qrcode'),
+            ]);
+
+            const W = 160, H = 100;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [W, H] });
+
+            const BELT_COLORS: Record<string, [number, number, number]> = {
+                'White': [229, 229, 229], 'Orange': [249, 115, 22], 'Blue': [59, 130, 246],
+                'Yellow': [234, 179, 8], 'Green': [34, 197, 94], 'Brown': [146, 64, 14],
+            };
+            const beltVal = user?.currentBeltRank || 'White';
+            const accent = beltVal.startsWith('Black') || beltVal.includes('Dan')
+                ? [220, 38, 38] as [number, number, number]
+                : (BELT_COLORS[beltVal] || [229, 229, 229]);
+
+            const pdfRoleTitle = ROLE_TITLES[user?.role || 'STUDENT'] || 'KARATEKA';
+            const expYears = user?.experienceYears || 0;
+            const expMonths = user?.experienceMonths || 0;
+            const expDisplay = expYears > 0 ? `${expYears}+ yrs` : expMonths > 0 ? `${expMonths} mo` : 'New';
+            const pdfValidThru = user?.membershipStatus === 'ACTIVE' ? 'Active' : user?.membershipStatus || '--';
+
+            const loadImg = (src: string): Promise<string> =>
+                new Promise((resolve, reject) => {
+                    const img = new window.Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        const c = document.createElement('canvas');
+                        c.width = img.naturalWidth; c.height = img.naturalHeight;
+                        c.getContext('2d')!.drawImage(img, 0, 0);
+                        resolve(c.toDataURL('image/png'));
+                    };
+                    img.onerror = reject;
+                    img.src = src;
+                });
+
+            const qrUrl = verifyUrl || `${window.location.origin}/verify/${user?.membershipNumber || ''}`;
+            const qrDataUrl = await QRCode.toDataURL(qrUrl, {
+                width: 300, margin: 1,
+                color: { dark: '#0a0a0a', light: '#ffffff' },
+                errorCorrectionLevel: 'M',
             });
-            const link = document.createElement('a');
-            link.download = `KKFI-${user?.membershipNumber || 'Card'}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+
+            let logoDataUrl: string | null = null;
+            try { logoDataUrl = await loadImg('/kkfi-logo.avif'); } catch {}
+
+            // Background
+            doc.setFillColor(8, 8, 8);
+            doc.rect(0, 0, W, H, 'F');
+            doc.setFillColor(12, 12, 12);
+            doc.rect(0, 0, W, 28, 'F');
+
+            // Top accent line
+            doc.setFillColor(accent[0], accent[1], accent[2]);
+            doc.rect(W * 0.1, 0, W * 0.8, 0.8, 'F');
+
+            // Corner glow
+            doc.setFillColor(accent[0], accent[1], accent[2]);
+            doc.setGState(doc.GState({ opacity: 0.06 }));
+            doc.circle(W - 10, 10, 30, 'F');
+            doc.circle(10, H - 10, 35, 'F');
+            doc.setGState(doc.GState({ opacity: 1 }));
+
+            // Logo
+            const logoSize = 14;
+            if (logoDataUrl) {
+                doc.setFillColor(0, 0, 0);
+                doc.roundedRect(7, 5, logoSize + 3, logoSize + 3, 2.5, 2.5, 'F');
+                doc.setDrawColor(255, 255, 255);
+                doc.setGState(doc.GState({ opacity: 0.1 }));
+                doc.roundedRect(7, 5, logoSize + 3, logoSize + 3, 2.5, 2.5, 'S');
+                doc.setGState(doc.GState({ opacity: 1 }));
+                doc.addImage(logoDataUrl, 'PNG', 8.5, 6.5, logoSize, logoSize);
+            }
+
+            const textX = logoDataUrl ? 26 : 8;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.setTextColor(255, 255, 255);
+            doc.text('KYOKUSHIN KARATE', textX, 12);
+
+            doc.setFontSize(5.5);
+            doc.setTextColor(255, 153, 51);
+            doc.text('FOUNDATION', textX, 16.5);
+            const foW = doc.getTextWidth('FOUNDATION ');
+            doc.setTextColor(255, 255, 255);
+            doc.text('OF', textX + foW, 16.5);
+            const ofW = doc.getTextWidth('OF ');
+            doc.setTextColor(19, 136, 8);
+            doc.text('INDIA', textX + foW + ofW, 16.5);
+
+            // ID badge
+            const memNum = user?.membershipNumber || 'PENDING';
+            const badgeW = Math.max(doc.getTextWidth(memNum) * 1.0 + 10, 32);
+            const badgeX = W - badgeW - 8;
+            doc.setFillColor(255, 255, 255);
+            doc.setGState(doc.GState({ opacity: 0.05 }));
+            doc.roundedRect(badgeX, 5, badgeW, 16, 2, 2, 'F');
+            doc.setGState(doc.GState({ opacity: 1 }));
+            doc.setDrawColor(255, 255, 255);
+            doc.setGState(doc.GState({ opacity: 0.08 }));
+            doc.roundedRect(badgeX, 5, badgeW, 16, 2, 2, 'S');
+            doc.setGState(doc.GState({ opacity: 1 }));
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(4);
+            doc.setTextColor(128, 128, 128);
+            doc.text('ID', badgeX + 4, 10);
+            doc.setFontSize(7);
+            doc.setTextColor(255, 255, 255);
+            doc.text(memNum, badgeX + 4, 17);
+
+            // Role title
+            const roleY = 36;
+            doc.setFillColor(accent[0], accent[1], accent[2]);
+            doc.circle(10, roleY - 1, 1, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(5);
+            doc.setTextColor(accent[0], accent[1], accent[2]);
+            doc.text(pdfRoleTitle, 13, roleY);
+
+            // Member name
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(18);
+            doc.setTextColor(255, 255, 255);
+            const cleanName = (user?.name || 'Member').replace(new RegExp(`^${pdfRoleTitle}\\s+`, 'i'), '').toUpperCase();
+            const displayName = pdfRoleTitle !== 'KARATEKA' ? `${pdfRoleTitle} ${cleanName}` : cleanName;
+            const maxNameW = W - 16;
+            let nameFontSize = 18;
+            doc.setFontSize(nameFontSize);
+            while (doc.getTextWidth(displayName) > maxNameW && nameFontSize > 10) {
+                nameFontSize -= 0.5;
+                doc.setFontSize(nameFontSize);
+            }
+            doc.text(displayName, 8, roleY + 10);
+
+            // Bottom stats
+            const statsY = H - 28;
+            const statsH = 16;
+            const gap = 2.5;
+            const qrSize = 20;
+            const availW = W - 16 - qrSize - 6;
+            const boxW = (availW - gap * 3) / 4;
+
+            const stats = [
+                { label: 'RANK', value: beltVal, dot: true },
+                { label: 'DOJO', value: user?.dojo?.name || 'HQ' },
+                { label: 'EXP', value: expDisplay },
+                { label: 'VALID', value: pdfValidThru },
+            ];
+
+            stats.forEach((stat, i) => {
+                const bx = 8 + i * (boxW + gap);
+                doc.setFillColor(255, 255, 255);
+                doc.setGState(doc.GState({ opacity: 0.04 }));
+                doc.roundedRect(bx, statsY, boxW, statsH, 2, 2, 'F');
+                doc.setGState(doc.GState({ opacity: 0.05 }));
+                doc.roundedRect(bx, statsY, boxW, statsH, 2, 2, 'S');
+                doc.setGState(doc.GState({ opacity: 1 }));
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(3.5);
+                doc.setTextColor(128, 128, 128);
+                doc.text(stat.label, bx + 3, statsY + 5);
+
+                let valX = bx + 3;
+                if (stat.dot) {
+                    doc.setFillColor(accent[0], accent[1], accent[2]);
+                    doc.circle(valX + 1.5, statsY + 11, 1.2, 'F');
+                    valX += 5;
+                }
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(6);
+                doc.setTextColor(255, 255, 255);
+                let val = stat.value;
+                while (doc.getTextWidth(val) > boxW - 8 && val.length > 3) {
+                    val = val.slice(0, -1);
+                }
+                if (val !== stat.value) val += '..';
+                doc.text(val, valX, statsY + 12);
+            });
+
+            // QR code
+            const qrX = W - qrSize - 8;
+            const qrY = statsY - 1;
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(qrX - 1.5, qrY - 1.5, qrSize + 3, qrSize + 3, 2, 2, 'F');
+            doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+
+            // Bottom accent line
+            doc.setFillColor(accent[0], accent[1], accent[2]);
+            doc.setGState(doc.GState({ opacity: 0.3 }));
+            doc.rect(W * 0.15, H - 0.6, W * 0.7, 0.5, 'F');
+            doc.setGState(doc.GState({ opacity: 1 }));
+
+            doc.save(`KKFI_Card_${user?.membershipNumber || 'member'}.pdf`);
         } catch (err) {
             console.error('Download failed:', err);
         } finally {
             setIsDownloading(false);
         }
-    }, [user?.membershipNumber]);
+    }, [user, verifyUrl, roleTitle]);
 
     const handleShare = useCallback(async () => {
         if (navigator.share && verifyUrl) {
