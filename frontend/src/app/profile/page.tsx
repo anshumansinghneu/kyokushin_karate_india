@@ -1,18 +1,33 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X, Download, Award, AlertCircle } from "lucide-react";
+import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X, Download, Award, AlertCircle, User, Mail, Phone, Ruler, Weight, ChevronRight, Lock, Clock, Building } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { getUserProfileImage } from "@/lib/imageUtils";
 import { searchCities, CityData } from "@/lib/india-locations";
 import BeltCertificate from "@/components/BeltCertificate";
 import { useToast } from "@/contexts/ToastContext";
+
+const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
+const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } } };
+
+function getBeltColor(belt?: string | null) {
+    if (!belt) return { bg: "bg-white", border: "border-gray-300", text: "text-black", glow: "shadow-white/10", hex: "#ffffff" };
+    const b = belt.toLowerCase();
+    if (b.startsWith("black") || b.includes("dan")) return { bg: "bg-zinc-900", border: "border-zinc-600", text: "text-white", glow: "shadow-red-500/20", hex: "#18181b" };
+    if (b === "brown") return { bg: "bg-amber-800", border: "border-amber-700", text: "text-white", glow: "shadow-amber-500/20", hex: "#92400e" };
+    if (b === "green") return { bg: "bg-green-600", border: "border-green-500", text: "text-white", glow: "shadow-green-500/20", hex: "#16a34a" };
+    if (b === "blue") return { bg: "bg-blue-600", border: "border-blue-500", text: "text-white", glow: "shadow-blue-500/20", hex: "#2563eb" };
+    if (b === "yellow") return { bg: "bg-yellow-500", border: "border-yellow-400", text: "text-black", glow: "shadow-yellow-500/20", hex: "#eab308" };
+    if (b === "orange") return { bg: "bg-orange-500", border: "border-orange-400", text: "text-white", glow: "shadow-orange-500/20", hex: "#f97316" };
+    return { bg: "bg-white", border: "border-gray-300", text: "text-black", glow: "shadow-white/10", hex: "#ffffff" };
+}
 
 // Extracted as standalone component to prevent re-mount on parent re-renders
 function ChangePasswordForm() {
@@ -59,47 +74,48 @@ function ChangePasswordForm() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-            <div>
-                <label htmlFor="cp-current" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Current Password</label>
+            <div className="space-y-2">
+                <label htmlFor="cp-current" className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-white/25 uppercase">Current Password</label>
                 <Input
                     id="cp-current"
                     type="password"
                     value={currentPassword}
                     onChange={e => setCurrentPassword(e.target.value)}
                     autoComplete="current-password"
-                    className="input-glass"
+                    className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/20 focus:border-red-500/30 focus:ring-red-500/10 h-11 rounded-xl"
                     disabled={loading}
                 />
             </div>
-            <div>
-                <label htmlFor="cp-new" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">New Password</label>
+            <div className="space-y-2">
+                <label htmlFor="cp-new" className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-white/25 uppercase">New Password</label>
                 <Input
                     id="cp-new"
                     type="password"
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
                     autoComplete="new-password"
-                    className="input-glass"
+                    className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/20 focus:border-red-500/30 focus:ring-red-500/10 h-11 rounded-xl"
                     disabled={loading}
                 />
             </div>
-            <div>
-                <label htmlFor="cp-confirm" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Confirm New Password</label>
+            <div className="space-y-2">
+                <label htmlFor="cp-confirm" className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-white/25 uppercase">Confirm New Password</label>
                 <Input
                     id="cp-confirm"
                     type="password"
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
                     autoComplete="new-password"
-                    className="input-glass"
+                    className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/20 focus:border-red-500/30 focus:ring-red-500/10 h-11 rounded-xl"
                     disabled={loading}
                 />
             </div>
             {error && <div className="text-red-400 text-sm">{error}</div>}
-            {success && <div className="text-green-400 text-sm">{success}</div>}
-            <Button type="submit" className="w-full h-10 bg-primary text-white font-bold rounded-lg" disabled={loading}>
+            {success && <div className="text-emerald-400 text-sm">{success}</div>}
+            <button type="submit" disabled={loading}
+                className="w-full h-11 bg-white text-black font-semibold rounded-xl hover:bg-white/90 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Change Password"}
-            </Button>
+            </button>
         </form>
     );
 }
@@ -361,8 +377,14 @@ export default function ProfilePage() {
     // Show loading while checking auth
     if (authLoading) {
         return (
-            <div className="min-h-screen w-full bg-black flex items-center justify-center">
-                <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
+            <div className="min-h-screen w-full bg-[#060606] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="relative">
+                        <div className="w-16 h-16 rounded-full border-2 border-white/[0.06] animate-pulse" />
+                        <div className="absolute inset-0 w-16 h-16 rounded-full border-t-2 border-red-500 animate-spin" />
+                    </div>
+                    <p className="text-white/30 text-sm font-mono tracking-wider">LOADING PROFILE</p>
+                </div>
             </div>
         );
     }
@@ -372,183 +394,171 @@ export default function ProfilePage() {
         return null;
     }
 
+    const belt = getBeltColor(user?.currentBeltRank);
+
     return (
-        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
-            {/* Background Elements */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-red-900/20 via-black to-black" />
-            <div className="absolute inset-0 bg-[url('/dojo-bg.png')] bg-cover bg-center opacity-10 mix-blend-overlay" />
+        <div className="min-h-screen w-full bg-[#060606] text-white relative overflow-hidden">
+            {/* Background grid */}
+            <div className="fixed inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none" />
+            {/* Subtle top glow */}
+            <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-red-500/[0.03] rounded-full blur-[120px] pointer-events-none" />
 
-            <div className="container-responsive py-8 relative z-10">
-                <header className="flex items-center justify-between mb-6 sm:mb-12">
-                    <Link href="/dashboard" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group py-2 min-h-[44px]">
-                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        <span className="hidden sm:inline">Back to Dashboard</span>
-                        <span className="sm:hidden">Back</span>
+            <div className="container-responsive py-6 sm:py-10 relative z-10">
+                {/* Header */}
+                <motion.header
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center justify-between mb-8 sm:mb-12"
+                >
+                    <Link href="/dashboard" className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group py-2 min-h-[44px]">
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-sm">Back to Dashboard</span>
                     </Link>
-                    <h1 className="text-2xl font-bold tracking-wider uppercase text-transparent stroke-text" style={{ WebkitTextStroke: '1px rgba(255,255,255,0.5)' }}>
-                        My Profile
-                    </h1>
-                </header>
+                    <div className="px-3 py-1.5 rounded-full border border-white/[0.06] bg-white/[0.02]">
+                        <span className="text-[10px] font-mono tracking-[0.2em] text-white/40 uppercase">Fighter Profile</span>
+                    </div>
+                </motion.header>
 
-                {/* Hero Banner */}
+                {/* Hero Identity Card */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="relative mb-8 rounded-2xl overflow-hidden border border-white/5"
+                    transition={{ duration: 0.5 }}
+                    className="relative mb-8 sm:mb-10 rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-900/60 via-zinc-900/80 to-black" />
-                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:20px_20px]" />
-                    {/* Belt color stripe */}
-                    <div className={`absolute bottom-0 left-0 right-0 h-1 ${
-                        user?.currentBeltRank?.startsWith('Black') ? 'bg-gradient-to-r from-black via-red-600 to-black' :
-                        user?.currentBeltRank === 'Brown' ? 'bg-amber-700' :
-                        user?.currentBeltRank === 'Green' ? 'bg-green-500' :
-                        user?.currentBeltRank === 'Blue' ? 'bg-blue-500' :
-                        user?.currentBeltRank === 'Yellow' ? 'bg-yellow-500' :
-                        user?.currentBeltRank === 'Orange' ? 'bg-orange-500' :
-                        'bg-white/30'
-                    }`} />
-                    <div className="relative z-10 px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-start md:items-center gap-6">
-                        <div className="w-20 h-20 rounded-full border-2 border-red-500/40 overflow-hidden bg-black/50 flex items-center justify-center flex-shrink-0">
-                            {getUserProfileImage(user) ? (
-                                <img src={getUserProfileImage(user)!} alt="Profile" className="w-full h-full object-cover" />
-                            ) : (
-                                <Shield className="w-10 h-10 text-gray-600" />
-                            )}
+                    {/* Background grid inside card */}
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:24px_24px]" />
+                    {/* Belt color accent stripe at top */}
+                    <div className="h-[2px] w-full" style={{ background: `linear-gradient(90deg, transparent, ${belt.hex}40, ${belt.hex}, ${belt.hex}40, transparent)` }} />
+
+                    <div className="relative z-10 px-5 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center gap-6 md:gap-8">
+                        {/* Avatar with belt-color ring */}
+                        <div className="relative group flex-shrink-0">
+                            <div className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-[3px] ${belt.border} shadow-lg ${belt.glow}`}>
+                                {getUserProfileImage(user) ? (
+                                    <img src={getUserProfileImage(user)!} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full bg-white/[0.03] flex items-center justify-center">
+                                        <User className="w-10 h-10 sm:w-12 sm:h-12 text-white/20" />
+                                    </div>
+                                )}
+                            </div>
+                            {/* Upload button */}
+                            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploading}
+                                className="absolute -bottom-1 -right-1 p-2.5 rounded-full bg-[#111] border border-white/[0.1] text-white/60 hover:text-white hover:border-white/20 transition-all min-w-[40px] min-h-[40px] flex items-center justify-center"
+                            >
+                                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                            </button>
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">{user?.name}</h2>
-                            <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-400">
-                                <span className="flex items-center gap-1.5">
-                                    <Award className="w-4 h-4 text-red-500" />
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0 text-center md:text-left">
+                            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">{user?.name}</h1>
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-3">
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${belt.bg} ${belt.text} ${belt.border} border`}>
+                                    <Award className="w-3 h-3" />
                                     {user?.currentBeltRank || "White"} Belt
                                 </span>
                                 {user?.dojo?.name && (
-                                    <span className="flex items-center gap-1.5">
-                                        <MapPin className="w-4 h-4 text-red-500" />
+                                    <span className="inline-flex items-center gap-1.5 text-sm text-white/40">
+                                        <Building className="w-3.5 h-3.5" />
                                         {user.dojo.name}
                                     </span>
                                 )}
                                 {user?.membershipNumber && (
-                                    <span className="px-2 py-0.5 rounded bg-white/5 font-mono text-xs text-gray-500">
-                                        #{user.membershipNumber}
+                                    <span className="px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.06] font-mono text-[11px] text-white/30 tracking-wider">
+                                        {user.membershipNumber}
                                     </span>
                                 )}
                             </div>
                         </div>
-                        <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider ${
-                            user?.membershipStatus === 'ACTIVE' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
-                            user?.membershipStatus === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
-                            'bg-red-500/10 text-red-400 border border-red-500/20'
+
+                        {/* Status badge */}
+                        <div className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest font-mono ${
+                            user?.membershipStatus === 'ACTIVE'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : user?.membershipStatus === 'PENDING'
+                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
                         }`}>
+                            <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${
+                                user?.membershipStatus === 'ACTIVE' ? 'bg-emerald-400' :
+                                user?.membershipStatus === 'PENDING' ? 'bg-amber-400' : 'bg-red-400'
+                            }`} />
                             {user?.membershipStatus || "PENDING"}
                         </div>
                     </div>
                 </motion.div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Profile Card */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="lg:col-span-1"
-                    >
-                        <div className="glass-card p-4 sm:p-6 lg:p-8 flex flex-col items-center text-center relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/20 to-transparent" />
+                <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
 
-                            <div className="relative mb-6 group">
-                                <div className="w-32 h-32 rounded-full border-4 border-primary/30 overflow-hidden bg-black/50 flex items-center justify-center">
-                                    {isUploading ? (
-                                        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                                    ) : getUserProfileImage(user) ? (
-                                        <img src={getUserProfileImage(user)!} alt="Profile" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <Shield className="w-16 h-16 text-gray-600" />
-                                    )}
-                                </div>
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handlePhotoUpload}
-                                />
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="absolute bottom-0 right-0 p-3 bg-primary rounded-full text-white shadow-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-primary/80 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                                >
-                                    <Camera className="w-5 h-5" />
-                                </button>
-                            </div>
+                    {/* Left Column: Identity & Actions */}
+                    <motion.div variants={fadeUp} className="lg:col-span-4 space-y-5">
+                        {/* Quick Stats Card */}
+                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6 space-y-5">
+                            <h3 className="text-[11px] font-mono tracking-[0.2em] text-white/30 uppercase">Quick Info</h3>
 
-                            <h2 className="text-2xl font-bold text-white mb-1">{formData.name}</h2>
-                            <p className="text-primary font-bold tracking-wider uppercase text-sm mb-6">{user?.currentBeltRank || "White"} Belt</p>
-
-                            <div className="w-full space-y-4 text-sm border-t border-white/10 pt-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="text-gray-500 uppercase text-xs font-bold">Membership ID</p>
-                                        <p className="text-white font-mono">{user?.membershipNumber || "Not Assigned"}</p>
+                            <div className="space-y-4">
+                                {[
+                                    { label: "Membership ID", value: user?.membershipNumber || "Not Assigned", mono: true },
+                                    { label: "Belt Rank", value: (user?.currentBeltRank || "White") + " Belt", accent: true },
+                                    { label: "Dojo", value: user?.dojo?.name || "Not Assigned" },
+                                    { label: "Status", value: user?.membershipStatus || "PENDING", status: true },
+                                    { label: "Experience", value: (user?.experienceYears || user?.experienceMonths) ? `${user?.experienceYears || 0}y ${user?.experienceMonths || 0}m` : "Not Set" },
+                                ].map((item, i) => (
+                                    <div key={i} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
+                                        <span className="text-xs text-white/30 uppercase tracking-wider">{item.label}</span>
+                                        <span className={`text-sm font-medium ${
+                                            item.status
+                                                ? user?.membershipStatus === 'ACTIVE' ? 'text-emerald-400' :
+                                                  user?.membershipStatus === 'PENDING' ? 'text-amber-400' : 'text-red-400'
+                                                : item.accent ? 'text-red-400'
+                                                : item.mono ? 'font-mono text-white/60 text-xs' : 'text-white/70'
+                                        }`}>
+                                            {item.value}
+                                        </span>
                                     </div>
-                                    <div>
-                                        <p className="text-gray-500 uppercase text-xs font-bold">Status</p>
-                                        <p className={`font-bold ${
-                                            user?.membershipStatus === 'ACTIVE' ? 'text-green-400' :
-                                            user?.membershipStatus === 'PENDING' ? 'text-yellow-400' :
-                                            user?.membershipStatus === 'EXPIRED' ? 'text-red-400' :
-                                            'text-gray-400'
-                                        }`}>{user?.membershipStatus || "PENDING"}</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p className="text-gray-500 uppercase text-xs font-bold">Dojo</p>
-                                    <p className="text-white">{user?.dojo?.name || "Not Assigned"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-500 uppercase text-xs font-bold">Experience</p>
-                                    <p className="text-white">
-                                        {(user?.experienceYears || user?.experienceMonths)
-                                            ? `${user?.experienceYears || 0}y ${user?.experienceMonths || 0}m`
-                                            : "Not Set"}
-                                    </p>
-                                </div>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Download Membership Card */}
-                        <Button
+                        {/* Download Card Button */}
+                        <button
                             onClick={handleDownloadCard}
-                            className="w-full mt-4 h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-900/20 hover:shadow-red-900/40 transition-all flex items-center justify-center gap-2"
+                            className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] text-white/70 hover:text-white transition-all group"
                         >
-                            <Download className="w-4 h-4" />
-                            Download Membership Card
-                        </Button>
+                            <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-medium">Download Membership Card</span>
+                        </button>
 
                         {/* Belt Verification Status */}
                         {user?.verificationStatus && user.verificationStatus !== 'VERIFIED' && (
-                            <div className={`mt-4 p-4 rounded-xl border ${
+                            <div className={`p-4 rounded-xl border ${
                                 user.verificationStatus === 'PENDING_VERIFICATION'
-                                    ? 'bg-yellow-500/10 border-yellow-500/20'
-                                    : 'bg-red-500/10 border-red-500/20'
+                                    ? 'bg-amber-500/[0.05] border-amber-500/10'
+                                    : 'bg-red-500/[0.05] border-red-500/10'
                             }`}>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-start gap-3">
                                     {user.verificationStatus === 'PENDING_VERIFICATION' ? (
-                                        <Loader2 className="w-5 h-5 text-yellow-400 animate-spin" />
+                                        <Loader2 className="w-4 h-4 text-amber-400 animate-spin mt-0.5 flex-shrink-0" />
                                     ) : (
-                                        <AlertCircle className="w-5 h-5 text-red-400" />
+                                        <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
                                     )}
                                     <div>
-                                        <p className={`text-sm font-bold ${
-                                            user.verificationStatus === 'PENDING_VERIFICATION' ? 'text-yellow-400' : 'text-red-400'
+                                        <p className={`text-sm font-semibold ${
+                                            user.verificationStatus === 'PENDING_VERIFICATION' ? 'text-amber-400' : 'text-red-400'
                                         }`}>
                                             {user.verificationStatus === 'PENDING_VERIFICATION'
                                                 ? 'Belt Verification Pending'
                                                 : 'Belt Verification Rejected'}
                                         </p>
-                                        <p className="text-xs text-gray-400 mt-1">
+                                        <p className="text-xs text-white/30 mt-1 leading-relaxed">
                                             {user.verificationStatus === 'PENDING_VERIFICATION'
                                                 ? 'Your belt rank claim is being reviewed by your instructor.'
-                                                : 'Your belt rank claim was not approved. You have been assigned White belt. Contact your instructor for details.'}
+                                                : 'Your belt rank claim was not approved. Contact your instructor.'}
                                         </p>
                                     </div>
                                 </div>
@@ -556,252 +566,237 @@ export default function ProfilePage() {
                         )}
                     </motion.div>
 
-                    {/* Right Column: Details & History */}
-                    <div className="lg:col-span-2 space-y-8">
+                    {/* Right Column: Details, Belt History, Password */}
+                    <div className="lg:col-span-8 space-y-6 sm:space-y-8">
+
                         {/* Personal Details */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="glass-card p-4 sm:p-6 lg:p-8"
+                            variants={fadeUp}
+                            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6 lg:p-8"
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <span className="w-1 h-6 bg-primary rounded-full" />
-                                    Personal Details
-                                </h3>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                                        <User className="w-4 h-4 text-red-400" />
+                                    </div>
+                                    <h3 className="text-base font-semibold text-white">Personal Details</h3>
+                                </div>
+                                <button
                                     onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                                    className="text-primary hover:text-primary-light hover:bg-primary/10"
+                                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
+                                        isEditing
+                                            ? 'bg-white text-black hover:bg-white/90'
+                                            : 'border border-white/[0.08] text-white/50 hover:text-white hover:border-white/20'
+                                    }`}
                                 >
                                     {isEditing ? (
-                                        isLoading ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save Changes</>
+                                        isLoading ? <><Loader2 className="w-3 h-3 animate-spin" /> Saving</> : <><Save className="w-3 h-3" /> Save</>
                                     ) : (
-                                        <><Edit2 className="w-4 h-4 mr-2" /> Edit Profile</>
+                                        <><Edit2 className="w-3 h-3" /> Edit</>
                                     )}
-                                </Button>
+                                </button>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {/* Full Name */}
                                 <div className="space-y-2">
-                                    <label htmlFor="profile-name" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Full Name</label>
-                                    <Input
-                                        id="profile-name"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        disabled={!isEditing}
-                                        className="input-glass"
-                                    />
+                                    <label htmlFor="profile-name" className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-white/25 uppercase">
+                                        <User className="w-3 h-3" /> Full Name
+                                    </label>
+                                    <Input id="profile-name" name="name" value={formData.name} onChange={handleChange} disabled={!isEditing}
+                                        className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/20 focus:border-red-500/30 focus:ring-red-500/10 transition-all h-11 rounded-xl" />
                                 </div>
+
+                                {/* Email */}
                                 <div className="space-y-2">
-                                    <label htmlFor="profile-email" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Email</label>
-                                    <Input
-                                        id="profile-email"
-                                        name="email"
-                                        value={formData.email}
-                                        disabled
-                                        className="input-glass opacity-50 cursor-not-allowed"
-                                    />
+                                    <label htmlFor="profile-email" className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-white/25 uppercase">
+                                        <Mail className="w-3 h-3" /> Email
+                                    </label>
+                                    <Input id="profile-email" name="email" value={formData.email} disabled
+                                        className="bg-white/[0.03] border-white/[0.06] text-white/40 cursor-not-allowed h-11 rounded-xl" />
                                 </div>
+
+                                {/* Phone */}
                                 <div className="space-y-2">
-                                    <label htmlFor="profile-phone" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
-                                        Phone <span className="text-red-400">*</span>
+                                    <label htmlFor="profile-phone" className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-white/25 uppercase">
+                                        <Phone className="w-3 h-3" /> Phone <span className="text-red-400">*</span>
                                     </label>
                                     <div className="flex gap-2">
-                                        <div className="flex items-center px-3 rounded-md bg-white/5 border border-white/10 text-white text-sm font-mono min-w-[60px] justify-center">
+                                        <div className="flex items-center px-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/40 text-sm font-mono min-w-[56px] justify-center h-11">
                                             +91
                                         </div>
-                                        <Input
-                                            id="profile-phone"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleChange}
-                                            disabled={!isEditing}
-                                            placeholder="10-digit number"
-                                            maxLength={10}
-                                            className={`input-glass flex-1 ${phoneError ? 'border-red-500' : ''}`}
-                                        />
+                                        <Input id="profile-phone" name="phone" value={formData.phone} onChange={handleChange} disabled={!isEditing}
+                                            placeholder="10-digit number" maxLength={10}
+                                            className={`bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/20 focus:border-red-500/30 focus:ring-red-500/10 h-11 rounded-xl flex-1 ${phoneError ? 'border-red-500/50' : ''}`} />
                                     </div>
-                                    {phoneError && <p className="text-red-400 text-xs mt-1">{phoneError}</p>}
+                                    {phoneError && <p className="text-red-400 text-xs">{phoneError}</p>}
                                 </div>
+
+                                {/* City */}
                                 <div className="space-y-2 relative" ref={cityDropdownRef}>
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
-                                        <MapPin className="w-3 h-3 inline mr-1" />City
+                                    <label className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-white/25 uppercase">
+                                        <MapPin className="w-3 h-3" /> City
                                     </label>
                                     <div className="relative">
-                                        <Input
-                                            name="city"
-                                            value={isEditing ? cityQuery : formData.city}
-                                            onChange={(e) => {
-                                                setCityQuery(e.target.value);
-                                                setFormData({ ...formData, city: e.target.value, state: "" });
-                                                setShowCityDropdown(true);
-                                            }}
-                                            disabled={!isEditing}
-                                            placeholder="Search city..."
-                                            className="input-glass"
-                                            autoComplete="off"
-                                        />
+                                        <Input name="city" value={isEditing ? cityQuery : formData.city}
+                                            onChange={(e) => { setCityQuery(e.target.value); setFormData({ ...formData, city: e.target.value, state: "" }); setShowCityDropdown(true); }}
+                                            disabled={!isEditing} placeholder="Search city..." autoComplete="off"
+                                            className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/20 focus:border-red-500/30 focus:ring-red-500/10 h-11 rounded-xl" />
                                         {isEditing && cityQuery && (
-                                            <button
-                                                onClick={() => {
-                                                    setCityQuery("");
-                                                    setFormData({ ...formData, city: "", state: "" });
-                                                }}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                                            >
+                                            <button onClick={() => { setCityQuery(""); setFormData({ ...formData, city: "", state: "" }); }}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60">
                                                 <X className="w-4 h-4" />
                                             </button>
                                         )}
                                     </div>
                                     {showCityDropdown && isEditing && filteredCities.length > 0 && (
-                                        <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg bg-gray-900 border border-white/10 shadow-xl">
+                                        <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-xl bg-[#111] border border-white/[0.08] shadow-2xl">
                                             {filteredCities.map((c) => (
-                                                <button
-                                                    key={`${c.city}-${c.state}`}
-                                                    onClick={() => handleCitySelect(c)}
-                                                    className="w-full text-left px-4 py-3 hover:bg-primary/20 text-sm text-white flex justify-between items-center min-h-[44px]"
-                                                >
+                                                <button key={`${c.city}-${c.state}`} onClick={() => handleCitySelect(c)}
+                                                    className="w-full text-left px-4 py-3 hover:bg-white/[0.05] text-sm text-white/70 flex justify-between items-center min-h-[44px] transition-colors">
                                                     <span>{c.city}</span>
-                                                    <span className="text-gray-500 text-xs">{c.state}</span>
+                                                    <span className="text-white/20 text-xs">{c.state}</span>
                                                 </button>
                                             ))}
                                         </div>
                                     )}
                                 </div>
+
+                                {/* State */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">State</label>
-                                    <Input
-                                        name="state"
-                                        value={formData.state}
-                                        onChange={handleChange}
-                                        disabled={!isEditing}
-                                        placeholder="Auto-filled from city"
-                                        className="input-glass"
-                                    />
+                                    <label className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-white/25 uppercase">
+                                        <MapPin className="w-3 h-3" /> State
+                                    </label>
+                                    <Input name="state" value={formData.state} onChange={handleChange} disabled={!isEditing} placeholder="Auto-filled from city"
+                                        className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/20 focus:border-red-500/30 focus:ring-red-500/10 h-11 rounded-xl" />
                                 </div>
+
+                                {/* Height */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Height (cm)</label>
-                                    <Input
-                                        name="height"
-                                        value={formData.height}
-                                        onChange={handleChange}
-                                        disabled={!isEditing}
-                                        className="input-glass"
-                                    />
+                                    <label className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-white/25 uppercase">
+                                        <Ruler className="w-3 h-3" /> Height (cm)
+                                    </label>
+                                    <Input name="height" value={formData.height} onChange={handleChange} disabled={!isEditing}
+                                        className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/20 focus:border-red-500/30 focus:ring-red-500/10 h-11 rounded-xl" />
                                 </div>
+
+                                {/* Weight */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Weight (kg)</label>
-                                    <Input
-                                        name="weight"
-                                        value={formData.weight}
-                                        onChange={handleChange}
-                                        disabled={!isEditing}
-                                        className="input-glass"
-                                    />
+                                    <label className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider text-white/25 uppercase">
+                                        <Weight className="w-3 h-3" /> Weight (kg)
+                                    </label>
+                                    <Input name="weight" value={formData.weight} onChange={handleChange} disabled={!isEditing}
+                                        className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/20 focus:border-red-500/30 focus:ring-red-500/10 h-11 rounded-xl" />
                                 </div>
                             </div>
+
+                            {/* Mobile cancel when editing */}
+                            <AnimatePresence>
+                                {isEditing && (
+                                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                                        className="mt-5 pt-5 border-t border-white/[0.04] flex justify-end gap-3 md:hidden">
+                                        <button onClick={() => setIsEditing(false)} className="px-5 py-2.5 text-sm text-white/50 hover:text-white border border-white/[0.08] rounded-lg transition-colors">
+                                            Cancel
+                                        </button>
+                                        <button onClick={handleSave} disabled={isLoading}
+                                            className="px-5 py-2.5 text-sm font-semibold bg-white text-black rounded-lg hover:bg-white/90 transition-colors flex items-center gap-2">
+                                            {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                                            {isLoading ? "Saving..." : "Save Changes"}
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </motion.div>
 
-                        {/* Belt History */}
+                        {/* Belt History — Timeline */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="glass-card p-4 sm:p-6 lg:p-8"
+                            variants={fadeUp}
+                            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6 lg:p-8"
                         >
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
-                                <span className="w-1 h-6 bg-primary rounded-full" />
-                                Belt History
-                            </h3>
-
-                            <div className="space-y-4">
-                                {beltHistory.length > 0 ? (
-                                    beltHistory.map((record, index) => (
-                                        <div key={index}>
-                                            <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xs border-2 shadow-lg
-                                                    ${record.newBelt === 'White' ? 'bg-white text-black border-gray-300' : ''}
-                                                    ${record.newBelt === 'Orange' ? 'bg-orange-500 text-white border-orange-600' : ''}
-                                                    ${record.newBelt === 'Blue' ? 'bg-blue-500 text-white border-blue-600' : ''}
-                                                    ${record.newBelt === 'Yellow' ? 'bg-yellow-500 text-white border-yellow-600' : ''}
-                                                    ${record.newBelt === 'Green' ? 'bg-green-500 text-white border-green-600' : ''}
-                                                    ${record.newBelt === 'Brown' ? 'bg-amber-700 text-white border-amber-800' : ''}
-                                                    ${record.newBelt?.startsWith('Black') ? 'bg-black text-white border-gray-600' : ''}
-                                                `}>
-                                                    {record.newBelt?.[0] || 'W'}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <h4 className="font-bold text-white">{record.newBelt} Belt Promotion</h4>
-                                                    <p className="text-sm text-gray-400">Promoted by {record.promotedBy?.name || 'Sensei'}</p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="text-sm font-mono text-primary">{new Date(record.promotionDate).toLocaleDateString()}</p>
-                                                </div>
-                                            </div>
-                                            {/* Belt Certificate Download */}
-                                            <div className="mt-2">
-                                                <BeltCertificate
-                                                    studentName={user?.name || ''}
-                                                    beltRank={record.newBelt}
-                                                    promotionDate={record.promotionDate}
-                                                    promoterName={record.promotedBy?.name || 'Sensei'}
-                                                    membershipNumber={user?.membershipNumber}
-                                                    dojoName={user?.dojo?.name}
-                                                    oldBelt={record.oldBelt}
-                                                />
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-gray-500 text-center py-8">No belt promotions yet</p>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                                    <Award className="w-4 h-4 text-red-400" />
+                                </div>
+                                <h3 className="text-base font-semibold text-white">Belt Journey</h3>
+                                {beltHistory.length > 0 && (
+                                    <span className="ml-auto text-[11px] font-mono text-white/20">{beltHistory.length} promotion{beltHistory.length !== 1 && 's'}</span>
                                 )}
                             </div>
+
+                            {beltHistory.length > 0 ? (
+                                <div className="relative">
+                                    {/* Timeline line */}
+                                    <div className="absolute left-[19px] top-2 bottom-2 w-px bg-white/[0.06]" />
+
+                                    <div className="space-y-1">
+                                        {beltHistory.map((record, index) => {
+                                            const bCol = getBeltColor(record.newBelt);
+                                            return (
+                                                <div key={index}>
+                                                    <div className="relative flex items-start gap-4 py-4 group">
+                                                        {/* Timeline dot */}
+                                                        <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold border-2 ${bCol.bg} ${bCol.border} ${bCol.text} shadow-md ${bCol.glow} flex-shrink-0`}>
+                                                            {record.newBelt?.[0] || 'W'}
+                                                        </div>
+                                                        {/* Content */}
+                                                        <div className="flex-1 min-w-0 pt-1">
+                                                            <div className="flex items-baseline justify-between gap-2">
+                                                                <h4 className="font-semibold text-white text-sm">{record.newBelt} Belt</h4>
+                                                                <span className="text-[11px] font-mono text-white/25 flex-shrink-0">
+                                                                    {new Date(record.promotionDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-xs text-white/30 mt-0.5">
+                                                                {record.oldBelt && <span className="text-white/20">{record.oldBelt} → {record.newBelt}</span>}
+                                                                {record.oldBelt && ' · '}
+                                                                Promoted by {record.promotedBy?.name || 'Sensei'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    {/* Certificate download */}
+                                                    <div className="ml-14 -mt-2 mb-2">
+                                                        <BeltCertificate
+                                                            studentName={user?.name || ''}
+                                                            beltRank={record.newBelt}
+                                                            promotionDate={record.promotionDate}
+                                                            promoterName={record.promotedBy?.name || 'Sensei'}
+                                                            membershipNumber={user?.membershipNumber}
+                                                            dojoName={user?.dojo?.name}
+                                                            oldBelt={record.oldBelt}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-10 space-y-3">
+                                    <div className="w-12 h-12 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto">
+                                        <Award className="w-5 h-5 text-white/15" />
+                                    </div>
+                                    <p className="text-white/25 text-sm">No belt promotions recorded yet</p>
+                                    <p className="text-white/15 text-xs">Your journey starts with the white belt</p>
+                                </div>
+                            )}
                         </motion.div>
 
-                        {/* Change Password Section */}
+                        {/* Change Password */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.15 }}
-                            className="glass-card p-4 sm:p-6 lg:p-8"
+                            variants={fadeUp}
+                            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6 lg:p-8"
                         >
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
-                                <span className="w-1 h-6 bg-primary rounded-full" />
-                                Change Password
-                            </h3>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                                    <Lock className="w-4 h-4 text-white/40" />
+                                </div>
+                                <h3 className="text-base font-semibold text-white">Change Password</h3>
+                            </div>
                             <ChangePasswordForm />
                         </motion.div>
-
                     </div>
-                </div>
+                </motion.div>
             </div>
-
-            {/* Mobile Sticky Save Bar */}
-            {isEditing && (
-                <div className="fixed bottom-16 left-0 right-0 z-50 p-3 bg-black/95 backdrop-blur-xl border-t border-white/10 md:hidden safe-area-inset">
-                    <div className="flex gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsEditing(false)}
-                            className="flex-1 h-12 border-white/20 text-white font-bold rounded-xl active:scale-95"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleSave}
-                            disabled={isLoading}
-                            className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-900/30 active:scale-95"
-                        >
-                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                            {isLoading ? "Saving..." : "Save Changes"}
-                        </Button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
