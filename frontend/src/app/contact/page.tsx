@@ -78,7 +78,7 @@ export default function ContactPage() {
 
                         {/* Phone */}
                         <a
-                            href="tel:+919956711400"
+                            href="tel:+919956745114"
                             className="group block bg-zinc-900/50 border border-white/10 rounded-xl p-6 hover:border-primary/40 transition-all duration-300"
                         >
                             <div className="flex items-start gap-4">
@@ -88,7 +88,7 @@ export default function ContactPage() {
                                 <div>
                                     <h3 className="text-white font-bold text-lg mb-1">Phone</h3>
                                     <p className="text-gray-400 text-lg group-hover:text-primary transition-colors">
-                                        +91 99567 11400
+                                        +91 99567 45114
                                     </p>
                                 </div>
                             </div>

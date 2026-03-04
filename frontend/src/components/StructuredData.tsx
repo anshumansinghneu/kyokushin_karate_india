@@ -37,7 +37,7 @@ export default function StructuredData() {
     },
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+91-99567-11400",
+      "telephone": "+91-99567-45114",
       "contactType": "Customer Service",
       "availableLanguage": ["English", "Hindi"]
     },
@@ -71,7 +71,7 @@ export default function StructuredData() {
     "name": "Kyokushin Karate Foundation of India – Headquarters Dojo",
     "description": "Full-contact Kyokushin karate dojo offering classes for kids and adults. Self-defense, fitness, and belt grading programs available.",
     "url": "https://kyokushinfoundation.com/dojos",
-    "telephone": "+91-99567-11400",
+    "telephone": "+91-99567-45114",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "Shuklaganj Bypass Rd, Poni Road",

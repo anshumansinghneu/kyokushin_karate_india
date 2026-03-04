@@ -133,7 +133,7 @@ export default function PrivacyPage() {
                             </p>
                             <div className="mt-4 p-4 bg-zinc-900/50 border border-white/10 rounded-lg space-y-1">
                                 <p>Email: contact@kyokushin.in</p>
-                                <p>Phone: +91 99567 11400</p>
+                                <p>Phone: +91 99567 45114</p>
                                 <p>Address: Shuklaganj Bypass Rd, Poni Road, Shuklaganj, Netua Grameen, Uttar Pradesh 209861, India</p>
                             </div>
                         </section>
