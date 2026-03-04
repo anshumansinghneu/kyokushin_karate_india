@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X, Download, Award, AlertCircle, User, Mail, Phone, Ruler, Weight, ChevronRight, Lock, Clock, Building } from "lucide-react";
+import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X, Award, AlertCircle, User, Mail, Phone, Ruler, Weight, ChevronRight, Lock, Clock, Building } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { getUserProfileImage } from "@/lib/imageUtils";
 import { searchCities, CityData } from "@/lib/india-locations";
 import BeltCertificate from "@/components/BeltCertificate";
+import MembershipCard from "@/components/dashboard/MembershipCard";
 import { useToast } from "@/contexts/ToastContext";
 
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
@@ -286,191 +287,7 @@ export default function ProfilePage() {
         }
     };
 
-    const handleDownloadCard = async () => {
-        const [{ jsPDF }, QRCode] = await Promise.all([
-            import("jspdf"),
-            import("qrcode"),
-        ]);
 
-        // Credit-card size: 85.6 x 53.98 mm
-        const W = 85.6, H = 54;
-        const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: [W, H] });
-
-        // Helper: load image as data URL (handles AVIF/any format via canvas)
-        const loadImg = (src: string): Promise<string> =>
-            new Promise((resolve, reject) => {
-                const img = new Image();
-                img.crossOrigin = "anonymous";
-                img.onload = () => {
-                    const c = document.createElement("canvas");
-                    c.width = img.naturalWidth;
-                    c.height = img.naturalHeight;
-                    c.getContext("2d")!.drawImage(img, 0, 0);
-                    resolve(c.toDataURL("image/png"));
-                };
-                img.onerror = reject;
-                img.src = src;
-            });
-
-        // Generate QR code (verify URL)
-        const verifyUrl = `https://kyokushinfoundation.com/verify/${user?.membershipNumber || ""}`;
-        const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
-            width: 200,
-            margin: 0,
-            color: { dark: "#ffffff", light: "#00000000" },
-            errorCorrectionLevel: "M",
-        });
-
-        // Load logo
-        let logoDataUrl: string | null = null;
-        try {
-            logoDataUrl = await loadImg("/kkfi-logo.avif");
-        } catch { /* skip logo if fails */ }
-
-        // ═══════════════ FRONT SIDE ═══════════════
-
-        // Background - deep black
-        doc.setFillColor(8, 8, 8);
-        doc.rect(0, 0, W, H, "F");
-
-        // Top red accent bar
-        doc.setFillColor(200, 30, 30);
-        doc.rect(0, 0, W, 1.2, "F");
-
-        // Subtle dark panel top area
-        doc.setFillColor(14, 14, 14);
-        doc.rect(0, 1.2, W, 16, "F");
-
-        // Logo (top-left)
-        if (logoDataUrl) {
-            doc.addImage(logoDataUrl, "PNG", 3.5, 3, 10, 10);
-        }
-
-        // Organization name
-        const orgX = logoDataUrl ? 15 : 4;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7.5);
-        doc.setTextColor(255, 255, 255);
-        doc.text("KYOKUSHIN KARATE", orgX, 7.5);
-        doc.setFontSize(4.5);
-        doc.setTextColor(200, 30, 30);
-        doc.text("FOUNDATION OF INDIA", orgX, 11);
-        doc.setFontSize(3);
-        doc.setTextColor(100, 100, 100);
-        doc.text("OFFICIAL MEMBERSHIP CARD", orgX, 14);
-
-        // QR code (top-right)
-        doc.addImage(qrDataUrl, "PNG", W - 16, 2.5, 13, 13);
-        doc.setFontSize(2.3);
-        doc.setTextColor(80, 80, 80);
-        doc.text("SCAN TO VERIFY", W - 9.5, 16.5, { align: "center" });
-
-        // Thin separator
-        doc.setDrawColor(40, 40, 40);
-        doc.setLineWidth(0.15);
-        doc.line(4, 17.8, W - 4, 17.8);
-
-        // Member Name
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(255, 255, 255);
-        const memberName = (user?.name || "Member").toUpperCase();
-        doc.text(memberName, 4, 23.5);
-
-        // Membership Number badge
-        doc.setFillColor(200, 30, 30);
-        const memNum = user?.membershipNumber || "PENDING";
-        const memNumWidth = doc.getTextWidth(memNum) + 4;
-        doc.roundedRect(4, 25.5, memNumWidth > 20 ? memNumWidth : 20, 4.5, 1, 1, "F");
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(5);
-        doc.setTextColor(255, 255, 255);
-        doc.text(memNum, 4 + (memNumWidth > 20 ? memNumWidth : 20) / 2, 28.3, { align: "center" });
-
-        // Info grid
-        const gridY = 33;
-        const fields = [
-            { label: "BELT RANK", value: user?.currentBeltRank || "White Belt", x: 4 },
-            { label: "DOJO", value: user?.dojo?.name || "—", x: 30 },
-            { label: "STATUS", value: user?.membershipStatus || "PENDING", x: 60 },
-        ];
-
-        fields.forEach((f) => {
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(3);
-            doc.setTextColor(90, 90, 90);
-            doc.text(f.label, f.x, gridY);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(5);
-            // Status gets color
-            if (f.label === "STATUS") {
-                if (f.value === "ACTIVE") doc.setTextColor(34, 197, 94);
-                else if (f.value === "PENDING") doc.setTextColor(234, 179, 8);
-                else doc.setTextColor(239, 68, 68);
-            } else {
-                doc.setTextColor(220, 220, 220);
-            }
-            doc.text(f.value, f.x, 36);
-        });
-
-        // Second row
-        const row2Y = 39.5;
-        const fields2 = [
-            { label: "CITY", value: user?.city || "—", x: 4 },
-            { label: "STATE", value: user?.state || "—", x: 30 },
-            { label: "DOB", value: user?.dob ? new Date(user.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : "—", x: 60 },
-        ];
-
-        fields2.forEach((f) => {
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(3);
-            doc.setTextColor(90, 90, 90);
-            doc.text(f.label, f.x, row2Y);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(4.5);
-            doc.setTextColor(180, 180, 180);
-            doc.text(f.value, f.x, row2Y + 3);
-        });
-
-        // Belt color accent bar
-        const beltColors: Record<string, [number, number, number]> = {
-            'White': [255, 255, 255], 'Orange': [249, 115, 22], 'Blue': [59, 130, 246],
-            'Yellow': [234, 179, 8], 'Green': [34, 197, 94], 'Brown': [146, 64, 14],
-        };
-        const beltRank = user?.currentBeltRank || 'White';
-        const bColor = beltRank.startsWith('Black') ? [200, 30, 30] as [number, number, number] : (beltColors[beltRank] || [255, 255, 255]);
-        doc.setFillColor(bColor[0], bColor[1], bColor[2]);
-        doc.rect(0, 46, W, 0.8, "F");
-
-        // Bottom footer area
-        doc.setFillColor(12, 12, 12);
-        doc.rect(0, 46.8, W, 7.2, "F");
-
-        // Website
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(3);
-        doc.setTextColor(80, 80, 80);
-        doc.text("kyokushinfoundation.com", 4, 50.5);
-
-        // Contact
-        doc.text("+91 99567 45114", 4, 52.5);
-
-        // Indian flag stripe at bottom
-        const flagH = 0.8;
-        doc.setFillColor(255, 153, 51);
-        doc.rect(0, H - flagH, W / 3, flagH, "F");
-        doc.setFillColor(255, 255, 255);
-        doc.rect(W / 3, H - flagH, W / 3, flagH, "F");
-        doc.setFillColor(19, 136, 8);
-        doc.rect((W / 3) * 2, H - flagH, W / 3, flagH, "F");
-
-        // Small "Not transferable" text
-        doc.setFontSize(2.2);
-        doc.setTextColor(50, 50, 50);
-        doc.text("This card is non-transferable. Property of KKFI.", W / 2, 50.5, { align: "center" });
-
-        doc.save(`KKFI_Card_${user?.membershipNumber || "member"}.pdf`);
-    };
 
     // Show loading while checking auth
     if (authLoading) {
@@ -595,42 +412,17 @@ export default function ProfilePage() {
 
                     {/* Left Column: Identity & Actions */}
                     <motion.div variants={fadeUp} className="lg:col-span-4 space-y-5">
-                        {/* Quick Stats Card */}
-                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6 space-y-5">
-                            <h3 className="text-[11px] font-mono tracking-[0.2em] text-white/30 uppercase">Quick Info</h3>
-
-                            <div className="space-y-4">
-                                {[
-                                    { label: "Membership ID", value: user?.membershipNumber || "Not Assigned", mono: true },
-                                    { label: "Belt Rank", value: (user?.currentBeltRank || "White") + " Belt", accent: true },
-                                    { label: "Dojo", value: user?.dojo?.name || "Not Assigned" },
-                                    { label: "Status", value: user?.membershipStatus || "PENDING", status: true },
-                                    { label: "Experience", value: (user?.experienceYears || user?.experienceMonths) ? `${user?.experienceYears || 0}y ${user?.experienceMonths || 0}m` : "Not Set" },
-                                ].map((item, i) => (
-                                    <div key={i} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
-                                        <span className="text-xs text-white/30 uppercase tracking-wider">{item.label}</span>
-                                        <span className={`text-sm font-medium ${
-                                            item.status
-                                                ? user?.membershipStatus === 'ACTIVE' ? 'text-emerald-400' :
-                                                  user?.membershipStatus === 'PENDING' ? 'text-amber-400' : 'text-red-400'
-                                                : item.accent ? 'text-red-400'
-                                                : item.mono ? 'font-mono text-white/60 text-xs' : 'text-white/70'
-                                        }`}>
-                                            {item.value}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Download Card Button */}
-                        <button
-                            onClick={handleDownloadCard}
-                            className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] text-white/70 hover:text-white transition-all group"
-                        >
-                            <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-medium">Download Membership Card</span>
-                        </button>
+                        {/* Membership Card with Download */}
+                        <MembershipCard user={{
+                            name: user?.name || '',
+                            membershipNumber: user?.membershipNumber,
+                            membershipStatus: user?.membershipStatus,
+                            currentBeltRank: user?.currentBeltRank,
+                            role: user?.role,
+                            experienceYears: user?.experienceYears,
+                            experienceMonths: user?.experienceMonths,
+                            dojo: user?.dojo ? { name: user.dojo.name, city: user.dojo.city } : null,
+                        }} />
 
                         {/* Belt Verification Status */}
                         {user?.verificationStatus && user.verificationStatus !== 'VERIFIED' && (
