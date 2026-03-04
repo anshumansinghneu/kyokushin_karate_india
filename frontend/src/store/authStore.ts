@@ -48,6 +48,7 @@ interface AuthState {
     registerWithVoucher: (data: any) => Promise<void>;
     logout: () => void;
     checkAuth: () => Promise<void>;
+    fetchUser: () => Promise<void>;
     refreshSession: () => Promise<boolean>;
     updateProfile: (data: any) => Promise<void>;
 }
@@ -162,6 +163,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             localStorage.removeItem('token');
             localStorage.removeItem('refreshToken');
             set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+        }
+    },
+
+    /** Force-fetch latest user data from the API (no guard). */
+    fetchUser: async () => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        try {
+            const response = await api.get('/auth/me');
+            set({ user: response.data.data.user, isAuthenticated: true, isLoading: false });
+        } catch (error) {
+            console.error('fetchUser failed:', error);
         }
     },
 

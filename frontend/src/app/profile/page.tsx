@@ -222,23 +222,32 @@ export default function ProfilePage() {
             showToast("File too large. Maximum size is 5MB.", "error");
             return;
         }
+        if (!file.type.startsWith("image/")) {
+            showToast("Please upload an image file (JPG, PNG, etc.)", "error");
+            return;
+        }
         setIsUploading(true);
         try {
             const fd = new FormData();
-            fd.append("file", file);
+            fd.append("image", file);
             const res = await api.post("/upload?folder=profiles", fd, {
-                headers: { "Content-Type": "multipart/form-data" },
+                headers: { "Content-Type": undefined as any },
             });
             const imageUrl = res.data.url || res.data.data?.url;
             if (imageUrl) {
-                await api.patch("/users/updateMe", { profilePhotoUrl: imageUrl });
-                await checkAuth();
+                await updateProfile({ profilePhotoUrl: imageUrl });
+                showToast("Profile photo updated!", "success");
+            } else {
+                showToast("Upload succeeded but no URL returned", "error");
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("Photo upload failed", err);
-            showToast("Failed to upload photo. Please try again.", "error");
+            const msg = err.response?.data?.message || "Failed to upload photo. Please try again.";
+            showToast(msg, "error");
         } finally {
             setIsUploading(false);
+            // Reset input so same file can be re-selected
+            if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 

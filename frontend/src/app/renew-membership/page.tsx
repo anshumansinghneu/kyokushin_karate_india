@@ -9,7 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 
 export default function RenewMembershipPage() {
-    const { user, isAuthenticated, checkAuth } = useAuthStore();
+    const { user, isAuthenticated, fetchUser } = useAuthStore();
     const router = useRouter();
 
     const [paymentStep, setPaymentStep] = useState<"idle" | "redeeming" | "done">("idle");
@@ -83,7 +83,7 @@ export default function RenewMembershipPage() {
         try {
             await api.post("/vouchers/redeem/renewal", { code: voucherValid.code });
             setPaymentStep("done");
-            await checkAuth();
+            await fetchUser();
             setTimeout(() => router.push("/dashboard"), 2000);
         } catch (err: unknown) {
             const errorMsg = err && typeof err === "object" && "response" in err

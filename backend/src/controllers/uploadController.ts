@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { createClient } from '@supabase/supabase-js';
 import { AppError } from '../utils/errorHandler';
 
@@ -10,7 +11,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const BUCKET = 'uploads';
 
-// Use memory storage (buffer) instead of disk — we upload to Supabase
+// Local uploads directory (fallback when Supabase is unavailable)
+const LOCAL_UPLOADS_DIR = path.join(__dirname, '../uploads');
+
+// Use memory storage (buffer) — we decide where to write later
 const storage = multer.memoryStorage();
 
 // File Filter
@@ -30,6 +34,38 @@ const upload = multer({
 
 export const uploadImage = upload.single('image');
 
+// Try uploading to Supabase, returns URL or null on failure
+async function trySupabaseUpload(filePath: string, buffer: Buffer, contentType: string): Promise<string | null> {
+    try {
+        if (!supabaseUrl || !supabaseServiceKey) return null;
+
+        const { data, error } = await supabase.storage
+            .from(BUCKET)
+            .upload(filePath, buffer, { contentType, upsert: false });
+
+        if (error) {
+            console.warn('[UPLOAD] Supabase failed:', error.message);
+            return null;
+        }
+
+        const { data: publicUrlData } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
+        return publicUrlData.publicUrl;
+    } catch (err: any) {
+        console.warn('[UPLOAD] Supabase unreachable:', err.message || err);
+        return null;
+    }
+}
+
+// Fallback: save to local filesystem and return relative URL
+function saveLocally(filePath: string, buffer: Buffer): string {
+    const fullPath = path.join(LOCAL_UPLOADS_DIR, filePath);
+    const dir = path.dirname(fullPath);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(fullPath, buffer);
+    // Return relative URL that express.static will serve
+    return `/uploads/${filePath}`;
+}
+
 export const handleUpload = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.file) {
@@ -45,25 +81,13 @@ export const handleUpload = async (req: Request, res: Response, next: NextFuncti
         const folder = (req.query.folder as string) || 'general';
         const filePath = `${folder}/${filename}`;
 
-        // Upload to Supabase Storage
-        const { data, error } = await supabase.storage
-            .from(BUCKET)
-            .upload(filePath, req.file.buffer, {
-                contentType: req.file.mimetype,
-                upsert: false,
-            });
+        // Try Supabase first, fall back to local filesystem
+        let fileUrl = await trySupabaseUpload(filePath, req.file.buffer, req.file.mimetype);
 
-        if (error) {
-            console.error('[UPLOAD ERROR] Supabase:', error.message);
-            return next(new AppError('File upload failed: ' + error.message, 500));
+        if (!fileUrl) {
+            console.log('[UPLOAD] Using local filesystem fallback');
+            fileUrl = saveLocally(filePath, req.file.buffer);
         }
-
-        // Get public URL
-        const { data: publicUrlData } = supabase.storage
-            .from(BUCKET)
-            .getPublicUrl(filePath);
-
-        const fileUrl = publicUrlData.publicUrl;
 
         res.status(200).json({
             status: 'success',
