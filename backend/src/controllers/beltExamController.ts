@@ -148,7 +148,7 @@ export const gradeStudent = catchAsync(async (req: Request, res: Response, next:
         });
 
         // Send promotion email (non-blocking)
-        sendBeltPromotionEmail(student.email, student.name, targetBelt).catch(() => {});
+        sendBeltPromotionEmail(student.email, student.name, targetBelt, currentUser.name || 'Sensei').catch(() => {});
     }
 
     res.status(200).json({
@@ -220,7 +220,7 @@ export const bulkGradeStudents = catchAsync(async (req: Request, res: Response, 
                         },
                     });
                 });
-                sendBeltPromotionEmail(student.email, student.name, targetBelt).catch(() => {});
+                sendBeltPromotionEmail(student.email, student.name, targetBelt, currentUser.name || 'Sensei').catch(() => {});
             }
 
             results.push({ studentId: grade.studentId, name: student.name, result: grade.result, targetBelt });
