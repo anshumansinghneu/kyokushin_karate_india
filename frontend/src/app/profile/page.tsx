@@ -287,89 +287,187 @@ export default function ProfilePage() {
     };
 
     const handleDownloadCard = async () => {
-        const { jsPDF } = await import("jspdf");
-        const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: [86, 54] });
+        const [{ jsPDF }, QRCode] = await Promise.all([
+            import("jspdf"),
+            import("qrcode"),
+        ]);
 
-        // Card background
-        doc.setFillColor(15, 15, 15);
-        doc.rect(0, 0, 86, 54, "F");
+        // Credit-card size: 85.6 x 53.98 mm
+        const W = 85.6, H = 54;
+        const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: [W, H] });
 
-        // Red accent top bar
-        doc.setFillColor(220, 38, 38);
-        doc.rect(0, 0, 86, 1.5, "F");
+        // Helper: load image as data URL (handles AVIF/any format via canvas)
+        const loadImg = (src: string): Promise<string> =>
+            new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => {
+                    const c = document.createElement("canvas");
+                    c.width = img.naturalWidth;
+                    c.height = img.naturalHeight;
+                    c.getContext("2d")!.drawImage(img, 0, 0);
+                    resolve(c.toDataURL("image/png"));
+                };
+                img.onerror = reject;
+                img.src = src;
+            });
 
-        // Org name
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7);
-        doc.setTextColor(255, 255, 255);
-        doc.text("KYOKUSHIN KARATE", 5, 7);
-        doc.setFontSize(4.5);
-        doc.setTextColor(220, 38, 38);
-        doc.text("FOUNDATION OF INDIA", 5, 10);
-
-        // Membership ID top right
-        doc.setFontSize(4);
-        doc.setTextColor(150, 150, 150);
-        doc.text("MEMBERSHIP ID", 81, 6, { align: "right" });
-        doc.setFontSize(5.5);
-        doc.setTextColor(220, 38, 38);
-        doc.text(user?.membershipNumber || "PENDING", 81, 9.5, { align: "right" });
-
-        // Divider
-        doc.setDrawColor(50, 50, 50);
-        doc.setLineWidth(0.2);
-        doc.line(5, 13, 81, 13);
-
-        // Member name
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(255, 255, 255);
-        doc.text((user?.name || "Member").toUpperCase(), 5, 20);
-
-        // Info fields
-        const fields = [
-            { label: "RANK", value: user?.currentBeltRank || "White Belt" },
-            { label: "DOJO", value: user?.dojo?.name || "Main Dojo" },
-            { label: "STATUS", value: user?.membershipStatus || "PENDING" },
-        ];
-
-        let xPos = 5;
-        fields.forEach((f) => {
-            doc.setFontSize(3.5);
-            doc.setTextColor(120, 120, 120);
-            doc.text(f.label, xPos, 26);
-            doc.setFontSize(5);
-            doc.setTextColor(255, 255, 255);
-            doc.text(f.value, xPos, 29.5);
-            xPos += 26;
+        // Generate QR code (verify URL)
+        const verifyUrl = `https://kyokushinfoundation.com/verify/${user?.membershipNumber || ""}`;
+        const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+            width: 200,
+            margin: 0,
+            color: { dark: "#ffffff", light: "#00000000" },
+            errorCorrectionLevel: "M",
         });
 
-        // Bottom bar
-        doc.setFillColor(25, 25, 25);
-        doc.rect(0, 44, 86, 10, "F");
-        doc.setDrawColor(50, 50, 50);
-        doc.line(0, 44, 86, 44);
+        // Load logo
+        let logoDataUrl: string | null = null;
+        try {
+            logoDataUrl = await loadImg("/kkfi-logo.avif");
+        } catch { /* skip logo if fails */ }
 
-        // Status dot + text
-        const statusColor = user?.membershipStatus === "ACTIVE" ? [34, 197, 94] : user?.membershipStatus === "PENDING" ? [234, 179, 8] : [239, 68, 68];
-        doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
-        doc.circle(7, 49.5, 1, "F");
-        doc.setFontSize(3.5);
-        doc.setTextColor(180, 180, 180);
-        doc.text(`STATUS: ${user?.membershipStatus || "PENDING"}`, 10, 50);
+        // ═══════════════ FRONT SIDE ═══════════════
+
+        // Background - deep black
+        doc.setFillColor(8, 8, 8);
+        doc.rect(0, 0, W, H, "F");
+
+        // Top red accent bar
+        doc.setFillColor(200, 30, 30);
+        doc.rect(0, 0, W, 1.2, "F");
+
+        // Subtle dark panel top area
+        doc.setFillColor(14, 14, 14);
+        doc.rect(0, 1.2, W, 16, "F");
+
+        // Logo (top-left)
+        if (logoDataUrl) {
+            doc.addImage(logoDataUrl, "PNG", 3.5, 3, 10, 10);
+        }
+
+        // Organization name
+        const orgX = logoDataUrl ? 15 : 4;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.setTextColor(255, 255, 255);
+        doc.text("KYOKUSHIN KARATE", orgX, 7.5);
+        doc.setFontSize(4.5);
+        doc.setTextColor(200, 30, 30);
+        doc.text("FOUNDATION OF INDIA", orgX, 11);
+        doc.setFontSize(3);
+        doc.setTextColor(100, 100, 100);
+        doc.text("OFFICIAL MEMBERSHIP CARD", orgX, 14);
+
+        // QR code (top-right)
+        doc.addImage(qrDataUrl, "PNG", W - 16, 2.5, 13, 13);
+        doc.setFontSize(2.3);
+        doc.setTextColor(80, 80, 80);
+        doc.text("SCAN TO VERIFY", W - 9.5, 16.5, { align: "center" });
+
+        // Thin separator
+        doc.setDrawColor(40, 40, 40);
+        doc.setLineWidth(0.15);
+        doc.line(4, 17.8, W - 4, 17.8);
+
+        // Member Name
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(255, 255, 255);
+        const memberName = (user?.name || "Member").toUpperCase();
+        doc.text(memberName, 4, 23.5);
+
+        // Membership Number badge
+        doc.setFillColor(200, 30, 30);
+        const memNum = user?.membershipNumber || "PENDING";
+        const memNumWidth = doc.getTextWidth(memNum) + 4;
+        doc.roundedRect(4, 25.5, memNumWidth > 20 ? memNumWidth : 20, 4.5, 1, 1, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(5);
+        doc.setTextColor(255, 255, 255);
+        doc.text(memNum, 4 + (memNumWidth > 20 ? memNumWidth : 20) / 2, 28.3, { align: "center" });
+
+        // Info grid
+        const gridY = 33;
+        const fields = [
+            { label: "BELT RANK", value: user?.currentBeltRank || "White Belt", x: 4 },
+            { label: "DOJO", value: user?.dojo?.name || "—", x: 30 },
+            { label: "STATUS", value: user?.membershipStatus || "PENDING", x: 60 },
+        ];
+
+        fields.forEach((f) => {
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(3);
+            doc.setTextColor(90, 90, 90);
+            doc.text(f.label, f.x, gridY);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(5);
+            // Status gets color
+            if (f.label === "STATUS") {
+                if (f.value === "ACTIVE") doc.setTextColor(34, 197, 94);
+                else if (f.value === "PENDING") doc.setTextColor(234, 179, 8);
+                else doc.setTextColor(239, 68, 68);
+            } else {
+                doc.setTextColor(220, 220, 220);
+            }
+            doc.text(f.value, f.x, 36);
+        });
+
+        // Second row
+        const row2Y = 39.5;
+        const fields2 = [
+            { label: "CITY", value: user?.city || "—", x: 4 },
+            { label: "STATE", value: user?.state || "—", x: 30 },
+            { label: "DOB", value: user?.dob ? new Date(user.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : "—", x: 60 },
+        ];
+
+        fields2.forEach((f) => {
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(3);
+            doc.setTextColor(90, 90, 90);
+            doc.text(f.label, f.x, row2Y);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(4.5);
+            doc.setTextColor(180, 180, 180);
+            doc.text(f.value, f.x, row2Y + 3);
+        });
+
+        // Belt color accent bar
+        const beltColors: Record<string, [number, number, number]> = {
+            'White': [255, 255, 255], 'Orange': [249, 115, 22], 'Blue': [59, 130, 246],
+            'Yellow': [234, 179, 8], 'Green': [34, 197, 94], 'Brown': [146, 64, 14],
+        };
+        const beltRank = user?.currentBeltRank || 'White';
+        const bColor = beltRank.startsWith('Black') ? [200, 30, 30] as [number, number, number] : (beltColors[beltRank] || [255, 255, 255]);
+        doc.setFillColor(bColor[0], bColor[1], bColor[2]);
+        doc.rect(0, 46, W, 0.8, "F");
+
+        // Bottom footer area
+        doc.setFillColor(12, 12, 12);
+        doc.rect(0, 46.8, W, 7.2, "F");
 
         // Website
-        doc.setTextColor(120, 120, 120);
+        doc.setFont("helvetica", "normal");
         doc.setFontSize(3);
-        doc.text("kyokushin-karate-india.vercel.app", 81, 50, { align: "right" });
+        doc.setTextColor(80, 80, 80);
+        doc.text("kyokushinfoundation.com", 4, 50.5);
 
-        // Indian flag stripe at very bottom
+        // Contact
+        doc.text("+91 99567 45114", 4, 52.5);
+
+        // Indian flag stripe at bottom
+        const flagH = 0.8;
         doc.setFillColor(255, 153, 51);
-        doc.rect(0, 53, 28.67, 1, "F");
+        doc.rect(0, H - flagH, W / 3, flagH, "F");
         doc.setFillColor(255, 255, 255);
-        doc.rect(28.67, 53, 28.67, 1, "F");
+        doc.rect(W / 3, H - flagH, W / 3, flagH, "F");
         doc.setFillColor(19, 136, 8);
-        doc.rect(57.34, 53, 28.66, 1, "F");
+        doc.rect((W / 3) * 2, H - flagH, W / 3, flagH, "F");
+
+        // Small "Not transferable" text
+        doc.setFontSize(2.2);
+        doc.setTextColor(50, 50, 50);
+        doc.text("This card is non-transferable. Property of KKFI.", W / 2, 50.5, { align: "center" });
 
         doc.save(`KKFI_Card_${user?.membershipNumber || "member"}.pdf`);
     };
