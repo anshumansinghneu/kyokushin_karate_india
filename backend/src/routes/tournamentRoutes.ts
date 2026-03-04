@@ -14,7 +14,7 @@ router.get('/:eventId/statistics', getTournamentStatistics);
 router.use(protect);
 
 // Category management (admin only)
-router.get('/:eventId/categories', restrictTo('ADMIN', 'INSTRUCTOR'), getCategories);
+router.get('/:eventId/categories', restrictTo('ADMIN'), getCategories);
 router.patch('/registrations/:registrationId/category', restrictTo('ADMIN'), moveParticipantCategory);
 router.post('/:eventId/categories/bulk-move', restrictTo('ADMIN'), bulkMoveParticipants);
 

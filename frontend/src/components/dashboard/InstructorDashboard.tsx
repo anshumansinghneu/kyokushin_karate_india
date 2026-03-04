@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, ClipboardCheck, Medal, ChevronRight, Search, Activity, FileText, Edit, Shield, BarChart, Menu, X, LogOut, Trophy, UserPlus, Ticket, FileCheck, KeyRound, ArrowRight, CalendarPlus, Calendar, MapPin, Tent, GraduationCap, CheckCircle } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Users, ClipboardCheck, Medal, ChevronRight, Activity, FileText, Edit, Shield, Menu, X, LogOut, Trophy, UserPlus, Ticket, FileCheck, KeyRound, ArrowRight, CalendarPlus, Calendar, Tent, GraduationCap, CheckCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
-import Link from "next/link";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuthStore } from "@/store/authStore";
 
@@ -18,52 +17,72 @@ import BlogSubmission from "./BlogSubmission";
 import BeltApprovalsView from "./BeltApprovalsView";
 import BeltPromotionsView from "./BeltPromotionsView";
 import BeltExamGrading from "./BeltExamGrading";
-import TournamentManager from "./TournamentManager";
+import TournamentViewer from "./TournamentViewer";
 import GlobalSearch from "./GlobalSearch";
 import StudentDetailView from "./StudentDetailView";
 
-export default function InstructorDashboard({ user }: { user: any }) {
+type TabId = 'overview' | 'students' | 'belt-approvals' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'register-student' | 'enroll-event' | 'blogs' | 'submit';
+
+const VALID_TABS: TabId[] = ['overview', 'students', 'belt-approvals', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'register-student', 'enroll-event', 'blogs', 'submit'];
+
+export default function InstructorDashboard({ user, initialTab }: { user: any; initialTab?: string }) {
     const { showToast } = useToast();
     const { logout } = useAuthStore();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [students, setStudents] = useState<any[]>([]);
     const [pendingStudents, setPendingStudents] = useState<any[]>([]);
-    const [recentRegistrations, setRecentRegistrations] = useState<any[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
+    // URL-synced tab state
+    const resolvedInitial = VALID_TABS.includes(initialTab as TabId) ? initialTab as TabId : 'overview';
+    const [activeTab, setActiveTabState] = useState<TabId>(resolvedInitial);
+
+    const setActiveTab = useCallback((tab: TabId) => {
+        setActiveTabState(tab);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('tab', tab);
+        router.replace(`?${params.toString()}`, { scroll: false });
+    }, [router, searchParams]);
+
+    // Sync from URL on popstate / external navigation
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [studentsRes, pendingRes] = await Promise.all([
-                    api.get('/users'), // Should return all students for this instructor
-                    api.get('/users?status=PENDING') // Should return pending students
-                ]);
-                setStudents(studentsRes.data.data.users);
-                setPendingStudents(pendingRes.data.data.users);
-            } catch (error) {
-                console.error("Failed to fetch instructor data", error);
-            }
-        };
-        fetchData();
-    }, []);
+        const tabParam = searchParams.get('tab');
+        if (tabParam && VALID_TABS.includes(tabParam as TabId)) {
+            setActiveTabState(tabParam as TabId);
+        }
+    }, [searchParams]);
 
-    const [approvingId, setApprovingId] = useState<string | null>(null);
-
-    const handleApprove = async (id: string) => {
-        if (approvingId) return; // Prevent double-click
-        setApprovingId(id);
+    // Shared data refresh function
+    const refreshData = useCallback(async () => {
         try {
-            await api.patch(`/users/${id}/approve`);
-            showToast("Student approved successfully!", "success");
-            // Refresh data
             const [studentsRes, pendingRes] = await Promise.all([
                 api.get('/users'),
                 api.get('/users?status=PENDING')
             ]);
             setStudents(studentsRes.data.data.users);
             setPendingStudents(pendingRes.data.data.users);
+        } catch (error) {
+            console.error("Failed to fetch instructor data", error);
+        }
+    }, []);
+
+    useEffect(() => { refreshData(); }, [refreshData]);
+
+    const [approvingId, setApprovingId] = useState<string | null>(null);
+    const [rejectingId, setRejectingId] = useState<string | null>(null);
+    const [confirmRejectId, setConfirmRejectId] = useState<string | null>(null);
+
+    const handleApprove = async (id: string) => {
+        if (approvingId) return;
+        setApprovingId(id);
+        try {
+            await api.patch(`/users/${id}/approve`);
+            showToast("Student approved successfully!", "success");
+            await refreshData();
         } catch (error) {
             console.error("Failed to approve student", error);
             showToast("Failed to approve student", "error");
@@ -73,33 +92,30 @@ export default function InstructorDashboard({ user }: { user: any }) {
     };
 
     const handleReject = async (id: string) => {
+        if (rejectingId) return;
+        setRejectingId(id);
         try {
             await api.patch(`/users/${id}/reject`);
             showToast("Student rejected", "success");
-            // Refresh data
-            const [studentsRes, pendingRes] = await Promise.all([
-                api.get('/users'),
-                api.get('/users?status=PENDING')
-            ]);
-            setStudents(studentsRes.data.data.users);
-            setPendingStudents(pendingRes.data.data.users);
+            await refreshData();
         } catch (error) {
             console.error("Failed to reject student", error);
             showToast("Failed to reject student", "error");
+        } finally {
+            setRejectingId(null);
+            setConfirmRejectId(null);
         }
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'blogs' | 'submit' | 'belt-approvals' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'register-student' | 'enroll-event'>('overview');
-
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: Activity },
-        { id: 'register-student', label: 'Register Student', icon: UserPlus },
-        { id: 'enroll-event', label: 'Enroll in Event', icon: CalendarPlus },
+        { id: 'students', label: 'Student Roster', icon: Users },
         { id: 'belt-approvals', label: 'Belt Verifications', icon: ClipboardCheck },
         { id: 'belt-promotions', label: 'Belt Promotions', icon: Medal },
         { id: 'belt-exam-grading', label: 'Belt Exam Grading', icon: Shield },
-        { id: 'students', label: 'Student Roster', icon: Users },
         { id: 'tournaments', label: 'Tournaments', icon: Trophy },
+        { id: 'register-student', label: 'Register Student', icon: UserPlus },
+        { id: 'enroll-event', label: 'Enroll in Event', icon: CalendarPlus },
         { id: 'blogs', label: 'My Blogs', icon: FileText },
         { id: 'submit', label: 'Write Blog', icon: Edit },
     ];
@@ -111,16 +127,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
                 onClose={() => setIsAddModalOpen(false)}
                 instructorDojoId={user?.dojoId}
                 instructorDojoName={user?.dojo?.name}
-                onSuccess={async () => {
-                    try {
-                        const [studentsRes, pendingRes] = await Promise.all([
-                            api.get('/users'),
-                            api.get('/users?status=PENDING')
-                        ]);
-                        setStudents(studentsRes.data.data.users);
-                        setPendingStudents(pendingRes.data.data.users);
-                    } catch {}
-                }}
+                onSuccess={refreshData}
             />
 
             <EnrollStudentModal
@@ -257,7 +264,16 @@ export default function InstructorDashboard({ user }: { user: any }) {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApprove(student.id)} disabled={approvingId === student.id}>{approvingId === student.id ? 'Approving...' : 'Approve'}</Button>
-                                            <Button size="sm" variant="outline" className="h-8 border-red-500/50 text-red-500 hover:bg-red-950" onClick={() => handleReject(student.id)}>Reject</Button>
+                                            {confirmRejectId === student.id ? (
+                                                <div className="flex items-center gap-1">
+                                                    <Button size="sm" className="h-8 bg-red-600 hover:bg-red-700 text-white text-xs" onClick={() => handleReject(student.id)} disabled={rejectingId === student.id}>
+                                                        {rejectingId === student.id ? 'Rejecting...' : 'Confirm'}
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" className="h-8 border-white/10 text-gray-400 text-xs" onClick={() => setConfirmRejectId(null)}>Cancel</Button>
+                                                </div>
+                                            ) : (
+                                                <Button size="sm" variant="outline" className="h-8 border-red-500/50 text-red-500 hover:bg-red-950" onClick={() => setConfirmRejectId(student.id)}>Reject</Button>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -572,7 +588,7 @@ export default function InstructorDashboard({ user }: { user: any }) {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
                 >
-                    <TournamentManager />
+                    <TournamentViewer />
                 </motion.div>
             )}
 

@@ -11,11 +11,11 @@ router.get('/:id', getEvent);
 // Protected
 router.use(protect);
 
-router.post('/', restrictTo('ADMIN', 'INSTRUCTOR'), createEvent);
-router.patch('/:id', restrictTo('ADMIN', 'INSTRUCTOR'), updateEvent);
+router.post('/', restrictTo('ADMIN'), createEvent);
+router.patch('/:id', restrictTo('ADMIN'), updateEvent);
 router.delete('/:id', restrictTo('ADMIN'), deleteEvent);
 
-router.get('/:id/registrations', restrictTo('ADMIN', 'INSTRUCTOR'), getEventRegistrations);
+router.get('/:id/registrations', restrictTo('ADMIN'), getEventRegistrations);
 router.post('/:eventId/register', registerForEvent);
 router.post('/:eventId/enroll-student', restrictTo('INSTRUCTOR', 'ADMIN'), enrollStudentInEvent);
 router.post('/registrations/:registrationId/approve', restrictTo('ADMIN'), approveRegistration);

@@ -47,7 +47,7 @@ function ManagementContent() {
 
             <div className="container-responsive py-8 relative z-10">
                 {user.role === 'ADMIN' && <AdminDashboard user={user} initialTab={initialTab} />}
-                {user.role === 'INSTRUCTOR' && <InstructorDashboard user={user} />}
+                {user.role === 'INSTRUCTOR' && <InstructorDashboard user={user} initialTab={initialTab} />}
             </div>
         </div>
     );
