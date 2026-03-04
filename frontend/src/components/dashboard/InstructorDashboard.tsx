@@ -3,7 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, ClipboardCheck, Medal, ChevronRight, Activity, FileText, Edit, Shield, Menu, X, LogOut, Trophy, UserPlus, Ticket, FileCheck, KeyRound, ArrowRight, CalendarPlus, Calendar, Tent, GraduationCap, CheckCircle, AlertTriangle } from "lucide-react";
+import {
+    Users, ClipboardCheck, Medal, ChevronRight, Activity, FileText, Edit, Shield,
+    Menu, X, LogOut, Trophy, UserPlus, Ticket, FileCheck, KeyRound, ArrowRight,
+    CalendarPlus, Calendar, Tent, GraduationCap, CheckCircle, AlertTriangle,
+    PanelLeftClose, PanelLeftOpen, Search
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
@@ -34,7 +39,8 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
     const [pendingStudents, setPendingStudents] = useState<any[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // mobile overlay
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // desktop
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
     // URL-synced tab state
@@ -120,8 +126,10 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
         { id: 'submit', label: 'Write Blog', icon: Edit },
     ];
 
+    const activeLabel = menuItems.find(i => i.id === activeTab)?.label || 'Overview';
+
     return (
-        <div className="flex min-h-[80vh] bg-black/50 rounded-3xl border border-white/10 overflow-hidden relative">
+        <div className="flex h-screen overflow-hidden">
             <RegisterStudentModal
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
@@ -135,101 +143,202 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
                 onClose={() => setIsEnrollModalOpen(false)}
             />
 
-            {/* Mobile Sidebar Toggle */}
-            <button
-                className="lg:hidden absolute top-4 left-4 z-50 p-2 bg-white/10 rounded-lg text-white"
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-                {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
+            {/* Mobile Sidebar Backdrop */}
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
 
             {/* Sidebar */}
-            <motion.div
-                className={`w-64 bg-black/80 backdrop-blur-xl border-r border-white/10 flex flex-col absolute lg:relative z-40 h-full transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+            <aside
+                className={`
+                    fixed lg:sticky top-0 left-0 z-50 lg:z-auto h-screen
+                    bg-[#0c0c0c] border-r border-white/[0.06]
+                    flex flex-col transition-all duration-300 ease-out
+                    ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                    ${isSidebarCollapsed ? 'lg:w-[68px]' : 'lg:w-[260px]'}
+                    w-[280px]
+                `}
             >
-                <div className="p-6 border-b border-white/10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-600 to-green-700 flex items-center justify-center shadow-lg shadow-orange-900/20">
-                            <Shield className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                            <h2 className="font-black text-white tracking-tight leading-none">KYOKUSHIN</h2>
-                            <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Instructor Panel</p>
-                        </div>
+                {/* Sidebar Header */}
+                <div className={`flex items-center gap-3 border-b border-white/[0.06] ${isSidebarCollapsed ? 'px-3 py-4 justify-center' : 'px-5 py-4'}`}>
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-600 to-green-700 flex items-center justify-center shadow-lg shadow-orange-900/30 flex-shrink-0">
+                        <Shield className="w-5 h-5 text-white" />
                     </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto py-6 px-3 space-y-1">
-                    {menuItems.map((item) => (
-                        <button
-                            key={item.id}
-                            onClick={() => { setActiveTab(item.id as any); setIsSidebarOpen(false); }}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === item.id
-                                ? 'bg-gradient-to-r from-orange-600 to-green-700 text-white shadow-lg shadow-orange-900/20'
-                                : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                }`}
-                        >
-                            <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-gray-500 group-hover:text-white'}`} />
-                            {item.label}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="p-4 border-t border-white/10">
+                    {!isSidebarCollapsed && (
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-sm font-black text-white tracking-tight leading-none">KYOKUSHIN</h2>
+                            <p className="text-[9px] font-bold text-orange-400 uppercase tracking-[0.2em] mt-0.5">Instructor</p>
+                        </div>
+                    )}
                     <button
-                        onClick={logout}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-400 hover:text-orange-400 hover:bg-orange-950/30 transition-all"
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="lg:hidden p-1.5 rounded-lg hover:bg-white/5 text-gray-500"
                     >
-                        <LogOut className="w-5 h-5" />
-                        Sign Out
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
-            </motion.div>
 
-            {/* Main Content */}
-            <div className="flex-1 overflow-y-auto h-[80vh] relative">
-                <div className="p-8 lg:p-10">
-                    {/* Global Search */}
-                    <div className="mb-8">
+                {/* Sidebar Navigation */}
+                <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 scrollbar-thin">
+                    {menuItems.map((item) => {
+                        const isActive = activeTab === item.id;
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => { setActiveTab(item.id as any); setIsSidebarOpen(false); }}
+                                title={isSidebarCollapsed ? item.label : undefined}
+                                className={`
+                                    w-full flex items-center gap-2.5 rounded-lg text-[13px] font-medium transition-all relative group
+                                    ${isSidebarCollapsed ? 'px-0 py-2.5 justify-center' : 'px-3 py-2'}
+                                    ${isActive
+                                        ? 'bg-orange-500/10 text-white'
+                                        : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.03]'
+                                    }
+                                `}
+                            >
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="instructorActiveTab"
+                                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-orange-500 rounded-r-full"
+                                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                    />
+                                )}
+                                <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-orange-400' : 'text-gray-600 group-hover:text-gray-400'}`} />
+                                {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
+                            </button>
+                        );
+                    })}
+                </nav>
+
+                {/* Sidebar Footer */}
+                <div className="border-t border-white/[0.06] p-2">
+                    <button
+                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                        className="hidden lg:flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-gray-600 hover:text-gray-300 hover:bg-white/[0.03] transition-all justify-center lg:justify-start"
+                        title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    >
+                        {isSidebarCollapsed ? (
+                            <PanelLeftOpen className="w-[18px] h-[18px]" />
+                        ) : (
+                            <>
+                                <PanelLeftClose className="w-[18px] h-[18px]" />
+                                <span>Collapse</span>
+                            </>
+                        )}
+                    </button>
+                    <button
+                        onClick={logout}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-gray-600 hover:text-orange-400 hover:bg-orange-950/20 transition-all ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                        title="Sign Out"
+                    >
+                        <LogOut className="w-[18px] h-[18px]" />
+                        {!isSidebarCollapsed && <span>Sign Out</span>}
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
+                {/* Top Bar */}
+                <header className="sticky top-0 z-30 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/[0.06]">
+                    <div className="flex items-center justify-between px-4 lg:px-8 h-14">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-white/5 text-gray-400"
+                            >
+                                <Menu className="w-5 h-5" />
+                            </button>
+                            <nav className="flex items-center gap-1.5 text-sm">
+                                <button
+                                    onClick={() => setActiveTab('overview')}
+                                    className={`font-medium transition-colors ${activeTab === 'overview' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                                >
+                                    Dashboard
+                                </button>
+                                {activeTab !== 'overview' && (
+                                    <>
+                                        <ChevronRight className="w-3.5 h-3.5 text-gray-700" />
+                                        <span className="text-white font-semibold">{activeLabel}</span>
+                                    </>
+                                )}
+                            </nav>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="hidden sm:block w-64">
+                                <GlobalSearch onResultClick={(userId) => setSelectedStudentId(userId)} />
+                            </div>
+                            <div className="hidden lg:flex items-center gap-2 pl-3 ml-2 border-l border-white/[0.06]">
+                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-600 to-green-700 flex items-center justify-center text-[11px] font-bold text-white">
+                                    {user?.name?.[0]?.toUpperCase() || 'I'}
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs font-semibold text-white leading-none">{user?.name?.split(' ')[0]}</p>
+                                    <p className="text-[10px] text-gray-500 mt-0.5">Instructor</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="sm:hidden px-4 pb-3">
                         <GlobalSearch onResultClick={(userId) => setSelectedStudentId(userId)} />
                     </div>
+                </header>
 
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto">
+                    <div className="px-4 lg:px-8 py-6 lg:py-8 max-w-[1600px] mx-auto w-full">
                     <AnimatePresence mode="wait">
 
             {activeTab === 'overview' && (
                 <motion.div
                     key="overview"
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15 }}
                     className="space-y-8"
                 >
                     <div>
-                        <h1 className="text-3xl font-black text-white mb-2">Instructor Dashboard</h1>
-                        <p className="text-gray-400">OSU, Sensei {user?.name?.split(' ')[0]}! Manage your dojo and students.</p>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                            <span className="text-xs font-medium text-green-400">Active</span>
+                        </div>
+                        <h1 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
+                            OSU, Sensei {user?.name?.split(' ')[0]}!
+                        </h1>
+                        <p className="text-sm text-gray-500 mt-1">Manage your dojo and students.</p>
                     </div>
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
                         {[
-                            { label: "Total Students", value: students.length, icon: Users, color: "text-blue-400" },
-                            { label: "Pending Approvals", value: pendingStudents.length, icon: ClipboardCheck, color: "text-orange-400" },
-                            { label: "Black Belts", value: students.filter(s => s.currentBeltRank?.includes('Black') || s.currentBeltRank?.includes('Dan')).length, icon: Medal, color: "text-yellow-400" },
+                            { label: "Total Students", value: students.length, icon: Users, color: "text-blue-400", iconBg: "bg-blue-500/10", border: "border-blue-500/10" },
+                            { label: "Pending Approvals", value: pendingStudents.length, icon: ClipboardCheck, color: "text-orange-400", iconBg: "bg-orange-500/10", border: pendingStudents.length > 0 ? "border-orange-500/10" : "border-white/[0.06]" },
+                            { label: "Black Belts", value: students.filter(s => s.currentBeltRank?.includes('Black') || s.currentBeltRank?.includes('Dan')).length, icon: Medal, color: "text-amber-400", iconBg: "bg-amber-500/10", border: "border-amber-500/10" },
                         ].map((stat, i) => (
                             <motion.div
                                 key={i}
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.1 }}
-                                className="glass-card p-6 flex items-center justify-between group hover:bg-white/10 transition-colors"
+                                transition={{ delay: i * 0.06 }}
+                                className={`p-5 rounded-2xl border ${stat.border} bg-white/[0.015] transition-all duration-200`}
                             >
-                                <div>
-                                    <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">{stat.label}</p>
-                                    <p className="text-3xl font-black text-white mt-1">{stat.value}</p>
-                                </div>
-                                <div className={`p-3 rounded-xl bg-white/5 ${stat.color}`}>
-                                    <stat.icon className="w-6 h-6" />
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{stat.label}</p>
+                                        <p className="text-3xl font-black text-white">{stat.value}</p>
+                                    </div>
+                                    <div className={`p-2.5 rounded-xl ${stat.iconBg}`}>
+                                        <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                                    </div>
                                 </div>
                             </motion.div>
                         ))}
@@ -238,28 +347,29 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
                     {/* Pending Approvals Section */}
                     {pendingStudents.length > 0 && (
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="glass-card p-6"
+                            className="bg-[#0c0c0c] border border-white/[0.06] rounded-2xl p-6"
                         >
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <ClipboardCheck className="w-5 h-5 text-primary" />
+                            <div className="flex items-center justify-between mb-5">
+                                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                                    <div className="h-5 w-1 bg-orange-500 rounded-full" />
                                     Pending Approvals
+                                    <span className="ml-1 text-[10px] font-bold bg-orange-500/80 text-white px-1.5 py-0.5 rounded-full">{pendingStudents.length}</span>
                                 </h3>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {pendingStudents.map((student, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center font-bold text-white">
+                                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-600/30 to-green-700/30 flex items-center justify-center text-sm font-bold text-white">
                                                 {student.name[0]}
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-white">{student.name}</h4>
-                                                <p className="text-xs text-gray-400">New Membership • <span className="text-primary">{new Date(student.createdAt).toLocaleDateString()}</span></p>
+                                                <h4 className="text-sm font-bold text-white">{student.name}</h4>
+                                                <p className="text-[11px] text-gray-500">New Membership &middot; {new Date(student.createdAt).toLocaleDateString()}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -286,10 +396,10 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
             {activeTab === 'register-student' && (
                 <motion.div
                     key="register-student"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.15 }}
                     className="space-y-8"
                 >
                     {/* Hero Card */}
@@ -426,10 +536,10 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
             {activeTab === 'enroll-event' && (
                 <motion.div
                     key="enroll-event"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.15 }}
                     className="space-y-8"
                 >
                     {/* Hero Card */}
@@ -529,37 +639,19 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
             )}
 
             {activeTab === 'belt-approvals' && (
-                <motion.div
-                    key="belt-approvals"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                >
+                <motion.div key="belt-approvals" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}>
                     <BeltApprovalsView />
                 </motion.div>
             )}
 
             {activeTab === 'belt-promotions' && (
-                <motion.div
-                    key="belt-promotions"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                >
+                <motion.div key="belt-promotions" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}>
                     <BeltPromotionsView />
                 </motion.div>
             )}
 
             {activeTab === 'belt-exam-grading' && (
-                <motion.div
-                    key="belt-exam-grading"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                >
+                <motion.div key="belt-exam-grading" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}>
                     <BeltExamGrading />
                 </motion.div>
             )}
@@ -567,65 +659,36 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
             {activeTab === 'students' && (
                 <motion.div
                     key="students"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.15 }}
                 >
-                    <div className="mb-6">
-                        <h1 className="text-3xl font-black text-white mb-2">Student Roster</h1>
-                        <p className="text-gray-400">View students who selected you as their instructor.</p>
-                    </div>
                     <StudentRoster />
                 </motion.div>
             )}
 
             {activeTab === 'tournaments' && (
-                <motion.div
-                    key="tournaments"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                >
+                <motion.div key="tournaments" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}>
                     <TournamentViewer />
                 </motion.div>
             )}
 
             {activeTab === 'blogs' && (
-                <motion.div
-                    key="blogs"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                >
-                    <div className="mb-6">
-                        <h1 className="text-3xl font-black text-white mb-2">My Blogs</h1>
-                        <p className="text-gray-400">Manage your published articles.</p>
-                    </div>
+                <motion.div key="blogs" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}>
                     <BlogManager />
                 </motion.div>
             )}
 
             {activeTab === 'submit' && (
-                <motion.div
-                    key="submit"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                >
-                    <div className="mb-6">
-                        <h1 className="text-3xl font-black text-white mb-2">Write New Blog</h1>
-                        <p className="text-gray-400">Share your knowledge with the community.</p>
-                    </div>
+                <motion.div key="submit" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}>
                     <BlogSubmission />
                 </motion.div>
             )}
                 </AnimatePresence>
+                    </div>
                 </div>
-            </div>
+            </main>
 
             {/* Student Detail View Modal */}
             {selectedStudentId && (

@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper, LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag, Ticket, RefreshCw, ChevronDown, Search, ChevronRight, Loader2, BookOpen } from "lucide-react";
+import {
+    Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper,
+    LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag,
+    Ticket, RefreshCw, ChevronDown, Search, ChevronRight, Loader2, BookOpen,
+    PanelLeftClose, PanelLeftOpen, UserCheck, AlertCircle
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -34,7 +39,10 @@ import { useToast } from '@/contexts/ToastContext';
 function TabLoader() {
     return (
         <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+            <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+                <span className="text-xs text-gray-500 font-medium">Loading module...</span>
+            </div>
         </div>
     );
 }
@@ -49,7 +57,8 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
     const searchParams = useSearchParams();
     const validInitial = VALID_TABS.includes(initialTab as TabId) ? initialTab as TabId : 'overview';
     const [activeTab, setActiveTab] = useState<TabId>(validInitial);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // mobile overlay
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // desktop collapse
     const [sidebarFilter, setSidebarFilter] = useState('');
     const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -65,6 +74,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
 
     const handleTabChange = useCallback((tab: TabId) => {
         setActiveTab(tab);
+        setIsSidebarOpen(false);
         const params = new URLSearchParams(searchParams.toString());
         params.set('tab', tab);
         router.replace(`/management?${params.toString()}`, { scroll: false });
@@ -154,53 +164,67 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
     const activeSectionHeader = activeSection?.header;
 
     return (
-        <div className="flex min-h-[80vh] bg-black/50 rounded-3xl border border-white/10 overflow-hidden relative">
-            {/* Mobile Sidebar Toggle */}
-            <button
-                className="lg:hidden absolute top-4 left-4 z-50 p-2 bg-white/10 rounded-lg text-white"
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-                {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-
+        <div className="flex h-screen overflow-hidden">
             {/* Mobile Sidebar Backdrop */}
-            {isSidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
-                    onClick={() => setIsSidebarOpen(false)}
-                />
-            )}
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
 
             {/* Sidebar */}
-            <motion.div
-                className={`w-64 bg-black/80 backdrop-blur-xl border-r border-white/10 flex flex-col absolute lg:relative z-40 h-full transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+            <aside
+                className={`
+                    fixed lg:sticky top-0 left-0 z-50 lg:z-auto h-screen
+                    bg-[#0c0c0c] border-r border-white/[0.06]
+                    flex flex-col transition-all duration-300 ease-out
+                    ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                    ${isSidebarCollapsed ? 'lg:w-[68px]' : 'lg:w-[260px]'}
+                    w-[280px]
+                `}
             >
-                <div className="p-6 border-b border-white/10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center shadow-lg shadow-red-900/20">
-                            <Shield className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                            <h2 className="font-black text-white tracking-tight leading-none">KYOKUSHIN</h2>
-                            <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Admin Console</p>
-                        </div>
+                {/* Sidebar Header */}
+                <div className={`flex items-center gap-3 border-b border-white/[0.06] ${isSidebarCollapsed ? 'px-3 py-4 justify-center' : 'px-5 py-4'}`}>
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center shadow-lg shadow-red-900/30 flex-shrink-0">
+                        <Shield className="w-5 h-5 text-white" />
                     </div>
+                    {!isSidebarCollapsed && (
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-sm font-black text-white tracking-tight leading-none">KYOKUSHIN</h2>
+                            <p className="text-[9px] font-bold text-red-400 uppercase tracking-[0.2em] mt-0.5">Admin Console</p>
+                        </div>
+                    )}
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="lg:hidden p-1.5 rounded-lg hover:bg-white/5 text-gray-500"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
 
                 {/* Sidebar Search */}
-                <div className="px-3 pt-3 pb-1">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-                        <input
-                            value={sidebarFilter}
-                            onChange={e => setSidebarFilter(e.target.value)}
-                            placeholder="Filter menu..."
-                            className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-red-500/40 transition-colors"
-                        />
+                {!isSidebarCollapsed && (
+                    <div className="px-3 pt-3 pb-1">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600" />
+                            <input
+                                value={sidebarFilter}
+                                onChange={e => setSidebarFilter(e.target.value)}
+                                placeholder="Search menu..."
+                                className="w-full bg-white/[0.03] border border-white/[0.06] rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-red-500/30 focus:bg-white/[0.05] transition-all"
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
 
-                <div className="flex-1 overflow-y-auto py-2 px-3">
+                {/* Sidebar Navigation */}
+                <nav className="flex-1 overflow-y-auto py-2 px-2 scrollbar-thin">
                     {menuSections.map((section, si) => {
                         const filteredItems = sidebarFilter
                             ? section.items.filter(item => item.label.toLowerCase().includes(sidebarFilter.toLowerCase()))
@@ -211,105 +235,189 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
 
                         return (
                             <div key={si} className={si > 0 ? 'mt-1' : ''}>
-                                {section.header && (
+                                {section.header && !isSidebarCollapsed && (
                                     <button
                                         onClick={() => section.id && toggleSection(section.id)}
-                                        className="w-full flex items-center justify-between px-4 py-2 mt-3 group cursor-pointer"
+                                        className="w-full flex items-center justify-between px-3 py-2 mt-3 group cursor-pointer"
                                     >
-                                        <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest group-hover:text-gray-400 transition-colors">
+                                        <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider group-hover:text-gray-400 transition-colors">
                                             {section.header}
                                         </p>
-                                        <ChevronDown className={`w-3 h-3 text-gray-600 group-hover:text-gray-400 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+                                        <ChevronDown className={`w-3 h-3 text-gray-700 group-hover:text-gray-500 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
                                     </button>
                                 )}
+                                {isSidebarCollapsed && section.header && (
+                                    <div className="h-px bg-white/[0.04] mx-2 mt-3 mb-1" />
+                                )}
                                 <div className={`space-y-0.5 overflow-hidden transition-all duration-200 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}>
-                                    {filteredItems.map((item) => (
-                                        <button
-                                            key={item.id}
-                                            onClick={() => { handleTabChange(item.id as TabId); setIsSidebarOpen(false); }}
-                                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all relative ${
-                                                activeTab === item.id
-                                                    ? 'bg-red-500/15 text-white'
-                                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                            }`}
-                                        >
-                                            {activeTab === item.id && (
-                                                <motion.div
-                                                    layoutId="sidebarActiveIndicator"
-                                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-red-500 rounded-r-full"
-                                                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                                                />
-                                            )}
-                                            <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${activeTab === item.id ? 'text-red-400' : 'text-gray-500'}`} />
-                                            <span className="truncate">{item.label}</span>
-                                            {'badge' in item && (item as any).badge ? (
-                                                <span className="ml-auto text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                                                    {(item as any).badge}
-                                                </span>
-                                            ) : null}
-                                        </button>
-                                    ))}
+                                    {filteredItems.map((item) => {
+                                        const isActive = activeTab === item.id;
+                                        return (
+                                            <button
+                                                key={item.id}
+                                                onClick={() => handleTabChange(item.id as TabId)}
+                                                title={isSidebarCollapsed ? item.label : undefined}
+                                                className={`
+                                                    w-full flex items-center gap-2.5 rounded-lg text-[13px] font-medium transition-all relative group
+                                                    ${isSidebarCollapsed ? 'px-0 py-2.5 justify-center' : 'px-3 py-2'}
+                                                    ${isActive
+                                                        ? 'bg-red-500/10 text-white'
+                                                        : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.03]'
+                                                    }
+                                                `}
+                                            >
+                                                {isActive && (
+                                                    <motion.div
+                                                        layoutId="adminActiveTab"
+                                                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-red-500 rounded-r-full"
+                                                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                                    />
+                                                )}
+                                                <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-red-400' : 'text-gray-600 group-hover:text-gray-400'}`} />
+                                                {!isSidebarCollapsed && (
+                                                    <>
+                                                        <span className="truncate">{item.label}</span>
+                                                        {'badge' in item && (item as any).badge ? (
+                                                            <span className="ml-auto text-[10px] font-bold bg-red-500/80 text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                                                {(item as any).badge}
+                                                            </span>
+                                                        ) : null}
+                                                    </>
+                                                )}
+                                                {isSidebarCollapsed && 'badge' in item && (item as any).badge ? (
+                                                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+                                                ) : null}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         );
                     })}
-                </div>
+                </nav>
 
-                <div className="p-4 border-t border-white/10">
+                {/* Sidebar Footer */}
+                <div className="border-t border-white/[0.06] p-2">
+                    <button
+                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                        className="hidden lg:flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-gray-600 hover:text-gray-300 hover:bg-white/[0.03] transition-all justify-center lg:justify-start"
+                        title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    >
+                        {isSidebarCollapsed ? (
+                            <PanelLeftOpen className="w-[18px] h-[18px]" />
+                        ) : (
+                            <>
+                                <PanelLeftClose className="w-[18px] h-[18px]" />
+                                <span>Collapse</span>
+                            </>
+                        )}
+                    </button>
                     <button
                         onClick={logout}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-400 hover:text-red-400 hover:bg-red-950/30 transition-all"
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-gray-600 hover:text-red-400 hover:bg-red-950/20 transition-all ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                        title="Sign Out"
                     >
-                        <LogOut className="w-5 h-5" />
-                        Sign Out
+                        <LogOut className="w-[18px] h-[18px]" />
+                        {!isSidebarCollapsed && <span>Sign Out</span>}
                     </button>
                 </div>
-            </motion.div>
+            </aside>
 
-            {/* Main Content */}
-            <div className="flex-1 overflow-y-auto min-h-[80vh] relative">
-                <div className="pt-16 lg:pt-0 p-4 md:p-8 lg:p-10">
-                    {/* Breadcrumb */}
-                    {activeTab !== 'overview' && (
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-4">
-                            <button onClick={() => handleTabChange('overview')} className="hover:text-white transition-colors">Dashboard</button>
-                            {activeSectionHeader && (
-                                <><ChevronRight className="w-3 h-3" /><span className="text-gray-600">{activeSectionHeader}</span></>
-                            )}
-                            <ChevronRight className="w-3 h-3" />
-                            <span className="text-white font-semibold">{activeLabel}</span>
+            {/* Main Content Area */}
+            <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
+                {/* Top Bar */}
+                <header className="sticky top-0 z-30 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/[0.06]">
+                    <div className="flex items-center justify-between px-4 lg:px-8 h-14">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-white/5 text-gray-400"
+                            >
+                                <Menu className="w-5 h-5" />
+                            </button>
+                            <nav className="flex items-center gap-1.5 text-sm">
+                                <button
+                                    onClick={() => handleTabChange('overview')}
+                                    className={`font-medium transition-colors ${activeTab === 'overview' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                                >
+                                    Dashboard
+                                </button>
+                                {activeTab !== 'overview' && (
+                                    <>
+                                        {activeSectionHeader && (
+                                            <>
+                                                <ChevronRight className="w-3.5 h-3.5 text-gray-700" />
+                                                <span className="text-gray-600 text-xs">{activeSectionHeader}</span>
+                                            </>
+                                        )}
+                                        <ChevronRight className="w-3.5 h-3.5 text-gray-700" />
+                                        <span className="text-white font-semibold">{activeLabel}</span>
+                                    </>
+                                )}
+                            </nav>
                         </div>
-                    )}
-
-                    {/* Global Search */}
-                    <div className="mb-8">
+                        <div className="flex items-center gap-2">
+                            <div className="hidden sm:block w-64">
+                                <GlobalSearch onResultClick={(userId) => setSelectedStudentId(userId)} />
+                            </div>
+                            <div className="hidden lg:flex items-center gap-2 pl-3 ml-2 border-l border-white/[0.06]">
+                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center text-[11px] font-bold text-white">
+                                    {user?.name?.[0]?.toUpperCase() || 'A'}
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs font-semibold text-white leading-none">{user?.name?.split(' ')[0]}</p>
+                                    <p className="text-[10px] text-gray-500 mt-0.5">Admin</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="sm:hidden px-4 pb-3">
                         <GlobalSearch onResultClick={(userId) => setSelectedStudentId(userId)} />
                     </div>
+                </header>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto">
+                    <div className="px-4 lg:px-8 py-6 lg:py-8 max-w-[1600px] mx-auto w-full">
                     <AnimatePresence mode="wait">
                         {activeTab === 'overview' && (
                             <motion.div
                                 key="overview"
-                                initial={{ opacity: 0, y: 10 }}
+                                initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.2 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.15 }}
                                 className="space-y-8"
                             >
+                                {/* Welcome Header */}
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                                     <div>
-                                        <h1 className="text-3xl font-black text-white mb-2">Dashboard Overview</h1>
-                                        <p className="text-gray-400">Welcome back, {user?.name || 'Admin'}. Here&apos;s what&apos;s happening today.</p>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                            <span className="text-xs font-medium text-green-400">System Online</span>
+                                        </div>
+                                        <h1 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
+                                            Welcome back, {user?.name?.split(' ')[0] || 'Admin'}
+                                        </h1>
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                        </p>
                                     </div>
-                                    <div className="flex gap-3">
+                                    <div className="flex gap-2">
                                         <Button
-                                            className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                                            size="sm"
+                                            variant="outline"
+                                            className="border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] text-gray-300 text-xs h-9"
                                             onClick={() => fetchStats()}
                                             disabled={isStatsLoading}
                                         >
-                                            <RefreshCw className={`w-4 h-4 mr-2 ${isStatsLoading ? 'animate-spin' : ''}`} /> Refresh
+                                            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isStatsLoading ? 'animate-spin' : ''}`} />
+                                            Refresh
                                         </Button>
                                         <Button
-                                            className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                                            size="sm"
+                                            variant="outline"
+                                            className="border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] text-gray-300 text-xs h-9"
                                             onClick={() => {
                                                 const headers = "Name,Email,Role,Status\n";
                                                 const rows = stats.users.map((u: any) => `${u.name},${u.email},${u.role},${u.membershipStatus}`).join("\n");
@@ -321,66 +429,63 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                                 a.click();
                                             }}
                                         >
-                                            <BarChart className="w-4 h-4 mr-2" /> Export Report
+                                            <BarChart className="w-3.5 h-3.5 mr-1.5" />
+                                            Export
                                         </Button>
                                     </div>
                                 </div>
 
                                 {/* Stats Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
                                     {isStatsLoading ? (
-                                        // Skeleton loading cards
                                         Array.from({ length: 4 }).map((_, i) => (
-                                            <div key={i} className="p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm animate-pulse">
+                                            <div key={i} className="p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] animate-pulse">
                                                 <div className="flex justify-between items-start">
-                                                    <div className="space-y-3">
-                                                        <div className="h-3 w-24 bg-white/10 rounded" />
-                                                        <div className="h-10 w-16 bg-white/10 rounded" />
+                                                    <div className="space-y-2.5">
+                                                        <div className="h-3 w-20 bg-white/[0.06] rounded" />
+                                                        <div className="h-8 w-14 bg-white/[0.06] rounded" />
                                                     </div>
-                                                    <div className="p-3 rounded-xl bg-white/5">
-                                                        <div className="w-6 h-6 bg-white/10 rounded" />
-                                                    </div>
+                                                    <div className="w-10 h-10 bg-white/[0.04] rounded-xl" />
                                                 </div>
                                             </div>
                                         ))
                                     ) : (
                                     [
-                                        { label: "Total Users", value: stats.usersCount, icon: Users, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", tab: 'users' as TabId },
-                                        { label: "Active Dojos", value: stats.dojos, icon: MapPin, color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/20", tab: 'dojos' as TabId },
-                                        { label: "Upcoming Events", value: stats.events, icon: Calendar, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20", tab: 'events' as TabId },
-                                        { label: "Pending Verifications", value: stats.pending, icon: Shield, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", tab: 'belt-verifications' as TabId },
+                                        { label: "Total Users", value: stats.usersCount, icon: Users, color: "text-blue-400", iconBg: "bg-blue-500/10", border: "border-blue-500/10", tab: 'users' as TabId },
+                                        { label: "Active Dojos", value: stats.dojos, icon: Building, color: "text-emerald-400", iconBg: "bg-emerald-500/10", border: "border-emerald-500/10", tab: 'dojos' as TabId },
+                                        { label: "Events", value: stats.events, icon: Calendar, color: "text-violet-400", iconBg: "bg-violet-500/10", border: "border-violet-500/10", tab: 'events' as TabId },
+                                        { label: "Pending", value: stats.pending, icon: AlertCircle, color: stats.pending > 0 ? "text-amber-400" : "text-gray-500", iconBg: stats.pending > 0 ? "bg-amber-500/10" : "bg-white/[0.03]", border: stats.pending > 0 ? "border-amber-500/10" : "border-white/[0.06]", tab: 'belt-verifications' as TabId },
                                     ].map((stat, i) => (
-                                        <motion.div
+                                        <motion.button
                                             key={i}
-                                            initial={{ opacity: 0, y: 20 }}
+                                            initial={{ opacity: 0, y: 12 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: i * 0.1 }}
+                                            transition={{ delay: i * 0.06 }}
                                             onClick={() => handleTabChange(stat.tab)}
-                                            className={`p-6 rounded-2xl border ${stat.border} ${stat.bg} backdrop-blur-sm relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300 cursor-pointer`}
+                                            className={`p-5 rounded-2xl border ${stat.border} bg-white/[0.015] hover:bg-white/[0.04] transition-all duration-200 text-left group`}
                                         >
-                                            <div className="relative z-10 flex justify-between items-start">
+                                            <div className="flex justify-between items-start">
                                                 <div>
-                                                    <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${stat.color} opacity-80`}>{stat.label}</p>
-                                                    <p className="text-4xl font-black text-white">{stat.value}</p>
+                                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">{stat.label}</p>
+                                                    <p className="text-3xl font-black text-white">{stat.value}</p>
                                                 </div>
-                                                <div className={`p-3 rounded-xl bg-white/5 ${stat.color}`}>
-                                                    <stat.icon className="w-6 h-6" />
+                                                <div className={`p-2.5 rounded-xl ${stat.iconBg}`}>
+                                                    <stat.icon className={`w-5 h-5 ${stat.color}`} />
                                                 </div>
                                             </div>
-                                            <div className={`absolute -right-6 -bottom-6 w-32 h-32 rounded-full opacity-20 blur-3xl ${stat.color.replace('text-', 'bg-')}`} />
-                                        </motion.div>
+                                        </motion.button>
                                     )))}
                                 </div>
 
-                                {/* Quick Actions - show when relevant stats are zero */}
+                                {/* Quick Actions */}
                                 {!isStatsLoading && (stats.dojos === 0 || stats.events === 0 || stats.pending > 0) && (
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         {stats.dojos === 0 && (
                                             <button
                                                 onClick={() => handleTabChange('dojos')}
-                                                className="p-4 rounded-xl border border-dashed border-green-500/30 bg-green-500/5 hover:bg-green-500/10 transition-colors text-left group"
+                                                className="p-4 rounded-xl border border-dashed border-emerald-500/20 bg-emerald-500/[0.03] hover:bg-emerald-500/[0.06] transition-colors text-left"
                                             >
-                                                <Building className="w-5 h-5 text-green-400 mb-2" />
+                                                <Building className="w-5 h-5 text-emerald-400 mb-2" />
                                                 <p className="text-sm font-bold text-white">Create First Dojo</p>
                                                 <p className="text-xs text-gray-500 mt-1">Set up your first training location</p>
                                             </button>
@@ -388,9 +493,9 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                         {stats.events === 0 && (
                                             <button
                                                 onClick={() => handleTabChange('events')}
-                                                className="p-4 rounded-xl border border-dashed border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-colors text-left group"
+                                                className="p-4 rounded-xl border border-dashed border-violet-500/20 bg-violet-500/[0.03] hover:bg-violet-500/[0.06] transition-colors text-left"
                                             >
-                                                <Calendar className="w-5 h-5 text-purple-400 mb-2" />
+                                                <Calendar className="w-5 h-5 text-violet-400 mb-2" />
                                                 <p className="text-sm font-bold text-white">Schedule an Event</p>
                                                 <p className="text-xs text-gray-500 mt-1">Create your first event or seminar</p>
                                             </button>
@@ -398,9 +503,9 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                         {stats.pending > 0 && (
                                             <button
                                                 onClick={() => handleTabChange('users')}
-                                                className="p-4 rounded-xl border border-dashed border-yellow-500/30 bg-yellow-500/5 hover:bg-yellow-500/10 transition-colors text-left group"
+                                                className="p-4 rounded-xl border border-dashed border-amber-500/20 bg-amber-500/[0.03] hover:bg-amber-500/[0.06] transition-colors text-left"
                                             >
-                                                <Users className="w-5 h-5 text-yellow-400 mb-2" />
+                                                <UserCheck className="w-5 h-5 text-amber-400 mb-2" />
                                                 <p className="text-sm font-bold text-white">{stats.pending} Pending Approval{stats.pending > 1 ? 's' : ''}</p>
                                                 <p className="text-xs text-gray-500 mt-1">Review pending membership requests</p>
                                             </button>
@@ -408,39 +513,68 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                     </div>
                                 )}
 
-
-                                {/* Organization Graph Section */}
-                                <div className="mt-8">
-                                    <div className="flex items-center gap-2 mb-6">
-                                        <div className="h-8 w-1 bg-red-600 rounded-full" />
-                                        <h2 className="text-xl font-bold text-white">Organization Structure</h2>
+                                {/* Quick Navigation Grid */}
+                                <div>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="h-6 w-1 bg-red-600 rounded-full" />
+                                        <h2 className="text-lg font-bold text-white">Quick Navigation</h2>
                                     </div>
-                                    <div className="bg-black/40 border border-white/10 rounded-3xl p-8 overflow-hidden">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                        {[
+                                            { id: 'users' as TabId, label: 'Users', icon: Users, color: 'text-blue-400', bg: 'hover:bg-blue-500/5' },
+                                            { id: 'events' as TabId, label: 'Events', icon: Calendar, color: 'text-violet-400', bg: 'hover:bg-violet-500/5' },
+                                            { id: 'tournaments' as TabId, label: 'Tournaments', icon: Trophy, color: 'text-red-400', bg: 'hover:bg-red-500/5' },
+                                            { id: 'dojos' as TabId, label: 'Dojos', icon: Building, color: 'text-emerald-400', bg: 'hover:bg-emerald-500/5' },
+                                            { id: 'belt-verifications' as TabId, label: 'Belt Verifications', icon: Shield, color: 'text-orange-400', bg: 'hover:bg-orange-500/5' },
+                                            { id: 'payments' as TabId, label: 'Payments', icon: IndianRupee, color: 'text-green-400', bg: 'hover:bg-green-500/5' },
+                                            { id: 'vouchers' as TabId, label: 'Vouchers', icon: Ticket, color: 'text-amber-400', bg: 'hover:bg-amber-500/5' },
+                                            { id: 'announcements' as TabId, label: 'Announcements', icon: Megaphone, color: 'text-cyan-400', bg: 'hover:bg-cyan-500/5' },
+                                        ].map((item) => (
+                                            <button
+                                                key={item.id}
+                                                onClick={() => handleTabChange(item.id)}
+                                                className={`flex items-center gap-3 p-3.5 rounded-xl border border-white/[0.04] bg-white/[0.01] ${item.bg} transition-all text-left group`}
+                                            >
+                                                <item.icon className={`w-4 h-4 ${item.color} flex-shrink-0`} />
+                                                <span className="text-sm font-medium text-gray-400 group-hover:text-white transition-colors truncate">{item.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Organization Graph */}
+                                <div>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="h-6 w-1 bg-red-600 rounded-full" />
+                                        <h2 className="text-lg font-bold text-white">Organization Structure</h2>
+                                    </div>
+                                    <div className="bg-[#0c0c0c] border border-white/[0.06] rounded-2xl p-6 overflow-hidden">
                                         <OrganizationGraph users={stats.users} />
                                     </div>
                                 </div>
                             </motion.div>
                         )}
 
-                        {activeTab === 'users' && <motion.div key="users" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><UserManagementTable /></Suspense></motion.div>}
-                        {activeTab === 'belt-verifications' && <motion.div key="belt-verifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><BeltApprovalsView /></Suspense></motion.div>}
-                        {activeTab === 'belt-promotions' && <motion.div key="belt-promotions" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><BeltPromotionsView /></Suspense></motion.div>}
-                        {activeTab === 'belt-exam-grading' && <motion.div key="belt-exam-grading" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><BeltExamGrading /></Suspense></motion.div>}
-                        {activeTab === 'dojos' && <motion.div key="dojos" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><DojoManager /></Suspense></motion.div>}
-                        {activeTab === 'events' && <motion.div key="events" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><EventManager /></Suspense></motion.div>}
-                        {activeTab === 'seminars' && <motion.div key="seminars" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><SeminarManager /></Suspense></motion.div>}
-                        {activeTab === 'tournaments' && <motion.div key="tournaments" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><TournamentManager /></Suspense></motion.div>}
-                        {activeTab === 'live-management' && <motion.div key="live-management" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><LiveMatchManager /></Suspense></motion.div>}
-                        {activeTab === 'store' && <motion.div key="store" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><StoreManagement /></Suspense></motion.div>}
-                        {activeTab === 'blogs' && <motion.div key="blogs" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><BlogManager /></Suspense></motion.div>}
-                        {activeTab === 'media' && <motion.div key="media" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><MediaManager /></Suspense></motion.div>}
-                        {activeTab === 'recognition' && <motion.div key="recognition" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><RecognitionManager /></Suspense></motion.div>}
-                        {activeTab === 'announcements' && <motion.div key="announcements" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><AnnouncementManager /></Suspense></motion.div>}
-                        {activeTab === 'payments' && <motion.div key="payments" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><PaymentManagement /></Suspense></motion.div>}
-                        {activeTab === 'vouchers' && <motion.div key="vouchers" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Suspense fallback={<TabLoader />}><VoucherManager /></Suspense></motion.div>}
+                        {activeTab === 'users' && <motion.div key="users" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><UserManagementTable /></Suspense></motion.div>}
+                        {activeTab === 'belt-verifications' && <motion.div key="belt-verifications" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><BeltApprovalsView /></Suspense></motion.div>}
+                        {activeTab === 'belt-promotions' && <motion.div key="belt-promotions" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><BeltPromotionsView /></Suspense></motion.div>}
+                        {activeTab === 'belt-exam-grading' && <motion.div key="belt-exam-grading" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><BeltExamGrading /></Suspense></motion.div>}
+                        {activeTab === 'dojos' && <motion.div key="dojos" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><DojoManager /></Suspense></motion.div>}
+                        {activeTab === 'events' && <motion.div key="events" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><EventManager /></Suspense></motion.div>}
+                        {activeTab === 'seminars' && <motion.div key="seminars" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><SeminarManager /></Suspense></motion.div>}
+                        {activeTab === 'tournaments' && <motion.div key="tournaments" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><TournamentManager /></Suspense></motion.div>}
+                        {activeTab === 'live-management' && <motion.div key="live-management" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><LiveMatchManager /></Suspense></motion.div>}
+                        {activeTab === 'store' && <motion.div key="store" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><StoreManagement /></Suspense></motion.div>}
+                        {activeTab === 'blogs' && <motion.div key="blogs" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><BlogManager /></Suspense></motion.div>}
+                        {activeTab === 'media' && <motion.div key="media" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><MediaManager /></Suspense></motion.div>}
+                        {activeTab === 'recognition' && <motion.div key="recognition" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><RecognitionManager /></Suspense></motion.div>}
+                        {activeTab === 'announcements' && <motion.div key="announcements" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><AnnouncementManager /></Suspense></motion.div>}
+                        {activeTab === 'payments' && <motion.div key="payments" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><PaymentManagement /></Suspense></motion.div>}
+                        {activeTab === 'vouchers' && <motion.div key="vouchers" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><VoucherManager /></Suspense></motion.div>}
                     </AnimatePresence>
+                    </div>
                 </div>
-            </div>
+            </main>
 
             {/* Student Detail View Modal */}
             {selectedStudentId && (
@@ -449,6 +583,6 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                     onClose={() => setSelectedStudentId(null)}
                 />
             )}
-        </div >
+        </div>
     );
 }
