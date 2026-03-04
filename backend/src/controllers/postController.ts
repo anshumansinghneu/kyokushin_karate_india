@@ -158,7 +158,7 @@ export const updatePost = catchAsync(async (req: Request, res: Response, next: N
     if (sourceName !== undefined) updateData.sourceName = stripHtml(sourceName);
     if (attachmentUrl !== undefined) updateData.attachmentUrl = attachmentUrl;
     if (status !== undefined) updateData.status = status;
-    if (publishedAt !== undefined) updateData.publishedAt = new Date(publishedAt);
+    if (publishedAt !== undefined) updateData.publishedAt = publishedAt ? new Date(publishedAt) : null;
 
     try {
         const post = await prisma.post.update({

@@ -168,7 +168,7 @@ export const updateScore = catchAsync(async (req: Request, res: Response, next: 
 
     if (fighterAScore !== undefined) updateData.fighterAScore = fighterAScore;
     if (fighterBScore !== undefined) updateData.fighterBScore = fighterBScore;
-    if (winnerId !== undefined) updateData.winnerId = winnerId;
+    if (winnerId !== undefined) updateData.winnerId = winnerId || null;
     if (status !== undefined) updateData.status = status;
     if (notes !== undefined) updateData.notes = notes;
 

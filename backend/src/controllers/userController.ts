@@ -725,6 +725,9 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
             // Convert date fields
             } else if (field === 'dateOfBirth' || field === 'membershipStartDate' || field === 'membershipEndDate') {
                 updateData[field] = req.body[field] ? new Date(req.body[field]) : null;
+            // Convert optional FK fields — empty string → null
+            } else if (field === 'dojoId' || field === 'primaryInstructorId') {
+                updateData[field] = req.body[field] || null;
             } else {
                 updateData[field] = req.body[field];
             }

@@ -72,7 +72,7 @@ export default function AnnouncementManager() {
                 subject,
                 body,
                 targetAudience,
-                dojoId: targetAudience === "dojo" ? dojoId : undefined,
+                dojoId: targetAudience === "dojo" ? (dojoId || undefined) : undefined,
             });
             setResult(res.data.data);
             setSubject("");

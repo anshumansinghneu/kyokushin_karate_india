@@ -49,8 +49,8 @@ export const getAllPayments = catchAsync(async (req: Request, res: Response, nex
     const payments = await prisma.payment.findMany({
         where,
         orderBy: { createdAt: 'desc' },
-        skip: (parseInt(page as string) - 1) * parseInt(limit as string),
-        take: parseInt(limit as string),
+        skip: ((parseInt(page as string) || 1) - 1) * (parseInt(limit as string) || 50),
+        take: parseInt(limit as string) || 50,
         include: {
             user: {
                 select: { id: true, name: true, email: true, membershipNumber: true },

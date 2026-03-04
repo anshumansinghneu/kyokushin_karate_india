@@ -186,8 +186,8 @@ export const updateDojo = catchAsync(async (req: Request, res: Response, next: N
     if (address !== undefined) updateData.address = address;
     if (contactEmail !== undefined) updateData.contactEmail = contactEmail;
     if (contactPhone !== undefined) updateData.contactPhone = contactPhone;
-    if (latitude !== undefined) updateData.latitude = latitude;
-    if (longitude !== undefined) updateData.longitude = longitude;
+    if (latitude !== undefined) updateData.latitude = latitude ? parseFloat(latitude) : null;
+    if (longitude !== undefined) updateData.longitude = longitude ? parseFloat(longitude) : null;
 
     // Handle instructor relation separately (instructorId is not a Dojo column)
     if (instructorId) {

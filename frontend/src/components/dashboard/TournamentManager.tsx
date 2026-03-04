@@ -154,9 +154,12 @@ export default function TournamentManager() {
         try {
             await api.post("/events", {
                 type: "TOURNAMENT", ...formData,
+                startDate: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
+                endDate: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
+                registrationDeadline: formData.registrationDeadline ? new Date(formData.registrationDeadline).toISOString() : undefined,
                 maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
-                memberFee: parseFloat(formData.memberFee),
-                nonMemberFee: parseFloat(formData.nonMemberFee),
+                memberFee: parseFloat(formData.memberFee) || 0,
+                nonMemberFee: parseFloat(formData.nonMemberFee) || 0,
                 categories: formData.categories.length > 0 ? formData.categories : null,
             });
             showToast("Tournament created successfully!", "success");
@@ -174,9 +177,12 @@ export default function TournamentManager() {
         try {
             await api.patch(`/events/${editingTournament.id}`, {
                 ...formData,
+                startDate: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
+                endDate: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
+                registrationDeadline: formData.registrationDeadline ? new Date(formData.registrationDeadline).toISOString() : undefined,
                 maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
-                memberFee: parseFloat(formData.memberFee),
-                nonMemberFee: parseFloat(formData.nonMemberFee),
+                memberFee: parseFloat(formData.memberFee) || 0,
+                nonMemberFee: parseFloat(formData.nonMemberFee) || 0,
                 categories: formData.categories.length > 0 ? formData.categories : null,
             });
             showToast("Tournament updated successfully!", "success");

@@ -182,12 +182,13 @@ const BlogManager = () => {
             }).join('');
 
             // Sanitize payload
-            const { author, id, ...rest } = currentPost as any;
+            const { author, id, slug, publishedAt, createdAt, updatedAt, ...rest } = currentPost as any;
 
             const payload = {
                 ...rest,
                 content: htmlContent,
-                type: 'BLOG'
+                type: 'BLOG',
+                imageUrl: rest.imageUrl || null,
             };
 
             if (currentPost.id) {

@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma';
 import { catchAsync } from '../utils/catchAsync';
-
-const prisma = new PrismaClient();
 
 /**
  * POST /api/analytics/visit — record a page visit

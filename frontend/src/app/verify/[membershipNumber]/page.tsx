@@ -214,8 +214,8 @@ export default function VerifyPage() {
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.1 }}
                                 className={`relative overflow-hidden rounded-2xl border ${
-                                    isActive 
-                                        ? 'border-green-500/15 bg-gradient-to-b from-green-500/[0.06] to-transparent' 
+                                    isActive
+                                        ? 'border-green-500/15 bg-gradient-to-b from-green-500/[0.06] to-transparent'
                                         : 'border-amber-500/15 bg-gradient-to-b from-amber-500/[0.06] to-transparent'
                                 }`}
                             >

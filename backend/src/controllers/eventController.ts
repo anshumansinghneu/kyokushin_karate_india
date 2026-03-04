@@ -94,11 +94,11 @@ export const createEvent = catchAsync(async (req: Request, res: Response, next: 
             type,
             name,
             description,
-            imageUrl,
+            imageUrl: imageUrl || null,
             startDate: new Date(startDate),
             endDate: new Date(endDate),
             location,
-            dojoId,
+            dojoId: dojoId || null,
             registrationDeadline: new Date(registrationDeadline),
             maxParticipants,
             memberFee,
@@ -169,7 +169,7 @@ export const registerForEvent = catchAsync(async (req: Request, res: Response, n
     });
 
     // Send event registration confirmation email
-    sendEventRegistrationEmail(currentUser.email, currentUser.name, event.name);
+    sendEventRegistrationEmail(currentUser.email, currentUser.name, event.name).catch((err: any) => console.error('[EMAIL]', err.message));
 
     res.status(201).json({
         status: 'success',
@@ -247,12 +247,12 @@ export const updateEvent = catchAsync(async (req: Request, res: Response, next: 
     if (name !== undefined) updateData.name = name;
     if (type !== undefined) updateData.type = type;
     if (description !== undefined) updateData.description = description;
-    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
-    if (startDate !== undefined) updateData.startDate = new Date(startDate);
-    if (endDate !== undefined) updateData.endDate = new Date(endDate);
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl || null;
+    if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : undefined;
+    if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : undefined;
     if (location !== undefined) updateData.location = location;
     if (dojoId !== undefined) updateData.dojoId = dojoId || null;
-    if (registrationDeadline !== undefined) updateData.registrationDeadline = new Date(registrationDeadline);
+    if (registrationDeadline !== undefined) updateData.registrationDeadline = registrationDeadline ? new Date(registrationDeadline) : undefined;
     if (maxParticipants !== undefined) updateData.maxParticipants = maxParticipants;
     if (memberFee !== undefined) updateData.memberFee = memberFee;
     if (nonMemberFee !== undefined) updateData.nonMemberFee = nonMemberFee;
@@ -454,7 +454,7 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
             return { registration, payment };
         });
 
-        sendEventRegistrationEmail(student.email, student.name, event.name);
+        sendEventRegistrationEmail(student.email, student.name, event.name).catch((err: any) => console.error('[EMAIL]', err.message));
 
         return res.status(201).json({
             status: 'success',
@@ -479,7 +479,7 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
         },
     });
 
-    sendEventRegistrationEmail(student.email, student.name, event.name);
+    sendEventRegistrationEmail(student.email, student.name, event.name).catch((err: any) => console.error('[EMAIL]', err.message));
 
     res.status(201).json({
         status: 'success',

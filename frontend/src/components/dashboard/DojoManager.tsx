@@ -92,10 +92,14 @@ export default function DojoManager() {
         e.preventDefault();
         setIsSaving(true);
         try {
+            const sanitized = {
+                ...formData,
+                instructorId: formData.instructorId || null,
+            };
             if (editingDojo) {
-                await api.patch(`/dojos/${editingDojo.id}`, formData);
+                await api.patch(`/dojos/${editingDojo.id}`, sanitized);
             } else {
-                await api.post('/dojos', { ...formData, country: 'India' });
+                await api.post('/dojos', { ...sanitized, country: 'India' });
             }
             setIsModalOpen(false);
             fetchDojos();

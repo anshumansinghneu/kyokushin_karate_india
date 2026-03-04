@@ -317,9 +317,9 @@ export const redeemVoucherForRegistration = catchAsync(async (req: Request, res:
 
     // Send emails
     if (newUser) {
-        sendRegistrationEmail(newUser.email, newUser.name);
+        sendRegistrationEmail(newUser.email, newUser.name).catch((err: any) => console.error('[EMAIL]', err.message));
         if (newUser.primaryInstructor?.email) {
-            sendNewApplicantEmail(newUser.primaryInstructor.email, newUser.name);
+            sendNewApplicantEmail(newUser.primaryInstructor.email, newUser.name).catch((err: any) => console.error('[EMAIL]', err.message));
         }
     }
 
@@ -495,7 +495,7 @@ export const registerStudentOnBehalf = catchAsync(async (req: Request, res: Resp
 
     // Send welcome email to the student
     if (newUser) {
-        sendRegistrationEmail(newUser.email, newUser.name);
+        sendRegistrationEmail(newUser.email, newUser.name).catch((err: any) => console.error('[EMAIL]', err.message));
     }
 
     if (newUser) (newUser as any).passwordHash = undefined;

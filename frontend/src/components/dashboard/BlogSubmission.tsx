@@ -38,7 +38,7 @@ export default function BlogSubmission() {
         setStatus('idle');
 
         try {
-            await api.post('/posts', formData);
+            await api.post('/posts', { ...formData, imageUrl: formData.imageUrl || null });
             setStatus('success');
             setMessage("Blog submitted successfully! It will be visible after admin approval.");
             setFormData({ title: "", excerpt: "", content: "", imageUrl: "", type: "BLOG" });

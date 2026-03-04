@@ -117,6 +117,10 @@ export default function RegisterStudentModal({ isOpen, onClose, onSuccess, instr
         try {
             const res = await api.post("/vouchers/redeem/register-student", {
                 ...formData,
+                dojoId: formData.dojoId || null,
+                beltExamDate: formData.beltExamDate || null,
+                height: formData.height ? parseFloat(formData.height) : null,
+                weight: formData.weight ? parseFloat(formData.weight) : null,
                 voucherCode: voucherCode.trim().toUpperCase(),
             });
             const { student, tempPassword } = res.data.data;

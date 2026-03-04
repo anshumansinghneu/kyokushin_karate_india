@@ -338,7 +338,7 @@ function ProductManagement() {
         const body = {
             name: form.name,
             description: form.description,
-            price: parseFloat(form.price),
+            price: parseFloat(form.price) || 0,
             comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : null,
             category: form.category,
             sizes: form.sizes.split(",").map((s) => s.trim()).filter(Boolean),

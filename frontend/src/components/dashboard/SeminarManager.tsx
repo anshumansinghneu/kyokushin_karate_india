@@ -186,12 +186,14 @@ export default function SeminarManager() {
             const payload = {
                 ...formData,
                 type: "SEMINAR",
+                dojoId: formData.dojoId || null,
+                imageUrl: formData.imageUrl || null,
                 startDate: new Date(formData.startDate).toISOString(),
                 endDate: new Date(formData.endDate).toISOString(),
                 registrationDeadline: new Date(formData.registrationDeadline).toISOString(),
-                maxParticipants: Number(formData.maxParticipants),
-                memberFee: Number(formData.memberFee),
-                nonMemberFee: Number(formData.nonMemberFee),
+                maxParticipants: Number(formData.maxParticipants) || null,
+                memberFee: Number(formData.memberFee) || 0,
+                nonMemberFee: Number(formData.nonMemberFee) || 0,
             };
 
             if (editingSeminar) {

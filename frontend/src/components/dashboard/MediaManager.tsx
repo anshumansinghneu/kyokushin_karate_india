@@ -83,12 +83,14 @@ const MediaManager = () => {
 
         setIsSaving(true);
         try {
+            const { id: postId, author, createdAt, updatedAt, ...rest } = currentPost as any;
             const payload = {
-                ...currentPost,
+                ...rest,
                 type: 'MEDIA_MENTION',
                 // Clear the other field based on type
                 externalLink: mediaType === 'LINK' ? currentPost.externalLink : null,
-                attachmentUrl: mediaType === 'PDF' ? currentPost.attachmentUrl : null
+                attachmentUrl: mediaType === 'PDF' ? currentPost.attachmentUrl : null,
+                imageUrl: rest.imageUrl || null,
             };
 
             if (currentPost.id) {

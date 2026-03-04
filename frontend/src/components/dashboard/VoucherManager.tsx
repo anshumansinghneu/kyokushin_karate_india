@@ -84,7 +84,7 @@ export default function VoucherManager() {
             }
 
             if (applicableTo !== 'MEMBERSHIP' && !specificEventId && customAmount) {
-                payload.amount = parseFloat(customAmount);
+                payload.amount = parseFloat(customAmount) || 0;
             }
 
             const res = await api.post('/vouchers/create', payload);

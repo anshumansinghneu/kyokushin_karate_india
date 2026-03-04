@@ -7,8 +7,8 @@ import { AppError } from '../utils/errorHandler';
 export const getGalleryItems = catchAsync(async (req: Request, res: Response) => {
     const { category, eventId, dojoId, page = '1', limit = '24' } = req.query;
 
-    const pageNum = Math.max(1, parseInt(page as string));
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit as string)));
+    const pageNum = Math.max(1, parseInt(page as string) || 1);
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit as string) || 24));
     const skip = (pageNum - 1) * limitNum;
 
     const where: any = { isApproved: true };
