@@ -184,6 +184,24 @@ async function send(to: string, subject: string, html: string, text: string) {
     }
 }
 
+/** Like send() but re-throws on failure so the caller can track errors */
+async function sendStrict(to: string, subject: string, html: string, text: string) {
+    // Primary: Brevo HTTP API (works on all cloud platforms)
+    if (process.env.BREVO_API_KEY) {
+        await sendViaBrevo(to, subject, html, text);
+        return;
+    }
+
+    // Fallback: SMTP (local dev)
+    const transporter = getTransporter();
+    const fromAddr = getFrom();
+    const sendPromise = transporter.sendMail({ from: fromAddr, to, subject, html, text });
+    const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Email send timed out after 30s')), 30000)
+    );
+    await Promise.race([sendPromise, timeoutPromise]);
+}
+
 // ── Verify & Test ───────────────────────────────────────────
 export async function verifySmtp(): Promise<{ success: boolean; message: string; provider: string }> {
     // Check Brevo first
@@ -537,7 +555,7 @@ ${btn('Visit KKFI', SITE_URL)}
 `);
         const text = `Osu ${r.name},\n\n${announcementBody}\n\nOsu!`;
         try {
-            await getTransporter().sendMail({ from: getFrom(), to: r.email, subject, html, text });
+            await sendStrict(r.email, subject, html, text);
             results.sent++;
         } catch (err) {
             console.error(`[BULK EMAIL] Failed for ${r.email}:`, err);
