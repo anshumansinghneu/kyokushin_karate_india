@@ -223,44 +223,61 @@ export default function StorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
-      <div className="container-responsive">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
-          <div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter">
-              KKFI <span className="text-red-600">STORE</span>
-            </h1>
-            <p className="text-gray-400 mt-2">
-              Official Kyokushin Karate Federation merchandise
-            </p>
-          </div>
+    <div className="min-h-screen bg-[#080808] text-white pb-20">
+      {/* Top accent */}
+      <div className="h-px bg-gradient-to-r from-transparent via-red-600/50 to-transparent" />
 
-          {/* Cart Button */}
-          <button
-            onClick={() => setCartOpen(true)}
-            className="relative flex items-center gap-2 px-5 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold transition-colors"
-          >
-            <ShoppingCart className="w-5 h-5" />
-            Cart
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white text-black text-xs font-black flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </button>
+      <div className="max-w-7xl mx-auto px-5">
+        {/* Hero Header */}
+        <div className="relative pt-28 pb-10 overflow-hidden">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808006_1px,transparent_1px),linear-gradient(to_bottom,#80808006_1px,transparent_1px)] bg-[size:32px_32px]" />
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-gray-400 tracking-wide mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                OFFICIAL MERCHANDISE
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight">
+                KKFI <span className="text-red-500">Store</span>
+              </h1>
+              <p className="text-gray-500 mt-2 text-sm">
+                Official Kyokushin Karate Federation merchandise
+              </p>
+            </motion.div>
+
+            {/* Cart Button */}
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              onClick={() => setCartOpen(true)}
+              className="relative flex items-center gap-2 px-5 py-3 rounded-lg bg-white text-black font-bold text-sm hover:bg-gray-200 transition-colors active:scale-[0.97]"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              Cart
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </motion.button>
+          </div>
         </div>
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-10">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
             <input
               type="text"
               placeholder="Search products..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-xl bg-zinc-900 border border-white/10 text-white placeholder-gray-500 focus:border-red-500/50 focus:outline-none transition-colors"
+              className="w-full pl-11 pr-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.08] text-white placeholder-gray-600 focus:border-red-500/40 focus:outline-none transition-colors text-sm"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
@@ -268,10 +285,10 @@ export default function StorePage() {
               <button
                 key={cat.key}
                 onClick={() => setCategory(cat.key)}
-                className={`px-4 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all min-h-[44px] flex items-center active:scale-95 ${
+                className={`px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all min-h-[44px] flex items-center active:scale-95 ${
                   category === cat.key
-                    ? "bg-red-600 text-white"
-                    : "bg-zinc-900 text-gray-400 border border-white/10 hover:text-white"
+                    ? "bg-white text-black"
+                    : "bg-white/[0.03] text-gray-400 border border-white/[0.08] hover:text-white hover:border-white/[0.15]"
                 }`}
               >
                 {cat.label}
@@ -282,56 +299,58 @@ export default function StorePage() {
 
         {/* Products Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="aspect-[3/4] bg-zinc-900 rounded-2xl animate-pulse"
+                className="aspect-[3/4] bg-white/[0.03] rounded-xl animate-pulse"
               />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-24">
-            <Package className="w-16 h-16 mx-auto mb-6 text-zinc-700" />
-            <h3 className="text-2xl font-bold mb-2">No products found</h3>
-            <p className="text-gray-500">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.06] mb-5">
+              <Package className="w-6 h-6 text-gray-600" />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-white">No products found</h3>
+            <p className="text-gray-500 text-sm">
               Check back soon for new merchandise
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filtered.map((product, index) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.04, duration: 0.4 }}
                 onClick={() => {
                   setSelectedProduct(product);
                   setSelectedSize(product.sizes[0] || "");
                 }}
-                className="group cursor-pointer bg-zinc-900 rounded-2xl overflow-hidden border border-white/5 hover:border-red-500/30 transition-all duration-300"
+                className="group cursor-pointer bg-white/[0.02] rounded-xl overflow-hidden border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300"
               >
                 {/* Image */}
-                <div className="aspect-square bg-zinc-800 relative overflow-hidden">
+                <div className="aspect-square bg-white/[0.03] relative overflow-hidden">
                   {product.images[0] ? (
                     <img
                       src={product.images[0]}
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <ShoppingBag className="w-12 h-12 text-zinc-700" />
+                      <ShoppingBag className="w-10 h-10 text-white/[0.06]" />
                     </div>
                   )}
                   {product.featured && (
-                    <div className="absolute top-3 left-3 px-2 py-1 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase">
+                    <div className="absolute top-3 left-3 px-2 py-1 rounded bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider">
                       Featured
                     </div>
                   )}
                   {product.comparePrice && (
-                    <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-green-600 text-white text-[10px] font-bold">
+                    <div className="absolute top-3 right-3 px-2 py-1 rounded bg-green-500/90 text-white text-[10px] font-bold">
                       {Math.round(
                         ((product.comparePrice - product.price) /
                           product.comparePrice) *
@@ -341,8 +360,8 @@ export default function StorePage() {
                     </div>
                   )}
                   {!product.inStock && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">
+                    <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                      <span className="text-white font-bold text-sm tracking-wider">
                         OUT OF STOCK
                       </span>
                     </div>
@@ -351,18 +370,18 @@ export default function StorePage() {
 
                 {/* Info */}
                 <div className="p-4">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1">
+                  <p className="text-[10px] text-gray-600 uppercase tracking-[0.15em] font-bold mb-1">
                     {product.category}
                   </p>
-                  <h3 className="font-bold text-white group-hover:text-red-500 transition-colors mb-2 line-clamp-1">
+                  <h3 className="font-bold text-white/90 group-hover:text-white transition-colors mb-2 line-clamp-1 text-sm">
                     {product.name}
                   </h3>
                   <div className="flex items-center gap-2">
-                    <span className="text-xl font-black text-white">
+                    <span className="text-lg font-black text-white">
                       ₹{product.price.toLocaleString()}
                     </span>
                     {product.comparePrice && (
-                      <span className="text-sm text-gray-500 line-through">
+                      <span className="text-xs text-gray-600 line-through">
                         ₹{product.comparePrice.toLocaleString()}
                       </span>
                     )}
@@ -388,7 +407,7 @@ export default function StorePage() {
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.95, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-zinc-900 rounded-2xl overflow-hidden max-w-md w-full border border-white/10"
+                className="bg-[#111] rounded-xl overflow-hidden max-w-md w-full border border-white/[0.08]"
               >
                 {/* Image */}
                 <div className="aspect-video bg-zinc-800 relative">

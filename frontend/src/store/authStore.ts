@@ -142,10 +142,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             return;
         }
 
+        // Use an AbortController so we can time out a slow /auth/me call
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
         try {
-            const response = await api.get('/auth/me');
+            const response = await api.get('/auth/me', { signal: controller.signal });
+            clearTimeout(timeoutId);
             set({ user: response.data.data.user, isAuthenticated: true, isLoading: false });
         } catch (error: any) {
+            clearTimeout(timeoutId);
+            // If aborted (timeout) or network error, let user retry
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+                console.error('checkAuth timed out');
+                set({ isLoading: false, isAuthenticated: false, _hasCheckedAuth: false });
+                return;
+            }
             // If 401, try refresh before giving up
             if (error.response?.status === 401) {
                 const refreshed = await get().refreshSession();
