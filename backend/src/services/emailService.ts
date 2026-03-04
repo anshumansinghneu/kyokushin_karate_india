@@ -154,9 +154,15 @@ function btn(text: string, url: string): string {
 async function send(to: string, subject: string, html: string, text: string) {
     try {
         // Primary: Brevo HTTP API (works on all cloud platforms)
-        if (process.env.BREVO_API_KEY) {
+        const brevoKey = process.env.BREVO_API_KEY;
+        if (brevoKey) {
             await sendViaBrevo(to, subject, html, text);
             return;
+        }
+
+        // If in production without Brevo, log a warning
+        if (process.env.RENDER || process.env.NODE_ENV === 'production') {
+            console.warn('[EMAIL] ⚠️  BREVO_API_KEY not set in production! SMTP will likely fail.');
         }
 
         // Fallback: SMTP (local dev)
@@ -187,12 +193,19 @@ async function send(to: string, subject: string, html: string, text: string) {
 /** Like send() but re-throws on failure so the caller can track errors */
 async function sendStrict(to: string, subject: string, html: string, text: string) {
     // Primary: Brevo HTTP API (works on all cloud platforms)
-    if (process.env.BREVO_API_KEY) {
+    const brevoKey = process.env.BREVO_API_KEY;
+    console.log(`[sendStrict] BREVO_API_KEY present: ${!!brevoKey} (length: ${brevoKey?.length || 0})`);
+    if (brevoKey) {
         await sendViaBrevo(to, subject, html, text);
         return;
     }
 
-    // Fallback: SMTP (local dev)
+    // If we're in production (Render) without Brevo key, fail loudly
+    if (process.env.RENDER || process.env.NODE_ENV === 'production') {
+        throw new Error('BREVO_API_KEY is not set — SMTP is blocked on this platform. Set BREVO_API_KEY in environment.');
+    }
+
+    // Fallback: SMTP (local dev only)
     const transporter = getTransporter();
     const fromAddr = getFrom();
     const sendPromise = transporter.sendMail({ from: fromAddr, to, subject, html, text });
