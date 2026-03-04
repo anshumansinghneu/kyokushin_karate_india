@@ -10,7 +10,7 @@ import PageTransition from "@/components/PageTransition";
 
 export default function LayoutShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const isFullscreen = pathname === '/management';
+    const isFullscreen = pathname === '/management' || pathname.startsWith('/management/');
 
     if (isFullscreen) {
         return <>{children}</>;

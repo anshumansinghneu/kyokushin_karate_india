@@ -856,11 +856,11 @@ export default function TournamentManager() {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case "UPCOMING": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-            case "ONGOING": return "bg-green-500/20 text-green-400 border-green-500/30";
-            case "COMPLETED": return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-            case "CANCELLED": return "bg-red-500/20 text-red-400 border-red-500/30";
-            default: return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+            case "UPCOMING": return "bg-blue-500/15 text-blue-400 border-blue-500/20";
+            case "ONGOING": return "bg-emerald-500/15 text-emerald-400 border-emerald-500/20";
+            case "COMPLETED": return "bg-gray-500/15 text-gray-400 border-gray-500/20";
+            case "CANCELLED": return "bg-red-500/15 text-red-400 border-red-500/20";
+            default: return "bg-yellow-500/15 text-yellow-400 border-yellow-500/20";
         }
     };
 
@@ -877,126 +877,209 @@ export default function TournamentManager() {
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-black text-white flex items-center gap-2">
-                        <Trophy className="w-6 h-6 text-yellow-500" />
+                    <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-700 flex items-center justify-center shadow-lg shadow-yellow-900/30">
+                            <Trophy className="w-5 h-5 text-white" />
+                        </div>
                         Tournament Management
                     </h2>
-                    <p className="text-gray-500 text-sm mt-1">Create and manage karate tournaments</p>
+                    <p className="text-gray-500 text-sm mt-1.5 ml-[52px]">Create and manage karate tournaments</p>
                 </div>
-                <Button onClick={() => setShowCreateModal(true)} className="bg-yellow-600 hover:bg-yellow-700 text-white">
-                    <Plus className="w-4 h-4 mr-2" /> Create Tournament
-                </Button>
+                <button onClick={() => setShowCreateModal(true)}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-yellow-600 to-amber-700 hover:from-yellow-500 hover:to-amber-600 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-yellow-900/20 hover:shadow-yellow-900/40">
+                    <Plus className="w-4 h-4" /> Create Tournament
+                </button>
+            </div>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                    { label: 'Total', count: tournaments.length, color: 'text-white', bg: 'bg-white/[0.03]', border: 'border-white/[0.06]', dot: 'bg-gray-400' },
+                    { label: 'Upcoming', count: tournaments.filter(t => t.status === 'UPCOMING').length, color: 'text-blue-400', bg: 'bg-blue-500/[0.04]', border: 'border-blue-500/10', dot: 'bg-blue-500' },
+                    { label: 'Ongoing', count: tournaments.filter(t => t.status === 'ONGOING').length, color: 'text-emerald-400', bg: 'bg-emerald-500/[0.04]', border: 'border-emerald-500/10', dot: 'bg-emerald-500' },
+                    { label: 'Completed', count: tournaments.filter(t => t.status === 'COMPLETED').length, color: 'text-amber-400', bg: 'bg-amber-500/[0.04]', border: 'border-amber-500/10', dot: 'bg-amber-500' },
+                ].map((s, i) => (
+                    <div key={i} className={`${s.bg} border ${s.border} rounded-xl p-4`}>
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">{s.label}</span>
+                        </div>
+                        <p className={`text-2xl font-black ${s.color}`}>{s.count}</p>
+                    </div>
+                ))}
             </div>
 
             {/* Search and Filters */}
             <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <Input placeholder="Search tournaments..." className="pl-10 bg-white/5 border-white/10"
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                    <input placeholder="Search tournaments..." className="w-full pl-10 pr-4 py-2.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/30 focus:bg-white/[0.05] transition-all"
                         value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                 </div>
-                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm">
-                    <option value="ALL">All Status</option>
-                    <option value="DRAFT">Draft</option>
-                    <option value="UPCOMING">Upcoming</option>
-                    <option value="ONGOING">Ongoing</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="CANCELLED">Cancelled</option>
-                </select>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                    <p className="text-sm text-gray-400">Total Tournaments</p>
-                    <p className="text-2xl font-bold text-white mt-1">{tournaments.length}</p>
-                </div>
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                    <p className="text-sm text-blue-400">Upcoming</p>
-                    <p className="text-2xl font-bold text-blue-400 mt-1">{tournaments.filter(t => t.status === 'UPCOMING').length}</p>
-                </div>
-                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-                    <p className="text-sm text-green-400">Ongoing</p>
-                    <p className="text-2xl font-bold text-green-400 mt-1">{tournaments.filter(t => t.status === 'ONGOING').length}</p>
-                </div>
-                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
-                    <p className="text-sm text-yellow-400">Completed</p>
-                    <p className="text-2xl font-bold text-yellow-400 mt-1">{tournaments.filter(t => t.status === 'COMPLETED').length}</p>
+                <div className="flex gap-1 p-1 bg-white/[0.03] border border-white/[0.06] rounded-xl">
+                    {['ALL', 'UPCOMING', 'ONGOING', 'COMPLETED', 'CANCELLED'].map(status => (
+                        <button key={status} onClick={() => setStatusFilter(status)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${statusFilter === status ? 'bg-white/10 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}>
+                            {status === 'ALL' ? 'All' : status.charAt(0) + status.slice(1).toLowerCase()}
+                        </button>
+                    ))}
                 </div>
             </div>
 
             {/* Tournament List */}
             {loading ? (
-                <div className="text-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500 mx-auto" />
+                <div className="flex items-center justify-center py-20">
+                    <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="w-8 h-8 text-yellow-500 animate-spin" />
+                        <p className="text-sm text-gray-500">Loading tournaments...</p>
+                    </div>
                 </div>
             ) : filteredTournaments.length === 0 ? (
-                <div className="text-center py-12 bg-white/5 rounded-xl border border-white/10">
-                    <Trophy className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400">No tournaments found</p>
-                    <Button onClick={() => setShowCreateModal(true)}
-                        className="mt-4 bg-yellow-600 hover:bg-yellow-700 text-white">
-                        Create Your First Tournament
-                    </Button>
+                <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/[0.08] rounded-2xl">
+                    <div className="w-16 h-16 rounded-2xl bg-yellow-500/[0.06] flex items-center justify-center mb-4">
+                        <Trophy className="w-8 h-8 text-yellow-500/40" />
+                    </div>
+                    <p className="text-gray-400 font-medium mb-1">No tournaments found</p>
+                    <p className="text-gray-600 text-sm mb-4">Create your first tournament to get started</p>
+                    <button onClick={() => setShowCreateModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-bold rounded-xl transition-colors">
+                        <Plus className="w-4 h-4" /> Create Tournament
+                    </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredTournaments.map((tournament, index) => (
-                        <motion.div key={tournament.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 transition-all group">
-                            {tournament.imageUrl ? (
-                                <div className="h-40 w-full bg-gradient-to-br from-yellow-900/20 to-red-900/20 flex items-center justify-center overflow-hidden">
-                                    <img src={getImageUrl(tournament.imageUrl)!} alt={tournament.name} className="w-full h-full object-cover" />
-                                </div>
-                            ) : (
-                                <div className="h-40 w-full bg-gradient-to-br from-yellow-900/20 to-red-900/20 flex items-center justify-center">
-                                    <Trophy className="w-16 h-16 text-yellow-500/50" />
-                                </div>
-                            )}
-                            <div className="p-5">
-                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border mb-3 ${getStatusColor(tournament.status)}`}>
-                                    {tournament.status}
-                                </span>
-                                <h3 className="text-lg font-bold text-white mb-2">{tournament.name}</h3>
-                                <div className="space-y-2 text-sm mb-4">
-                                    <div className="flex items-center gap-2 text-gray-400">
-                                        <Calendar className="w-4 h-4" />
-                                        <span>{new Date(tournament.startDate).toLocaleDateString()}</span>
-                                    </div>
-                                    {tournament.location && (
-                                        <div className="flex items-center gap-2 text-gray-400">
-                                            <MapPin className="w-4 h-4" />
-                                            <span>{tournament.location}</span>
+                <div className="space-y-3">
+                    {filteredTournaments.map((tournament, index) => {
+                        const startDate = new Date(tournament.startDate);
+                        const endDate = new Date(tournament.endDate);
+                        const regDeadline = new Date(tournament.registrationDeadline);
+                        const isUpcoming = tournament.status === 'UPCOMING';
+                        const isOngoing = tournament.status === 'ONGOING';
+                        const isCompleted = tournament.status === 'COMPLETED';
+                        const daysUntil = Math.ceil((startDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                        const regDaysLeft = Math.ceil((regDeadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+                        return (
+                            <motion.div
+                                key={tournament.id}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.04 }}
+                                className="group border border-white/[0.06] hover:border-white/[0.12] rounded-2xl bg-white/[0.01] hover:bg-white/[0.025] transition-all overflow-hidden"
+                            >
+                                <div className="flex flex-col lg:flex-row">
+                                    {/* Left: Image / Visual */}
+                                    <div className="relative w-full lg:w-56 h-36 lg:h-auto flex-shrink-0">
+                                        {tournament.imageUrl ? (
+                                            <img src={getImageUrl(tournament.imageUrl)!} alt={tournament.name}
+                                                className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className={`w-full h-full flex items-center justify-center ${
+                                                isCompleted ? 'bg-gradient-to-br from-gray-900/40 to-gray-800/20' :
+                                                isOngoing ? 'bg-gradient-to-br from-emerald-900/30 to-emerald-800/10' :
+                                                'bg-gradient-to-br from-yellow-900/20 to-amber-900/10'
+                                            }`}>
+                                                <Trophy className={`w-10 h-10 ${
+                                                    isCompleted ? 'text-gray-600' : isOngoing ? 'text-emerald-600' : 'text-yellow-600/60'
+                                                }`} />
+                                            </div>
+                                        )}
+                                        {/* Status badge overlay */}
+                                        <div className="absolute top-3 left-3">
+                                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ${getStatusColor(tournament.status)}`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                                    isOngoing ? 'bg-emerald-400 animate-pulse' :
+                                                    isUpcoming ? 'bg-blue-400' :
+                                                    isCompleted ? 'bg-gray-400' : 'bg-red-400'
+                                                }`} />
+                                                {tournament.status}
+                                            </span>
                                         </div>
-                                    )}
-                                    {tournament._count && (
-                                        <div className="flex items-center gap-2 text-gray-400">
-                                            <Users className="w-4 h-4" />
-                                            <span>{tournament._count.registrations} participants</span>
+                                    </div>
+
+                                    {/* Center: Info */}
+                                    <div className="flex-1 p-5 flex flex-col justify-between min-w-0">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-white mb-2 truncate group-hover:text-yellow-50 transition-colors">
+                                                {tournament.name}
+                                            </h3>
+                                            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-gray-500">
+                                                <span className="flex items-center gap-1.5">
+                                                    <Calendar className="w-3.5 h-3.5 text-gray-600" />
+                                                    {startDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    {startDate.toDateString() !== endDate.toDateString() && (
+                                                        <> – {endDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</>
+                                                    )}
+                                                </span>
+                                                {tournament.location && (
+                                                    <span className="flex items-center gap-1.5">
+                                                        <MapPin className="w-3.5 h-3.5 text-gray-600" />
+                                                        {tournament.location}
+                                                    </span>
+                                                )}
+                                                {tournament._count && (
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Users className="w-3.5 h-3.5 text-gray-600" />
+                                                        {tournament._count.registrations} participant{tournament._count.registrations !== 1 ? 's' : ''}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <Button onClick={() => handleViewDetails(tournament)}
-                                        className="w-full bg-yellow-600 hover:bg-yellow-700 text-white" size="sm">
-                                        <Eye className="w-4 h-4 mr-2" /> View Details
-                                    </Button>
-                                    <div className="flex gap-2">
-                                        <Button onClick={() => openEditModal(tournament)}
-                                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" size="sm">
-                                            <Edit2 className="w-4 h-4 mr-2" /> Edit
-                                        </Button>
-                                        <Button onClick={() => handleDelete(tournament.id)}
-                                            className="bg-red-600 hover:bg-red-700 text-white" size="sm">
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
+
+                                        {/* Tags row */}
+                                        <div className="flex flex-wrap items-center gap-2 mt-3">
+                                            {isUpcoming && daysUntil > 0 && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 text-[11px] font-semibold">
+                                                    <CalendarClock className="w-3 h-3" />
+                                                    Starts in {daysUntil} day{daysUntil !== 1 ? 's' : ''}
+                                                </span>
+                                            )}
+                                            {isUpcoming && regDaysLeft > 0 && (
+                                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold ${
+                                                    regDaysLeft <= 7 ? 'bg-red-500/10 text-red-400' : 'bg-amber-500/10 text-amber-400'
+                                                }`}>
+                                                    Registration {regDaysLeft <= 7 ? 'closing' : 'open'}: {regDaysLeft}d left
+                                                </span>
+                                            )}
+                                            {isUpcoming && regDaysLeft <= 0 && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-500/10 text-red-400 text-[11px] font-semibold">
+                                                    Registration closed
+                                                </span>
+                                            )}
+                                            {tournament.memberFee > 0 && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] text-gray-400 text-[11px] font-semibold">
+                                                    <IndianRupee className="w-3 h-3" />
+                                                    {tournament.memberFee}
+                                                </span>
+                                            )}
+                                            {tournament._count && tournament._count.results > 0 && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-yellow-500/10 text-yellow-400 text-[11px] font-semibold">
+                                                    <Medal className="w-3 h-3" />
+                                                    {tournament._count.results} result{tournament._count.results !== 1 ? 's' : ''}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Right: Actions */}
+                                    <div className="flex lg:flex-col items-center gap-2 p-4 lg:p-5 lg:pl-0 border-t lg:border-t-0 lg:border-l border-white/[0.04]">
+                                        <button onClick={() => handleViewDetails(tournament)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-yellow-600/90 hover:bg-yellow-600 text-white text-xs font-bold rounded-lg transition-all flex-1 lg:flex-none lg:w-full justify-center">
+                                            <Eye className="w-3.5 h-3.5" /> Details
+                                        </button>
+                                        <button onClick={() => openEditModal(tournament)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white text-xs font-semibold rounded-lg transition-all flex-1 lg:flex-none lg:w-full justify-center border border-white/[0.06]">
+                                            <Edit2 className="w-3.5 h-3.5" /> Edit
+                                        </button>
+                                        <button onClick={() => handleDelete(tournament.id)}
+                                            className="flex items-center gap-2 px-3 py-2 hover:bg-red-500/10 text-gray-600 hover:text-red-400 text-xs rounded-lg transition-all"
+                                            title="Delete tournament">
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
-                        </motion.div>
-                    ))}
+                            </motion.div>
+                        );
+                    })}
                 </div>
             )}
 
