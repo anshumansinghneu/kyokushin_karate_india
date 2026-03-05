@@ -45,7 +45,8 @@ function calculateExperience(user?: { experienceYears?: number; experienceMonths
     if (user?.experienceYears || user?.experienceMonths) {
         const years = user.experienceYears || 0;
         const months = user.experienceMonths || 0;
-        if (years > 0) return { years, months, display: `${years}y ${months}m` };
+        if (years > 0 && months > 0) return { years, months, display: `${years}y ${months}m` };
+        if (years > 0) return { years, months: 0, display: `${years} yr${years > 1 ? 's' : ''}` };
         return { years: 0, months, display: months > 0 ? `${months} mo` : 'New' };
     }
     // Fallback to calculated from membership start
@@ -114,10 +115,11 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                 : (BELT_COLORS[beltVal] || [229, 229, 229]);
 
             const pdfRoleTitle = ROLE_TITLES[user?.role || 'STUDENT'] || 'KARATEKA';
-            const expYears = user?.experienceYears || 0;
-            const expMonths = user?.experienceMonths || 0;
-            const expDisplay = expYears > 0 ? `${expYears}+ yrs` : expMonths > 0 ? `${expMonths} mo` : 'New';
-            const pdfValidThru = user?.membershipStatus === 'ACTIVE' ? 'Active' : user?.membershipStatus || '--';
+            const pdfExperience = calculateExperience(user);
+            const expDisplay = pdfExperience.display;
+            const pdfValidThru = user?.membershipEndDate
+                ? new Date(user.membershipEndDate).toLocaleDateString('en-IN', { month: '2-digit', year: '2-digit' })
+                : user?.membershipStatus === 'ACTIVE' ? 'Active' : user?.membershipStatus || '--';
 
             const loadImg = (src: string): Promise<string> =>
                 new Promise((resolve, reject) => {
