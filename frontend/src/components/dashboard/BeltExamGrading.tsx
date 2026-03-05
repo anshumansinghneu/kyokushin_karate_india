@@ -155,9 +155,9 @@ export default function BeltExamGrading() {
 
     const passedParticipants = participants.filter((p) => p.result === "PASS");
 
-    const handleDownloadCertificate = (p: Participant) => {
+    const handleDownloadCertificate = async (p: Participant) => {
         const instructorName = selectedEvent?.assignedInstructor?.name || user?.name || 'Instructor';
-        downloadBeltCertificate({
+        await downloadBeltCertificate({
             studentName: p.student.name,
             instructorName,
             beltRank: p.targetBelt || p.currentBelt,
@@ -165,7 +165,7 @@ export default function BeltExamGrading() {
         });
     };
 
-    const handleDownloadAllCertificates = () => {
+    const handleDownloadAllCertificates = async () => {
         const instructorName = selectedEvent?.assignedInstructor?.name || user?.name || 'Instructor';
         const certs = passedParticipants.map((p) => ({
             studentName: p.student.name,
@@ -173,7 +173,7 @@ export default function BeltExamGrading() {
             beltRank: p.targetBelt || p.currentBelt,
             dateOfApproval: p.gradedAt || new Date().toISOString(),
         }));
-        downloadAllBeltCertificates(certs);
+        await downloadAllBeltCertificates(certs);
     };
 
     return (

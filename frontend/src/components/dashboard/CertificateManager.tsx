@@ -17,16 +17,16 @@ export default function CertificateManager() {
         dateOfApproval: new Date().toISOString(),
     };
 
-    const handlePreview = () => {
-        const pdf = generateBeltCertificate(sampleData);
+    const handlePreview = async () => {
+        const pdf = await generateBeltCertificate(sampleData);
         const blob = pdf.output("blob");
         const url = URL.createObjectURL(blob);
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         setPreviewUrl(url);
     };
 
-    const handleDownloadSample = () => {
-        const pdf = generateBeltCertificate(sampleData);
+    const handleDownloadSample = async () => {
+        const pdf = await generateBeltCertificate(sampleData);
         pdf.save(`Sample_${previewBelt.replace(/\s+/g, "_")}_Belt_Certificate.pdf`);
     };
 
