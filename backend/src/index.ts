@@ -8,6 +8,7 @@ import { Server } from 'socket.io';
 import app from './app';
 import runMigration from './runMigration';
 import { verifySmtp } from './services/emailService';
+import { startBackupScheduler } from './services/backupService';
 
 const PORT = process.env.PORT || 10000;
 
@@ -55,4 +56,7 @@ server.listen(Number(PORT), '0.0.0.0', () => {
     verifySmtp().then(result => {
         console.log(`📧 SMTP startup check: ${result.success ? '✅ WORKING' : '❌ FAILED - ' + result.message}`);
     });
+
+    // Start daily backup scheduler
+    startBackupScheduler();
 });

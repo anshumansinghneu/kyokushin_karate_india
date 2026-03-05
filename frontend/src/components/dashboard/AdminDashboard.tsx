@@ -32,6 +32,7 @@ const StoreManagement = lazy(() => import('./StoreManagement'));
 const VoucherManager = lazy(() => import('./VoucherManager'));
 const SeminarManager = lazy(() => import('./SeminarManager'));
 const SiteAnalytics = lazy(() => import('./SiteAnalytics'));
+const CertificateManager = lazy(() => import('./CertificateManager'));
 
 import OrganizationGraph from "./OrganizationGraph";
 import GlobalSearch from "./GlobalSearch";
@@ -49,9 +50,9 @@ function TabLoader() {
     );
 }
 
-type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers' | 'analytics';
+type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers' | 'analytics' | 'certificates';
 
-const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers', 'analytics'];
+const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers', 'analytics', 'certificates'];
 
 export default function AdminDashboard({ user, initialTab }: { user: any; initialTab?: string }) {
     const { showToast } = useToast();
@@ -129,6 +130,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                 { id: 'belt-verifications', label: 'Belt Verifications', icon: Shield, badge: stats.pending > 0 ? stats.pending : undefined },
                 { id: 'belt-promotions', label: 'Belt Promotions', icon: Award },
                 { id: 'belt-exam-grading', label: 'Belt Exam Grading', icon: Shield },
+                { id: 'certificates', label: 'Certificates', icon: Award },
             ]
         },
         {
@@ -670,6 +672,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                         {activeTab === 'payments' && <motion.div key="payments" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><PaymentManagement /></Suspense></motion.div>}
                         {activeTab === 'vouchers' && <motion.div key="vouchers" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><VoucherManager /></Suspense></motion.div>}
                         {activeTab === 'analytics' && <motion.div key="analytics" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><SiteAnalytics /></Suspense></motion.div>}
+                        {activeTab === 'certificates' && <motion.div key="certificates" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><CertificateManager /></Suspense></motion.div>}
                     </AnimatePresence>
                     </div>
                 </div>

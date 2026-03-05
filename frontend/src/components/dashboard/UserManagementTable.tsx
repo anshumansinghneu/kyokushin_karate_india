@@ -54,7 +54,22 @@ export default function UserManagementTable() {
         dojoId: "",
         primaryInstructorId: "",
         currentBeltRank: "White",
-        membershipStatus: "PENDING"
+        membershipStatus: "PENDING",
+        phone: "",
+        countryCode: "+91",
+        dateOfBirth: "",
+        city: "",
+        state: "",
+        country: "India",
+        height: "",
+        weight: "",
+        experienceYears: "",
+        experienceMonths: "",
+        membershipNumber: "",
+        membershipStartDate: "",
+        membershipEndDate: "",
+        fatherName: "",
+        fatherPhone: "",
     });
 
     // Create User Modal State
@@ -275,7 +290,22 @@ export default function UserManagementTable() {
             dojoId: user.dojoId || "",
             primaryInstructorId: user.primaryInstructorId || "",
             currentBeltRank: user.currentBeltRank || "White",
-            membershipStatus: user.membershipStatus
+            membershipStatus: user.membershipStatus,
+            phone: user.phone || "",
+            countryCode: user.countryCode || "+91",
+            dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : "",
+            city: user.city || "",
+            state: user.state || "",
+            country: user.country || "India",
+            height: user.height?.toString() || "",
+            weight: user.weight?.toString() || "",
+            experienceYears: user.experienceYears?.toString() || "",
+            experienceMonths: user.experienceMonths?.toString() || "",
+            membershipNumber: user.membershipNumber || "",
+            membershipStartDate: user.membershipStartDate ? new Date(user.membershipStartDate).toISOString().split('T')[0] : "",
+            membershipEndDate: user.membershipEndDate ? new Date(user.membershipEndDate).toISOString().split('T')[0] : "",
+            fatherName: user.fatherName || "",
+            fatherPhone: user.fatherPhone || "",
         });
         setIsEditModalOpen(true);
     };
@@ -283,6 +313,8 @@ export default function UserManagementTable() {
     // Get instructors for the edit modal dropdown
     const availableInstructors = users.filter(u => {
         if (u.role !== 'INSTRUCTOR' && u.role !== 'ADMIN') return false;
+        // Don't show the user being edited as their own instructor
+        if (editingUser && u.id === editingUser.id) return false;
         // If a dojo is selected, show instructors at that dojo + admin
         if (editFormData.dojoId) {
             return u.role === 'ADMIN' || u.dojoId === editFormData.dojoId;
@@ -302,7 +334,22 @@ export default function UserManagementTable() {
                 dojoId: editFormData.dojoId || null,
                 primaryInstructorId: editFormData.primaryInstructorId || null,
                 currentBeltRank: editFormData.currentBeltRank,
-                membershipStatus: editFormData.membershipStatus
+                membershipStatus: editFormData.membershipStatus,
+                phone: editFormData.phone || null,
+                countryCode: editFormData.countryCode || "+91",
+                dateOfBirth: editFormData.dateOfBirth || null,
+                city: editFormData.city || null,
+                state: editFormData.state || null,
+                country: editFormData.country || "India",
+                height: editFormData.height || null,
+                weight: editFormData.weight || null,
+                experienceYears: editFormData.experienceYears || null,
+                experienceMonths: editFormData.experienceMonths || null,
+                membershipNumber: editFormData.membershipNumber || null,
+                membershipStartDate: editFormData.membershipStartDate || null,
+                membershipEndDate: editFormData.membershipEndDate || null,
+                fatherName: editFormData.fatherName || null,
+                fatherPhone: editFormData.fatherPhone || null,
             };
 
             await api.patch(`/users/${editingUser.id}`, updateData);
@@ -839,10 +886,157 @@ export default function UserManagementTable() {
                                                 onChange={(e) => setEditFormData({ ...editFormData, currentBeltRank: e.target.value })}
                                                 className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
                                             >
-                                                {["White", "Orange", "Blue", "Yellow", "Green", "Brown", "Black"].map(belt => (
+                                                {["White", "Orange", "Blue", "Yellow", "Green", "Brown", "Black 1st Dan", "Black 2nd Dan", "Black 3rd Dan", "Black 4th Dan"].map(belt => (
                                                     <option key={belt} value={belt}>{belt}</option>
                                                 ))}
                                             </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Membership Number</Label>
+                                            <Input
+                                                value={editFormData.membershipNumber}
+                                                onChange={(e) => setEditFormData({ ...editFormData, membershipNumber: e.target.value })}
+                                                placeholder="e.g. KKFI-2025-MUM-00001"
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Phone & DOB */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Phone</Label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    value={editFormData.countryCode}
+                                                    onChange={(e) => setEditFormData({ ...editFormData, countryCode: e.target.value })}
+                                                    className="bg-black/50 border-white/10 w-20"
+                                                    placeholder="+91"
+                                                />
+                                                <Input
+                                                    value={editFormData.phone}
+                                                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                                                    className="bg-black/50 border-white/10 flex-1"
+                                                    placeholder="9876543210"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Date of Birth</Label>
+                                            <Input
+                                                type="date"
+                                                value={editFormData.dateOfBirth}
+                                                onChange={(e) => setEditFormData({ ...editFormData, dateOfBirth: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* City & State */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>City</Label>
+                                            <Input
+                                                value={editFormData.city}
+                                                onChange={(e) => setEditFormData({ ...editFormData, city: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>State</Label>
+                                            <Input
+                                                value={editFormData.state}
+                                                onChange={(e) => setEditFormData({ ...editFormData, state: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Height & Weight */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Height (cm)</Label>
+                                            <Input
+                                                type="number"
+                                                value={editFormData.height}
+                                                onChange={(e) => setEditFormData({ ...editFormData, height: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Weight (kg)</Label>
+                                            <Input
+                                                type="number"
+                                                value={editFormData.weight}
+                                                onChange={(e) => setEditFormData({ ...editFormData, weight: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Experience */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Experience (Years)</Label>
+                                            <Input
+                                                type="number"
+                                                value={editFormData.experienceYears}
+                                                onChange={(e) => setEditFormData({ ...editFormData, experienceYears: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                                min="0"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Experience (Months)</Label>
+                                            <Input
+                                                type="number"
+                                                value={editFormData.experienceMonths}
+                                                onChange={(e) => setEditFormData({ ...editFormData, experienceMonths: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                                min="0" max="11"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Membership Dates */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Membership Start</Label>
+                                            <Input
+                                                type="date"
+                                                value={editFormData.membershipStartDate}
+                                                onChange={(e) => setEditFormData({ ...editFormData, membershipStartDate: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Membership End</Label>
+                                            <Input
+                                                type="date"
+                                                value={editFormData.membershipEndDate}
+                                                onChange={(e) => setEditFormData({ ...editFormData, membershipEndDate: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Father Details */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Father/Guardian Name</Label>
+                                            <Input
+                                                value={editFormData.fatherName}
+                                                onChange={(e) => setEditFormData({ ...editFormData, fatherName: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Father/Guardian Phone</Label>
+                                            <Input
+                                                value={editFormData.fatherPhone}
+                                                onChange={(e) => setEditFormData({ ...editFormData, fatherPhone: e.target.value })}
+                                                className="bg-black/50 border-white/10"
+                                            />
                                         </div>
                                     </div>
 

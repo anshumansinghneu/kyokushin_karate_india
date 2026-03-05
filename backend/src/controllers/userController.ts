@@ -709,10 +709,11 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
 
     // Whitelist of fields an admin can update on a user
     const allowedFields = [
-        'name', 'phone', 'countryCode', 'dateOfBirth', 'height', 'weight',
+        'name', 'email', 'phone', 'countryCode', 'dateOfBirth', 'height', 'weight',
         'city', 'state', 'country', 'profilePhotoUrl', 'fatherName', 'fatherPhone',
         'dojoId', 'primaryInstructorId', 'currentBeltRank', 'role',
-        'membershipStatus', 'membershipStartDate', 'membershipEndDate',
+        'membershipStatus', 'membershipNumber', 'membershipStartDate', 'membershipEndDate',
+        'experienceYears', 'experienceMonths',
         'verificationStatus', 'isInstructorApproved'
     ];
 
@@ -720,8 +721,8 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
     for (const field of allowedFields) {
         if (req.body[field] !== undefined) {
             // Convert numeric fields
-            if (field === 'height' || field === 'weight') {
-                updateData[field] = req.body[field] ? parseFloat(req.body[field]) : null;
+            if (field === 'height' || field === 'weight' || field === 'experienceYears' || field === 'experienceMonths') {
+                updateData[field] = req.body[field] !== '' && req.body[field] !== null ? parseInt(req.body[field], 10) : null;
             // Convert date fields
             } else if (field === 'dateOfBirth' || field === 'membershipStartDate' || field === 'membershipEndDate') {
                 updateData[field] = req.body[field] ? new Date(req.body[field]) : null;

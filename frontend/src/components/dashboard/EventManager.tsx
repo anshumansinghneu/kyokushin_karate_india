@@ -25,6 +25,9 @@ interface Event {
     dojo?: { name: string };
     imageUrl?: string;
     categories?: { name: string; age: string; weight: string }[];
+    isPreEvent?: boolean;
+    assignedInstructorId?: string;
+    assignedInstructor?: { id: string; name: string };
 }
 
 interface CategoryRow {
@@ -38,16 +41,23 @@ interface Dojo {
     name: string;
 }
 
+interface Instructor {
+    id: string;
+    name: string;
+}
+
 export default function EventManager() {
     const { showToast } = useToast();
     const [events, setEvents] = useState<Event[]>([]);
     const [dojos, setDojos] = useState<Dojo[]>([]);
+    const [instructors, setInstructors] = useState<Instructor[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<Event | null>(null);
     const [typeFilter, setTypeFilter] = useState<'ALL' | 'TOURNAMENT' | 'CAMP' | 'SEMINAR' | 'BELT_EXAM'>('ALL');
     const [searchQuery, setSearchQuery] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    const [isPreEvent, setIsPreEvent] = useState(false);
     const [formData, setFormData] = useState({
         name: "",
         type: "TOURNAMENT",
@@ -62,7 +72,8 @@ export default function EventManager() {
         maxParticipants: 100,
         memberFee: 0,
         nonMemberFee: 0,
-        categories: [] as CategoryRow[]
+        categories: [] as CategoryRow[],
+        assignedInstructorId: ""
     });
 
     // Smart auto-fill: when start date changes, auto-set end date (+1 day) and deadline (-7 days)
@@ -104,12 +115,14 @@ export default function EventManager() {
     const fetchEvents = async () => {
         setIsLoading(true);
         try {
-            const [eventsRes, dojosRes] = await Promise.all([
+            const [eventsRes, dojosRes, instructorsRes] = await Promise.all([
                 api.get('/events'),
-                api.get('/dojos')
+                api.get('/dojos'),
+                api.get('/users?role=INSTRUCTOR,ADMIN')
             ]);
             setEvents(eventsRes.data.data.events);
             setDojos(dojosRes.data.data.dojos);
+            setInstructors((instructorsRes.data.data.users || []).map((u: any) => ({ id: u.id, name: u.name })));
         } catch (error) {
             console.error("Failed to fetch data", error);
         } finally {
@@ -149,8 +162,10 @@ export default function EventManager() {
                 maxParticipants: event.maxParticipants,
                 memberFee: event.memberFee,
                 nonMemberFee: event.nonMemberFee,
-                categories: cats
+                categories: cats,
+                assignedInstructorId: event.assignedInstructorId || ""
             });
+            setIsPreEvent(event.isPreEvent || false);
         } else {
             setEditingEvent(null);
             setFormData({
@@ -167,8 +182,10 @@ export default function EventManager() {
                 maxParticipants: 100,
                 memberFee: 0,
                 nonMemberFee: 0,
-                categories: []
+                categories: [],
+                assignedInstructorId: ""
             });
+            setIsPreEvent(false);
         }
         setIsModalOpen(true);
     };
@@ -182,11 +199,13 @@ export default function EventManager() {
                 dojoId: formData.dojoId || null,
                 imageUrl: formData.imageUrl || null,
                 startDate: new Date(formData.startDate).toISOString(),
-                endDate: new Date(formData.endDate).toISOString(),
-                registrationDeadline: new Date(formData.registrationDeadline).toISOString(),
+                endDate: formData.endDate ? new Date(formData.endDate).toISOString() : new Date(formData.startDate).toISOString(),
+                registrationDeadline: formData.registrationDeadline ? new Date(formData.registrationDeadline).toISOString() : new Date(formData.startDate).toISOString(),
                 maxParticipants: Number(formData.maxParticipants) || null,
                 memberFee: Number(formData.memberFee),
-                nonMemberFee: Number(formData.nonMemberFee)
+                nonMemberFee: Number(formData.nonMemberFee),
+                isPreEvent,
+                assignedInstructorId: formData.assignedInstructorId || null
             };
 
             if (editingEvent) {
@@ -392,9 +411,16 @@ export default function EventManager() {
                             <div className="p-5">
                                 {/* Header: Type + Status */}
                                 <div className="flex items-center justify-between mb-3">
-                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${typeCfg.badge}`}>
-                                        {event.type}
-                                    </span>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${typeCfg.badge}`}>
+                                            {event.type}
+                                        </span>
+                                        {event.isPreEvent && (
+                                            <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                                                PRE-EVENT
+                                            </span>
+                                        )}
+                                    </div>
                                     <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${statusCfg.cls}`}>
                                         {statusCfg.label}
                                     </span>
@@ -424,6 +450,12 @@ export default function EventManager() {
                                             <span className="text-gray-600">/ ₹{event.nonMemberFee} non-member</span>
                                         )}
                                     </div>
+                                    {event.assignedInstructor && (
+                                        <div className="flex items-center gap-2 text-amber-400">
+                                            <Shield className="w-3.5 h-3.5 flex-shrink-0" />
+                                            <span>{event.assignedInstructor.name}</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Deadline */}
@@ -524,6 +556,120 @@ export default function EventManager() {
                                         </div>
                                     </div>
 
+                                    {/* Pre-Event Toggle (only for Belt Exam) */}
+                                    {formData.type === 'BELT_EXAM' && (
+                                        <div className="flex items-center justify-between p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                                            <div>
+                                                <p className="text-sm font-bold text-amber-400">Pre-Event Mode</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">Simplified belt test creation — just price, city & instructor</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newVal = !isPreEvent;
+                                                    setIsPreEvent(newVal);
+                                                    if (newVal) {
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            name: prev.location ? `Belt Test, ${prev.location}` : 'Belt Test',
+                                                            description: 'Official KKFI belt grading examination.',
+                                                            nonMemberFee: prev.memberFee,
+                                                            status: 'UPCOMING',
+                                                        }));
+                                                    }
+                                                }}
+                                                className={`relative w-12 h-6 rounded-full transition-colors ${isPreEvent ? 'bg-amber-500' : 'bg-white/10'}`}
+                                            >
+                                                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${isPreEvent ? 'translate-x-6' : 'translate-x-0'}`} />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Pre-Event Simplified Form */}
+                                    {isPreEvent && formData.type === 'BELT_EXAM' ? (
+                                        <div className="space-y-5">
+                                            {/* City */}
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">City <span className="text-red-400">*</span></label>
+                                                <input
+                                                    value={formData.location}
+                                                    onChange={(e) => {
+                                                        const city = e.target.value;
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            location: city,
+                                                            name: city ? `Belt Test, ${city}` : 'Belt Test'
+                                                        }));
+                                                    }}
+                                                    required
+                                                    placeholder="e.g. Mumbai, Delhi, Bangalore"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-all"
+                                                />
+                                            </div>
+
+                                            {/* Price */}
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Price (₹) <span className="text-red-400">*</span></label>
+                                                <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
+                                                    <input
+                                                        type="number"
+                                                        value={formData.memberFee}
+                                                        onChange={(e) => {
+                                                            const fee = Number(e.target.value);
+                                                            setFormData(prev => ({ ...prev, memberFee: fee, nonMemberFee: fee }));
+                                                        }}
+                                                        min={0}
+                                                        required
+                                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Start Date */}
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Start Date <span className="text-red-400">*</span></label>
+                                                <input
+                                                    type="date"
+                                                    value={formData.startDate}
+                                                    onChange={(e) => handleStartDateChange(e.target.value)}
+                                                    required
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-all [color-scheme:dark]"
+                                                />
+                                            </div>
+
+                                            {/* Assign Instructor */}
+                                            <div>
+                                                <label className="text-sm text-gray-300 mb-1.5 block">Assign Instructor <span className="text-red-400">*</span></label>
+                                                <select
+                                                    value={formData.assignedInstructorId}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, assignedInstructorId: e.target.value }))}
+                                                    required
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-all appearance-none cursor-pointer"
+                                                >
+                                                    <option value="" className="bg-zinc-900">Select instructor...</option>
+                                                    {instructors.map(inst => (
+                                                        <option key={inst.id} value={inst.id} className="bg-zinc-900">{inst.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {/* Auto-generated name preview */}
+                                            {formData.location && (
+                                                <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4">
+                                                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Auto-Generated</p>
+                                                    <p className="text-sm text-white font-semibold">{formData.name}</p>
+                                                    <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-400">
+                                                        {formData.startDate && <span>📅 {new Date(formData.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
+                                                        <span>📍 {formData.location}</span>
+                                                        <span>💰 ₹{formData.memberFee}</span>
+                                                        {formData.assignedInstructorId && <span>👤 {instructors.find(i => i.id === formData.assignedInstructorId)?.name}</span>}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                    <>
                                     {/* Section: Basic Info */}
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
@@ -869,6 +1015,8 @@ export default function EventManager() {
                                                 {formData.memberFee > 0 && <span className="text-gray-500">· ₹{formData.memberFee}</span>}
                                             </div>
                                         </div>
+                                    )}
+                                    </>
                                     )}
                                 </div>
 

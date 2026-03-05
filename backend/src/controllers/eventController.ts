@@ -29,11 +29,16 @@ export const getAllEvents = catchAsync(async (req: Request, res: Response, next:
                 nonMemberFee: true,
                 status: true,
                 categories: true,
+                isPreEvent: true,
+                assignedInstructorId: true,
                 createdAt: true,
                 updatedAt: true,
                 dojoId: true,
                 dojo: {
                     select: { name: true, city: true }
+                },
+                assignedInstructor: {
+                    select: { id: true, name: true }
                 }
             }
         }),
@@ -57,6 +62,7 @@ export const getEvent = catchAsync(async (req: Request, res: Response, next: Nex
         where: { id: req.params.id },
         include: {
             dojo: true,
+            assignedInstructor: { select: { id: true, name: true } },
             registrations: {
                 select: { id: true } // Only return count-able IDs publicly
             }
@@ -86,7 +92,8 @@ export const createEvent = catchAsync(async (req: Request, res: Response, next: 
 
     const {
         type, name, description, imageUrl, startDate, endDate, location, dojoId,
-        registrationDeadline, maxParticipants, memberFee, nonMemberFee, categories, status
+        registrationDeadline, maxParticipants, memberFee, nonMemberFee, categories, status,
+        isPreEvent, assignedInstructorId
     } = req.body;
 
     const newEvent = await prisma.event.create({
@@ -96,16 +103,18 @@ export const createEvent = catchAsync(async (req: Request, res: Response, next: 
             description,
             imageUrl: imageUrl || null,
             startDate: new Date(startDate),
-            endDate: new Date(endDate),
+            endDate: endDate ? new Date(endDate) : new Date(startDate),
             location,
             dojoId: dojoId || null,
-            registrationDeadline: new Date(registrationDeadline),
+            registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : new Date(startDate),
             maxParticipants,
             memberFee,
             nonMemberFee,
             categories,
             createdBy: currentUser.id,
-            status: status || 'UPCOMING'
+            status: status || 'UPCOMING',
+            isPreEvent: isPreEvent || false,
+            assignedInstructorId: assignedInstructorId || null
         },
     });
 
@@ -240,7 +249,7 @@ export const bulkApproveRegistrations = catchAsync(async (req: Request, res: Res
     });
 });
 export const updateEvent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { name, type, description, imageUrl, startDate, endDate, location, dojoId, registrationDeadline, maxParticipants, memberFee, nonMemberFee, categories, status } = req.body;
+    const { name, type, description, imageUrl, startDate, endDate, location, dojoId, registrationDeadline, maxParticipants, memberFee, nonMemberFee, categories, status, isPreEvent, assignedInstructorId } = req.body;
 
     // Build update data with only valid Event model fields
     const updateData: any = {};
@@ -258,6 +267,8 @@ export const updateEvent = catchAsync(async (req: Request, res: Response, next: 
     if (nonMemberFee !== undefined) updateData.nonMemberFee = nonMemberFee;
     if (categories !== undefined) updateData.categories = categories;
     if (status !== undefined) updateData.status = status;
+    if (isPreEvent !== undefined) updateData.isPreEvent = isPreEvent;
+    if (assignedInstructorId !== undefined) updateData.assignedInstructorId = assignedInstructorId || null;
 
     try {
         const event = await prisma.event.update({

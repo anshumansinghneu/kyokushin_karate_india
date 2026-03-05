@@ -147,6 +147,7 @@ model User {
   beltVerificationRequests BeltVerificationRequest[] @relation("StudentVerificationRequests")
   reviewedVerifications BeltVerificationRequest[] @relation("InstructorReviews")
   createdEvents         Event[]
+  assignedEvents        Event[]          @relation("AssignedInstructor")
   registrations         EventRegistration[]
   approvedRegistrations EventRegistration[] @relation("RegistrationApprover")
 
@@ -246,6 +247,11 @@ model Event {
 
   // Categories (JSON array)
   categories            Json?       // [{age: "18-35", weight: "<70kg", belt: "Brown"}]
+
+  // Pre-Event (simplified belt exam)
+  isPreEvent            Boolean     @default(false)
+  assignedInstructorId  String?
+  assignedInstructor    User?       @relation("AssignedInstructor", fields: [assignedInstructorId], references: [id])
 
   status                EventStatus @default(UPCOMING)
   createdBy             String

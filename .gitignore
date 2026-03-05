@@ -13,3 +13,4 @@ frontend/.env.production
 .DS_Store
 backend/src/uploads/*
 !backend/src/uploads/.gitkeep
+backups/
