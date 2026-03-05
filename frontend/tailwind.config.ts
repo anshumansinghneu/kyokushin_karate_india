@@ -43,7 +43,7 @@ const config: Config = {
                 'slide-up': 'slideUp 0.5s ease-out forwards',
                 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                 'blob': 'blob 7s infinite',
-                'shimmer': 'shimmer 2s infinite',
+                'shimmer': 'shimmer 4s ease-in-out infinite',
             },
             keyframes: {
                 fadeIn: {
@@ -55,7 +55,8 @@ const config: Config = {
                     '100%': { opacity: '1', transform: 'translateY(0)' },
                 },
                 shimmer: {
-                    '100%': { transform: 'translateX(100%)' },
+                    '0%': { backgroundPosition: '-200% 0' },
+                    '100%': { backgroundPosition: '200% 0' },
                 },
                 blob: {
                     "0%": {
