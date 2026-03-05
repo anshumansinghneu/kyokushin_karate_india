@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
-import { Download, Share2, Flame, Crown, Star, Gem } from "lucide-react";
+import { Download, Share2, Flame, Swords, Shield } from "lucide-react";
 import { useState, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
@@ -24,75 +24,15 @@ interface MembershipCardProps {
     showDownload?: boolean;
 }
 
-// Card tier system based on belt rank — like elite credit cards
-type CardTier = 'standard' | 'elite' | 'platinum' | 'diamond' | 'legend';
-
-function getCardTier(belt: string): { tier: CardTier; label: string; icon: typeof Star } {
-    if (belt.includes('7th') || belt.includes('8th') || belt.includes('9th') || belt.includes('10th'))
-        return { tier: 'legend', label: 'LEGEND', icon: Crown };
-    if (belt.includes('5th') || belt.includes('6th'))
-        return { tier: 'diamond', label: 'DIAMOND', icon: Gem };
-    if (belt.includes('3rd') || belt.includes('4th'))
-        return { tier: 'platinum', label: 'PLATINUM', icon: Star };
-    if (belt.includes('1st') || belt.includes('2nd') || belt === 'Brown')
-        return { tier: 'elite', label: 'ELITE', icon: Star };
-    return { tier: 'standard', label: 'MEMBER', icon: Star };
-}
-
-const TIER_THEMES: Record<CardTier, {
-    bg: string; accent: string; accentRgb: string; glow: string;
-    border: string; shimmer: string; textGradient: string; chipBg: string;
-}> = {
-    standard: {
-        bg: 'from-zinc-950 via-zinc-900 to-zinc-950',
-        accent: '#a1a1aa', accentRgb: '161,161,170',
-        glow: 'rgba(161,161,170,0.15)',
-        border: 'border-white/[0.08]',
-        shimmer: 'from-transparent via-white/[0.03] to-transparent',
-        textGradient: 'from-zinc-200 to-zinc-400',
-        chipBg: 'from-zinc-700 to-zinc-800',
-    },
-    elite: {
-        bg: 'from-zinc-950 via-zinc-900 to-zinc-950',
-        accent: '#dc2626', accentRgb: '220,38,38',
-        glow: 'rgba(220,38,38,0.2)',
-        border: 'border-red-500/20',
-        shimmer: 'from-transparent via-red-500/[0.04] to-transparent',
-        textGradient: 'from-red-300 to-red-500',
-        chipBg: 'from-red-900 to-red-950',
-    },
-    platinum: {
-        bg: 'from-[#0c0c12] via-[#14141f] to-[#0c0c12]',
-        accent: '#a8b4d4', accentRgb: '168,180,212',
-        glow: 'rgba(168,180,212,0.25)',
-        border: 'border-blue-200/15',
-        shimmer: 'from-transparent via-blue-100/[0.06] to-transparent',
-        textGradient: 'from-blue-100 via-slate-200 to-blue-300',
-        chipBg: 'from-slate-600 to-slate-800',
-    },
-    diamond: {
-        bg: 'from-[#0a0a0f] via-[#111118] to-[#0a0a0f]',
-        accent: '#c4b5fd', accentRgb: '196,181,253',
-        glow: 'rgba(196,181,253,0.3)',
-        border: 'border-violet-300/20',
-        shimmer: 'from-transparent via-violet-200/[0.08] to-transparent',
-        textGradient: 'from-violet-200 via-white to-violet-300',
-        chipBg: 'from-violet-800 to-violet-950',
-    },
-    legend: {
-        bg: 'from-[#0f0b04] via-[#1a1408] to-[#0f0b04]',
-        accent: '#fbbf24', accentRgb: '251,191,36',
-        glow: 'rgba(251,191,36,0.35)',
-        border: 'border-yellow-400/20',
-        shimmer: 'from-transparent via-yellow-300/[0.1] to-transparent',
-        textGradient: 'from-yellow-200 via-amber-100 to-yellow-400',
-        chipBg: 'from-yellow-700 to-amber-900',
-    },
-};
-
-const BELT_COLORS: Record<string, string> = {
-    White: '#e5e5e5', Orange: '#f97316', Blue: '#3b82f6',
-    Yellow: '#eab308', Green: '#22c55e', Brown: '#92400e',
+// Belt-based accent — aggressive red for black belts, belt color for others
+const BELT_ACCENTS: Record<string, { color: string; rgb: string }> = {
+    White:  { color: '#94a3b8', rgb: '148,163,184' },
+    Orange: { color: '#f97316', rgb: '249,115,22' },
+    Blue:   { color: '#3b82f6', rgb: '59,130,246' },
+    Yellow: { color: '#eab308', rgb: '234,179,8' },
+    Green:  { color: '#22c55e', rgb: '34,197,94' },
+    Brown:  { color: '#a16207', rgb: '161,98,7' },
+    Black:  { color: '#dc2626', rgb: '220,38,38' },
 };
 
 const ROLE_TITLES: Record<string, string> = {
@@ -106,7 +46,7 @@ function calculateExperience(user?: { experienceYears?: number; experienceMonths
         const years = user.experienceYears || 0;
         const months = user.experienceMonths || 0;
         if (years > 0 && months > 0) return { years, months, display: `${years}y ${months}m` };
-        if (years > 0) return { years, months: 0, display: `${years} yr${years > 1 ? 's' : ''}` };
+        if (years > 0) return { years, months: 0, display: `${years} yrs` };
         return { years: 0, months, display: months > 0 ? `${months} mo` : 'New' };
     }
     const date = user?.membershipStartDate || user?.createdAt;
@@ -115,7 +55,7 @@ function calculateExperience(user?: { experienceYears?: number; experienceMonths
     const totalMonths = Math.floor(ms / (30.44 * 24 * 60 * 60 * 1000));
     const years = Math.floor(totalMonths / 12);
     const months = totalMonths % 12;
-    if (years > 0) return { years, months, display: `${years}+ yr${years > 1 ? 's' : ''}` };
+    if (years > 0) return { years, months, display: `${years}+ yrs` };
     return { years: 0, months, display: months > 0 ? `${months} mo` : 'New' };
 }
 
@@ -127,8 +67,8 @@ export default function MembershipCard({ user, showDownload = true }: Membership
     const y = useMotionValue(0);
     const mouseXSpring = useSpring(x);
     const mouseYSpring = useSpring(y);
-    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["10deg", "-10deg"]);
-    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-10deg", "10deg"]);
+    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["12deg", "-12deg"]);
+    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-12deg", "12deg"]);
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
@@ -139,12 +79,9 @@ export default function MembershipCard({ user, showDownload = true }: Membership
 
     const belt = user?.currentBeltRank || 'White';
     const beltBase = belt.startsWith('Black') ? 'Black' : belt;
-    const beltColor = BELT_COLORS[beltBase] || '#dc2626';
-    const { tier, label: tierLabel, icon: TierIcon } = getCardTier(belt);
-    const theme = TIER_THEMES[tier];
+    const accent = BELT_ACCENTS[beltBase] || BELT_ACCENTS.Black;
     const roleTitle = ROLE_TITLES[user?.role || 'STUDENT'] || 'KARATEKA';
     const isBlack = belt.startsWith('Black');
-    const isPremium = tier !== 'standard';
 
     const experience = useMemo(
         () => calculateExperience(user),
@@ -163,6 +100,10 @@ export default function MembershipCard({ user, showDownload = true }: Membership
         ? new Date(user.membershipStartDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
         : user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '--';
 
+    // Dan level for display (e.g. "5TH DAN" for the slash mark)
+    const danMatch = belt.match(/(\d+)\w*\s*Dan/i);
+    const danLevel = danMatch ? parseInt(danMatch[1]) : 0;
+
     const handleDownload = useCallback(async () => {
         setIsDownloading(true);
         try {
@@ -174,7 +115,6 @@ export default function MembershipCard({ user, showDownload = true }: Membership
             const W = 160, H = 100;
             const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [W, H] });
 
-            const pdfTier = getCardTier(belt);
             const pdfRoleTitle = ROLE_TITLES[user?.role || 'STUDENT'] || 'KARATEKA';
             const pdfExperience = calculateExperience(user);
             const pdfValidThru = user?.membershipEndDate
@@ -184,15 +124,9 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                 ? new Date(user.membershipStartDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
                 : '--';
 
-            // Tier-specific PDF theme colors
-            const pdfColors: Record<CardTier, { accent: [number, number, number]; bg: [number, number, number]; bg2: [number, number, number] }> = {
-                standard:  { accent: [161, 161, 170], bg: [12, 12, 12], bg2: [18, 18, 18] },
-                elite:     { accent: [220, 38, 38],    bg: [12, 12, 12], bg2: [18, 18, 18] },
-                platinum:  { accent: [168, 180, 212],  bg: [12, 12, 18], bg2: [20, 20, 31] },
-                diamond:   { accent: [196, 181, 253],  bg: [10, 10, 15], bg2: [17, 17, 24] },
-                legend:    { accent: [251, 191, 36],   bg: [15, 11, 4],  bg2: [26, 20, 8] },
-            };
-            const pc = pdfColors[pdfTier.tier];
+            const pdfAccent: [number, number, number] = isBlack
+                ? [220, 38, 38]
+                : (beltBase === 'White' ? [148, 163, 184] : [parseInt(accent.rgb.split(',')[0]), parseInt(accent.rgb.split(',')[1]), parseInt(accent.rgb.split(',')[2])]);
 
             const loadImg = (src: string): Promise<string> =>
                 new Promise((resolve, reject) => {
@@ -219,22 +153,21 @@ export default function MembershipCard({ user, showDownload = true }: Membership
             try { logoDataUrl = await loadImg('/kkfi-logo.avif'); } catch {}
 
             // === Background ===
-            doc.setFillColor(pc.bg[0], pc.bg[1], pc.bg[2]);
+            doc.setFillColor(6, 6, 6);
             doc.rect(0, 0, W, H, 'F');
 
-            // Header strip
-            doc.setFillColor(pc.bg2[0], pc.bg2[1], pc.bg2[2]);
+            // Darker header band
+            doc.setFillColor(10, 10, 10);
             doc.rect(0, 0, W, 26, 'F');
 
-            // Top accent line
-            doc.setFillColor(pc.accent[0], pc.accent[1], pc.accent[2]);
-            doc.rect(0, 0, W, 0.8, 'F');
+            // Top accent slash (aggressive angled line)
+            doc.setFillColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
+            doc.rect(0, 0, W, 0.7, 'F');
 
-            // Corner glows
-            doc.setFillColor(pc.accent[0], pc.accent[1], pc.accent[2]);
-            doc.setGState(doc.GState({ opacity: 0.06 }));
-            doc.circle(W - 5, 5, 35, 'F');
-            doc.circle(5, H - 5, 40, 'F');
+            // Diagonal slash across top-right (ninja slash mark)
+            doc.setGState(doc.GState({ opacity: 0.04 }));
+            doc.setFillColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
+            doc.triangle(W - 60, 0, W, 0, W, 50, 'F');
             doc.setGState(doc.GState({ opacity: 1 }));
 
             // === Logo ===
@@ -242,8 +175,8 @@ export default function MembershipCard({ user, showDownload = true }: Membership
             if (logoDataUrl) {
                 doc.setFillColor(0, 0, 0);
                 doc.roundedRect(7, 4.5, logoSize + 3, logoSize + 3, 2.5, 2.5, 'F');
-                doc.setDrawColor(pc.accent[0], pc.accent[1], pc.accent[2]);
-                doc.setGState(doc.GState({ opacity: 0.15 }));
+                doc.setDrawColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
+                doc.setGState(doc.GState({ opacity: 0.2 }));
                 doc.roundedRect(7, 4.5, logoSize + 3, logoSize + 3, 2.5, 2.5, 'S');
                 doc.setGState(doc.GState({ opacity: 1 }));
                 doc.addImage(logoDataUrl, 'PNG', 8.5, 6, logoSize, logoSize);
@@ -257,44 +190,44 @@ export default function MembershipCard({ user, showDownload = true }: Membership
             doc.text('KYOKUSHIN KARATE', textX, 11);
             doc.setFontSize(5);
             doc.setTextColor(255, 153, 51);
-            doc.text('FOUNDATION', textX, 15);
+            doc.text('FOUNDATION', textX, 15.5);
             const foW = doc.getTextWidth('FOUNDATION ');
             doc.setTextColor(200, 200, 200);
-            doc.text('OF', textX + foW, 15);
+            doc.text('OF', textX + foW, 15.5);
             const ofW = doc.getTextWidth('OF ');
             doc.setTextColor(19, 136, 8);
-            doc.text('INDIA', textX + foW + ofW, 15);
+            doc.text('INDIA', textX + foW + ofW, 15.5);
 
-            // Tier label
-            doc.setFontSize(4);
-            doc.setTextColor(pc.accent[0], pc.accent[1], pc.accent[2]);
-            doc.text(pdfTier.label, textX, 19.5);
+            // "OFFICIAL IDENTITY CARD"
+            doc.setFontSize(3.5);
+            doc.setTextColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
+            doc.text('OFFICIAL IDENTITY CARD', textX, 19.5);
 
             // ID badge (top right)
             const memNum = user?.membershipNumber || 'PENDING';
             const badgeW = Math.max(doc.getTextWidth(memNum) * 1.1 + 10, 34);
             const badgeX = W - badgeW - 7;
-            doc.setFillColor(pc.accent[0], pc.accent[1], pc.accent[2]);
+            doc.setFillColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
             doc.setGState(doc.GState({ opacity: 0.06 }));
             doc.roundedRect(badgeX, 4, badgeW, 17, 2, 2, 'F');
-            doc.setGState(doc.GState({ opacity: 0.12 }));
-            doc.setDrawColor(pc.accent[0], pc.accent[1], pc.accent[2]);
+            doc.setGState(doc.GState({ opacity: 0.15 }));
+            doc.setDrawColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
             doc.roundedRect(badgeX, 4, badgeW, 17, 2, 2, 'S');
             doc.setGState(doc.GState({ opacity: 1 }));
             doc.setFontSize(3.5);
-            doc.setTextColor(128, 128, 128);
+            doc.setTextColor(100, 100, 100);
             doc.text('ID', badgeX + 4, 9);
             doc.setFontSize(7);
             doc.setTextColor(255, 255, 255);
             doc.text(memNum, badgeX + 4, 16.5);
 
             // === Role title ===
-            const roleY = 34;
-            doc.setFillColor(pc.accent[0], pc.accent[1], pc.accent[2]);
+            const roleY = 33;
+            doc.setFillColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
             doc.circle(9, roleY - 0.8, 0.9, 'F');
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(4.5);
-            doc.setTextColor(pc.accent[0], pc.accent[1], pc.accent[2]);
+            doc.setTextColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
             doc.text(pdfRoleTitle, 12, roleY);
 
             // === Member name ===
@@ -310,16 +243,22 @@ export default function MembershipCard({ user, showDownload = true }: Membership
             doc.setTextColor(255, 255, 255);
             doc.text(displayName, 8, roleY + 10);
 
-            // === Member since + belt rank line ===
+            // === Member since + belt rank ===
             const midY = roleY + 17;
-            doc.setFontSize(4);
-            doc.setTextColor(120, 120, 120);
-            doc.text(`MEMBER SINCE ${pdfMemberSince.toUpperCase()}`, 8, midY);
-            doc.text(`BELT: ${belt.toUpperCase()}`, W / 2, midY);
+            doc.setFontSize(3.8);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`SINCE ${pdfMemberSince.toUpperCase()}`, 8, midY);
 
-            // Divider line
-            doc.setDrawColor(pc.accent[0], pc.accent[1], pc.accent[2]);
-            doc.setGState(doc.GState({ opacity: 0.15 }));
+            // Belt indicator (small colored bar + text)
+            const beltX = 45;
+            doc.setFillColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
+            doc.rect(beltX, midY - 2.5, 8, 0.8, 'F');
+            doc.setTextColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
+            doc.text(belt.toUpperCase(), beltX + 11, midY);
+
+            // Divider
+            doc.setDrawColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
+            doc.setGState(doc.GState({ opacity: 0.12 }));
             doc.setLineWidth(0.3);
             doc.line(8, midY + 3, W - 8, midY + 3);
             doc.setGState(doc.GState({ opacity: 1 }));
@@ -341,18 +280,17 @@ export default function MembershipCard({ user, showDownload = true }: Membership
 
             stats.forEach((stat, i) => {
                 const bx = 8 + i * (boxW + gap);
-                // Box background
-                doc.setFillColor(pc.accent[0], pc.accent[1], pc.accent[2]);
+                doc.setFillColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
                 doc.setGState(doc.GState({ opacity: 0.04 }));
                 doc.roundedRect(bx, statsY, boxW, statsH, 1.5, 1.5, 'F');
-                doc.setGState(doc.GState({ opacity: 0.08 }));
-                doc.setDrawColor(pc.accent[0], pc.accent[1], pc.accent[2]);
+                doc.setGState(doc.GState({ opacity: 0.1 }));
+                doc.setDrawColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
                 doc.roundedRect(bx, statsY, boxW, statsH, 1.5, 1.5, 'S');
                 doc.setGState(doc.GState({ opacity: 1 }));
 
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(3.2);
-                doc.setTextColor(100, 100, 110);
+                doc.setTextColor(90, 90, 90);
                 doc.text(stat.label, bx + 3, statsY + 4.5);
 
                 doc.setFontSize(5.5);
@@ -371,8 +309,8 @@ export default function MembershipCard({ user, showDownload = true }: Membership
             doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
 
             // Bottom accent line
-            doc.setFillColor(pc.accent[0], pc.accent[1], pc.accent[2]);
-            doc.rect(0, H - 0.8, W, 0.8, 'F');
+            doc.setFillColor(pdfAccent[0], pdfAccent[1], pdfAccent[2]);
+            doc.rect(0, H - 0.7, W, 0.7, 'F');
 
             doc.save(`KKFI_Card_${user?.membershipNumber || 'member'}.pdf`);
         } catch (err) {
@@ -380,7 +318,7 @@ export default function MembershipCard({ user, showDownload = true }: Membership
         } finally {
             setIsDownloading(false);
         }
-    }, [user, verifyUrl, belt]);
+    }, [user, verifyUrl, belt, beltBase, isBlack, accent.rgb]);
 
     const handleShare = useCallback(async () => {
         if (navigator.share && verifyUrl) {
@@ -399,136 +337,163 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                     style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
                     onMouseMove={handleMouseMove}
                     onMouseLeave={handleMouseLeave}
-                    initial={{ opacity: 0, scale: 0.92, y: 30 }}
+                    initial={{ opacity: 0, scale: 0.9, y: 40 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.7, ease: [0.19, 1, 0.22, 1] }}
+                    transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
                     className="cursor-pointer group"
                 >
                     <div
                         ref={cardRef}
-                        className={`relative rounded-2xl overflow-hidden ${theme.border} border`}
+                        className="relative rounded-xl overflow-hidden border border-white/[0.06]"
                         style={{
                             aspectRatio: '1.6 / 1',
-                            boxShadow: `0 30px 80px -20px ${theme.glow}, 0 0 0 1px rgba(255,255,255,0.06)`,
+                            boxShadow: `0 40px 100px -25px rgba(${accent.rgb}, 0.25), 0 0 0 1px rgba(0,0,0,0.8)`,
                         }}
                     >
-                        {/* ── Background ── */}
-                        <div className={`absolute inset-0 bg-gradient-to-br ${theme.bg}`} />
+                        {/* ── Deep black background ── */}
+                        <div className="absolute inset-0 bg-[#060606]" />
 
-                        {/* Noise texture */}
-                        <div
-                            className="absolute inset-0 opacity-[0.03]"
+                        {/* Brushed metal / grain texture */}
+                        <div className="absolute inset-0 opacity-[0.035]"
                             style={{
-                                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
-                            }}
-                        />
+                                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
+                            }} />
 
-                        {/* Shimmer sweep — animated on premium */}
-                        <div
-                            className={`absolute inset-0 bg-gradient-to-r ${theme.shimmer} ${isPremium ? 'animate-shimmer' : ''}`}
-                            style={{ backgroundSize: '200% 100%' }}
-                        />
+                        {/* Diagonal slash — ninja cut across the card */}
+                        <div className="absolute inset-0 overflow-hidden">
+                            <div className="absolute opacity-[0.04]"
+                                style={{
+                                    background: `linear-gradient(135deg, transparent 40%, ${accent.color}, transparent 60%)`,
+                                    width: '200%', height: '200%', top: '-50%', left: '-50%',
+                                }} />
+                        </div>
 
-                        {/* Corner glows */}
-                        <div className="absolute top-0 right-0 w-56 h-56 opacity-[0.12]"
-                            style={{ background: `radial-gradient(circle at top right, ${theme.accent}, transparent 70%)` }} />
-                        <div className="absolute bottom-0 left-0 w-64 h-52 opacity-[0.08]"
-                            style={{ background: `radial-gradient(circle at bottom left, ${theme.accent}, transparent 70%)` }} />
+                        {/* Aggressive corner glow — top right hot zone */}
+                        <div className="absolute -top-10 -right-10 w-72 h-72 opacity-[0.08]"
+                            style={{ background: `radial-gradient(circle, ${accent.color}, transparent 60%)` }} />
 
-                        {/* Top accent line */}
-                        <div className="absolute top-0 left-0 right-0 h-[3px]"
-                            style={{ background: `linear-gradient(90deg, ${theme.accent}00 0%, ${theme.accent} 50%, ${theme.accent}00 100%)` }} />
+                        {/* Faint bottom-left ember */}
+                        <div className="absolute -bottom-8 -left-8 w-48 h-48 opacity-[0.05]"
+                            style={{ background: `radial-gradient(circle, ${accent.color}, transparent 60%)` }} />
+
+                        {/* Top accent blade — sharp edge */}
+                        <div className="absolute top-0 left-0 right-0 h-[2px]"
+                            style={{ background: `linear-gradient(90deg, transparent 10%, ${accent.color}, transparent 90%)` }} />
 
                         {/* ── Content ── */}
-                        <div className="relative h-full p-4 sm:p-6 flex flex-col justify-between z-10">
+                        <div className="relative h-full p-4 sm:p-5 flex flex-col justify-between z-10">
 
-                            {/* Header row */}
+                            {/* === Top row: Logo + Org name | ID Badge === */}
                             <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-2.5">
-                                    {/* Logo with tier-colored glow */}
+                                    {/* Logo */}
                                     <div className="relative">
-                                        <div className="absolute -inset-1 rounded-xl blur-md opacity-30"
-                                            style={{ background: theme.accent }} />
-                                        <div className={`relative bg-black/80 p-1.5 sm:p-2 rounded-xl border`}
-                                            style={{ borderColor: `${theme.accent}30` }}>
+                                        <div className="absolute -inset-1.5 rounded-xl blur-lg opacity-25"
+                                            style={{ background: accent.color }} />
+                                        <div className="relative bg-black p-1.5 sm:p-2 rounded-xl border"
+                                            style={{ borderColor: `rgba(${accent.rgb}, 0.2)` }}>
                                             <Image src="/kkfi-logo.avif" alt="KKFI" width={32} height={32}
                                                 className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
                                         </div>
                                     </div>
                                     <div>
-                                        <h3 className="text-xs sm:text-base font-black tracking-[0.02em] text-white leading-none">KYOKUSHIN KARATE</h3>
-                                        <p className="text-[8px] sm:text-[9px] font-bold tracking-[0.2em] mt-0.5">
-                                            <span className="bg-gradient-to-r from-orange-400 via-white to-green-400 bg-clip-text text-transparent">FOUNDATION OF INDIA</span>
-                                        </p>
-                                        {/* Tier badge */}
-                                        <div className="flex items-center gap-1 mt-1">
-                                            <TierIcon className="w-2.5 h-2.5" style={{ color: theme.accent }} />
-                                            <span className={`text-[7px] sm:text-[8px] font-black tracking-[0.25em] bg-gradient-to-r ${theme.textGradient} bg-clip-text text-transparent`}>
-                                                {tierLabel}
+                                        <h3 className="text-xs sm:text-sm font-black tracking-[0.04em] text-white leading-none">
+                                            KYOKUSHIN KARATE
+                                        </h3>
+                                        <p className="text-[7px] sm:text-[8px] font-bold tracking-[0.2em] mt-0.5">
+                                            <span className="bg-gradient-to-r from-orange-400 via-white to-green-500 bg-clip-text text-transparent">
+                                                FOUNDATION OF INDIA
                                             </span>
-                                        </div>
+                                        </p>
+                                        {/* "OFFICIAL IDENTITY CARD" — professional, clean */}
+                                        <p className="text-[6px] sm:text-[7px] font-bold tracking-[0.3em] mt-1.5 uppercase"
+                                            style={{ color: `rgba(${accent.rgb}, 0.6)` }}>
+                                            OFFICIAL IDENTITY CARD
+                                        </p>
                                     </div>
                                 </div>
 
                                 {/* ID badge */}
-                                <div className="backdrop-blur-sm px-2.5 py-1.5 rounded-lg border"
+                                <div className="backdrop-blur-sm px-2 sm:px-3 py-1.5 rounded-lg border"
                                     style={{
-                                        background: `rgba(${theme.accentRgb}, 0.06)`,
-                                        borderColor: `rgba(${theme.accentRgb}, 0.12)`,
+                                        background: `rgba(${accent.rgb}, 0.05)`,
+                                        borderColor: `rgba(${accent.rgb}, 0.12)`,
                                     }}>
-                                    <p className="text-[7px] sm:text-[8px] font-bold text-gray-500 uppercase tracking-[0.15em] mb-0.5">ID</p>
-                                    <p className="text-[10px] sm:text-xs font-black tracking-wider text-white">
+                                    <p className="text-[6px] sm:text-[7px] font-bold text-gray-600 uppercase tracking-[0.15em] mb-0.5">ID</p>
+                                    <p className="text-[9px] sm:text-xs font-black tracking-wider text-white">
                                         {user?.membershipNumber || (user?.membershipStatus === 'ACTIVE' ? 'GENERATING…' : 'PENDING')}
                                     </p>
                                 </div>
                             </div>
 
-                            {/* Role + Name */}
+                            {/* === Middle: Role + Name + Belt line === */}
                             <div className="flex-1 flex flex-col justify-center min-h-0 py-1">
-                                <div className="flex items-center gap-1.5 mb-0.5">
-                                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: theme.accent }} />
-                                    <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em]"
-                                        style={{ color: theme.accent }}>
+                                {/* Role dot + title */}
+                                <div className="flex items-center gap-1.5 mb-1">
+                                    <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: accent.color }} />
+                                    <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.25em]"
+                                        style={{ color: accent.color }}>
                                         {roleTitle}
                                     </span>
                                 </div>
-                                <h2 className="text-base sm:text-2xl font-black text-white uppercase tracking-tight leading-[1.1]">
+
+                                {/* Name — big, aggressive, uppercase */}
+                                <h2 className="text-lg sm:text-2xl font-black text-white uppercase tracking-tight leading-[1.05]"
+                                    style={{ textShadow: `0 0 40px rgba(${accent.rgb}, 0.15)` }}>
                                     {roleTitle !== 'KARATEKA' ? `${roleTitle} ` : ''}{user?.name?.replace(new RegExp(`^${roleTitle}\\s+`, 'i'), '')}
                                 </h2>
-                                {/* Member since line */}
-                                <p className="text-[7px] sm:text-[8px] text-gray-500 tracking-[0.1em] mt-1.5 font-medium">
-                                    MEMBER SINCE {memberSince.toUpperCase()} &nbsp;•&nbsp; {belt.toUpperCase()}
-                                </p>
+
+                                {/* Since + Belt rank with slash accent */}
+                                <div className="flex items-center gap-2 mt-2">
+                                    <span className="text-[7px] sm:text-[8px] text-gray-500 tracking-[0.1em] font-medium">
+                                        SINCE {memberSince.toUpperCase()}
+                                    </span>
+                                    <span className="w-4 h-[1px]" style={{ background: accent.color }} />
+                                    <span className="text-[7px] sm:text-[8px] font-bold tracking-[0.1em]"
+                                        style={{ color: accent.color }}>
+                                        {belt.toUpperCase()}
+                                    </span>
+                                    {/* Dan marks — small slashes for each dan level */}
+                                    {danLevel > 0 && (
+                                        <div className="flex gap-0.5 ml-1">
+                                            {Array.from({ length: Math.min(danLevel, 10) }).map((_, i) => (
+                                                <span key={i} className="w-[2px] h-2 rounded-full" style={{ background: accent.color, opacity: 0.7 }} />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Divider */}
-                            <div className="h-px w-full mb-2 sm:mb-3"
-                                style={{ background: `linear-gradient(90deg, transparent, rgba(${theme.accentRgb}, 0.2), transparent)` }} />
+                            {/* === Divider — angled slash line === */}
+                            <div className="relative h-px w-full mb-2 sm:mb-3">
+                                <div className="absolute inset-0"
+                                    style={{ background: `linear-gradient(90deg, ${accent.color}00, rgba(${accent.rgb}, 0.25) 20%, rgba(${accent.rgb}, 0.25) 80%, ${accent.color}00)` }} />
+                            </div>
 
-                            {/* Bottom stats row */}
+                            {/* === Bottom: Stats row + QR === */}
                             <div className="flex items-end justify-between gap-2">
-                                <div className="flex gap-1.5 sm:gap-2 flex-1 min-w-0">
+                                <div className="flex gap-1 sm:gap-1.5 flex-1 min-w-0">
                                     {[
                                         { label: 'Rank', value: belt, dot: true },
                                         { label: 'Dojo', value: user?.dojo?.name || 'HQ' },
-                                        { label: 'Exp', value: experience.display, icon: true },
+                                        { label: 'Exp', value: experience.display, fire: true },
                                         { label: 'Valid', value: validThru },
                                     ].map((item, i) => (
-                                        <div key={i} className="flex-1 min-w-0 rounded-lg p-1.5 sm:p-2 border"
+                                        <div key={i} className="flex-1 min-w-0 rounded-md p-1.5 sm:p-2 border"
                                             style={{
-                                                background: `rgba(${theme.accentRgb}, 0.04)`,
-                                                borderColor: `rgba(${theme.accentRgb}, 0.08)`,
+                                                background: `rgba(${accent.rgb}, 0.03)`,
+                                                borderColor: `rgba(${accent.rgb}, 0.07)`,
                                             }}>
-                                            <p className="text-[6px] sm:text-[7px] font-bold text-gray-500 uppercase tracking-[0.12em] mb-0.5">{item.label}</p>
-                                            <div className="flex items-center gap-1">
+                                            <p className="text-[5px] sm:text-[6px] font-bold text-gray-600 uppercase tracking-[0.15em] mb-0.5">{item.label}</p>
+                                            <div className="flex items-center gap-0.5 sm:gap-1">
                                                 {item.dot && (
                                                     <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full flex-shrink-0"
-                                                        style={{ background: isBlack ? theme.accent : beltColor }} />
+                                                        style={{ background: accent.color }} />
                                                 )}
-                                                {item.icon && (
-                                                    <Flame className="w-2.5 h-2.5 flex-shrink-0" style={{ color: theme.accent }} />
+                                                {item.fire && (
+                                                    <Flame className="w-2.5 h-2.5 flex-shrink-0" style={{ color: accent.color }} />
                                                 )}
-                                                <span className="text-[9px] sm:text-[11px] font-black text-white truncate">{item.value}</span>
+                                                <span className="text-[8px] sm:text-[10px] font-black text-white truncate">{item.value}</span>
                                             </div>
                                         </div>
                                     ))}
@@ -536,27 +501,36 @@ export default function MembershipCard({ user, showDownload = true }: Membership
 
                                 {/* QR Code */}
                                 <div className="flex-shrink-0">
-                                    <div className="bg-white p-1 sm:p-1.5 rounded-lg shadow-xl ring-1 ring-black/10">
+                                    <div className="bg-white p-1 sm:p-1.5 rounded-md shadow-2xl"
+                                        style={{ boxShadow: `0 0 20px rgba(${accent.rgb}, 0.1)` }}>
                                         {user?.membershipNumber ? (
                                             <QRCodeSVG
                                                 value={verifyUrl || user.membershipNumber}
-                                                size={48}
+                                                size={46}
                                                 bgColor="#ffffff"
                                                 fgColor="#0a0a0a"
                                                 level="M"
                                                 includeMargin={false}
                                             />
                                         ) : (
-                                            <div className="w-12 h-12 flex items-center justify-center text-gray-400 text-[7px] font-bold">PENDING</div>
+                                            <div className="w-[46px] h-[46px] flex items-center justify-center text-gray-400 text-[7px] font-bold">PENDING</div>
                                         )}
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Bottom accent line */}
-                        <div className="absolute bottom-0 left-0 right-0 h-[3px]"
-                            style={{ background: `linear-gradient(90deg, ${theme.accent}00, ${theme.accent}, ${theme.accent}00)` }} />
+                        {/* Bottom accent blade */}
+                        <div className="absolute bottom-0 left-0 right-0 h-[2px]"
+                            style={{ background: `linear-gradient(90deg, transparent 10%, ${accent.color}, transparent 90%)` }} />
+
+                        {/* Kanku mark — the iconic ∞ circle, faint watermark bottom-right */}
+                        <div className="absolute bottom-3 right-16 sm:right-20 opacity-[0.03] pointer-events-none">
+                            <svg viewBox="0 0 100 100" className="w-16 h-16 sm:w-20 sm:h-20" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="50" cy="50" r="40" className="text-white" />
+                                <path d="M50 10 L42 42 L10 50 L42 58 L50 90 L58 58 L90 50 L58 42 Z" className="text-white" fill="currentColor" fillOpacity="0.3" />
+                            </svg>
+                        </div>
                     </div>
                 </motion.div>
             </div>
@@ -572,22 +546,22 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                     <button
                         onClick={handleDownload}
                         disabled={isDownloading}
-                        className="flex items-center gap-2 px-5 py-2.5 border rounded-xl text-white text-sm font-semibold transition-all duration-200 disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
+                        className="group/btn flex items-center gap-2 px-5 py-2.5 border rounded-lg text-white text-sm font-bold transition-all duration-200 disabled:opacity-50 hover:scale-[1.03] active:scale-[0.97]"
                         style={{
-                            background: `rgba(${theme.accentRgb}, 0.08)`,
-                            borderColor: `rgba(${theme.accentRgb}, 0.15)`,
+                            background: `rgba(${accent.rgb}, 0.06)`,
+                            borderColor: `rgba(${accent.rgb}, 0.15)`,
                         }}
                     >
                         <Download className="w-4 h-4" />
-                        {isDownloading ? 'Saving...' : 'Download Card'}
+                        {isDownloading ? 'Saving...' : 'Download'}
                     </button>
                     {typeof navigator !== 'undefined' && 'share' in navigator && (
                         <button
                             onClick={handleShare}
-                            className="flex items-center gap-2 px-5 py-2.5 border rounded-xl text-white text-sm font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                            className="flex items-center gap-2 px-5 py-2.5 border rounded-lg text-white text-sm font-bold transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
                             style={{
-                                background: `rgba(${theme.accentRgb}, 0.08)`,
-                                borderColor: `rgba(${theme.accentRgb}, 0.15)`,
+                                background: `rgba(${accent.rgb}, 0.06)`,
+                                borderColor: `rgba(${accent.rgb}, 0.15)`,
                             }}
                         >
                             <Share2 className="w-4 h-4" />Share
