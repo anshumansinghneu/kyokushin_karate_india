@@ -14,3 +14,4 @@ frontend/.env.production
 backend/src/uploads/*
 !backend/src/uploads/.gitkeep
 backups/
+sport logo.cdr

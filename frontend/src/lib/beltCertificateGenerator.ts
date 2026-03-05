@@ -22,15 +22,19 @@ function loadImageAsBase64(url: string): Promise<string> {
 // Cache loaded logo data URIs
 let kkfiLogoCache: string | null = null;
 let lowKickLogoCache: string | null = null;
+let sportLogoCache: string | null = null;
 
-async function getLogos(): Promise<{ kkfi: string | null; lowKick: string | null }> {
+async function getLogos(): Promise<{ kkfi: string | null; lowKick: string | null; sport: string | null }> {
     if (!kkfiLogoCache) {
         try { kkfiLogoCache = await loadImageAsBase64('/kkfi-logo.png'); } catch { kkfiLogoCache = null; }
     }
     if (!lowKickLogoCache) {
         try { lowKickLogoCache = await loadImageAsBase64('/low-kick-logo.png'); } catch { lowKickLogoCache = null; }
     }
-    return { kkfi: kkfiLogoCache, lowKick: lowKickLogoCache };
+    if (!sportLogoCache) {
+        try { sportLogoCache = await loadImageAsBase64('/sport-logo.png'); } catch { sportLogoCache = null; }
+    }
+    return { kkfi: kkfiLogoCache, lowKick: lowKickLogoCache, sport: sportLogoCache };
 }
 
 export interface BeltCertificateData {
@@ -55,6 +59,12 @@ const BELT_HEX: Record<string, string> = {
     'Black 2nd Dan': '#1a1a1a',
     'Black 3rd Dan': '#1a1a1a',
     'Black 4th Dan': '#1a1a1a',
+    'Black 5th Dan': '#1a1a1a',
+    'Black 6th Dan': '#1a1a1a',
+    'Black 7th Dan': '#1a1a1a',
+    'Black 8th Dan': '#1a1a1a',
+    'Black 9th Dan': '#1a1a1a',
+    'Black 10th Dan': '#1a1a1a',
 };
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -143,6 +153,11 @@ export const generateBeltCertificate = async (data: BeltCertificateData): Promis
     // KKFI Logo (top-left)
     if (logos.kkfi) {
         try { pdf.addImage(logos.kkfi, 'PNG', 18, 14, 18, 18); } catch { /* silent */ }
+    }
+
+    // Sport Logo (top-center)
+    if (logos.sport) {
+        try { pdf.addImage(logos.sport, 'PNG', W / 2 - 9, 14, 18, 18); } catch { /* silent */ }
     }
 
     // Low Kick Logo (top-right)

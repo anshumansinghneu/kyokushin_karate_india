@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Trash2, CheckCircle, XCircle, MoreVertical, Shield, User, Users, Edit2, Save, X, Pencil, Mail, Calendar, UserPlus, Eye, ChevronLeft, ChevronRight, IndianRupee, Filter, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Search, Trash2, CheckCircle, XCircle, MoreVertical, Shield, User, Users, Edit2, Save, X, Pencil, Mail, Calendar, UserPlus, Eye, ChevronLeft, ChevronRight, IndianRupee, Filter, ArrowUpDown, ChevronDown, MapPin, Phone, Ruler, Weight, Clock, Award, CreditCard, Heart, UserCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -47,6 +47,8 @@ export default function UserManagementTable() {
     // Edit Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<any | null>(null);
+    const [editSection, setEditSection] = useState<'personal' | 'martial' | 'membership'>('personal');
+    const [isSaving, setIsSaving] = useState(false);
     const [editFormData, setEditFormData] = useState({
         name: "",
         email: "",
@@ -325,7 +327,8 @@ export default function UserManagementTable() {
 
     const handleUpdateUser = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingUser) return;
+        if (!editingUser || isSaving) return;
+        setIsSaving(true);
         try {
             const updateData: any = {
                 name: editFormData.name,
@@ -361,6 +364,8 @@ export default function UserManagementTable() {
             console.error("Failed to update user", error);
             const errorMessage = error.response?.data?.message || error.message || "Failed to update user.";
             showToast(errorMessage, "error");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -778,275 +783,480 @@ export default function UserManagementTable() {
             <Portal>
                 <AnimatePresence>
                     {isEditModalOpen && editingUser && (
-                        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => { setIsEditModalOpen(false); setEditingUser(null); }}>
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-zinc-900 border border-white/10 rounded-xl p-6 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
+                                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 20, scale: 0.97 }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="bg-gradient-to-b from-zinc-900 to-zinc-950 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden"
                             >
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                        <Edit2 className="w-5 h-5 text-primary" />
-                                        Edit User
-                                    </h3>
-                                    <Button variant="ghost" className="h-8 w-8 p-0" onClick={() => {
-                                        setIsEditModalOpen(false);
-                                        setEditingUser(null);
-                                    }}>
-                                        <X className="w-5 h-5" />
-                                    </Button>
-                                </div>
-
-                                <form onSubmit={handleUpdateUser} className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Name</Label>
-                                            <Input
-                                                value={editFormData.name}
-                                                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Email</Label>
-                                            <Input
-                                                value={editFormData.email}
-                                                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Role</Label>
-                                            <select
-                                                value={editFormData.role}
-                                                onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                            >
-                                                <option value="STUDENT">Student</option>
-                                                <option value="INSTRUCTOR">Instructor</option>
-                                                <option value="ADMIN">Admin</option>
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Status</Label>
-                                            <select
-                                                value={editFormData.membershipStatus}
-                                                onChange={(e) => setEditFormData({ ...editFormData, membershipStatus: e.target.value })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                            >
-                                                <option value="PENDING">Pending</option>
-                                                <option value="ACTIVE">Active</option>
-                                                <option value="EXPIRED">Expired</option>
-                                                <option value="REJECTED">Rejected</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Dojo</Label>
-                                            <select
-                                                value={editFormData.dojoId}
-                                                onChange={(e) => {
-                                                    const newDojoId = e.target.value;
-                                                    // Reset instructor when dojo changes
-                                                    setEditFormData({ ...editFormData, dojoId: newDojoId, primaryInstructorId: "" });
-                                                }}
-                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                            >
-                                                <option value="">No Dojo</option>
-                                                {dojos.map((dojo: any) => (
-                                                    <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Instructor</Label>
-                                            <select
-                                                value={editFormData.primaryInstructorId}
-                                                onChange={(e) => setEditFormData({ ...editFormData, primaryInstructorId: e.target.value })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                            >
-                                                <option value="">Direct under Shihan</option>
-                                                {availableInstructors.map((inst: any) => (
-                                                    <option key={inst.id} value={inst.id}>
-                                                        {inst.name} {inst.role === 'ADMIN' ? '(Shihan)' : `(${inst.dojo?.name || 'No Dojo'})`}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Belt Rank</Label>
-                                            <select
-                                                value={editFormData.currentBeltRank}
-                                                onChange={(e) => setEditFormData({ ...editFormData, currentBeltRank: e.target.value })}
-                                                className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white"
-                                            >
-                                                {["White", "Orange", "Blue", "Yellow", "Green", "Brown", "Black 1st Dan", "Black 2nd Dan", "Black 3rd Dan", "Black 4th Dan"].map(belt => (
-                                                    <option key={belt} value={belt}>{belt}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Membership Number</Label>
-                                            <Input
-                                                value={editFormData.membershipNumber}
-                                                onChange={(e) => setEditFormData({ ...editFormData, membershipNumber: e.target.value })}
-                                                placeholder="e.g. KKFI-2025-MUM-00001"
-                                                className="bg-black/50 border-white/10"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Phone & DOB */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Phone</Label>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    value={editFormData.countryCode}
-                                                    onChange={(e) => setEditFormData({ ...editFormData, countryCode: e.target.value })}
-                                                    className="bg-black/50 border-white/10 w-20"
-                                                    placeholder="+91"
-                                                />
-                                                <Input
-                                                    value={editFormData.phone}
-                                                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                                                    className="bg-black/50 border-white/10 flex-1"
-                                                    placeholder="9876543210"
-                                                />
+                                {/* Header with user info banner */}
+                                <div className="relative px-6 pt-5 pb-4 border-b border-white/10 bg-gradient-to-r from-red-950/30 via-zinc-900/50 to-zinc-900/50">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                                {editFormData.name?.charAt(0)?.toUpperCase() || 'U'}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-bold text-white">{editFormData.name || 'Edit User'}</h3>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                                        editFormData.role === 'ADMIN' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
+                                                        editFormData.role === 'INSTRUCTOR' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
+                                                        'bg-zinc-500/20 text-zinc-300 border border-zinc-500/30'
+                                                    }`}>
+                                                        {editFormData.role === 'ADMIN' ? <Shield className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                                                        {editFormData.role}
+                                                    </span>
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                                        editFormData.membershipStatus === 'ACTIVE' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                                                        editFormData.membershipStatus === 'PENDING' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                                                        editFormData.membershipStatus === 'EXPIRED' ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' :
+                                                        'bg-red-500/20 text-red-300 border border-red-500/30'
+                                                    }`}>
+                                                        {editFormData.membershipStatus}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label>Date of Birth</Label>
-                                            <Input
-                                                type="date"
-                                                value={editFormData.dateOfBirth}
-                                                onChange={(e) => setEditFormData({ ...editFormData, dateOfBirth: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                            />
-                                        </div>
+                                        <button onClick={() => { setIsEditModalOpen(false); setEditingUser(null); }}
+                                            className="text-gray-400 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition-colors">
+                                            <X className="w-5 h-5" />
+                                        </button>
                                     </div>
 
-                                    {/* City & State */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>City</Label>
-                                            <Input
-                                                value={editFormData.city}
-                                                onChange={(e) => setEditFormData({ ...editFormData, city: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                            />
+                                    {/* Belt rank visual indicator */}
+                                    <div className="mt-3 flex items-center gap-2">
+                                        <div className="flex gap-1">
+                                            {BELT_RANKS.slice(0, 6).map(belt => (
+                                                <div key={belt} title={belt}
+                                                    className={`w-5 h-2 rounded-full transition-all ${
+                                                        editFormData.currentBeltRank === belt ? 'ring-2 ring-white ring-offset-1 ring-offset-zinc-900 scale-125' : 'opacity-40'
+                                                    }`}
+                                                    style={{ backgroundColor: belt === 'White' ? '#e5e5e5' : belt === 'Orange' ? '#f97316' : belt === 'Blue' ? '#3b82f6' : belt === 'Yellow' ? '#eab308' : belt === 'Green' ? '#22c55e' : '#78350f' }}
+                                                />
+                                            ))}
+                                            {BELT_RANKS.filter(b => b.startsWith('Black')).length > 0 && (
+                                                <div className={`px-2 h-2 rounded-full transition-all ${
+                                                    editFormData.currentBeltRank.startsWith('Black') ? 'ring-2 ring-white ring-offset-1 ring-offset-zinc-900 bg-zinc-200' : 'bg-zinc-800 opacity-40'
+                                                }`} />
+                                            )}
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label>State</Label>
-                                            <Input
-                                                value={editFormData.state}
-                                                onChange={(e) => setEditFormData({ ...editFormData, state: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                            />
-                                        </div>
+                                        <span className="text-xs text-gray-400 ml-1">{editFormData.currentBeltRank}</span>
+                                    </div>
+                                </div>
+
+                                {/* Section Tabs */}
+                                <div className="flex border-b border-white/10 bg-zinc-900/50">
+                                    {([
+                                        { key: 'personal' as const, label: 'Personal', icon: User },
+                                        { key: 'martial' as const, label: 'Martial Arts', icon: Award },
+                                        { key: 'membership' as const, label: 'Membership', icon: CreditCard },
+                                    ]).map(tab => (
+                                        <button
+                                            key={tab.key}
+                                            type="button"
+                                            onClick={() => setEditSection(tab.key)}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-all relative ${
+                                                editSection === tab.key
+                                                    ? 'text-white'
+                                                    : 'text-gray-500 hover:text-gray-300'
+                                            }`}
+                                        >
+                                            <tab.icon className="w-4 h-4" />
+                                            {tab.label}
+                                            {editSection === tab.key && (
+                                                <motion.div layoutId="editTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Scrollable Form Content */}
+                                <form onSubmit={handleUpdateUser} className="flex-1 overflow-y-auto">
+                                    <div className="p-6 space-y-5">
+                                        <AnimatePresence mode="wait">
+                                            {/* === PERSONAL INFO SECTION === */}
+                                            {editSection === 'personal' && (
+                                                <motion.div key="personal" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.15 }} className="space-y-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                                <User className="w-3 h-3" /> Full Name
+                                                            </Label>
+                                                            <Input
+                                                                value={editFormData.name}
+                                                                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                                                className="bg-black/40 border-white/10 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                                <Mail className="w-3 h-3" /> Email
+                                                            </Label>
+                                                            <Input
+                                                                value={editFormData.email}
+                                                                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                                                                className="bg-black/40 border-white/10 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                                <Phone className="w-3 h-3" /> Phone
+                                                            </Label>
+                                                            <div className="flex gap-2">
+                                                                <select
+                                                                    value={editFormData.countryCode}
+                                                                    onChange={(e) => setEditFormData({ ...editFormData, countryCode: e.target.value })}
+                                                                    className="bg-black/40 border border-white/10 rounded-md h-10 px-2 text-white text-sm w-24 focus:border-red-500/50 transition-colors"
+                                                                >
+                                                                    {COUNTRY_CODES.map(c => (
+                                                                        <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                                                                    ))}
+                                                                </select>
+                                                                <Input
+                                                                    value={editFormData.phone}
+                                                                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                                                                    className="bg-black/40 border-white/10 flex-1 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                                    placeholder="9876543210"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                                <Calendar className="w-3 h-3" /> Date of Birth
+                                                            </Label>
+                                                            <Input
+                                                                type="date"
+                                                                value={editFormData.dateOfBirth}
+                                                                onChange={(e) => setEditFormData({ ...editFormData, dateOfBirth: e.target.value })}
+                                                                className="bg-black/40 border-white/10 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                                <MapPin className="w-3 h-3" /> State
+                                                            </Label>
+                                                            <select
+                                                                value={editFormData.state}
+                                                                onChange={(e) => setEditFormData({ ...editFormData, state: e.target.value, city: '' })}
+                                                                className="w-full bg-black/40 border border-white/10 rounded-md h-10 px-3 text-white text-sm focus:border-red-500/50 transition-colors"
+                                                            >
+                                                                <option value="">Select State</option>
+                                                                {INDIAN_STATES.map(s => (
+                                                                    <option key={s} value={s}>{s}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                                <MapPin className="w-3 h-3" /> City
+                                                            </Label>
+                                                            <select
+                                                                value={editFormData.city}
+                                                                onChange={(e) => setEditFormData({ ...editFormData, city: e.target.value })}
+                                                                className="w-full bg-black/40 border border-white/10 rounded-md h-10 px-3 text-white text-sm focus:border-red-500/50 transition-colors"
+                                                            >
+                                                                <option value="">Select City</option>
+                                                                {(editFormData.state && CITIES[editFormData.state] ? CITIES[editFormData.state] : []).map((c: any) => (
+                                                                    <option key={typeof c === 'string' ? c : c.name} value={typeof c === 'string' ? c : c.name}>
+                                                                        {typeof c === 'string' ? c : c.name}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                                <Ruler className="w-3 h-3" /> Height (cm)
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={editFormData.height}
+                                                                onChange={(e) => setEditFormData({ ...editFormData, height: e.target.value })}
+                                                                className="bg-black/40 border-white/10 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                                placeholder="170"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                                <Weight className="w-3 h-3" /> Weight (kg)
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                value={editFormData.weight}
+                                                                onChange={(e) => setEditFormData({ ...editFormData, weight: e.target.value })}
+                                                                className="bg-black/40 border-white/10 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                                placeholder="70"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Guardian info - collapsible */}
+                                                    <div className="border border-white/5 rounded-xl p-4 bg-black/20">
+                                                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                                                            <Heart className="w-3 h-3" /> Guardian / Parent Details
+                                                        </p>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <div className="space-y-1.5">
+                                                                <Label className="text-xs text-gray-400">Father/Guardian Name</Label>
+                                                                <Input
+                                                                    value={editFormData.fatherName}
+                                                                    onChange={(e) => setEditFormData({ ...editFormData, fatherName: e.target.value })}
+                                                                    className="bg-black/40 border-white/10 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-1.5">
+                                                                <Label className="text-xs text-gray-400">Father/Guardian Phone</Label>
+                                                                <Input
+                                                                    value={editFormData.fatherPhone}
+                                                                    onChange={(e) => setEditFormData({ ...editFormData, fatherPhone: e.target.value })}
+                                                                    className="bg-black/40 border-white/10 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+
+                                            {/* === MARTIAL ARTS SECTION === */}
+                                            {editSection === 'martial' && (
+                                                <motion.div key="martial" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.15 }} className="space-y-4">
+                                                    {/* Role selector - interactive cards */}
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                            <Shield className="w-3 h-3" /> Role
+                                                        </Label>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            {[
+                                                                { val: 'STUDENT', label: 'Student', icon: User, color: 'zinc' },
+                                                                { val: 'INSTRUCTOR', label: 'Instructor', icon: UserCheck, color: 'blue' },
+                                                                { val: 'ADMIN', label: 'Admin', icon: Shield, color: 'purple' },
+                                                            ].map(r => (
+                                                                <button key={r.val} type="button"
+                                                                    onClick={() => setEditFormData({ ...editFormData, role: r.val })}
+                                                                    className={`p-3 rounded-xl border text-sm font-semibold transition-all flex flex-col items-center gap-1.5 ${
+                                                                        editFormData.role === r.val
+                                                                            ? r.color === 'purple' ? 'border-purple-500 bg-purple-500/10 text-purple-300 shadow-lg shadow-purple-500/10'
+                                                                            : r.color === 'blue' ? 'border-blue-500 bg-blue-500/10 text-blue-300 shadow-lg shadow-blue-500/10'
+                                                                            : 'border-zinc-500 bg-zinc-500/10 text-zinc-300'
+                                                                            : 'border-white/10 bg-black/30 text-gray-500 hover:bg-white/5 hover:text-gray-300'
+                                                                    }`}
+                                                                >
+                                                                    <r.icon className="w-5 h-5" />
+                                                                    {r.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Status selector */}
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs text-gray-400 uppercase tracking-wide">Status</Label>
+                                                        <div className="grid grid-cols-4 gap-2">
+                                                            {[
+                                                                { val: 'ACTIVE', label: 'Active', dot: 'bg-green-400' },
+                                                                { val: 'PENDING', label: 'Pending', dot: 'bg-yellow-400' },
+                                                                { val: 'EXPIRED', label: 'Expired', dot: 'bg-orange-400' },
+                                                                { val: 'REJECTED', label: 'Rejected', dot: 'bg-red-400' },
+                                                            ].map(s => (
+                                                                <button key={s.val} type="button"
+                                                                    onClick={() => setEditFormData({ ...editFormData, membershipStatus: s.val })}
+                                                                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                                                                        editFormData.membershipStatus === s.val
+                                                                            ? 'border-white/30 bg-white/10 text-white'
+                                                                            : 'border-white/10 bg-black/30 text-gray-500 hover:bg-white/5'
+                                                                    }`}
+                                                                >
+                                                                    <span className={`w-2 h-2 rounded-full ${s.dot}`} />
+                                                                    {s.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Belt Rank - visual selector */}
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                            <Award className="w-3 h-3" /> Belt Rank
+                                                        </Label>
+                                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                                            {BELT_RANKS.map(belt => {
+                                                                const isBlack = belt.startsWith('Black');
+                                                                const color = belt === 'White' ? '#e5e5e5' : belt === 'Orange' ? '#f97316' : belt === 'Blue' ? '#3b82f6' : belt === 'Yellow' ? '#eab308' : belt === 'Green' ? '#22c55e' : belt === 'Brown' ? '#92400e' : '#1a1a1a';
+                                                                const selected = editFormData.currentBeltRank === belt;
+                                                                return (
+                                                                    <button key={belt} type="button"
+                                                                        onClick={() => setEditFormData({ ...editFormData, currentBeltRank: belt })}
+                                                                        className={`py-2 px-2 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                                                                            selected ? 'border-white/40 bg-white/10 text-white ring-1 ring-white/20' : 'border-white/10 bg-black/30 text-gray-500 hover:bg-white/5'
+                                                                        }`}
+                                                                    >
+                                                                        <span className="w-3 h-3 rounded-full flex-shrink-0 border border-white/20" style={{ backgroundColor: color }} />
+                                                                        <span className="truncate">{isBlack ? belt.replace('Black ', '') : belt}</span>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide">Dojo</Label>
+                                                            <select
+                                                                value={editFormData.dojoId}
+                                                                onChange={(e) => {
+                                                                    setEditFormData({ ...editFormData, dojoId: e.target.value, primaryInstructorId: "" });
+                                                                }}
+                                                                className="w-full bg-black/40 border border-white/10 rounded-md h-10 px-3 text-white text-sm focus:border-red-500/50 transition-colors"
+                                                            >
+                                                                <option value="">No Dojo</option>
+                                                                {dojos.map((dojo: any) => (
+                                                                    <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide">Instructor</Label>
+                                                            <select
+                                                                value={editFormData.primaryInstructorId}
+                                                                onChange={(e) => setEditFormData({ ...editFormData, primaryInstructorId: e.target.value })}
+                                                                className="w-full bg-black/40 border border-white/10 rounded-md h-10 px-3 text-white text-sm focus:border-red-500/50 transition-colors"
+                                                            >
+                                                                <option value="">Direct under Shihan</option>
+                                                                {availableInstructors.map((inst: any) => (
+                                                                    <option key={inst.id} value={inst.id}>
+                                                                        {inst.name} {inst.role === 'ADMIN' ? '(Shihan)' : `(${inst.dojo?.name || 'No Dojo'})`}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Experience */}
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                            <Clock className="w-3 h-3" /> Experience
+                                                        </Label>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="relative">
+                                                                <Input
+                                                                    type="number"
+                                                                    value={editFormData.experienceYears}
+                                                                    onChange={(e) => setEditFormData({ ...editFormData, experienceYears: e.target.value })}
+                                                                    className="bg-black/40 border-white/10 pr-14 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                                    min="0"
+                                                                    placeholder="0"
+                                                                />
+                                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">years</span>
+                                                            </div>
+                                                            <div className="relative">
+                                                                <Input
+                                                                    type="number"
+                                                                    value={editFormData.experienceMonths}
+                                                                    onChange={(e) => setEditFormData({ ...editFormData, experienceMonths: e.target.value })}
+                                                                    className="bg-black/40 border-white/10 pr-16 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                                    min="0" max="11"
+                                                                    placeholder="0"
+                                                                />
+                                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">months</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+
+                                            {/* === MEMBERSHIP SECTION === */}
+                                            {editSection === 'membership' && (
+                                                <motion.div key="membership" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.15 }} className="space-y-4">
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                            <CreditCard className="w-3 h-3" /> Membership Number
+                                                        </Label>
+                                                        <Input
+                                                            value={editFormData.membershipNumber}
+                                                            onChange={(e) => setEditFormData({ ...editFormData, membershipNumber: e.target.value })}
+                                                            placeholder="e.g. KKFI-ADM-0001"
+                                                            className="bg-black/40 border-white/10 focus:border-red-500/50 focus:ring-red-500/20 transition-colors font-mono"
+                                                        />
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                                <Calendar className="w-3 h-3" /> Membership Start
+                                                            </Label>
+                                                            <Input
+                                                                type="date"
+                                                                value={editFormData.membershipStartDate}
+                                                                onChange={(e) => setEditFormData({ ...editFormData, membershipStartDate: e.target.value })}
+                                                                className="bg-black/40 border-white/10 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                                                <Calendar className="w-3 h-3" /> Membership End
+                                                            </Label>
+                                                            <Input
+                                                                type="date"
+                                                                value={editFormData.membershipEndDate}
+                                                                onChange={(e) => setEditFormData({ ...editFormData, membershipEndDate: e.target.value })}
+                                                                className="bg-black/40 border-white/10 focus:border-red-500/50 focus:ring-red-500/20 transition-colors"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Membership duration info */}
+                                                    {editFormData.membershipStartDate && editFormData.membershipEndDate && (
+                                                        <div className="bg-black/20 border border-white/5 rounded-xl p-3">
+                                                            <p className="text-xs text-gray-400">
+                                                                Duration: {(() => {
+                                                                    const start = new Date(editFormData.membershipStartDate);
+                                                                    const end = new Date(editFormData.membershipEndDate);
+                                                                    const days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                                                                    if (days < 0) return <span className="text-red-400">Invalid (end before start)</span>;
+                                                                    const months = Math.floor(days / 30);
+                                                                    return <span className="text-white font-medium">{months} months ({days} days)</span>;
+                                                                })()}
+                                                            </p>
+                                                            {new Date(editFormData.membershipEndDate) < new Date() && (
+                                                                <p className="text-xs text-orange-400 mt-1">⚠ Membership has expired</p>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
 
-                                    {/* Height & Weight */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Height (cm)</Label>
-                                            <Input
-                                                type="number"
-                                                value={editFormData.height}
-                                                onChange={(e) => setEditFormData({ ...editFormData, height: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Weight (kg)</Label>
-                                            <Input
-                                                type="number"
-                                                value={editFormData.weight}
-                                                onChange={(e) => setEditFormData({ ...editFormData, weight: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Experience */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Experience (Years)</Label>
-                                            <Input
-                                                type="number"
-                                                value={editFormData.experienceYears}
-                                                onChange={(e) => setEditFormData({ ...editFormData, experienceYears: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                                min="0"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Experience (Months)</Label>
-                                            <Input
-                                                type="number"
-                                                value={editFormData.experienceMonths}
-                                                onChange={(e) => setEditFormData({ ...editFormData, experienceMonths: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                                min="0" max="11"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Membership Dates */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Membership Start</Label>
-                                            <Input
-                                                type="date"
-                                                value={editFormData.membershipStartDate}
-                                                onChange={(e) => setEditFormData({ ...editFormData, membershipStartDate: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Membership End</Label>
-                                            <Input
-                                                type="date"
-                                                value={editFormData.membershipEndDate}
-                                                onChange={(e) => setEditFormData({ ...editFormData, membershipEndDate: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Father Details */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Father/Guardian Name</Label>
-                                            <Input
-                                                value={editFormData.fatherName}
-                                                onChange={(e) => setEditFormData({ ...editFormData, fatherName: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Father/Guardian Phone</Label>
-                                            <Input
-                                                value={editFormData.fatherPhone}
-                                                onChange={(e) => setEditFormData({ ...editFormData, fatherPhone: e.target.value })}
-                                                className="bg-black/50 border-white/10"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-4 flex justify-end gap-2">
-                                        <Button type="button" variant="ghost" onClick={() => {
-                                            setIsEditModalOpen(false);
-                                            setEditingUser(null);
-                                        }}>Cancel</Button>
-                                        <Button type="submit" className="bg-primary hover:bg-primary-dark text-white">
-                                            <Save className="w-4 h-4 mr-2" /> Save Changes
+                                    {/* Sticky Footer */}
+                                    <div className="sticky bottom-0 px-6 py-4 border-t border-white/10 bg-zinc-900/95 backdrop-blur flex items-center justify-between">
+                                        <button type="button" onClick={() => { setIsEditModalOpen(false); setEditingUser(null); }}
+                                            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                                            Cancel
+                                        </button>
+                                        <Button type="submit" disabled={isSaving}
+                                            className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white px-6 py-2 rounded-lg font-semibold shadow-lg shadow-red-500/20 transition-all disabled:opacity-50">
+                                            {isSaving ? (
+                                                <span className="flex items-center gap-2">
+                                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    Saving...
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-2">
+                                                    <Save className="w-4 h-4" /> Save Changes
+                                                </span>
+                                            )}
                                         </Button>
                                     </div>
                                 </form>
