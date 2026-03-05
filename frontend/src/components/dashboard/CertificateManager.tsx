@@ -126,36 +126,47 @@ export default function CertificateManager() {
                         <div className="rounded-xl border border-dashed border-white/[0.08] bg-white/[0.01] flex flex-col items-center justify-center py-20 gap-4">
                             {/* Static mockup of the certificate */}
                             <div className="w-full max-w-2xl mx-auto aspect-[297/210] bg-white rounded-lg shadow-2xl shadow-black/40 p-4 relative overflow-hidden">
-                                {/* Outer border */}
-                                <div className="absolute inset-2 border-[3px] border-gray-800 rounded" />
-                                {/* Inner red border */}
-                                <div className="absolute inset-3 border border-red-600 rounded" />
+                                {/* Outer navy border */}
+                                <div className="absolute inset-1.5 border-[3px] border-[#192855] rounded" />
+                                {/* Red border */}
+                                <div className="absolute inset-[10px] border-[1.5px] border-red-600 rounded" />
+                                {/* Gold border */}
+                                <div className="absolute inset-3 border border-amber-500/40 rounded" />
 
-                                <div className="relative flex flex-col items-center justify-between h-full py-4 px-6">
+                                <div className="relative flex flex-col items-center justify-between h-full py-3 px-6">
                                     {/* Top section */}
-                                    <div className="text-center space-y-1 mt-2">
-                                        <p className="text-[10px] sm:text-xs font-bold text-red-600 tracking-wider">
+                                    <div className="text-center space-y-0.5 mt-1">
+                                        <p className="text-[10px] sm:text-sm font-bold text-[#192855] tracking-wider">
                                             KYOKUSHIN KARATE FEDERATION OF INDIA
                                         </p>
-                                        <h3 className="text-lg sm:text-2xl font-black text-gray-800 tracking-wide">
+                                        <p className="text-[6px] sm:text-[8px] text-red-600 font-medium">
+                                            Aff. to - International Karate Organisation, World Kyokushinkai-Kan (Japan)
+                                        </p>
+                                        <p className="text-[5px] sm:text-[6px] text-gray-400">
+                                            ISO 9001 Certified | ISO 45001 Certified | FIT India | NITI Aayog Recognised
+                                        </p>
+                                        <div className="w-32 h-[1px] bg-amber-500/60 mx-auto mt-1" />
+                                        <h3 className="text-lg sm:text-2xl font-black text-[#192855] tracking-wide !mt-2">
                                             CERTIFICATE
                                         </h3>
-                                        <p className="text-[9px] sm:text-xs text-gray-500 font-medium">
+                                        <p className="text-[9px] sm:text-xs text-[#324178] font-medium">
                                             OF BELT PROMOTION
                                         </p>
-                                        <div className="w-20 h-[1px] bg-red-600 mx-auto mt-1" />
                                     </div>
 
                                     {/* Middle section */}
-                                    <div className="text-center space-y-2 flex-1 flex flex-col items-center justify-center -mt-2">
-                                        <p className="text-[9px] sm:text-[11px] text-gray-400">
+                                    <div className="text-center space-y-1 flex-1 flex flex-col items-center justify-center -mt-1">
+                                        <p className="text-[8px] sm:text-[10px] text-[#192855] italic">
                                             This is to certify that
                                         </p>
-                                        <p className="text-sm sm:text-xl font-black text-gray-800 tracking-wider border-b border-gray-300 pb-1 px-4">
+                                        <p className="text-sm sm:text-xl font-black text-[#192855] tracking-wider border-b border-[#192855]/30 pb-1 px-4">
                                             RAHUL KUMAR SINGH
                                         </p>
-                                        <p className="text-[9px] sm:text-[11px] text-gray-400">
-                                            has been promoted to the rank of
+                                        <p className="text-[6px] sm:text-[8px] text-[#192855] italic leading-relaxed max-w-sm">
+                                            has appeared for Grading Test and has successfully completed the basic methods of Kyokushin Karate - Kihons, Ido-kihon, Kata, Kumite and passed the test.
+                                        </p>
+                                        <p className="text-[8px] sm:text-[10px] text-[#324178] italic">
+                                            and has been promoted to the rank of
                                         </p>
                                         <p className={`text-sm sm:text-lg font-black tracking-widest ${
                                             previewBelt === "Orange" ? "text-orange-500" :
@@ -167,7 +178,6 @@ export default function CertificateManager() {
                                         }`}>
                                             {previewBelt.toUpperCase()}
                                         </p>
-                                        {/* Belt color bar */}
                                         <div className={`w-16 h-1 rounded-full ${
                                             previewBelt === "Orange" ? "bg-orange-500" :
                                             previewBelt === "Blue" ? "bg-blue-500" :
@@ -176,22 +186,30 @@ export default function CertificateManager() {
                                             previewBelt === "Brown" ? "bg-amber-800" :
                                             "bg-gray-900"
                                         }`} />
-                                        <p className="text-[8px] sm:text-[10px] text-gray-400 mt-1">
-                                            Date: {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+                                        <p className="text-[5px] sm:text-[7px] text-[#324178] italic max-w-xs">
+                                            Hereafter he/she promises to continue to improve himself/herself Physically, mentally, and morally.
                                         </p>
                                     </div>
 
                                     {/* Bottom section — signatures */}
                                     <div className="flex justify-between w-full px-2 sm:px-6 mb-1">
                                         <div className="text-center">
-                                            <p className="text-[9px] sm:text-xs font-bold text-gray-700">Vasant Kumar Singh</p>
-                                            <div className="w-20 sm:w-24 h-[1px] bg-gray-400 mt-1 mx-auto" />
-                                            <p className="text-[7px] sm:text-[9px] text-gray-400 mt-1">Instructor / Examiner</p>
+                                            <p className="text-[9px] sm:text-xs font-bold text-[#192855]">Vasant Kumar Singh</p>
+                                            <div className="w-20 sm:w-24 h-[1px] bg-[#192855] mt-1 mx-auto" />
+                                            <p className="text-[6px] sm:text-[8px] text-red-600 mt-1 font-medium">INSTRUCTOR NAME / SIGNATURE</p>
                                         </div>
                                         <div className="text-center">
-                                            <div className="w-20 sm:w-24 h-[1px] bg-gray-400 mt-4 mx-auto" />
-                                            <p className="text-[7px] sm:text-[9px] text-gray-400 mt-1">President, KKFI</p>
+                                            <p className="text-[7px] sm:text-[9px] text-[#192855] italic">Country Director</p>
+                                            <p className="text-[9px] sm:text-xs font-bold text-[#192855]">Shihan Vasant Kumar Singh</p>
+                                            <div className="w-20 sm:w-24 h-[1px] bg-[#192855] mt-1 mx-auto" />
+                                            <p className="text-[6px] sm:text-[8px] text-red-600 mt-1 font-medium">5th Dan Black Belt (Japan)</p>
                                         </div>
+                                    </div>
+
+                                    {/* Footer */}
+                                    <div className="text-center">
+                                        <div className="w-40 h-[1px] bg-amber-500/40 mx-auto mb-1" />
+                                        <p className="text-[5px] text-gray-400">Kyokushin Karate Federation of India | www.kyokushinkarate.in</p>
                                     </div>
                                 </div>
                             </div>
