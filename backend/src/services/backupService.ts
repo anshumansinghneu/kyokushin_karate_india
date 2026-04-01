@@ -1,16 +1,49 @@
 /**
  * Scheduled Database Backup Service
  * Runs daily at 2 AM IST — dumps all PostgreSQL tables via Prisma
- * and stores compressed JSON in MongoDB.
+ * and stores AES-256-GCM encrypted + compressed JSON in MongoDB.
  * Works on any hosting (Render, Railway, etc.) — no pg_dump needed.
  */
 
 import cron from 'node-cron';
+import crypto from 'crypto';
 import { MongoClient, Binary } from 'mongodb';
 import { gzipSync } from 'zlib';
 import prisma from '../prisma';
 
 const MONGO_URI = process.env.MONGODB_BACKUP_URI;
+const ENCRYPTION_KEY = process.env.BACKUP_ENCRYPTION_KEY;
+
+/**
+ * Derive a 32-byte key from the secret using SHA-256.
+ * This allows the user to set any-length passphrase.
+ */
+function deriveKey(secret: string): Buffer {
+    return crypto.createHash('sha256').update(secret).digest();
+}
+
+/**
+ * Encrypt data using AES-256-GCM.
+ * Returns: { iv, authTag, encrypted } — all Buffers.
+ */
+function encryptBuffer(data: Buffer, secret: string): { iv: Buffer; authTag: Buffer; encrypted: Buffer } {
+    const key = deriveKey(secret);
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+    const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
+    const authTag = cipher.getAuthTag();
+    return { iv, authTag, encrypted };
+}
+
+/**
+ * Decrypt data that was encrypted with encryptBuffer().
+ */
+export function decryptBuffer(encrypted: Buffer, iv: Buffer, authTag: Buffer, secret: string): Buffer {
+    const key = deriveKey(secret);
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(authTag);
+    return Buffer.concat([decipher.update(encrypted), decipher.final()]);
+}
 
 async function runBackup() {
     if (!MONGO_URI) {
@@ -55,8 +88,13 @@ async function runBackup() {
 
         let totalRows = 0;
         for (const table of tables) {
-            data[table.name] = await table.query();
-            totalRows += data[table.name].length;
+            try {
+                data[table.name] = await table.query();
+                totalRows += data[table.name].length;
+            } catch (err: any) {
+                console.warn(`   ⚠️  Skipping table ${table.name}: ${err.message}`);
+                data[table.name] = [];
+            }
         }
 
         const jsonStr = JSON.stringify(data);
@@ -64,7 +102,22 @@ async function runBackup() {
         const compressed = gzipSync(Buffer.from(jsonStr), { level: 9 });
         const compressedSize = compressed.length;
 
-        console.log(`   ${tables.length} tables, ${totalRows} rows, ${(compressedSize / 1024).toFixed(1)} KB compressed`);
+        // Encrypt if key is configured, otherwise store compressed only
+        const isEncrypted = !!ENCRYPTION_KEY;
+        let payload: Buffer;
+        let iv: Buffer | null = null;
+        let authTag: Buffer | null = null;
+
+        if (ENCRYPTION_KEY) {
+            const enc = encryptBuffer(compressed, ENCRYPTION_KEY);
+            payload = enc.encrypted;
+            iv = enc.iv;
+            authTag = enc.authTag;
+            console.log(`   ${tables.length} tables, ${totalRows} rows, ${(compressedSize / 1024).toFixed(1)} KB compressed, encrypted ✅`);
+        } else {
+            payload = compressed;
+            console.log(`   ${tables.length} tables, ${totalRows} rows, ${(compressedSize / 1024).toFixed(1)} KB compressed (⚠️ unencrypted — set BACKUP_ENCRYPTION_KEY)`);
+        }
 
         // Store in MongoDB
         const client = new MongoClient(MONGO_URI);
@@ -82,7 +135,10 @@ async function runBackup() {
                 tableCount: tables.length,
                 originalSizeBytes: originalSize,
                 compressedSizeBytes: compressedSize,
-                dump: new Binary(compressed),
+                encrypted: isEncrypted,
+                ...(iv && { iv: new Binary(iv) }),
+                ...(authTag && { authTag: new Binary(authTag) }),
+                dump: new Binary(payload),
             });
 
             // Keep only last 30 backups
@@ -109,13 +165,13 @@ export function startBackupScheduler() {
         return;
     }
 
-    // Every day at 2:00 AM IST (UTC 20:30 previous day)
-    cron.schedule('30 20 * * *', () => {
+    // Every day at 2:00 AM IST
+    cron.schedule('0 2 * * *', () => {
         console.log('⏰ Scheduled backup triggered');
         runBackup();
     }, { timezone: 'Asia/Kolkata' });
 
-    console.log('📦 Backup scheduler: Daily at 2:00 AM IST → MongoDB');
+    console.log('📦 Backup scheduler: Daily at 2:00 AM IST → MongoDB' + (ENCRYPTION_KEY ? ' (encrypted)' : ' (⚠️ unencrypted)'));
 
     // Also run once on server start (first backup)
     setTimeout(() => runBackup(), 10000);

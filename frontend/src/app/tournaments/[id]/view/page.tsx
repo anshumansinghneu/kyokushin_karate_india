@@ -9,8 +9,8 @@ import { useToast } from "@/contexts/ToastContext";
 import axios from "axios";
 import { io, Socket } from "socket.io-client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-const SOCKET_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+import { API_URL, BACKEND_URL } from '@/lib/config';
+const SOCKET_URL = BACKEND_URL;
 
 interface Match {
     id: string;

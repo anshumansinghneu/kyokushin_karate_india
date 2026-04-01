@@ -3,7 +3,6 @@ import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
 
 import authRouter from './routes/authRoutes';
 import userRouter from './routes/userRoutes';
@@ -62,23 +61,6 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiting for auth endpoints (prevent brute force)
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // limit each IP to 20 requests per windowMs (increased for testing)
-    message: 'Too many authentication attempts, please try again after 15 minutes',
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-// General API rate limiting
-const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later',
-    standardHeaders: true,
-    legacyHeaders: false,
-});
 
 // Diagnostic: test email endpoint (dev-only or admin-only)
 app.get('/api/test-email', async (req, res) => {
@@ -125,7 +107,7 @@ app.get('/api/test-email', async (req, res) => {
 
 // Routes
 app.use('/api/setup', setupRouter);  // Admin setup (one-time use)
-app.use('/api/auth', authLimiter, authRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
 app.use('/api/dojos', dojoRouter);
 app.use('/api/belts', beltRouter);

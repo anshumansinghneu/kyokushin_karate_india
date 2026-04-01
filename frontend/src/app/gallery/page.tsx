@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { Camera, X, ChevronLeft, ChevronRight, Upload, Star, Loader2, ImageIcon, Download, Share2, ZoomIn, ZoomOut, Info, Trophy, MapPin, Flame, Sparkles, Eye, Grid3X3, LayoutGrid } from "lucide-react";
+import { Camera, X, ChevronLeft, ChevronRight, Upload, Star, Loader2, ImageIcon, Download, Share2, ZoomIn, ZoomOut, Info, Trophy, MapPin, Flame, Sparkles, Eye, Grid3X3, LayoutGrid, Trash2 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
@@ -35,7 +35,7 @@ function ImageSkeleton() {
 }
 
 // Individual gallery image with load state
-function GalleryImage({ item, index, onClick }: { item: GalleryItem; index: number; onClick: () => void }) {
+function GalleryImage({ item, index, onClick, onDelete }: { item: GalleryItem; index: number; onClick: () => void; onDelete?: (item: GalleryItem) => void }) {
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
@@ -99,6 +99,15 @@ function GalleryImage({ item, index, onClick }: { item: GalleryItem; index: numb
                         <button className="p-2 rounded-full bg-white/10 hover:bg-white/25 text-white backdrop-blur-sm transition-all hover:scale-110" title="View">
                             <Eye className="w-3.5 h-3.5" />
                         </button>
+                        {onDelete && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onDelete(item); }}
+                                className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400 backdrop-blur-sm transition-all hover:scale-110"
+                                title="Delete"
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
@@ -139,10 +148,13 @@ export default function GalleryPage() {
     const [isDragging, setIsDragging] = useState(false);
     const [showLightboxInfo, setShowLightboxInfo] = useState(true);
     const [heroIndex, setHeroIndex] = useState(0);
+    const [deleteTarget, setDeleteTarget] = useState<GalleryItem | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
     const heroRef = useRef<HTMLDivElement>(null);
     const { showToast } = useToast();
+    const isAdmin = user?.role === "ADMIN";
 
     // Parallax for hero
     const { scrollY } = useScroll();
@@ -359,6 +371,26 @@ export default function GalleryPage() {
         }
     };
 
+    const handleDelete = async () => {
+        if (!deleteTarget) return;
+        setIsDeleting(true);
+        try {
+            await api.delete(`/gallery/${deleteTarget.id}`);
+            showToast("Photo deleted successfully", "success");
+            setDeleteTarget(null);
+            // Close lightbox if the deleted item was being viewed
+            if (lightboxIndex !== null && currentItem?.id === deleteTarget.id) {
+                setLightboxIndex(null);
+            }
+            fetchGallery();
+        } catch (error) {
+            console.error("Delete failed", error);
+            showToast("Failed to delete photo", "error");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const currentItem = lightboxIndex !== null ? items[lightboxIndex] : null;
     const currentHeroItem = featuredItems[heroIndex];
 
@@ -372,6 +404,48 @@ export default function GalleryPage() {
 
     return (
         <div className="min-h-screen bg-black text-white relative overflow-hidden selection:bg-red-500/30">
+            {/* ── DELETE CONFIRMATION MODAL ─────────────────────────────────── */}
+            <AnimatePresence>
+                {deleteTarget && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                        >
+                            {deleteTarget.imageUrl && (
+                                <div className="mb-4 rounded-xl overflow-hidden border border-white/5">
+                                    <img src={deleteTarget.imageUrl} alt="" className="w-full h-40 object-cover" />
+                                </div>
+                            )}
+                            <h3 className="text-xl font-bold text-white mb-2">Delete Photo?</h3>
+                            <p className="text-gray-400 text-sm mb-6">
+                                {deleteTarget.caption
+                                    ? <>Are you sure you want to delete &ldquo;{deleteTarget.caption}&rdquo;? This action cannot be undone.</>
+                                    : "Are you sure you want to delete this photo? This action cannot be undone."}
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => setDeleteTarget(null)}
+                                    className="px-4 py-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors font-medium"
+                                    disabled={isDeleting}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold flex items-center gap-2"
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? <><Loader2 className="w-4 h-4 animate-spin" /> Deleting...</> : <><Trash2 className="w-4 h-4" /> Delete Photo</>}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             {/* ── HERO SECTION with featured carousel ──────────────────────────── */}
             <div ref={heroRef} className="relative h-[70vh] md:h-[80vh] overflow-hidden">
                 {/* Background images — crossfade carousel */}
@@ -679,6 +753,7 @@ export default function GalleryPage() {
                                     item={item}
                                     index={index}
                                     onClick={() => setLightboxIndex(index)}
+                                    onDelete={isAdmin ? setDeleteTarget : undefined}
                                 />
                             ))}
                         </div>
@@ -901,6 +976,15 @@ export default function GalleryPage() {
                                 >
                                     <Download className="w-5 h-5" />
                                 </button>
+                                {isAdmin && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(currentItem); }}
+                                        className="p-2.5 rounded-full bg-white/5 text-red-400/60 hover:bg-red-500/20 hover:text-red-400 transition-all"
+                                        title="Delete"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                )}
                                 <div className="w-px h-5 bg-white/10 mx-1" />
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setLightboxIndex(null); setZoomed(false); }}

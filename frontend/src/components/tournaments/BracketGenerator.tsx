@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Users, Shuffle, AlertCircle, CheckCircle, XCircle, Target } from 'lucide-react';
+import { API_URL } from '@/lib/config';
 
 interface BracketGeneratorProps {
     eventId: string;
@@ -56,8 +57,7 @@ const BracketGenerator: React.FC<BracketGeneratorProps> = ({ eventId, onBrackets
 
         try {
             const token = localStorage.getItem('token');
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-            const url = `${baseUrl}/tournaments/${eventId}/generate/stream`;
+            const url = `${API_URL}/tournaments/${eventId}/generate/stream`;
 
             const response = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${token}` },

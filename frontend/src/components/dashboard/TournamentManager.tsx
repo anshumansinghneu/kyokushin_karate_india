@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
+import { API_URL } from "@/lib/config";
 import { useToast } from "@/contexts/ToastContext";
 import { getImageUrl } from "@/lib/imageUtils";
 
@@ -366,8 +367,7 @@ export default function TournamentManager() {
 
         try {
             const token = localStorage.getItem('token');
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-            const url = `${baseUrl}/tournaments/${viewingTournament.id}/generate/stream`;
+            const url = `${API_URL}/tournaments/${viewingTournament.id}/generate/stream`;
 
             const response = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${token}` },

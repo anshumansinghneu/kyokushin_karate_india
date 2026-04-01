@@ -13,7 +13,7 @@ import { useToast } from "@/contexts/ToastContext";
 import axios from "axios";
 import { downloadCertificate, downloadAllCertificates } from "@/lib/certificateGenerator";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+import { API_URL } from '@/lib/config';
 
 interface Winner {
     id: string;
