@@ -226,12 +226,21 @@ export default function BlackBeltsPage() {
         fetchBlackBelts();
     }, []);
 
+    // Parse Dan number from varied belt rank formats:
+    // "Black 1st Dan" -> 1, "3rd Dan" -> 3, "Black" -> 1, "5th Dan" -> 5
+    const parseDan = (rank: string): number => {
+        const match = rank.match(/(\d+)/);
+        if (match) return parseInt(match[1], 10);
+        if (rank === "Black") return 1; // Plain "Black" = 1st Dan
+        return 0;
+    };
+
     // Group members by Dan tier, skip empty tiers
     const tiers = useMemo(() => {
         return DAN_TIERS
             .map((tier) => ({
                 ...tier,
-                members: blackBelts.filter((bb) => bb.currentBeltRank === tier.rank),
+                members: blackBelts.filter((bb) => parseDan(bb.currentBeltRank) === tier.dan),
             }))
             .filter((tier) => tier.members.length > 0);
     }, [blackBelts]);

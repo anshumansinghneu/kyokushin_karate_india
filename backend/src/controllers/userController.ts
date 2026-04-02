@@ -900,9 +900,13 @@ export const getPublicInstructors = catchAsync(async (req: Request, res: Respons
 
 // ─── Public Black Belt Directory ──────────────────────────────────────
 export const getPublicBlackBelts = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // Match all black belt variations: "Black", "Black 1st Dan", "3rd Dan", "5th Dan", etc.
     const blackBelts = await prisma.user.findMany({
         where: {
-            currentBeltRank: { startsWith: 'Black' },
+            OR: [
+                { currentBeltRank: { startsWith: 'Black' } },
+                { currentBeltRank: { endsWith: 'Dan' } },
+            ],
             membershipStatus: 'ACTIVE',
         },
         select: {
