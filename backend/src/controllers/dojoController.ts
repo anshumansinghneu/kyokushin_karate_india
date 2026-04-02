@@ -10,7 +10,10 @@ export const getAllDojos = catchAsync(async (req: Request, res: Response, next: 
     if (state) where.state = state;
 
     const dojos = await prisma.dojo.findMany({
-        where
+        where,
+        include: {
+            instructors: { select: { id: true, name: true, role: true } },
+        },
     });
 
     res.status(200).json({
@@ -69,30 +72,27 @@ export const getDojoLocations = catchAsync(async (req: Request, res: Response, n
 });
 
 export const getDojo = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // Fetch basic dojo info without relations to avoid schema mismatch issues
     const dojo = await prisma.dojo.findUnique({
-        where: { id: req.params.id }
+        where: { id: req.params.id },
+        include: {
+            instructors: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    currentBeltRank: true,
+                    profilePhotoUrl: true,
+                    role: true
+                }
+            },
+        },
     });
 
     if (!dojo) {
         return next(new AppError('No dojo found with that ID', 404));
     }
 
-    // Fetch instructors separately to avoid relation issues
-    const instructors = await prisma.user.findMany({
-        where: {
-            dojoId: req.params.id,
-            role: 'INSTRUCTOR'
-        },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            currentBeltRank: true,
-            profilePhotoUrl: true,
-            role: true
-        }
-    });
+    const instructors = dojo.instructors;
 
     // Fetch events separately with only fields that exist in production
     let events: any[] = [];
@@ -160,16 +160,13 @@ export const createDojo = catchAsync(async (req: Request, res: Response, next: N
             state,
             country,
             address,
+            // Connect instructor via many-to-many
+            instructors: instructorId ? { connect: { id: instructorId } } : undefined,
+        },
+        include: {
+            instructors: { select: { id: true, name: true, role: true } },
         },
     });
-
-    // Link the instructor to this dojo by updating their dojoId
-    if (instructorId) {
-        await prisma.user.update({
-            where: { id: instructorId },
-            data: { dojoId: newDojo.id },
-        });
-    }
 
     res.status(201).json({
         status: 'success',
@@ -195,18 +192,18 @@ export const updateDojo = catchAsync(async (req: Request, res: Response, next: N
     if (longitude !== undefined) updateData.longitude = longitude ? parseFloat(longitude) : null;
 
     try {
+        // If instructorId provided, add to many-to-many instructors
+        if (instructorId) {
+            updateData.instructors = { connect: { id: instructorId } };
+        }
+
         const dojo = await prisma.dojo.update({
             where: { id: req.params.id },
             data: updateData,
+            include: {
+                instructors: { select: { id: true, name: true, role: true } },
+            },
         });
-
-        // Link the instructor to this dojo by updating their dojoId
-        if (instructorId) {
-            await prisma.user.update({
-                where: { id: instructorId },
-                data: { dojoId: dojo.id },
-            });
-        }
 
         res.status(200).json({
             status: 'success',

@@ -888,6 +888,7 @@ export const getPublicInstructors = catchAsync(async (req: Request, res: Respons
             membershipNumber: true,
             createdAt: true,
             dojo: { select: { name: true, city: true } },
+            teachingDojos: { select: { id: true, name: true, city: true } },
         },
         orderBy: { name: 'asc' },
     });
@@ -919,6 +920,7 @@ export const getPublicBlackBelts = catchAsync(async (req: Request, res: Response
             membershipNumber: true,
             role: true,
             dojo: { select: { name: true, city: true } },
+            teachingDojos: { select: { id: true, name: true, city: true } },
         },
         orderBy: { name: 'asc' },
     });

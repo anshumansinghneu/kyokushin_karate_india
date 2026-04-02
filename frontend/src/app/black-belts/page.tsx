@@ -19,6 +19,7 @@ interface BlackBelt {
     membershipNumber?: string;
     role?: string;
     dojo?: { name: string; city: string } | null;
+    teachingDojos?: { id: string; name: string; city: string }[];
 }
 
 interface DanTier {
@@ -127,12 +128,20 @@ function BlackBeltCard({ member, tier, index, featured }: { member: BlackBelt; t
                     </p>
 
                     <div className="space-y-1.5 mb-4">
-                        {member.dojo && (
+                        {/* Show all teaching dojos for instructors, fall back to primary dojo */}
+                        {member.teachingDojos && member.teachingDojos.length > 0 ? (
+                            member.teachingDojos.map((d) => (
+                                <p key={d.id} className="text-sm text-gray-400 flex items-center gap-2">
+                                    <Shield className="w-3.5 h-3.5 text-red-500/70 shrink-0" />
+                                    <span className="truncate">{d.name}</span>
+                                </p>
+                            ))
+                        ) : member.dojo ? (
                             <p className="text-sm text-gray-400 flex items-center gap-2">
                                 <Shield className="w-3.5 h-3.5 text-red-500/70 shrink-0" />
                                 <span className="truncate">{member.dojo.name}</span>
                             </p>
-                        )}
+                        ) : null}
                         {location && (
                             <p className="text-sm text-gray-400 flex items-center gap-2">
                                 <MapPin className="w-3.5 h-3.5 text-red-500/70 shrink-0" />

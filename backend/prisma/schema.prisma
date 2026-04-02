@@ -120,7 +120,8 @@ model User {
 
   // Relationships
   dojoId                String?
-  dojo                  Dojo?            @relation(fields: [dojoId], references: [id])
+  dojo                  Dojo?            @relation("DojoMembers", fields: [dojoId], references: [id])
+  teachingDojos         Dojo[]           @relation("InstructorDojos")  // Many-to-many: instructor teaches at multiple dojos
   primaryInstructorId   String?
   primaryInstructor     User?            @relation("InstructorStudents", fields: [primaryInstructorId], references: [id])
   students              User[]           @relation("InstructorStudents")
@@ -200,10 +201,11 @@ model Dojo {
   latitude     Float?
   longitude    Float?
 
-  instructors  User[] // Ideally filtered by role in app logic, but relation exists via User.dojoId
+  members      User[]   @relation("DojoMembers")       // Users whose primary dojo is this
+  instructors  User[]   @relation("InstructorDojos")   // Many-to-many: instructors who teach here
 
-  gallery      Gallery[]
-  events       Event[]
+  gallery      Gallery[] @relation("DojoGallery")
+  events       Event[]   @relation("DojoEvents")
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -235,7 +237,7 @@ model Event {
   endDate               DateTime
   location              String?
   dojoId                String?
-  dojo                  Dojo?       @relation(fields: [dojoId], references: [id])
+  dojo                  Dojo?       @relation("DojoEvents", fields: [dojoId], references: [id])
 
   // Registration
   registrationDeadline  DateTime
@@ -422,7 +424,7 @@ model Gallery {
   eventId           String?
   event             Event?    @relation(fields: [eventId], references: [id])
   dojoId            String?
-  dojo              Dojo?     @relation(fields: [dojoId], references: [id])
+  dojo              Dojo?     @relation("DojoGallery", fields: [dojoId], references: [id])
 
   isApproved        Boolean   @default(false)
   isPublicFeatured  Boolean   @default(false)
