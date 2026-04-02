@@ -160,11 +160,16 @@ export const createDojo = catchAsync(async (req: Request, res: Response, next: N
             state,
             country,
             address,
-            instructors: req.body.instructorId ? {
-                connect: { id: req.body.instructorId }
-            } : undefined
         },
     });
+
+    // Link the instructor to this dojo by updating their dojoId
+    if (instructorId) {
+        await prisma.user.update({
+            where: { id: instructorId },
+            data: { dojoId: newDojo.id },
+        });
+    }
 
     res.status(201).json({
         status: 'success',
@@ -189,16 +194,19 @@ export const updateDojo = catchAsync(async (req: Request, res: Response, next: N
     if (latitude !== undefined) updateData.latitude = latitude ? parseFloat(latitude) : null;
     if (longitude !== undefined) updateData.longitude = longitude ? parseFloat(longitude) : null;
 
-    // Handle instructor relation separately (instructorId is not a Dojo column)
-    if (instructorId) {
-        updateData.instructors = { connect: { id: instructorId } };
-    }
-
     try {
         const dojo = await prisma.dojo.update({
             where: { id: req.params.id },
             data: updateData,
         });
+
+        // Link the instructor to this dojo by updating their dojoId
+        if (instructorId) {
+            await prisma.user.update({
+                where: { id: instructorId },
+                data: { dojoId: dojo.id },
+            });
+        }
 
         res.status(200).json({
             status: 'success',
