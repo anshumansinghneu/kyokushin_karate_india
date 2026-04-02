@@ -898,6 +898,33 @@ export const getPublicInstructors = catchAsync(async (req: Request, res: Respons
     });
 });
 
+// ─── Public Black Belt Directory ──────────────────────────────────────
+export const getPublicBlackBelts = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const blackBelts = await prisma.user.findMany({
+        where: {
+            currentBeltRank: { startsWith: 'Black' },
+            membershipStatus: 'ACTIVE',
+        },
+        select: {
+            id: true,
+            name: true,
+            currentBeltRank: true,
+            profilePhotoUrl: true,
+            city: true,
+            state: true,
+            membershipNumber: true,
+            role: true,
+            dojo: { select: { name: true, city: true } },
+        },
+        orderBy: { name: 'asc' },
+    });
+
+    res.status(200).json({
+        status: 'success',
+        data: { blackBelts },
+    });
+});
+
 // Change password for logged-in user
 export const changePassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;

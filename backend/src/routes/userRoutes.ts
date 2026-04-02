@@ -1,12 +1,13 @@
 import express from 'express';
 import { getMe } from '../controllers/authController';
-import { getAllUsers, getUser, getUserFullProfile, getUserByMembershipId, searchUsers, approveUser, rejectUser, deleteUser, inviteUser, updateMe, updateUser, createUser, getPublicInstructors, changePassword } from '../controllers/userController';
+import { getAllUsers, getUser, getUserFullProfile, getUserByMembershipId, searchUsers, approveUser, rejectUser, deleteUser, inviteUser, updateMe, updateUser, createUser, getPublicInstructors, getPublicBlackBelts, changePassword } from '../controllers/userController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
 // Public routes (no auth required)
 router.get('/public-instructors', getPublicInstructors);
+router.get('/public-black-belts', getPublicBlackBelts);
 
 router.use(protect);
 
