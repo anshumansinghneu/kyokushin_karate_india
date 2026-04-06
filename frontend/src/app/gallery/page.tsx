@@ -194,15 +194,112 @@ function AlbumCard3D({ album, index }: { album: Album; index: number }) {
     );
 }
 
+// Seeded random for consistent per-photo rotation
+function seededRandom(seed: number) {
+    const x = Math.sin(seed * 9301 + 49297) * 49297;
+    return x - Math.floor(x);
+}
+
+interface GalleryPhoto {
+    id: string;
+    imageUrl: string;
+    caption: string | null;
+    uploadedAt: string;
+    isPublicFeatured: boolean;
+    uploader: { id: string; name: string };
+    event: { id: string; name: string } | null;
+    dojo: { id: string; name: string } | null;
+}
+
+function FloatingPhoto({ photo, index }: { photo: GalleryPhoto; index: number }) {
+    const [loaded, setLoaded] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+    const [inView, setInView] = useState(false);
+    const imgUrl = getImageUrl(photo.imageUrl);
+    const rotation = (seededRandom(index + 1) - 0.5) * 5;
+    const offsetY = (seededRandom(index + 50) - 0.5) * 10;
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
+            { rootMargin: "200px" }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <motion.div
+            ref={ref}
+            initial={{ opacity: 0, y: 30, rotate: rotation }}
+            animate={inView ? {
+                opacity: 1,
+                y: isHovered ? -8 : offsetY,
+                rotate: isHovered ? 0 : rotation,
+                scale: isHovered ? 1.04 : 1,
+            } : {}}
+            transition={{
+                opacity: { duration: 0.5, delay: Math.min(index * 0.04, 0.5) },
+                y: { type: "spring", stiffness: 200, damping: 20 },
+                rotate: { type: "spring", stiffness: 200, damping: 20 },
+                scale: { type: "spring", stiffness: 300, damping: 25 },
+            }}
+            className="break-inside-avoid mb-5 group"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <div
+                className="relative rounded-2xl overflow-hidden border border-white/[0.06] group-hover:border-white/[0.12] transition-all duration-500"
+                style={{
+                    boxShadow: isHovered
+                        ? "0 25px 50px rgba(0,0,0,0.5), 0 0 30px rgba(220,38,38,0.04)"
+                        : "0 8px 25px rgba(0,0,0,0.3)",
+                }}
+            >
+                {!loaded && (
+                    <div className="w-full aspect-[4/3] bg-zinc-900/50">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent animate-shimmer" />
+                    </div>
+                )}
+                {inView && imgUrl && (
+                    <img
+                        src={imgUrl}
+                        alt={photo.caption || "Photo"}
+                        className={`w-full transition-all duration-700 group-hover:scale-110 ${loaded ? "opacity-100" : "opacity-0 absolute"}`}
+                        loading="lazy"
+                        onLoad={() => setLoaded(true)}
+                    />
+                )}
+                {loaded && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-4">
+                        {photo.caption && <p className="text-xs font-semibold text-white drop-shadow-lg">{photo.caption}</p>}
+                        <p className="text-[10px] text-zinc-400 mt-0.5">by {photo.uploader.name}</p>
+                        {photo.event && (
+                            <span className="mt-1.5 inline-flex self-start text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">{photo.event.name}</span>
+                        )}
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+}
+
 export default function GalleryPage() {
     const { user } = useAuthStore();
     const [albums, setAlbums] = useState<Album[]>([]);
+    const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [photosLoading, setPhotosLoading] = useState(true);
     const [filter, setFilter] = useState<AlbumFilter>("ALL");
     const [search, setSearch] = useState("");
     const [searchInput, setSearchInput] = useState("");
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [photoPage, setPhotoPage] = useState(1);
+    const [photoTotalPages, setPhotoTotalPages] = useState(1);
     const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
     const fetchAlbums = useCallback(async () => {
@@ -221,7 +318,21 @@ export default function GalleryPage() {
         }
     }, [page, filter, search]);
 
+    const fetchPhotos = useCallback(async () => {
+        setPhotosLoading(true);
+        try {
+            const res = await api.get(`/gallery?page=${photoPage}&limit=24`);
+            setPhotos(res.data.data.items);
+            setPhotoTotalPages(res.data.data.pagination.totalPages);
+        } catch (error) {
+            console.error("Failed to fetch photos", error);
+        } finally {
+            setPhotosLoading(false);
+        }
+    }, [photoPage]);
+
     useEffect(() => { fetchAlbums(); }, [fetchAlbums]);
+    useEffect(() => { fetchPhotos(); }, [fetchPhotos]);
     useEffect(() => { setPage(1); }, [filter, search]);
 
     const handleSearchChange = (val: string) => {
@@ -324,64 +435,102 @@ export default function GalleryPage() {
                     ))}
                 </motion.div>
 
-                {/* Albums Grid */}
+                {/* Albums Section */}
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-24 gap-3">
+                    <div className="flex flex-col items-center justify-center py-16 gap-3">
                         <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
-                        <span className="text-xs text-zinc-700">Loading albums...</span>
+                        <span className="text-xs text-zinc-700">Loading...</span>
                     </div>
-                ) : albums.length === 0 ? (
+                ) : albums.length > 0 && (
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+                            {albums.map((album, i) => (
+                                <AlbumCard3D key={album.id} album={album} index={i} />
+                            ))}
+                        </div>
+
+                        {/* Album Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex justify-center gap-2 mt-10">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                                    <button
+                                        key={p}
+                                        onClick={() => setPage(p)}
+                                        className={`w-10 h-10 rounded-full text-sm font-semibold transition-all duration-300 ${
+                                            p === page
+                                                ? "bg-red-600 text-white shadow-lg shadow-red-600/20"
+                                                : "text-zinc-600 border border-white/[0.06] hover:text-white hover:border-white/10"
+                                        }`}
+                                        style={p !== page ? { background: "rgba(255,255,255,0.02)" } : undefined}
+                                    >
+                                        {p}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* ── All Photos Section ──────────────────────────── */}
+                {photos.length > 0 && (
+                    <div className={albums.length > 0 ? "mt-20" : ""}>
+                        {/* Section header */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.5 }}
+                            className="flex items-center gap-4 mb-10"
+                        >
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+                            <div className="flex items-center gap-2 px-4 py-1.5 border border-white/[0.06] rounded-full"
+                                style={{ background: "rgba(255,255,255,0.02)" }}>
+                                <ImageIcon className="w-3.5 h-3.5 text-zinc-500" />
+                                <span className="text-xs font-medium text-zinc-500">All Photos</span>
+                            </div>
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+                        </motion.div>
+
+                        {/* Floating photos masonry */}
+                        <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-4">
+                            {photos.map((photo, i) => (
+                                <FloatingPhoto key={photo.id} photo={photo} index={i} />
+                            ))}
+                        </div>
+
+                        {/* Photo Pagination */}
+                        {photoTotalPages > 1 && (
+                            <div className="flex justify-center gap-2 mt-12">
+                                {Array.from({ length: Math.min(photoTotalPages, 10) }, (_, i) => i + 1).map((p) => (
+                                    <button
+                                        key={p}
+                                        onClick={() => setPhotoPage(p)}
+                                        className={`w-10 h-10 rounded-full text-sm font-semibold transition-all duration-300 ${
+                                            p === photoPage
+                                                ? "bg-red-600 text-white shadow-lg shadow-red-600/20"
+                                                : "text-zinc-600 border border-white/[0.06] hover:text-white hover:border-white/10"
+                                        }`}
+                                        style={p !== photoPage ? { background: "rgba(255,255,255,0.02)" } : undefined}
+                                    >
+                                        {p}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Empty state — only when no albums AND no photos */}
+                {!isLoading && albums.length === 0 && photos.length === 0 && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="text-center py-24"
                     >
-                        <FolderOpen className="w-16 h-16 text-zinc-800 mx-auto mb-4" />
-                        <p className="text-zinc-500 text-lg">No albums found</p>
-                        <p className="text-zinc-700 text-sm mt-1">
-                            {search ? "Try a different search term" : "Albums will appear here as events are created"}
-                        </p>
+                        <Camera className="w-16 h-16 text-zinc-800 mx-auto mb-4" />
+                        <p className="text-zinc-500 text-lg">No photos yet</p>
+                        <p className="text-zinc-700 text-sm mt-1">Photos will appear here as they are uploaded</p>
                     </motion.div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
-                        {albums.map((album, i) => (
-                            <AlbumCard3D key={album.id} album={album} index={i} />
-                        ))}
-                    </div>
                 )}
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="flex justify-center gap-2 mt-14">
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                            <button
-                                key={p}
-                                onClick={() => setPage(p)}
-                                className={`w-10 h-10 rounded-full text-sm font-semibold transition-all duration-300 ${
-                                    p === page
-                                        ? "bg-red-600 text-white shadow-lg shadow-red-600/20"
-                                        : "text-zinc-600 border border-white/[0.06] hover:text-white hover:border-white/10"
-                                }`}
-                                style={p !== page ? { background: "rgba(255,255,255,0.02)" } : undefined}
-                            >
-                                {p}
-                            </button>
-                        ))}
-                    </div>
-                )}
-
-                {/* All Photos Link */}
-                <div className="text-center mt-14 mb-8">
-                    <Link
-                        href="/gallery/all"
-                        className="inline-flex items-center gap-2 px-6 py-3 border border-white/[0.06] rounded-2xl text-sm font-medium text-zinc-500 hover:text-white hover:border-white/10 transition-all group"
-                        style={{ background: "rgba(255,255,255,0.02)" }}
-                    >
-                        <Grid3X3 className="w-4 h-4" />
-                        Browse All Photos
-                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                </div>
             </div>
         </div>
     );
