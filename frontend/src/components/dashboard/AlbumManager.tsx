@@ -111,8 +111,9 @@ export default function AlbumManager() {
             }
             setShowForm(false);
             fetchAlbums();
-        } catch {
-            showToast("Save failed", "error");
+        } catch (err: any) {
+            console.error("Album save error:", err.response?.data || err.message || err);
+            showToast(err.response?.data?.message || "Save failed", "error");
         } finally {
             setSaving(false);
         }
