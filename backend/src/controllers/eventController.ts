@@ -118,6 +118,28 @@ export const createEvent = catchAsync(async (req: Request, res: Response, next: 
         },
     });
 
+    // Auto-create album for this event
+    const albumTypeMap: Record<string, string> = {
+        TOURNAMENT: 'TOURNAMENT',
+        CAMP: 'CAMP',
+        SEMINAR: 'SEMINAR',
+        BELT_EXAM: 'BELT_EXAM',
+    };
+    try {
+        await prisma.album.create({
+            data: {
+                name,
+                type: (albumTypeMap[type] || 'GENERAL') as any,
+                eventId: newEvent.id,
+                createdBy: currentUser.id,
+                date: new Date(startDate),
+            },
+        });
+    } catch (e) {
+        // Non-critical — log but don't fail event creation
+        console.warn('[EVENT] Auto-album creation failed:', e);
+    }
+
     res.status(201).json({
         status: 'success',
         data: {

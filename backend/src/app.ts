@@ -21,6 +21,7 @@ import recognitionRouter from './routes/recognitionRoutes';
 import setupRouter from './routes/setupRoutes';
 import noteRouter from './routes/noteRoutes';
 import galleryRouter from './routes/galleryRoutes';
+import albumRouter from './routes/albumRoutes';
 import announceRouter from './routes/announceRoutes';
 import paymentRouter from './routes/paymentRoutes';
 import merchRouter from './routes/merchRoutes';
@@ -122,6 +123,7 @@ app.use('/api/upload', uploadRouter);
 app.use('/api/posts', postRouter);
 app.use('/api/recognitions', recognitionRouter);
 app.use('/api/gallery', galleryRouter);
+app.use('/api/albums', albumRouter);
 app.use('/api/announcements', announceRouter);
 app.use('/api/payments', paymentRouter);  // Payment & UPI integration
 app.use('/api/merch', merchRouter);  // Merchandise store

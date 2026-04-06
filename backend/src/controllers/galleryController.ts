@@ -53,7 +53,7 @@ export const uploadGalleryItem = catchAsync(async (req: Request, res: Response) 
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    const { imageUrl, caption, eventId, dojoId } = req.body;
+    const { imageUrl, caption, eventId, dojoId, albumId } = req.body;
 
     if (!imageUrl) {
         throw new AppError('imageUrl is required', 400);
@@ -79,6 +79,27 @@ export const uploadGalleryItem = catchAsync(async (req: Request, res: Response) 
             dojo: { select: { id: true, name: true } },
         },
     });
+
+    // If albumId provided, link photo to album
+    if (albumId) {
+        try {
+            const maxOrder = await prisma.albumPhoto.findFirst({
+                where: { albumId },
+                orderBy: { order: 'desc' },
+                select: { order: true },
+            });
+            await prisma.albumPhoto.create({
+                data: {
+                    albumId,
+                    galleryId: item.id,
+                    order: (maxOrder?.order ?? -1) + 1,
+                },
+            });
+        } catch (e: any) {
+            // Ignore if album doesn't exist or duplicate
+            if (e.code !== 'P2002' && e.code !== 'P2003') throw e;
+        }
+    }
 
     res.status(201).json({
         status: 'success',

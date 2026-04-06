@@ -33,6 +33,7 @@ const upload = multer({
 });
 
 export const uploadImage = upload.single('image');
+export const uploadImages = upload.array('images', 20); // max 20 files at once
 
 // Try uploading to Supabase, returns URL or null on failure
 async function trySupabaseUpload(filePath: string, buffer: Buffer, contentType: string): Promise<string | null> {
@@ -65,6 +66,41 @@ function saveLocally(filePath: string, buffer: Buffer): string {
     // Return relative URL that express.static will serve
     return `/uploads/${filePath}`;
 }
+
+// Handle multiple file uploads
+export const handleMultiUpload = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const files = req.files as Express.Multer.File[];
+        if (!files || files.length === 0) {
+            return next(new AppError('Please upload at least one file', 400));
+        }
+
+        const folder = (req.query.folder as string) || 'general';
+        const results = [];
+
+        for (const file of files) {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+            const ext = path.extname(file.originalname);
+            const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+            const filePath = `${folder}/${filename}`;
+
+            let fileUrl = await trySupabaseUpload(filePath, file.buffer, file.mimetype);
+            if (!fileUrl) {
+                fileUrl = saveLocally(filePath, file.buffer);
+            }
+
+            results.push({ url: fileUrl, filename, path: filePath });
+        }
+
+        res.status(200).json({
+            status: 'success',
+            data: { files: results },
+        });
+    } catch (err: any) {
+        console.error('[MULTI UPLOAD ERROR]', err);
+        return next(new AppError('Upload failed', 500));
+    }
+};
 
 export const handleUpload = async (req: Request, res: Response, next: NextFunction) => {
     try {

@@ -76,6 +76,15 @@ enum VoucherApplicability {
   ALL
 }
 
+enum AlbumType {
+  CAMP
+  SEMINAR
+  TOURNAMENT
+  BELT_EXAM
+  TRAINING
+  GENERAL
+}
+
 enum NotificationType {
   APPROVAL
   REJECTION
@@ -162,6 +171,7 @@ model User {
   // Other
   uploadedGallery       Gallery[]        @relation("GalleryUploader")
   approvedGallery       Gallery[]        @relation("GalleryApprover")
+  createdAlbums         Album[]          @relation("AlbumCreator")
   createdVouchers       CashVoucher[]    @relation("VoucherCreator")
   redeemedVouchers      CashVoucher[]    @relation("VoucherRedeemer")
   notifications         Notification[]
@@ -264,6 +274,7 @@ model Event {
   results               TournamentResult[]
   beltExamResults       BeltExamResult[]
   gallery               Gallery[]
+  album                 Album?
   specificVouchers      CashVoucher[]
   payments              Payment[]
   notifications         Notification[]
@@ -434,6 +445,47 @@ model Gallery {
 
   caption           String?
   uploadedAt        DateTime  @default(now())
+
+  albums            AlbumPhoto[]
+}
+
+model Album {
+  id            String       @id @default(uuid())
+  name          String
+  description   String?
+  coverImageUrl String?
+  type          AlbumType    @default(GENERAL)
+  isPinned      Boolean      @default(false)
+  date          DateTime?
+
+  eventId       String?      @unique
+  event         Event?       @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  createdBy     String
+  creator       User         @relation("AlbumCreator", fields: [createdBy], references: [id])
+
+  photos        AlbumPhoto[]
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([type])
+  @@index([isPinned])
+  @@index([date])
+}
+
+model AlbumPhoto {
+  id        String   @id @default(uuid())
+  albumId   String
+  album     Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  galleryId String
+  gallery   Gallery  @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  order     Int      @default(0)
+  addedAt   DateTime @default(now())
+
+  @@unique([albumId, galleryId])
+  @@index([albumId])
+  @@index([galleryId])
 }
 
 model CashVoucher {

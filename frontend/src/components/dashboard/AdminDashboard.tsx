@@ -33,6 +33,7 @@ const VoucherManager = lazy(() => import('./VoucherManager'));
 const SeminarManager = lazy(() => import('./SeminarManager'));
 const SiteAnalytics = lazy(() => import('./SiteAnalytics'));
 const CertificateManager = lazy(() => import('./CertificateManager'));
+const AlbumManager = lazy(() => import('./AlbumManager'));
 
 import OrganizationGraph from "./OrganizationGraph";
 import GlobalSearch from "./GlobalSearch";
@@ -50,9 +51,9 @@ function TabLoader() {
     );
 }
 
-type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers' | 'analytics' | 'certificates';
+type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers' | 'analytics' | 'certificates' | 'albums';
 
-const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers', 'analytics', 'certificates'];
+const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers', 'analytics', 'certificates', 'albums'];
 
 export default function AdminDashboard({ user, initialTab }: { user: any; initialTab?: string }) {
     const { showToast } = useToast();
@@ -154,6 +155,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
         {
             id: 'content', header: 'CONTENT',
             items: [
+                { id: 'albums', label: 'Photo Albums', icon: Image },
                 { id: 'blogs', label: 'Blogs', icon: FileText },
                 { id: 'media', label: 'Media', icon: Newspaper },
                 { id: 'recognition', label: 'Monthly Recognition', icon: Trophy },
@@ -673,6 +675,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                         {activeTab === 'vouchers' && <motion.div key="vouchers" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><VoucherManager /></Suspense></motion.div>}
                         {activeTab === 'analytics' && <motion.div key="analytics" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><SiteAnalytics /></Suspense></motion.div>}
                         {activeTab === 'certificates' && <motion.div key="certificates" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><CertificateManager /></Suspense></motion.div>}
+                        {activeTab === 'albums' && <motion.div key="albums" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><AlbumManager /></Suspense></motion.div>}
                     </AnimatePresence>
                     </div>
                 </div>
