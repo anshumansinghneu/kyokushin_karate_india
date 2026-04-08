@@ -119,8 +119,11 @@ async function runBackup() {
             console.log(`   ${tables.length} tables, ${totalRows} rows, ${(compressedSize / 1024).toFixed(1)} KB compressed (⚠️ unencrypted — set BACKUP_ENCRYPTION_KEY)`);
         }
 
-        // Store in MongoDB
-        const client = new MongoClient(MONGO_URI);
+        // Store in MongoDB (Node.js 22+ needs explicit TLS options for Atlas)
+        const client = new MongoClient(MONGO_URI, {
+            tls: true,
+            tlsAllowInvalidCertificates: true,
+        });
         try {
             await client.connect();
             const db = client.db();
