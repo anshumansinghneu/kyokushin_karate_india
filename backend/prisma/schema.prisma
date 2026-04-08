@@ -93,6 +93,12 @@ enum NotificationType {
   GENERAL
 }
 
+enum FeedbackStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum VerificationStatus {
   VERIFIED
   PENDING_VERIFICATION
@@ -188,6 +194,8 @@ model User {
   merchOrders           MerchOrder[]
   refreshTokens         RefreshToken[]
   passwordResetTokens   PasswordResetToken[]
+  eventFeedbacks        EventFeedback[]  @relation("FeedbackAuthor")
+  anonymousMessages     AnonymousMessage[] @relation("AnonymousMessageSender")
 
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
@@ -278,6 +286,7 @@ model Event {
   specificVouchers      CashVoucher[]
   payments              Payment[]
   notifications         Notification[]
+  feedbacks             EventFeedback[]
 
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
@@ -790,4 +799,32 @@ model SiteVisit {
   @@index([fingerprint])
   @@index([createdAt])
   @@index([country])
+}
+
+model EventFeedback {
+  id        String         @id @default(uuid())
+  eventId   String
+  event     Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User           @relation("FeedbackAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  feedback  String         @db.Text
+  status    FeedbackStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([eventId, userId])
+  @@index([eventId, status])
+}
+
+model AnonymousMessage {
+  id         String   @id @default(uuid())
+  senderId   String
+  sender     User     @relation("AnonymousMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  message    String   @db.Text
+  isRead     Boolean  @default(false)
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([isRead, isArchived])
+  @@index([senderId, createdAt])
 }
