@@ -7,7 +7,7 @@ import {
     Users, ClipboardCheck, Medal, ChevronRight, Activity, FileText, Edit, Shield,
     Menu, X, LogOut, Trophy, UserPlus, Ticket, FileCheck, KeyRound, ArrowRight,
     CalendarPlus, Calendar, Tent, GraduationCap, CheckCircle, AlertTriangle,
-    PanelLeftClose, PanelLeftOpen, Search, Home
+    PanelLeftClose, PanelLeftOpen, Search, Home, ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import BeltExamGrading from "./BeltExamGrading";
 import TournamentViewer from "./TournamentViewer";
 import GlobalSearch from "./GlobalSearch";
 import StudentDetailView from "./StudentDetailView";
+import AnonymousFeedbackModal from "@/components/AnonymousFeedbackModal";
 
 type TabId = 'overview' | 'students' | 'belt-approvals' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'register-student' | 'enroll-event' | 'blogs' | 'submit';
 
@@ -43,6 +44,7 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // mobile overlay
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // desktop
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+    const [showAnonFeedback, setShowAnonFeedback] = useState(false);
 
     // URL-synced tab state
     const resolvedInitial = VALID_TABS.includes(initialTab as TabId) ? initialTab as TabId : 'overview';
@@ -147,6 +149,12 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
                 { id: 'submit', label: 'Write Blog', icon: Edit },
             ]
         },
+        {
+            header: 'OTHER',
+            items: [
+                { id: 'anonymous-feedback', label: 'Anonymous Feedback', icon: ShieldCheck },
+            ]
+        },
     ];
 
     const activeLabel = menuSections.flatMap(s => s.items).find(i => i.id === activeTab)?.label || 'Overview';
@@ -227,7 +235,7 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
                                     return (
                                         <button
                                             key={item.id}
-                                            onClick={() => { setActiveTab(item.id as any); setIsSidebarOpen(false); }}
+                                            onClick={() => { if (item.id === 'anonymous-feedback') { setShowAnonFeedback(true); setIsSidebarOpen(false); } else { setActiveTab(item.id as any); setIsSidebarOpen(false); } }}
                                             title={isSidebarCollapsed ? item.label : undefined}
                                             className={`
                                                 w-full flex items-center gap-2.5 rounded-lg text-[13px] font-medium transition-all relative group
@@ -819,6 +827,8 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
                     onClose={() => setSelectedStudentId(null)}
                 />
             )}
+
+            <AnonymousFeedbackModal isOpen={showAnonFeedback} onClose={() => setShowAnonFeedback(false)} />
         </div>
     );
 }

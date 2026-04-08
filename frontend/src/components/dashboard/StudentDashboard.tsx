@@ -17,6 +17,7 @@ import ProfileCompletionBar from "@/components/ui/ProfileCompletionBar";
 // OnboardingTour removed
 import MyOrders from "./MyOrders";
 import BeltTimeline from "./BeltTimeline";
+import AnonymousFeedbackModal from "@/components/AnonymousFeedbackModal";
 
 const TABS = [
     { key: 'overview', label: 'Overview', icon: Activity },
@@ -32,6 +33,7 @@ export default function StudentDashboard({ user }: { user: any }) {
     const [nextEvent, setNextEvent] = useState<any>(null);
     const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     const [activeTab, setActiveTab] = useState<TabKey>('overview');
+    const [showAnonFeedback, setShowAnonFeedback] = useState(false);
 
     const { showToast } = useToast();
 
@@ -253,6 +255,16 @@ export default function StudentDashboard({ user }: { user: any }) {
                                         );
                                     })}
                                 </div>
+
+                                <button
+                                    onClick={() => setShowAnonFeedback(true)}
+                                    className="w-full mt-3 group relative overflow-hidden rounded-xl border border-white/[0.06] p-3 flex items-center gap-3 hover:border-amber-500/30 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                                >
+                                    <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                                        <ShieldCheck className="w-4 h-4 text-amber-500" />
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold group-hover:text-white transition-colors">Anonymous Feedback</p>
+                                </button>
                             </div>
                         </div>
 
@@ -439,6 +451,8 @@ export default function StudentDashboard({ user }: { user: any }) {
 
             {/* Onboarding Tour */}
             {/* OnboardingTour removed */}
+
+            <AnonymousFeedbackModal isOpen={showAnonFeedback} onClose={() => setShowAnonFeedback(false)} />
         </motion.div>
     );
 }
