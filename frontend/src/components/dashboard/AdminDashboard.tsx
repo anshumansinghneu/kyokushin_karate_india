@@ -6,7 +6,8 @@ import {
     Shield, Users, MapPin, Calendar, BarChart, Building, Image, FileText, Newspaper,
     LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag,
     Ticket, RefreshCw, ChevronDown, Search, ChevronRight, Loader2, BookOpen,
-    PanelLeftClose, PanelLeftOpen, UserCheck, AlertCircle, Home, Activity
+    PanelLeftClose, PanelLeftOpen, UserCheck, AlertCircle, Home, Activity,
+    MessageSquare, Mail
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,8 @@ const SeminarManager = lazy(() => import('./SeminarManager'));
 const SiteAnalytics = lazy(() => import('./SiteAnalytics'));
 const CertificateManager = lazy(() => import('./CertificateManager'));
 const AlbumManager = lazy(() => import('./AlbumManager'));
+const EventReviewManager = lazy(() => import('./EventReviewManager'));
+const AnonymousMessageManager = lazy(() => import('./AnonymousMessageManager'));
 
 import OrganizationGraph from "./OrganizationGraph";
 import GlobalSearch from "./GlobalSearch";
@@ -51,9 +54,9 @@ function TabLoader() {
     );
 }
 
-type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers' | 'analytics' | 'certificates' | 'albums';
+type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers' | 'analytics' | 'certificates' | 'albums' | 'event-reviews' | 'anonymous-messages';
 
-const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers', 'analytics', 'certificates', 'albums'];
+const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers', 'analytics', 'certificates', 'albums', 'event-reviews', 'anonymous-messages'];
 
 export default function AdminDashboard({ user, initialTab }: { user: any; initialTab?: string }) {
     const { showToast } = useToast();
@@ -150,6 +153,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                 { id: 'seminars', label: 'Seminars', icon: BookOpen },
                 { id: 'tournaments', label: 'Tournaments', icon: Trophy },
                 { id: 'live-management', label: 'Live Control', icon: Radio },
+                { id: 'event-reviews', label: 'Event Reviews', icon: MessageSquare },
             ]
         },
         {
@@ -160,6 +164,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                 { id: 'media', label: 'Media', icon: Newspaper },
                 { id: 'recognition', label: 'Monthly Recognition', icon: Trophy },
                 { id: 'announcements', label: 'Announcements', icon: Megaphone },
+                { id: 'anonymous-messages', label: 'Anonymous Messages', icon: Mail },
             ]
         },
         {
@@ -676,6 +681,8 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                         {activeTab === 'analytics' && <motion.div key="analytics" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><SiteAnalytics /></Suspense></motion.div>}
                         {activeTab === 'certificates' && <motion.div key="certificates" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><CertificateManager /></Suspense></motion.div>}
                         {activeTab === 'albums' && <motion.div key="albums" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><AlbumManager /></Suspense></motion.div>}
+                        {activeTab === 'event-reviews' && <motion.div key="event-reviews" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><EventReviewManager /></Suspense></motion.div>}
+                        {activeTab === 'anonymous-messages' && <motion.div key="anonymous-messages" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><AnonymousMessageManager /></Suspense></motion.div>}
                     </AnimatePresence>
                     </div>
                 </div>
