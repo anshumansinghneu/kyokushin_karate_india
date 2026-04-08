@@ -119,11 +119,12 @@ async function runBackup() {
             console.log(`   ${tables.length} tables, ${totalRows} rows, ${(compressedSize / 1024).toFixed(1)} KB compressed (⚠️ unencrypted — set BACKUP_ENCRYPTION_KEY)`);
         }
 
-        // Store in MongoDB (Node.js 22+ needs explicit TLS options for Atlas)
-        const client = new MongoClient(MONGO_URI, {
-            tls: true,
-            tlsAllowInvalidCertificates: true,
-        });
+        // Store in MongoDB
+        // Node.js 22 uses OpenSSL 3.x which rejects some TLS configs by default.
+        // Append tlsInsecure=true to the URI to bypass protocol-level negotiation issues.
+        const separator = MONGO_URI.includes('?') ? '&' : '?';
+        const safeUri = MONGO_URI.includes('tlsInsecure') ? MONGO_URI : `${MONGO_URI}${separator}tlsInsecure=true`;
+        const client = new MongoClient(safeUri);
         try {
             await client.connect();
             const db = client.db();
