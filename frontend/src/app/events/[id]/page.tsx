@@ -29,6 +29,14 @@ export default function EventDetailPage() {
     const [voucherValid, setVoucherValid] = useState<{ amount: number; code: string } | null>(null);
     const [voucherError, setVoucherError] = useState("");
 
+    // Feedback state
+    const [feedbacks, setFeedbacks] = useState<any[]>([]);
+    const [myFeedback, setMyFeedback] = useState<any>(null);
+    const [feedbackText, setFeedbackText] = useState('');
+    const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+    const [submittingFeedback, setSubmittingFeedback] = useState(false);
+    const [isEditingFeedback, setIsEditingFeedback] = useState(false);
+
     useEffect(() => {
         const fetchEvent = async () => {
             try {
@@ -43,6 +51,50 @@ export default function EventDetailPage() {
         };
         if (id) fetchEvent();
     }, [id]);
+
+    // Fetch feedback for completed events
+    useEffect(() => {
+        if (!event || event.status !== 'COMPLETED') return;
+        const fetchFeedback = async () => {
+            try {
+                const res = await api.get(`/feedback/${event.id}`);
+                setFeedbacks(res.data.data.feedbacks || []);
+            } catch { }
+            if (user) {
+                try {
+                    const res = await api.get(`/feedback/${event.id}/mine`);
+                    if (res.data.data.feedback) setMyFeedback(res.data.data.feedback);
+                } catch { }
+            }
+        };
+        fetchFeedback();
+    }, [event?.id, event?.status, user]);
+
+    const handleFeedbackSubmit = async () => {
+        if (feedbackText.trim().length < 10) {
+            showToast('Feedback must be at least 10 characters', 'error');
+            return;
+        }
+        setSubmittingFeedback(true);
+        try {
+            if (isEditingFeedback) {
+                await api.put(`/feedback/${event.id}`, { feedback: feedbackText });
+                showToast('Feedback updated! It will be reviewed again.', 'success');
+            } else {
+                await api.post(`/feedback/${event.id}`, { feedback: feedbackText });
+                showToast('Feedback submitted! It will appear after admin approval.', 'success');
+            }
+            const res = await api.get(`/feedback/${event.id}/mine`);
+            setMyFeedback(res.data.data.feedback);
+            setShowFeedbackForm(false);
+            setIsEditingFeedback(false);
+            setFeedbackText('');
+        } catch (err: any) {
+            showToast(err?.response?.data?.message || 'Failed to submit feedback', 'error');
+        } finally {
+            setSubmittingFeedback(false);
+        }
+    };
 
     const handleRegister = () => {
         if (!user) {
@@ -239,6 +291,111 @@ export default function EventDetailPage() {
                             </div>
                         </div>
                     </motion.section>
+
+                    {/* Feedback Section — only for completed events */}
+                    {event.status === 'COMPLETED' && (
+                        <motion.section
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                        >
+                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
+                                <span className="w-1 h-8 bg-primary rounded-full" />
+                                Feedback
+                            </h2>
+
+                            {/* My feedback status */}
+                            {user && myFeedback && !showFeedbackForm && (
+                                <div className="glass-card p-4 mb-6 border-l-4 border-yellow-500/50">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-sm text-gray-400 mb-1">Your feedback</p>
+                                            <p className="text-white">{myFeedback.feedback}</p>
+                                            <span className={`inline-block mt-2 px-2 py-0.5 rounded text-xs font-medium ${
+                                                myFeedback.status === 'APPROVED' ? 'bg-green-500/20 text-green-400' :
+                                                myFeedback.status === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
+                                                'bg-yellow-500/20 text-yellow-400'
+                                            }`}>
+                                                {myFeedback.status === 'PENDING' ? 'Awaiting Approval' : myFeedback.status}
+                                            </span>
+                                        </div>
+                                        <button
+                                            onClick={() => { setFeedbackText(myFeedback.feedback); setIsEditingFeedback(true); setShowFeedbackForm(true); }}
+                                            className="text-xs text-gray-500 hover:text-white transition-colors"
+                                        >
+                                            Edit
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Submit/Edit form */}
+                            {user && showFeedbackForm && (
+                                <div className="glass-card p-4 mb-6">
+                                    <textarea
+                                        value={feedbackText}
+                                        onChange={(e) => setFeedbackText(e.target.value)}
+                                        placeholder="Share your experience... (min 10 characters)"
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none resize-none"
+                                        rows={4}
+                                        maxLength={2000}
+                                    />
+                                    <div className="flex justify-between items-center mt-2">
+                                        <span className="text-xs text-gray-500">{feedbackText.length}/2000</span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => { setShowFeedbackForm(false); setIsEditingFeedback(false); setFeedbackText(''); }}
+                                                className="px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={handleFeedbackSubmit}
+                                                disabled={submittingFeedback || feedbackText.trim().length < 10}
+                                                className="px-4 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                {submittingFeedback ? 'Submitting...' : isEditingFeedback ? 'Update' : 'Submit'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Write feedback button */}
+                            {user && !myFeedback && !showFeedbackForm && (
+                                <button
+                                    onClick={() => setShowFeedbackForm(true)}
+                                    className="glass-card p-4 mb-6 w-full text-left hover:bg-white/5 transition-colors border border-dashed border-white/10 rounded-xl"
+                                >
+                                    <p className="text-gray-400 text-sm">Participated in this event? Share your feedback!</p>
+                                </button>
+                            )}
+
+                            {/* Approved feedback list */}
+                            {feedbacks.length > 0 ? (
+                                <div className="space-y-4">
+                                    {feedbacks.map((fb: any) => (
+                                        <div key={fb.id} className="glass-card p-4">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                                                    {fb.user?.name?.[0] || '?'}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-white">{fb.user?.name}</p>
+                                                    <p className="text-xs text-gray-500">{fb.user?.currentBeltRank?.replace('_', ' ')} &bull; {new Date(fb.createdAt).toLocaleDateString()}</p>
+                                                </div>
+                                            </div>
+                                            <p className="text-gray-300 text-sm">{fb.feedback}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                !showFeedbackForm && (
+                                    <p className="text-gray-600 text-sm">No feedback yet. Be the first to share your experience!</p>
+                                )
+                            )}
+                        </motion.section>
+                    )}
                 </div>
 
                 {/* Right Column: Registration */}
