@@ -1,6 +1,9 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_URL } from './config';
 
+const MAX_RETRIES = 3;
+const RETRY_DELAYS = [3000, 6000, 10000]; // 3s, 6s, 10s — gives Render ~19s to wake up
+
 const api = axios.create({
     baseURL: API_URL,
     timeout: 30000, // 30 second timeout
@@ -36,7 +39,20 @@ function processQueue(error: any, token: string | null = null) {
 api.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean; _retryCount?: number };
+
+        // ── Retry logic for cold starts / network errors ──
+        // Retry on: network error (no response), 502, 503, 521 (Render cold start)
+        const retryableStatus = error.response?.status && [502, 503, 521].includes(error.response.status);
+        const isNetworkError = !error.response && error.code !== 'ERR_CANCELED';
+        const retryCount = originalRequest?._retryCount || 0;
+
+        if ((retryableStatus || isNetworkError) && retryCount < MAX_RETRIES && originalRequest) {
+            originalRequest._retryCount = retryCount + 1;
+            const delay = RETRY_DELAYS[retryCount] || 10000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return api(originalRequest);
+        }
 
         // Skip refresh for auth endpoints to avoid infinite loops
         const isAuthEndpoint = originalRequest?.url?.includes('/auth/login') ||
