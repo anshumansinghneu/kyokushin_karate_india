@@ -29,6 +29,7 @@ import notificationRouter from './routes/notificationRoutes';
 import voucherRouter from './routes/voucherRoutes';
 import analyticsRouter from './routes/analyticsRoutes';
 import feedbackRouter from './routes/eventFeedbackRoutes';
+import anonymousMessageRouter from './routes/anonymousMessageRoutes';
 import { sendRenewalReminders } from './services/renewalReminderService';
 import { verifySmtp, sendTestEmail } from './services/emailService';
 import { globalErrorHandler } from './utils/errorHandler';
@@ -132,6 +133,7 @@ app.use('/api/notifications', notificationRouter);  // Notification center
 app.use('/api/vouchers', voucherRouter);  // Cash voucher system
 app.use('/api/analytics', analyticsRouter);  // Site visit analytics
 app.use('/api/feedback', feedbackRouter);  // Event feedback & reviews
+app.use('/api/anonymous-messages', anonymousMessageRouter);  // Anonymous messaging
 app.use('/api', noteRouter);  // Notes and profile views
 
 // Serve static files (uploads)
