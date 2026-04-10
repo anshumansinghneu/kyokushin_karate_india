@@ -24,8 +24,8 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
         <>
             <ScrollProgress />
             <Navbar />
-            <main className="min-h-screen pt-14 md:pt-24 pb-20 md:pb-0">
-                <PageTransition>{children}</PageTransition>
+            <main className="min-h-screen pt-24 md:pt-32 pb-20 md:pb-0">
+                <PageTransition pathname={pathname}>{children}</PageTransition>
             </main>
             <Footer />
             <MobileBottomNav />
