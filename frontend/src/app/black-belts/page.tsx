@@ -1,8 +1,9 @@
+
 "use client";
 
-import { useState, useEffect, useMemo, MouseEvent } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Award, MapPin, Users, ChevronRight, Shield, Building2, BadgeCheck } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
+import { Award, MapPin, Building2, BadgeCheck, User } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import KarateLoader from "@/components/KarateLoader";
@@ -26,167 +27,166 @@ interface DanTier {
     dan: number;
     label: string;
     accent: string;
-    glow: string;
-    badgeClass: string;
-    barClass: string;
+    bgGlow: string;
+    borderHover: string;
 }
 
-// ─── Dan Tiers — clean labels, no Japanese ───────────────────────────
+// ─── Dan Tiers ─────────────────────────────────────────────────────────
 const DAN_TIERS: DanTier[] = [
-    { dan: 10, label: "10th Dan", accent: "text-amber-400",  glow: "rgba(251,191,36,0.35)",  badgeClass: "bg-amber-500/15 text-amber-400 border-amber-500/30",  barClass: "from-amber-400 to-yellow-600" },
-    { dan: 9,  label: "9th Dan",  accent: "text-amber-400",  glow: "rgba(251,191,36,0.3)",   badgeClass: "bg-amber-500/15 text-amber-400 border-amber-500/30",  barClass: "from-amber-400 to-yellow-600" },
-    { dan: 8,  label: "8th Dan",  accent: "text-amber-400",  glow: "rgba(245,158,11,0.25)",  badgeClass: "bg-amber-500/15 text-amber-400 border-amber-500/25",  barClass: "from-amber-500 to-orange-600" },
-    { dan: 7,  label: "7th Dan",  accent: "text-red-400",    glow: "rgba(239,68,68,0.25)",   badgeClass: "bg-red-500/15 text-red-400 border-red-500/30",        barClass: "from-red-500 to-red-700" },
-    { dan: 6,  label: "6th Dan",  accent: "text-red-400",    glow: "rgba(239,68,68,0.2)",    badgeClass: "bg-red-500/15 text-red-400 border-red-500/25",        barClass: "from-red-500 to-red-700" },
-    { dan: 5,  label: "5th Dan",  accent: "text-red-400",    glow: "rgba(220,38,38,0.18)",   badgeClass: "bg-red-500/10 text-red-400 border-red-500/20",        barClass: "from-red-600 to-red-800" },
-    { dan: 4,  label: "4th Dan",  accent: "text-gray-300",   glow: "rgba(161,161,170,0.15)", badgeClass: "bg-white/10 text-gray-300 border-white/15",           barClass: "from-zinc-400 to-zinc-600" },
-    { dan: 3,  label: "3rd Dan",  accent: "text-gray-300",   glow: "rgba(161,161,170,0.12)", badgeClass: "bg-white/10 text-gray-300 border-white/15",           barClass: "from-zinc-400 to-zinc-600" },
-    { dan: 2,  label: "2nd Dan",  accent: "text-gray-400",   glow: "rgba(113,113,122,0.1)",  badgeClass: "bg-white/8 text-gray-400 border-white/10",            barClass: "from-zinc-500 to-zinc-700" },
-    { dan: 1,  label: "1st Dan",  accent: "text-gray-400",   glow: "rgba(113,113,122,0.08)", badgeClass: "bg-white/8 text-gray-400 border-white/10",            barClass: "from-zinc-500 to-zinc-700" },
+    { dan: 10, label: "10th Dan", accent: "text-yellow-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(234,179,8,0.3)]", borderHover: "group-hover:border-yellow-500/50" },
+    { dan: 9,  label: "9th Dan",  accent: "text-yellow-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(234,179,8,0.3)]", borderHover: "group-hover:border-yellow-500/50" },
+    { dan: 8,  label: "8th Dan",  accent: "text-amber-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(245,158,11,0.3)]", borderHover: "group-hover:border-amber-500/50" },
+    { dan: 7,  label: "7th Dan",  accent: "text-red-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(239,68,68,0.3)]", borderHover: "group-hover:border-red-500/50" },
+    { dan: 6,  label: "6th Dan",  accent: "text-red-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(239,68,68,0.3)]", borderHover: "group-hover:border-red-500/50" },
+    { dan: 5,  label: "5th Dan",  accent: "text-red-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(239,68,68,0.3)]", borderHover: "group-hover:border-red-500/50" },
+    { dan: 4,  label: "4th Dan",  accent: "text-zinc-200", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(255,255,255,0.15)]", borderHover: "group-hover:border-white/30" },
+    { dan: 3,  label: "3rd Dan",  accent: "text-zinc-300", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(255,255,255,0.1)]", borderHover: "group-hover:border-white/20" },
+    { dan: 2,  label: "2nd Dan",  accent: "text-zinc-400", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(255,255,255,0.1)]", borderHover: "group-hover:border-white/20" },
+    { dan: 1,  label: "1st Dan",  accent: "text-zinc-400", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(255,255,255,0.05)]", borderHover: "group-hover:border-white/10" },
 ];
 
-const ordinal = (n: number) => n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`;
+const getTitle = (dan: number, isPlural: boolean = false) => {
+    let title = "";
+    if (dan >= 5) title = "SHIHAN";
+    else if (dan >= 3) title = "SENSEI";
+    else title = "SENPAI";
+    
+    return isPlural ? title + "S" : title;
+};
 
-// ─── 3D Tilt Card ─────────────────────────────────────────────────────
-function BlackBeltCard({ member, tier, index }: { member: BlackBelt; tier: DanTier; index: number }) {
-    const x = useMotionValue(0);
-    const y = useMotionValue(0);
-    const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
-    const mouseY = useSpring(y, { stiffness: 500, damping: 100 });
-
-    function onMouseMove({ currentTarget, clientX, clientY }: MouseEvent) {
-        const { left, top, width, height } = currentTarget.getBoundingClientRect();
-        x.set(clientX - left - width / 2);
-        y.set(clientY - top - height / 2);
-    }
-
-    const rotateX = useTransform(mouseY, [-200, 200], [3, -3]);
-    const rotateY = useTransform(mouseX, [-200, 200], [-3, 3]);
-
+// ─── Fighter Card ───────────────────────────────────────────
+function FighterCard({ member, tier, index }: { member: BlackBelt; tier: DanTier; index: number }) {
     const photoUrl = getImageUrl(member.profilePhotoUrl || null);
     const location = [member.city, member.state].filter(Boolean).join(", ");
+    const initials = member.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
-    // Collect all dojos
     const dojos = member.teachingDojos && member.teachingDojos.length > 0
         ? member.teachingDojos
         : member.dojo ? [{ id: "primary", name: member.dojo.name, city: member.dojo.city }] : [];
 
-    return (
+    // Link to dojo profile if available
+    const dojoId = dojos.length > 0 && dojos[0].id !== "primary" ? dojos[0].id : null;
+
+    const card = (
         <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.1 }}
-            transition={{ delay: index * 0.05, duration: 0.45 }}
-            style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-            onMouseMove={onMouseMove}
-            onMouseLeave={() => { x.set(0); y.set(0); }}
-            className="group relative rounded-2xl overflow-hidden border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm hover:border-white/[0.14] transition-colors duration-300"
+            transition={{ delay: (index % 4) * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className={`group relative flex flex-col h-[360px] w-full rounded-2xl bg-white/[0.02] border border-white/[0.04] overflow-hidden transition-all duration-500 hover:border-red-600/15 hover:-translate-y-1 ${tier.bgGlow}`}
         >
-            {/* Hover glow */}
-            <div
-                className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-xl -z-10"
-                style={{ background: `radial-gradient(500px circle, ${tier.glow}, transparent 70%)` }}
-            />
+            {/* Sweep light on hover */}
+            <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden rounded-2xl">
+                <div className="absolute top-0 left-[-100%] h-full w-1/2 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent skew-x-[-25deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out" />
+            </div>
 
-            <div className="flex items-stretch">
-                {/* Photo column */}
-                <div className="relative w-28 sm:w-36 shrink-0 bg-zinc-900 overflow-hidden">
-                    {photoUrl ? (
-                        <img
-                            src={photoUrl}
-                            alt={member.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900 min-h-[140px]">
-                            <span className="text-5xl font-black text-white/10">{member.name.charAt(0)}</span>
+            {/* Photo */}
+            <div className="relative h-[55%] w-full overflow-hidden bg-black">
+                {photoUrl ? (
+                    <img
+                        src={photoUrl}
+                        alt={member.name}
+                        className="w-full h-full object-cover object-top filter grayscale contrast-[1.1] opacity-80 group-hover:scale-105 group-hover:grayscale-[30%] group-hover:opacity-100 transition-all duration-1000 ease-out"
+                    />
+                ) : (
+                    <div className="w-full h-full bg-[#080808] flex items-center justify-center">
+                        <div className="w-20 h-20 rounded-full bg-red-600/10 border border-red-600/20 flex items-center justify-center">
+                            <span className="text-2xl font-black text-red-500/60">{initials}</span>
                         </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/40" />
+                    </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/30 to-transparent" />
+
+                {member.membershipNumber && (
+                    <div className="absolute top-3 right-3 z-20">
+                        <div className="bg-black/50 backdrop-blur-xl p-1.5 rounded-full border border-white/10 text-white/40 group-hover:text-emerald-400 group-hover:border-emerald-400/30 transition-all duration-500">
+                            <BadgeCheck className="w-3.5 h-3.5" />
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Info */}
+            <div className="relative -mt-6 px-5 pb-5 flex flex-col flex-1 z-10">
+                {/* Belt indicator */}
+                <div className="flex items-center gap-2 mb-2">
+                    <div className="w-[2px] h-3.5 rounded-full bg-red-600" />
+                    <span className="text-[9px] font-extrabold text-red-500 uppercase tracking-[2px]">
+                        {tier.label} &middot; {getTitle(tier.dan)}
+                    </span>
                 </div>
 
-                {/* Content column */}
-                <div className="flex-1 p-4 sm:p-5 flex flex-col justify-center min-h-[140px]">
-                    {/* Name + Dan badge row */}
-                    <div className="flex items-center gap-2.5 mb-2 flex-wrap">
-                        <h3 className="text-base sm:text-lg font-bold text-white leading-tight">
-                            {member.name}
-                        </h3>
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${tier.badgeClass}`}>
-                            {ordinal(tier.dan)} Dan
+                <h3 className="text-lg font-extrabold text-white tracking-tight leading-snug mb-2">
+                    {member.name}
+                </h3>
+
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-auto text-[11px] text-zinc-500">
+                    {dojos.slice(0,1).map((d) => (
+                        <span key={d.id} className="flex items-center gap-1.5">
+                            <Building2 className="w-3 h-3 opacity-40" />
+                            <span className="truncate">{d.name}</span>
                         </span>
-                    </div>
-
-                    {/* Role */}
-                    {member.role && member.role !== "STUDENT" && (
-                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2.5">
-                            {member.role === "ADMIN" ? "Country Director" : "Instructor"}
-                        </p>
-                    )}
-                    {member.role === "STUDENT" && (
-                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2.5">
-                            Black Belt Holder
-                        </p>
-                    )}
-
-                    {/* Dojos + Location */}
-                    <div className="space-y-1">
-                        {dojos.map((d) => (
-                            <p key={d.id} className="text-[13px] text-gray-400 flex items-center gap-1.5">
-                                <Building2 className="w-3 h-3 text-gray-600 shrink-0" />
-                                <span className="truncate">{d.name}</span>
-                            </p>
-                        ))}
-                        {location && (
-                            <p className="text-[13px] text-gray-500 flex items-center gap-1.5">
-                                <MapPin className="w-3 h-3 text-gray-600 shrink-0" />
-                                {location}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Verify link */}
-                    {member.membershipNumber && (
-                        <Link
-                            href={`/verify/${member.membershipNumber}`}
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-red-400/80 hover:text-red-400 transition-colors mt-3"
-                        >
-                            <BadgeCheck className="w-3 h-3" /> Verify <ChevronRight className="w-3 h-3" />
-                        </Link>
+                    ))}
+                    {dojos.length > 0 && location && <span className="w-1 h-1 rounded-full bg-zinc-700" />}
+                    {location && (
+                        <span className="flex items-center gap-1.5">
+                            <MapPin className="w-3 h-3 opacity-40" />
+                            <span className="truncate">{location}</span>
+                        </span>
                     )}
                 </div>
             </div>
         </motion.div>
     );
+
+    // Wrap in link if dojo exists
+    if (dojoId) {
+        return <Link href={`/dojos/${dojoId}`} className="block">{card}</Link>;
+    }
+    return card;
 }
 
-// ─── Tier Section ─────────────────────────────────────────────────────
+// ─── Tier Section ────────────────────────────────────────────
 function TierSection({ tier, members }: { tier: DanTier; members: BlackBelt[] }) {
     return (
-        <motion.section
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.1 }}
-            transition={{ duration: 0.5 }}
-            className="mb-14"
-        >
-            {/* Tier header — minimal */}
-            <div className="flex items-center gap-3 mb-6">
-                <div className={`h-px flex-1 bg-gradient-to-r ${tier.barClass} opacity-30`} />
-                <h2 className={`text-sm font-bold uppercase tracking-[0.15em] ${tier.accent}`}>
-                    {tier.label}
-                </h2>
-                <span className="text-xs text-gray-600">{members.length}</span>
-                <div className={`h-px flex-1 bg-gradient-to-l ${tier.barClass} opacity-30`} />
-            </div>
+        <section className="relative mb-20 pt-12">
+            <div className="container-responsive relative z-10">
+                {/* Tier Header — centered */}
+                <div className="flex flex-col items-center text-center pb-4 mb-10 relative">
+                    {/* Red gradient underline */}
+                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-600/30 to-transparent" />
 
-            {/* Cards — always 2-column on desktop for a uniform professional look */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {members.map((member, i) => (
-                    <BlackBeltCard key={member.id} member={member} tier={tier} index={i} />
-                ))}
+                    <div className="flex items-baseline gap-3 mb-2">
+                        <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
+                            {tier.label}
+                        </h2>
+                        <span className="px-2.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-[2px] bg-red-600/10 text-red-500 border border-red-600/15">
+                            {getTitle(tier.dan)}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="hidden md:flex gap-[3px]">
+                            {[...Array(tier.dan)].map((_, i) => (
+                                <div key={i} className={`w-[3px] h-4 rounded-sm opacity-40 ${tier.dan >= 8 ? 'bg-yellow-500' : tier.dan >= 5 ? 'bg-red-500' : 'bg-white'}`} />
+                            ))}
+                        </div>
+                        <span className="text-[10px] font-semibold text-zinc-500">
+                            {members.length} {members.length === 1 ? 'Member' : 'Members'}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Card Grid — centered, fills from center outward */}
+                <div className="flex flex-wrap justify-center gap-5">
+                    {members.map((member, i) => (
+                        <div key={member.id} className="w-full sm:w-[calc(50%-10px)] lg:w-[calc(33.333%-14px)] xl:w-[calc(25%-15px)]">
+                            <FighterCard member={member} tier={tier} index={i} />
+                        </div>
+                    ))}
+                </div>
             </div>
-        </motion.section>
+        </section>
     );
 }
 
@@ -212,9 +212,10 @@ export default function BlackBeltsPage() {
     }, []);
 
     const parseDan = (rank: string): number => {
-        const match = rank.match(/(\d+)/);
+        if (!rank) return 0;
+        const match = String(rank).match(/(\d+)/);
         if (match) return parseInt(match[1], 10);
-        if (rank === "Black") return 1;
+        if (String(rank).includes("Black")) return 1;
         return 0;
     };
 
@@ -230,70 +231,89 @@ export default function BlackBeltsPage() {
     const totalCount = blackBelts.length;
 
     return (
-        <div className="min-h-screen bg-black text-white">
-            {/* ── Hero ─────────────────────────────────────────────────── */}
-            <div className="relative overflow-hidden border-b border-white/[0.06]">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-950/40 via-black to-black" />
+        <div className="min-h-screen bg-[#050505] text-white relative font-sans">
+            {/* Subtle top vignette */}
+            <div className="absolute top-0 inset-x-0 h-[400px] bg-gradient-to-b from-zinc-900/10 to-transparent pointer-events-none" />
 
-                <div className="max-w-5xl mx-auto px-4 pt-24 pb-16 md:pt-32 md:pb-20 relative z-10">
+            {/* ── Hero ─── */}
+            <div className="relative pt-20 pb-6 md:pt-24 md:pb-8 overflow-hidden">
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+                <div className="container-responsive relative z-10">
                     <motion.div
-                        initial={{ opacity: 0, y: 16 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="text-center"
+                        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                        className="text-center flex flex-col items-center"
                     >
-                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-4">
-                            Black Belt{" "}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700">
-                                Directory
+                        {/* Title: BLACK [logo] BELT / REGISTRY */}
+                        <h1 className="font-black uppercase leading-[0.9] tracking-tighter mb-5" style={{ fontSize: 'clamp(2.5rem, 7vw, 4.5rem)' }}>
+                            <span className="inline-flex items-center gap-3 md:gap-4">
+                                <span className="text-white">BLACK</span>
+                                <img src="/kkfi-logo.png" alt="KKFI" className="w-10 h-10 md:w-14 md:h-14 inline-block rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.2)]" />
+                                <span className="text-white">BELT</span>
                             </span>
+                            <br />
+                            <span
+                                className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
+                                style={{
+                                    background: 'linear-gradient(180deg, #ef4444, #991b1b)',
+                                    WebkitBackgroundClip: 'text',
+                                    backgroundClip: 'text',
+                                    color: 'transparent',
+                                }}
+                            >REGISTRY</span>
                         </h1>
-                        <p className="text-gray-500 text-sm md:text-base max-w-lg mx-auto leading-relaxed">
-                            Active Dan-graded practitioners of Kyokushin Karate Federation of India.
-                        </p>
 
-                        {!loading && totalCount > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.25 }}
-                                className="flex items-center justify-center gap-4 mt-6 text-xs text-gray-500"
-                            >
-                                <span className="flex items-center gap-1.5">
-                                    <Users className="w-3.5 h-3.5 text-gray-600" />
-                                    <strong className="text-white font-bold">{totalCount}</strong> Members
-                                </span>
-                                <span className="w-px h-3 bg-white/10" />
-                                <span className="flex items-center gap-1.5">
-                                    <Award className="w-3.5 h-3.5 text-gray-600" />
-                                    <strong className="text-white font-bold">{tiers.length}</strong> Dan Levels
-                                </span>
-                            </motion.div>
-                        )}
+                        {/* Divider line with stats inline */}
+                        <div className="flex items-center gap-4 md:gap-6 w-full max-w-2xl mb-5">
+                            <div className="flex-1 h-px bg-gradient-to-r from-transparent to-white/[0.06]" />
+                            {!loading && totalCount > 0 && (
+                                <>
+                                    <div className="flex items-baseline gap-1.5">
+                                        <span className="text-lg font-extrabold text-white">{totalCount}</span>
+                                        <span className="text-[8px] font-semibold text-zinc-600 uppercase tracking-widest">Members</span>
+                                    </div>
+                                    <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                                    <div className="flex items-baseline gap-1.5">
+                                        <span className="text-lg font-extrabold text-white">{tiers.length}</span>
+                                        <span className="text-[8px] font-semibold text-zinc-600 uppercase tracking-widest">Dan Tiers</span>
+                                    </div>
+                                </>
+                            )}
+                            <div className="flex-1 h-px bg-gradient-to-l from-transparent to-white/[0.06]" />
+                        </div>
+
+                        <p className="text-xs md:text-sm text-zinc-600 max-w-md leading-relaxed">
+                            The highest-ranked practitioners of Kyokushin Karate in India.
+                        </p>
                     </motion.div>
                 </div>
             </div>
 
-            {/* ── Content ──────────────────────────────────────────────── */}
-            <div className="max-w-5xl mx-auto px-4 py-10 md:py-14">
+            {/* ── Tiers Pipeline ──────────────────────────────────────── */}
+            <div className="relative z-10 w-full bg-[#050505] pb-32">
                 {loading ? (
-                    <div className="flex justify-center py-20">
+                    <div className="flex justify-center py-40">
                         <KarateLoader />
                     </div>
                 ) : tiers.length === 0 ? (
-                    <div className="text-center py-20">
-                        <Award className="w-10 h-10 text-zinc-700 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-gray-400">No black belt holders listed yet</h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                            Profiles will appear here once members are approved and active.
+                    <div className="container-responsive text-center py-40 flex flex-col items-center">
+                        <Award className="w-12 h-12 text-zinc-700 mb-6 opacity-50" />
+                        <h3 className="text-2xl font-light text-white mb-3">No Profiles Found</h3>
+                        <p className="text-zinc-500 font-light max-w-sm">
+                            The registry is currently empty.
                         </p>
                     </div>
                 ) : (
-                    tiers.map((tier) => (
-                        <TierSection key={tier.dan} tier={tier} members={tier.members} />
-                    ))
+                    <div className="w-full">
+                        {tiers.map((tier) => (
+                            <TierSection key={tier.dan} tier={tier} members={tier.members} />
+                        ))}
+                    </div>
                 )}
             </div>
         </div>
     );
 }
+
