@@ -427,7 +427,7 @@ export default function GalleryPage() {
                         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
                     >
                         <h1 className="font-black tracking-tighter uppercase leading-[0.9] drop-shadow-2xl" style={{ fontSize: 'clamp(2.5rem, 8vw, 5rem)' }}>
-                            <span className="text-white">PHOTO </span>
+                            <span className="text-white">THE </span>
                             <span
                                 className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
                                 style={{
@@ -436,11 +436,12 @@ export default function GalleryPage() {
                                     backgroundClip: 'text',
                                     color: 'transparent',
                                 }}
-                            >GALLERY</span>
+                            >DOJO</span>
+                            <span className="text-white"> WALL</span>
                         </h1>
 
                         <p className="mt-6 text-zinc-500 max-w-lg mx-auto text-sm leading-relaxed">
-                            Moments from tournaments, camps, and dojos across India.
+                            Training, grading, tournaments, and camp memories from Kyokushin dojos across India.
                         </p>
                     </motion.div>
                 </div>
