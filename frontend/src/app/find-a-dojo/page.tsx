@@ -17,6 +17,9 @@ import api from '@/lib/api';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+// Leaflet supports `duration` at runtime but @types/leaflet omits it
+type AnimateOptions = L.ZoomPanOptions & { duration?: number };
+
 /* ------------------------------------------------------------------ */
 /*  Types & Constants                                                  */
 /* ------------------------------------------------------------------ */
@@ -64,6 +67,37 @@ const CITY_COORDS: Record<string, [number, number]> = {
   noida: [28.5355, 77.391],
   gurgaon: [28.4595, 77.0266],
   gurugram: [28.4595, 77.0266],
+  shuklaganj: [26.4799, 80.2932],
+  unnao: [26.5477, 80.4878],
+  kanpur: [26.4499, 80.3319],
+  varanasi: [25.3176, 82.9739],
+  agra: [27.1767, 78.0081],
+  prayagraj: [25.4358, 81.8463],
+  gorakhpur: [26.7606, 83.3732],
+  meerut: [28.9845, 77.7064],
+  bareilly: [28.3670, 79.4304],
+  dehradun: [30.3165, 78.0322],
+  bhilai: [21.2094, 81.3784],
+  amritsar: [31.6340, 74.8723],
+  alipurduar: [26.4900, 89.5271],
+  raipur: [21.2514, 81.6296],
+  ludhiana: [30.9010, 75.8573],
+  jalandhar: [31.3260, 75.5762],
+  ranchi: [23.3441, 85.3096],
+  bhubaneswar: [20.2961, 85.8245],
+  gwalior: [26.2183, 78.1828],
+  jodhpur: [26.2389, 73.0243],
+  mysore: [12.2958, 76.6394],
+  mangalore: [12.9141, 74.8560],
+  jammu: [32.7266, 74.8570],
+  srinagar: [34.0837, 74.7973],
+  shimla: [31.1048, 77.1734],
+  dharamsala: [32.2190, 76.3234],
+  siliguri: [26.7271, 88.3953],
+  imphal: [24.8170, 93.9368],
+  shillong: [25.5788, 91.8933],
+  dibrugarh: [27.4728, 94.9120],
+  tezpur: [26.6528, 92.7926],
 };
 
 /* ------------------------------------------------------------------ */
@@ -239,6 +273,11 @@ export default function FindADojoPage() {
     }).addTo(map);
 
     mapInstanceRef.current = map;
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
   }, [isLoading]);
 
   /* ---- Sync markers with filteredDojos ---- */
@@ -285,11 +324,11 @@ export default function FindADojoPage() {
     if (Object.keys(markersRef.current).length > 0 && !selectedDojo) {
       if (Object.keys(markersRef.current).length === 1) {
         const onlyCoords = getDojoCoords(filteredDojos[0]);
-        if (onlyCoords) map.setView(onlyCoords, 12, { animate: true, duration: 1 } as any);
+        if (onlyCoords) map.setView(onlyCoords, 12, { animate: true, duration: 1 } as AnimateOptions);
       } else if (searchQuery) {
-        map.fitBounds(bounds, { padding: [80, 80], maxZoom: 14, animate: true, duration: 1 } as any);
+        map.fitBounds(bounds, { padding: [80, 80], maxZoom: 14, animate: true, duration: 1 } as AnimateOptions);
       } else {
-        map.setView([22.5, 78.9], 4, { animate: true, duration: 1 } as any);
+        map.setView([22.5, 78.9], 4, { animate: true, duration: 1 } as AnimateOptions);
       }
     }
   }, [filteredDojos, searchQuery, getDojoCoords, selectedDojo]);
