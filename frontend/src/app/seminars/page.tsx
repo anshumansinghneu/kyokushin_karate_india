@@ -601,7 +601,7 @@ export default function SeminarsPage() {
             </section>
 
             {/* ─── Seminars Showcase ─── */}
-            <section className="py-8 md:py-16">
+            <section className="py-6 md:py-10">
                 <div className="container-responsive">
                     <div className="flex items-center justify-center gap-3 mb-12">
                         <div className="flex-1 max-w-[100px] h-px bg-gradient-to-r from-transparent to-white/[0.06]" />
@@ -724,21 +724,15 @@ export default function SeminarsPage() {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-16 border border-dashed border-white/[0.06] rounded-3xl bg-zinc-900/20">
-                            <Shield size={48} className="mx-auto text-zinc-800 mb-4" strokeWidth={1} />
-                            <p className="text-gray-500 text-lg font-medium">
-                                No upcoming seminars scheduled
-                            </p>
-                            <p className="text-gray-600 text-sm mt-2">
-                                Check back later for new self-defense training events
-                            </p>
+                        <div className="text-center py-10">
+                            <p className="text-sm text-zinc-600">No upcoming seminars scheduled</p>
                         </div>
                     )}
                 </div>
             </section>
 
             {/* ─── CTA ─── */}
-            <section className="py-16 md:py-20">
+            <section className="py-8 md:py-12">
                 <div className="container-responsive">
                     <div className="relative border border-white/[0.06] rounded-2xl overflow-hidden">
                         {/* Red gradient top accent */}
