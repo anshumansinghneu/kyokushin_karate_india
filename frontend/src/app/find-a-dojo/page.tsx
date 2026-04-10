@@ -9,8 +9,6 @@ import {
   Shield,
   User,
   Navigation,
-  ChevronRight,
-  Crosshair,
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -220,6 +218,28 @@ const MARKER_STYLES = `
   transition: background 0.2s;
 }
 .kyoku-popup-cta:hover { background: #b91c1c; }
+
+/* Zoom controls */
+.leaflet-control-zoom {
+  border: 1px solid rgba(220,38,38,0.15) !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+}
+.leaflet-control-zoom a {
+  background: rgba(0,0,0,0.8) !important;
+  color: #fff !important;
+  border-color: rgba(220,38,38,0.1) !important;
+  backdrop-filter: blur(10px);
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  font-size: 16px !important;
+}
+.leaflet-control-zoom a:hover {
+  background: rgba(220,38,38,0.15) !important;
+  color: #dc2626 !important;
+}
 `;
 
 /* ------------------------------------------------------------------ */
@@ -287,6 +307,7 @@ interface FloatingDojoListProps {
   onHoverEnd: () => void;
   onSelect: (dojo: Dojo) => void;
   isLoading: boolean;
+  isDetailOpen: boolean;
 }
 
 function FloatingDojoList({
@@ -299,13 +320,14 @@ function FloatingDojoList({
   onHoverEnd,
   onSelect,
   isLoading,
+  isDetailOpen,
 }: FloatingDojoListProps) {
   return (
     <motion.div
       initial={{ x: 40, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-      className="absolute top-20 sm:top-24 right-4 sm:right-6 lg:right-8 bottom-6 w-[280px] lg:w-[300px] bg-black/80 backdrop-blur-xl border border-red-600/[0.12] rounded-2xl shadow-2xl hidden md:flex flex-col z-20"
+      className={`absolute top-20 sm:top-24 right-4 sm:right-6 lg:right-8 bottom-6 w-[280px] lg:w-[300px] z-20 hidden md:flex flex-col bg-black/80 backdrop-blur-xl border border-red-600/[0.12] rounded-2xl overflow-hidden shadow-2xl transition-opacity duration-300 ${isDetailOpen ? 'opacity-0 pointer-events-none' : ''}`}
     >
       {/* Search section */}
       <div className="p-3 border-b border-red-600/10">
@@ -598,7 +620,7 @@ export default function FindADojoPage() {
       scrollWheelZoom: true,
     });
 
-    L.control.zoom({ position: 'topright' }).addTo(map);
+    L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
@@ -801,6 +823,7 @@ export default function FindADojoPage() {
         onHoverEnd={() => setHoveredDojoId(null)}
         onSelect={setSelectedDojo}
         isLoading={isLoading}
+        isDetailOpen={!!selectedDojo}
       />
 
       {/* ============================================================ */}
