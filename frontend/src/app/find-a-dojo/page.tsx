@@ -323,6 +323,138 @@ function FloatingDojoList({
 }
 
 /* ------------------------------------------------------------------ */
+/*  DojoDetailPanel                                                    */
+/* ------------------------------------------------------------------ */
+
+function DojoDetailPanel({
+  dojo,
+  onClose,
+  getCoords,
+}: {
+  dojo: Dojo;
+  onClose: () => void;
+  getCoords: (d: Dojo) => [number, number] | null;
+}) {
+  const coords = getCoords(dojo);
+
+  return (
+    <>
+      {/* Gradient dim overlay */}
+      <motion.div
+        key="detail-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 z-[35] bg-gradient-to-l from-black/60 via-black/20 to-transparent pointer-events-auto"
+        onClick={onClose}
+      />
+
+      {/* Slide-in panel */}
+      <motion.div
+        key="detail-panel"
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="fixed top-0 right-0 bottom-0 w-full sm:w-[380px] z-[40] bg-black/[0.92] backdrop-blur-2xl border-l border-red-600/20 shadow-[-20px_0_60px_rgba(0,0,0,0.6)] overflow-y-auto"
+      >
+        <div className="p-6 sm:p-8 flex flex-col min-h-full">
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-9 h-9 rounded-lg bg-white/[0.06] border border-white/10 flex items-center justify-center text-zinc-400 hover:bg-red-600 hover:text-white transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          {/* Branch badge */}
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1 bg-red-600 text-white font-extrabold uppercase tracking-[3px] rounded shadow-[0_0_20px_rgba(220,38,38,0.4)] w-fit mb-4"
+            style={{ fontSize: '9px' }}
+          >
+            <Shield className="w-3.5 h-3.5" />
+            OFFICIAL BRANCH {dojo.dojoCode}
+          </div>
+
+          {/* Dojo name */}
+          <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white leading-tight mb-5">
+            {dojo.name}
+          </h2>
+
+          {/* Meta tags */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            {/* Location pill */}
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-600/[0.06] border border-red-600/10 rounded-lg text-xs text-zinc-300">
+              <MapPin className="w-3 h-3 text-zinc-400" />
+              {dojo.city}{dojo.state ? `, ${dojo.state}` : ''}
+            </span>
+            {/* Instructor pill */}
+            {dojo.chiefInstructor && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-600/[0.06] border border-red-600/10 rounded-lg text-xs text-zinc-300">
+                <User className="w-3 h-3 text-red-500" />
+                Sensei {dojo.chiefInstructor}
+              </span>
+            )}
+          </div>
+
+          {/* Info rows */}
+          <div className="space-y-3 flex-1 mb-6">
+            {/* Status row */}
+            <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-between">
+              <span className="text-xs text-zinc-500">Status</span>
+              <span className="text-xs font-semibold" style={{ color: '#4ade80' }}>
+                Verified &amp; Active
+              </span>
+            </div>
+
+            {/* Address row */}
+            {dojo.address && (
+              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center gap-3">
+                <MapPin className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                <span className="text-xs text-zinc-300">{dojo.address}</span>
+              </div>
+            )}
+
+            {/* Contact row */}
+            {dojo.contactEmail && (
+              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-between">
+                <span className="text-xs text-zinc-500">Contact</span>
+                <span className="text-xs text-zinc-300">{dojo.contactEmail}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Action buttons */}
+          <div className="space-y-3 mt-auto">
+            {/* View Full Profile */}
+            <Link
+              href={`/dojos/${dojo.id}`}
+              className="block w-full text-center py-4 rounded-xl bg-white text-black font-extrabold text-xs uppercase tracking-[2px] hover:bg-zinc-200 transition-colors"
+            >
+              View Full Profile
+            </Link>
+
+            {/* Get Directions */}
+            {coords && (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${coords[0]},${coords[1]}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-4 rounded-xl bg-white/[0.04] border border-white/10 text-zinc-300 font-extrabold text-xs uppercase tracking-[2px] hover:bg-white/[0.08] transition-colors"
+              >
+                <Navigation className="w-4 h-4" />
+                Get Directions
+              </a>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Page Component                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -580,10 +712,17 @@ export default function FindADojoPage() {
       />
 
       {/* ============================================================ */}
-      {/*  Task 3 Placeholder — DojoDetailPanel                        */}
-      {/*  Will render the selected dojo detail slide-in panel         */}
-      {/*  with full info, directions, and profile link.               */}
+      {/*  DOJO DETAIL SLIDE-IN PANEL                                  */}
       {/* ============================================================ */}
+      <AnimatePresence>
+        {selectedDojo && (
+          <DojoDetailPanel
+            dojo={selectedDojo}
+            onClose={() => setSelectedDojo(null)}
+            getCoords={getDojoCoords}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
