@@ -42,16 +42,13 @@ function AnimatedBrand() {
                 ) : (
                     <motion.span
                         key="text"
-                        className="text-xl font-black tracking-tight leading-none whitespace-nowrap"
+                        className="text-xl font-black tracking-tighter italic leading-none whitespace-nowrap bg-gradient-to-r from-[#FF9933] via-white to-[#4ade80] bg-clip-text text-transparent"
                         initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
                         animate={{ opacity: 1, scale: 1, rotate: 0 }}
                         exit={{ opacity: 0, scale: 0.5, rotate: 180 }}
                         transition={{ duration: 0.5, ease: 'easeInOut' }}
                     >
-                        <span className="text-[#FF9933]">K</span>
-                        <span className="text-[#FF9933]">K</span>
-                        <span className="text-white">F</span>
-                        <span className="text-[#138808]">I</span>
+                        KKFI
                     </motion.span>
                 )}
             </AnimatePresence>
