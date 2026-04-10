@@ -18,12 +18,16 @@ interface Notification {
 }
 
 export default function NotificationCenter() {
+    const [mounted, setMounted] = useState(false);
     const [open, setOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
     const { isAuthenticated } = useAuthStore();
+
+    // Prevent hydration mismatch — auth state differs between server and client
+    useEffect(() => { setMounted(true); }, []);
 
     // Poll unread count
     useEffect(() => {
@@ -130,7 +134,7 @@ export default function NotificationCenter() {
         return new Date(dateStr).toLocaleDateString();
     };
 
-    if (!isAuthenticated) return null;
+    if (!mounted || !isAuthenticated) return null;
 
     return (
         <div className="relative" ref={panelRef}>
@@ -200,9 +204,8 @@ export default function NotificationCenter() {
                                 </div>
                             ) : notifications.length === 0 ? (
                                 <div className="text-center py-12 px-4">
-                                    <Bell className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-                                    <p className="text-gray-500 text-sm">No notifications yet</p>
-                                    <p className="text-gray-600 text-xs mt-1">You&apos;ll be notified about events, belt promotions, and more</p>
+                                    <Bell className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
+                                    <p className="text-zinc-500 text-sm">No notifications</p>
                                 </div>
                             ) : (
                                 notifications.map((notification) => (
