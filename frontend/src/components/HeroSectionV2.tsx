@@ -192,13 +192,8 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
                     transition={{ duration: 1.5, ease: "easeOut" }}
                     className="relative w-full"
                 >
-                    {/* Top accent line */}
-                    <motion.div
-                        initial={{ opacity: 0, scaleX: 0 }}
-                        animate={{ opacity: 1, scaleX: 1 }}
-                        transition={{ duration: 0.8, delay: 0.5 }}
-                        className="w-10 h-[2px] bg-gradient-to-r from-red-600/0 via-red-600 to-red-600/0 mb-6 md:mb-8 mx-auto"
-                    />
+                    {/* Spacer for top */}
+                    <div className="mb-4 md:mb-6" />
 
                     {/* Main Headline */}
                     <motion.h1
