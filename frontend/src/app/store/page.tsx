@@ -311,17 +311,12 @@ export default function StorePage() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-24">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.06] mb-5">
-              <Package className="w-6 h-6 text-gray-600" />
-            </div>
-            <h3 className="text-xl font-bold mb-2 text-white">No products found</h3>
-            <p className="text-gray-500 text-sm">
-              Check back soon for new merchandise
-            </p>
+          <div className="text-center py-20">
+            <Package className="w-10 h-10 text-zinc-700 mx-auto mb-4" />
+            <h3 className="text-sm font-bold text-white/80">No products found</h3>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((product, index) => (
               <motion.div
                 key={product.id}
@@ -332,63 +327,64 @@ export default function StorePage() {
                   setSelectedProduct(product);
                   setSelectedSize(product.sizes[0] || "");
                 }}
-                className="group cursor-pointer bg-white/[0.02] rounded-xl overflow-hidden border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300"
+                className="group cursor-pointer rounded-2xl overflow-hidden border border-white/[0.05] hover:border-red-600/15 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_0_40px_-12px_rgba(220,38,38,0.1)]"
               >
                 {/* Image */}
-                <div className="aspect-square bg-white/[0.03] relative overflow-hidden">
+                <div className="aspect-[4/3] bg-[#0a0a0a] relative overflow-hidden">
                   {product.images[0] ? (
                     <img
                       src={product.images[0]}
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <ShoppingBag className="w-10 h-10 text-white/[0.06]" />
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                      <div className="w-16 h-16 rounded-full bg-red-600/10 border border-red-600/20 flex items-center justify-center">
+                        <ShoppingBag className="w-7 h-7 text-red-500/40" />
+                      </div>
+                      <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">{product.category}</span>
                     </div>
                   )}
-                  {product.featured && (
-                    <div className="absolute top-3 left-3 px-2 py-1 rounded bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider">
-                      Featured
-                    </div>
-                  )}
-                  {product.comparePrice && (
-                    <div className="absolute top-3 right-3 px-2 py-1 rounded bg-green-500/90 text-white text-[10px] font-bold">
-                      {Math.round(
-                        ((product.comparePrice - product.price) /
-                          product.comparePrice) *
-                          100
-                      )}
-                      % OFF
-                    </div>
-                  )}
-                  {!product.inStock && (
-                    <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm tracking-wider">
-                        OUT OF STOCK
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="p-4">
-                  <p className="text-[10px] text-gray-600 uppercase tracking-[0.15em] font-bold mb-1">
-                    {product.category}
-                  </p>
-                  <h3 className="font-bold text-white/90 group-hover:text-white transition-colors mb-2 line-clamp-1 text-sm">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-black text-white">
-                      ₹{product.price.toLocaleString()}
-                    </span>
+                  {/* Badges */}
+                  <div className="absolute top-3 left-3 flex gap-1.5">
+                    {product.featured && (
+                      <span className="px-2 py-1 rounded bg-red-600 text-white text-[8px] font-extrabold uppercase tracking-[1.5px]">Featured</span>
+                    )}
                     {product.comparePrice && (
-                      <span className="text-xs text-gray-600 line-through">
-                        ₹{product.comparePrice.toLocaleString()}
+                      <span className="px-2 py-1 rounded bg-emerald-500 text-white text-[8px] font-extrabold">
+                        {Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}% OFF
                       </span>
                     )}
                   </div>
+                  {!product.inStock && (
+                    <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                      <span className="text-white text-[10px] font-extrabold uppercase tracking-[2px]">Out of Stock</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-60" />
+                </div>
+
+                {/* Info */}
+                <div className="p-4 bg-[#0a0a0a]">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[9px] text-zinc-600 uppercase tracking-[2px] font-bold mb-1">{product.category}</p>
+                      <h3 className="font-bold text-white text-sm group-hover:text-red-400 transition-colors line-clamp-1">{product.name}</h3>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-lg font-black text-white">₹{product.price.toLocaleString()}</span>
+                      {product.comparePrice && (
+                        <span className="block text-[10px] text-zinc-600 line-through">₹{product.comparePrice.toLocaleString()}</span>
+                      )}
+                    </div>
+                  </div>
+                  {product.sizes.length > 0 && (
+                    <div className="flex gap-1.5 mt-3">
+                      {product.sizes.slice(0, 5).map(s => (
+                        <span key={s} className="px-2 py-0.5 rounded text-[9px] font-bold text-zinc-500 bg-white/[0.03] border border-white/[0.06]">{s}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}
