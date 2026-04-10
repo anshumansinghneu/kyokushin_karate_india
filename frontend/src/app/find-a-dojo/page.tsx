@@ -13,11 +13,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Leaflet supports `duration` at runtime but @types/leaflet omits it
-type AnimateOptions = L.ZoomPanOptions & { duration?: number };
+// Leaflet JS is loaded dynamically to avoid SSR "window is not defined" errors
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type LeafletType = any;
 
 /* ------------------------------------------------------------------ */
 /*  Types & Constants                                                  */
@@ -569,9 +569,10 @@ export default function FindADojoPage() {
 
   /* ---- Refs ---- */
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<Record<string, L.Marker>>({});
-  const prevViewRef = useRef<{ center: L.LatLng; zoom: number } | null>(null);
+  const mapInstanceRef = useRef<LeafletType>(null);
+  const markersRef = useRef<Record<string, LeafletType>>({});
+  const prevViewRef = useRef<{ center: LeafletType; zoom: number } | null>(null);
+  const leafletRef = useRef<LeafletType>(null);
 
   /* ---- Coord helper (CITY_COORDS fallback preserved) ---- */
   const getDojoCoords = useCallback((dojo: Dojo): [number, number] | null => {
@@ -617,55 +618,65 @@ export default function FindADojoPage() {
     fetchDojos();
   }, []);
 
-  /* ---- Leaflet map init ---- */
+  /* ---- Leaflet map init (dynamic import to avoid SSR window error) ---- */
   useEffect(() => {
     if (isLoading || !mapRef.current || mapInstanceRef.current) return;
 
-    // India bounds — lock the map to India only
-    const indiaBounds = L.latLngBounds(
-      [6.5, 68.0],   // SW corner (south tip, west coast)
-      [37.0, 97.5],   // NE corner (north Kashmir, east Arunachal)
-    );
+    const initMap = async () => {
+      const L = (await import('leaflet')).default;
+      leafletRef.current = L;
 
-    const map = L.map(mapRef.current, {
-      center: [22.5, 82.0],
-      zoom: 5,
-      minZoom: 4,
-      maxZoom: 17,
-      zoomControl: false,
-      attributionControl: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      touchZoom: false,
-      boxZoom: false,
-      keyboard: false,
-      dragging: true,
-      maxBounds: indiaBounds,
-      maxBoundsViscosity: 1.0,
-    });
+      if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Fit the map to India on load
-    map.fitBounds(indiaBounds, { padding: [20, 20] });
+      const indiaBounds = L.latLngBounds(
+        [6.5, 68.0],
+        [37.0, 97.5],
+      );
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 17,
-    }).addTo(map);
+      const map = L.map(mapRef.current, {
+        center: [22.5, 82.0],
+        zoom: 5,
+        minZoom: 4,
+        maxZoom: 17,
+        zoomControl: false,
+        attributionControl: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        touchZoom: false,
+        boxZoom: false,
+        keyboard: false,
+        dragging: true,
+        maxBounds: indiaBounds,
+        maxBoundsViscosity: 1.0,
+      });
 
-    mapInstanceRef.current = map;
+      map.fitBounds(indiaBounds, { padding: [20, 20] });
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 17,
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
+    };
+
+    initMap();
 
     return () => {
-      map.remove();
-      mapInstanceRef.current = null;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
     };
   }, [isLoading]);
 
   /* ---- Sync markers with filteredDojos ---- */
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map) return;
+    const L = leafletRef.current;
+    if (!map || !L) return;
 
     // Clear old markers
-    Object.values(markersRef.current).forEach((m) => m.remove());
+    Object.values(markersRef.current).forEach((m: LeafletType) => m.remove());
     markersRef.current = {};
 
     const bounds = L.latLngBounds([]);
@@ -727,11 +738,11 @@ export default function FindADojoPage() {
     if (Object.keys(markersRef.current).length > 0 && !selectedDojo) {
       if (Object.keys(markersRef.current).length === 1) {
         const onlyCoords = getDojoCoords(filteredDojos[0]);
-        if (onlyCoords) map.setView(onlyCoords, 12, { animate: true, duration: 1 } as AnimateOptions);
+        if (onlyCoords) map.setView(onlyCoords, 12, { animate: true, duration: 1 });
       } else if (searchQuery) {
-        map.fitBounds(bounds, { padding: [80, 80], maxZoom: 14, animate: true, duration: 1 } as AnimateOptions);
+        map.fitBounds(bounds, { padding: [80, 80], maxZoom: 14, animate: true, duration: 1 });
       } else {
-        map.fitBounds(L.latLngBounds([6.5, 68.0], [37.0, 97.5]), { padding: [20, 20], animate: true, duration: 1 } as AnimateOptions);
+        map.fitBounds(L.latLngBounds([6.5, 68.0], [37.0, 97.5]), { padding: [20, 20], animate: true, duration: 1 });
       }
     }
   }, [filteredDojos, searchQuery, getDojoCoords, selectedDojo]);
