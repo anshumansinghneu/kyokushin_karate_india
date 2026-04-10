@@ -57,102 +57,148 @@ export default function InstructorsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white">
-            {/* Hero */}
-            <div className="relative overflow-hidden border-b border-white/5">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-red-900/20 via-transparent to-transparent" />
-                <div className="max-w-6xl mx-auto px-4 py-20 relative z-10">
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full mb-6">
-                            <Award className="w-4 h-4 text-red-500" />
-                            <span className="text-xs font-bold text-red-400 uppercase tracking-wider">Our Senseis</span>
-                        </div>
-                        <h1 className="text-4xl sm:text-6xl font-black mb-4 tracking-tight">
-                            Meet Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">Instructors</span>
+        <div className="min-h-screen bg-[#050505] text-white font-sans">
+            {/* Subtle top vignette */}
+            <div className="absolute top-0 inset-x-0 h-[300px] bg-gradient-to-b from-zinc-900/10 to-transparent pointer-events-none" />
+
+            {/* ── Hero ── */}
+            <div className="relative pt-28 pb-10 md:pt-32 md:pb-12 overflow-hidden">
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+                <div className="max-w-6xl mx-auto px-4 relative z-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7 }}
+                        className="text-center flex flex-col items-center"
+                    >
+                        <h1 className="font-black uppercase leading-[0.9] tracking-tighter mb-4" style={{ fontSize: 'clamp(2.5rem, 7vw, 4.5rem)' }}>
+                            <span className="inline-flex items-center gap-3 md:gap-4">
+                                <span className="text-white">OUR</span>
+                                <img src="/kkfi-logo.png" alt="KKFI" className="w-10 h-10 md:w-14 md:h-14 inline-block rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.2)]" />
+                                <span
+                                    className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
+                                    style={{
+                                        background: 'linear-gradient(180deg, #ef4444, #991b1b)',
+                                        WebkitBackgroundClip: 'text',
+                                        backgroundClip: 'text',
+                                        color: 'transparent',
+                                    }}
+                                >SENSEIS</span>
+                            </span>
                         </h1>
-                        <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                            Certified Kyokushin Karate instructors dedicated to passing on the spirit of OSU.
+
+                        {/* Divider with count */}
+                        <div className="flex items-center gap-4 md:gap-6 w-full max-w-xl mb-4">
+                            <div className="flex-1 h-px bg-gradient-to-r from-transparent to-white/[0.06]" />
+                            {!loading && instructors.length > 0 && (
+                                <>
+                                    <div className="flex items-baseline gap-1.5">
+                                        <span className="text-lg font-extrabold text-white">{instructors.length}</span>
+                                        <span className="text-[8px] font-semibold text-zinc-600 uppercase tracking-widest">Instructors</span>
+                                    </div>
+                                </>
+                            )}
+                            <div className="flex-1 h-px bg-gradient-to-l from-transparent to-white/[0.06]" />
+                        </div>
+
+                        <p className="text-xs md:text-sm text-zinc-600 max-w-md leading-relaxed">
+                            Certified Kyokushin Karate instructors across India.
                         </p>
                     </motion.div>
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-4 py-12">
+            {/* ── Instructor Grid ── */}
+            <div className="max-w-6xl mx-auto px-4 py-12 relative z-10">
                 {loading ? (
                     <div className="flex justify-center py-20">
                         <KarateLoader />
                     </div>
                 ) : instructors.length === 0 ? (
                     <div className="text-center py-20">
-                        <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-gray-400">No instructors listed yet</h3>
-                        <p className="text-sm text-gray-500 mt-1">Instructor profiles will appear here once approved.</p>
+                        <Users className="w-10 h-10 text-white/[0.06] mx-auto mb-4" />
+                        <h3 className="text-sm font-bold text-white/80">No Instructors Listed</h3>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {instructors.map((instructor, i) => (
-                            <motion.div
-                                key={instructor.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, amount: 0.15 }}
-                                transition={{ delay: i * 0.06, duration: 0.5 }}
-                                className="glass-card overflow-hidden group hover:border-red-500/30 transition-all duration-300"
-                            >
-                                <div className="relative h-48 bg-gradient-to-br from-zinc-800 to-zinc-900 overflow-hidden">
-                                    {instructor.profilePhotoUrl ? (
-                                        <img
-                                            src={instructor.profilePhotoUrl}
-                                            alt={instructor.name}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <span className="text-6xl font-black text-white/20">{instructor.name.charAt(0)}</span>
+                    <div className="flex flex-wrap justify-center gap-5">
+                        {instructors.map((instructor, i) => {
+                            const initials = instructor.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+                            return (
+                                <motion.div
+                                    key={instructor.id}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, amount: 0.1 }}
+                                    transition={{ delay: (i % 4) * 0.08, duration: 0.6 }}
+                                    className="group w-full sm:w-[calc(50%-10px)] lg:w-[calc(33.333%-14px)]"
+                                >
+                                    <div className="relative flex flex-col h-[360px] rounded-2xl bg-white/[0.02] border border-white/[0.04] overflow-hidden transition-all duration-500 hover:border-red-600/15 hover:-translate-y-1 hover:shadow-[0_0_40px_-12px_rgba(220,38,38,0.15)]">
+                                        {/* Sweep light */}
+                                        <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden rounded-2xl">
+                                            <div className="absolute top-0 left-[-100%] h-full w-1/2 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent skew-x-[-25deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out" />
                                         </div>
-                                    )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
 
-                                    {/* Belt badge */}
-                                    <div className="absolute top-4 right-4">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${BELT_STYLES[instructor.currentBeltRank] || 'bg-gray-600 text-white'}`}>
-                                            {instructor.currentBeltRank} Belt
-                                        </span>
+                                        {/* Photo */}
+                                        <div className="relative h-[55%] w-full overflow-hidden bg-black">
+                                            {instructor.profilePhotoUrl ? (
+                                                <img
+                                                    src={instructor.profilePhotoUrl}
+                                                    alt={instructor.name}
+                                                    className="w-full h-full object-cover object-top filter grayscale contrast-[1.1] opacity-80 group-hover:scale-105 group-hover:grayscale-[30%] group-hover:opacity-100 transition-all duration-1000 ease-out"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-[#080808] flex items-center justify-center">
+                                                    <div className="w-20 h-20 rounded-full bg-red-600/10 border border-red-600/20 flex items-center justify-center">
+                                                        <span className="text-2xl font-black text-red-500/60">{initials}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/30 to-transparent" />
+
+                                            {/* Belt badge */}
+                                            <div className="absolute top-3 right-3 z-20">
+                                                <span className={`px-2.5 py-1 rounded text-[8px] font-extrabold uppercase tracking-[1.5px] ${BELT_STYLES[instructor.currentBeltRank] || 'bg-zinc-700 text-white/70'}`}>
+                                                    {instructor.currentBeltRank}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Info */}
+                                        <div className="relative -mt-6 px-5 pb-5 flex flex-col flex-1 z-10">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <div className="w-[2px] h-3.5 rounded-full bg-red-600" />
+                                                <span className="text-[9px] font-extrabold text-red-500 uppercase tracking-[2px]">Sensei</span>
+                                            </div>
+
+                                            <h3 className="text-lg font-extrabold text-white tracking-tight leading-snug mb-2">
+                                                {instructor.name}
+                                            </h3>
+
+                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-auto text-[11px] text-zinc-500">
+                                                {instructor.dojo && (
+                                                    <span className="flex items-center gap-1.5">
+                                                        <MapPin className="w-3 h-3 opacity-40" />
+                                                        <span className="truncate">{instructor.dojo.name}, {instructor.dojo.city}</span>
+                                                    </span>
+                                                )}
+                                                {instructor.membershipNumber && (
+                                                    <>
+                                                        {instructor.dojo && <span className="w-1 h-1 rounded-full bg-zinc-700" />}
+                                                        <Link
+                                                            href={`/verify/${instructor.membershipNumber}`}
+                                                            className="flex items-center gap-1 text-red-500/70 hover:text-red-400 transition-colors"
+                                                        >
+                                                            Verify <ChevronRight className="w-3 h-3" />
+                                                        </Link>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div className="p-5">
-                                    <h3 className="text-lg font-black text-white mb-1 group-hover:text-red-500 transition-colors">
-                                        {instructor.name}
-                                    </h3>
-                                    <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-3">Sensei</p>
-
-                                    <div className="space-y-2 mb-4">
-                                        {instructor.dojo && (
-                                            <p className="text-sm text-gray-400 flex items-center gap-2">
-                                                <MapPin className="w-3.5 h-3.5 text-red-500" />
-                                                {instructor.dojo.name}, {instructor.dojo.city}
-                                            </p>
-                                        )}
-                                        {instructor.createdAt && (
-                                            <p className="text-sm text-gray-400 flex items-center gap-2">
-                                                <Award className="w-3.5 h-3.5 text-yellow-500" />
-                                                {getExperience(instructor.createdAt)} experience
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {instructor.membershipNumber && (
-                                        <Link
-                                            href={`/verify/${instructor.membershipNumber}`}
-                                            className="flex items-center gap-1.5 text-xs font-bold text-red-400 hover:text-red-300 transition-colors py-2 -mb-1 min-h-[44px] active:opacity-70"
-                                        >
-                                            Verify Credentials <ChevronRight className="w-3.5 h-3.5" />
-                                        </Link>
-                                    )}
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 )}
             </div>
