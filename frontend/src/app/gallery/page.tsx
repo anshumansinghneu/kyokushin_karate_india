@@ -43,61 +43,7 @@ function seededRandom(seed: number) {
 }
 
 // ----------------------------------------------------------------------
-// Hero Background Collage
-// ----------------------------------------------------------------------
-const HERO_IMAGES = [
-    "https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1580088031269-e70a59aeb78f?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1629851609386-77894aa1c1be?q=80&w=600&auto=format&fit=crop",
-];
-
-function HeroBackground() {
-    return (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.15] select-none">
-            <div className="absolute inset-0 flex items-center justify-center -rotate-12 scale-125">
-                <style>{`
-                  @keyframes scrollLeft {
-                    from { transform: translateX(0); }
-                    to { transform: translateX(-50%); }
-                  }
-                  .hero-collage-row {
-                    display: flex;
-                    gap: 1.5rem;
-                    padding: 0.75rem 0;
-                    animation: scrollLeft linear infinite;
-                    width: max-content;
-                  }
-                `}</style>
-                <div className="flex flex-col gap-4">
-                    {/* Row 1 */}
-                    <div className="hero-collage-row" style={{ animationDuration: "50s" }}>
-                        {[...HERO_IMAGES, ...HERO_IMAGES].map((src, i) => (
-                            <div key={`r1-${i}`} className="w-56 h-40 rounded-2xl overflow-hidden shadow-2xl relative border border-white/10">
-                                <img src={src} className="w-full h-full object-cover filter grayscale contrast-125" alt="" />
-                                <div className="absolute inset-0 bg-red-900/20 mix-blend-overlay"></div>
-                            </div>
-                        ))}
-                    </div>
-                    {/* Row 2 (moves opposite direction using hack: reversed order or neg duration, but keeping simple forward for smooth) */}
-                    <div className="hero-collage-row" style={{ animationDuration: "65s", animationDirection: "reverse" }}>
-                        {[...HERO_IMAGES].reverse().concat([...HERO_IMAGES].reverse()).map((src, i) => (
-                            <div key={`r2-${i}`} className="w-48 h-48 rounded-2xl overflow-hidden shadow-2xl relative border border-white/10">
-                                <img src={src} className="w-full h-full object-cover filter grayscale contrast-125" alt="" />
-                                <div className="absolute inset-0 bg-red-900/20 mix-blend-overlay"></div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-            {/* Top/Bottom gradient fades to blend with background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#050507] via-transparent to-[#050507] z-10" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#050507_80%)] z-10" />
-        </div>
-    );
-}
+// Hero background removed — no stock images
 
 // ----------------------------------------------------------------------
 // Floating Photo & Album Cards
@@ -418,7 +364,8 @@ export default function GalleryPage() {
                 <div className="absolute top-0 inset-x-0 mx-auto w-[600px] h-[600px] bg-red-600 opacity-[0.03] blur-[150px] rounded-full pointer-events-none mix-blend-screen" />
                 <div className="absolute top-[20%] left-[10%] w-[300px] h-[300px] bg-orange-500 opacity-[0.03] blur-[120px] rounded-full pointer-events-none mix-blend-screen" />
                 
-                <HeroBackground />
+                {/* Clean dark background — no stock images */}
+                <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/10 to-transparent pointer-events-none" />
                 
                 <div className="relative z-20 max-w-5xl mx-auto px-4 pointer-events-none">
                     <motion.div
