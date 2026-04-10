@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Lock, Mail, ChevronRight, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Lock, Mail, ChevronRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
@@ -16,7 +16,6 @@ export default function LoginPage() {
     const { login, isLoading, error } = useAuthStore();
     const router = useRouter();
 
-    // Clear any stale auth error when page mounts
     useEffect(() => {
         useAuthStore.setState({ error: null });
     }, []);
@@ -27,152 +26,199 @@ export default function LoginPage() {
             await login({ email, password });
             router.push("/dashboard");
         } catch (err) {
-            // Error handled by store
+            // Error managed by the store
         }
     };
 
     return (
-        <div className="min-h-screen w-full flex relative overflow-hidden bg-black font-sans selection:bg-red-500/30">
-            {/* Background Ambience */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-red-900/10 via-black to-black z-0" />
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] z-0 mix-blend-overlay pointer-events-none" />
-
-            {/* Left Side - Hero/Brand */}
-            <div className="hidden lg:flex w-1/2 relative items-center justify-center z-10 overflow-hidden">
-                <div className="absolute inset-0 bg-[url('/dojo-bg.png')] bg-cover bg-center opacity-40 mix-blend-overlay grayscale" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/0 via-black/0 to-black" />
-
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    className="relative z-20 text-center"
-                >
-                    <h1 className="text-[12rem] leading-none font-black text-transparent stroke-text opacity-10 select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 blur-sm">
-                        OSU
-                    </h1>
-                    <div className="relative">
-                        <motion.div
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.3, duration: 0.8 }}
-                        >
-                            <h2 className="text-8xl font-black text-white tracking-tighter mb-2 drop-shadow-2xl">
-                                KYOKUSHIN
-                            </h2>
-                        </motion.div>
-                        <motion.p
-                            initial={{ x: -20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 0.6, duration: 0.8 }}
-                            className="text-3xl text-red-500 font-bold tracking-[0.8em] uppercase ml-2 pl-1 border-l-4 border-red-600"
-                        >
-                            Karate India
-                        </motion.p>
-                    </div>
-                </motion.div>
-            </div>
-
-            {/* Right Side - Login Form */}
-            <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-8 md:p-16 lg:p-24 relative z-20">
-                <Link href="/" className="absolute top-6 left-4 sm:top-8 sm:left-8 lg:left-12 text-gray-500 hover:text-white flex items-center gap-2 transition-all group text-sm font-medium tracking-wide min-w-[44px] min-h-[44px] p-2 -m-2 rounded-xl active:bg-white/5">
-                    <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                    <span className="hidden sm:inline">RETURN HOME</span>
-                </Link>
-
-                <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
-                    className="w-full max-w-md"
-                >
-                    <div className="mb-10">
-                        <h3 className="text-4xl font-bold text-white mb-3">Welcome Back</h3>
-                        <p className="text-gray-400 text-lg">Sign in to manage your dojo and events.</p>
+        <div className="min-h-screen w-full flex relative overflow-hidden bg-[#050507] text-white font-sans selection:bg-red-500/30">
+            {/* Split Screen Container */}
+            <div className="w-full flex h-screen">
+                
+                {/* ── Left Side: The Visual Brand ─────────────── */}
+                <div className="hidden lg:flex w-[55%] relative flex-col justify-between overflow-hidden">
+                    {/* Background Image / Effects */}
+                    <div className="absolute inset-0 z-0">
+                        {/* Authentic Kyokushin Kanji watermark */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[30rem] font-black text-white/5 select-none pointer-events-none mix-blend-overlay">
+                            極真
+                        </div>
+                        <img 
+                            src="/dojo-bg.png" 
+                            alt="Kyokushin Dojo" 
+                            className="w-full h-full object-cover filter grayscale contrast-125 opacity-70"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-black/95 mix-blend-overlay" />
+                        <div className="absolute inset-0 bg-red-900/20 mix-blend-multiply" />
+                        {/* Gradient fade to the right edge to blend with the form side */}
+                        <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-[#050507] to-transparent z-10" />
+                        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 pointer-events-none mix-blend-overlay" />
                     </div>
 
-                    {error && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mb-6 p-4 bg-red-500/10 border-l-4 border-red-500 text-red-400 rounded-r-lg text-sm font-medium flex items-center gap-3"
+                    <div className="relative z-20 p-12 h-full flex flex-col justify-between">
+                        {/* Back Button & Logo */}
+                        <motion.div 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6 }}
+                            className="flex justify-between items-center"
                         >
-                            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                            {error}
-                        </motion.div>
-                    )}
-
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-2 group">
-                            <label htmlFor="login-email" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">Email Address</label>
-                            <div className="relative rounded-xl input-glow">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
-                                <Input
-                                    id="login-email"
-                                    type="email"
-                                    placeholder="osu@kyokushin.in"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="pl-12 h-14 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-gray-600 focus:border-red-500/50 focus:ring-red-500/20 transition-all"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2 group">
-                            <label htmlFor="login-password" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">Password</label>
-                            <div className="relative rounded-xl input-glow">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
-                                <Input
-                                    id="login-password"
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="••••••••"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="pl-12 pr-12 h-14 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-gray-600 focus:border-red-500/50 focus:ring-red-500/20 transition-all"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-white transition-colors rounded-lg"
-                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                >
-                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-end text-sm pt-2">
-                            <Link href="/forgot-password" className="text-red-500 hover:text-red-400 font-medium transition-colors py-2 px-2 -mr-2 rounded-lg active:bg-white/5 min-h-[44px] flex items-center">Forgot password?</Link>
-                        </div>
-
-                        <Button
-                            className="w-full h-14 text-lg font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl shadow-lg shadow-red-900/20 hover:shadow-red-900/40 transition-all duration-300 flex items-center justify-center gap-2 group btn-shine active:scale-[0.98]"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <span className="flex items-center gap-2">
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    Authenticating...
-                                </span>
-                            ) : (
-                                <>
-                                    Sign In <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                </>
-                            )}
-                        </Button>
-                    </form>
-
-                    <div className="mt-10 pt-6 border-t border-white/5 text-center">
-                        <p className="text-gray-500">
-                            Don't have an account?{" "}
-                            <Link href="/register" className="text-white font-bold hover:text-red-500 transition-colors inline-flex items-center gap-1">
-                                Register Now
+                            <Link href="/" className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition-all text-xs font-bold uppercase tracking-widest text-zinc-300 hover:text-white">
+                                <ArrowLeft className="w-4 h-4" /> Return Home
                             </Link>
-                        </p>
+
+                            <div className="flex items-center gap-3">
+                                <img src="/kkfi-logo.png" alt="Kyokushin Karate India" className="w-12 h-12 object-contain" />
+                                <span className="font-black tracking-tighter text-xl border-l border-white/10 pl-3">O S U !</span>
+                            </div>
+                        </motion.div>
+
+                        {/* Title Context */}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                            className="max-w-xl"
+                        >
+                            <h1 className="text-5xl xl:text-7xl font-black leading-[0.9] tracking-tighter mb-6 text-white drop-shadow-2xl uppercase">
+                                THE ULTIMATE<br/>
+                                <span className="text-red-600">TRUTH.</span>
+                            </h1>
+                            <p className="text-base text-zinc-400 font-medium leading-relaxed max-w-md border-l-2 border-red-600 pl-4">
+                                Enter your credentials to manage your dojo, review events, and continue your journey in Kyokushin Karate.
+                            </p>
+                        </motion.div>
                     </div>
-                </motion.div>
+                </div>
+
+                {/* ── Right Side: The Form ─────────────── */}
+                <div className="w-full lg:w-[45%] flex flex-col justify-center items-center p-6 sm:p-12 relative z-20 bg-[#050507]">
+                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 pointer-events-none z-0 mix-blend-overlay" />
+                    
+                    {/* Mobile Only Header */}
+                    <div className="lg:hidden absolute top-6 left-6 right-6 flex justify-between items-center z-20">
+                        <Link href="/" className="p-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-zinc-400 hover:text-white">
+                            <ArrowLeft className="w-5 h-5" />
+                        </Link>
+                        <div className="flex items-center gap-2">
+                            <img src="/kkfi-logo.png" alt="KKFI" className="w-8 h-8 object-contain" />
+                            <span className="font-black tracking-tighter uppercase">O S U !</span>
+                        </div>
+                    </div>
+
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                        transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                        className="w-full max-w-md"
+                    >
+                        {/* The Premium Floating Glass Card */}
+                        <div className="bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+                            
+                            {/* Subtle internal gradient glow */}
+                            <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-500/20 blur-[100px] rounded-full pointer-events-none" />
+
+                            <div className="mb-10 text-center relative z-10">
+                                <h2 className="text-3xl font-black text-white mb-2">Sign In</h2>
+                                <p className="text-sm font-medium text-zinc-400">Access your dashboard</p>
+                            </div>
+
+                            <AnimatePresence mode="popLayout">
+                                {error && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -20, height: 0 }}
+                                        animate={{ opacity: 1, y: 0, height: "auto" }}
+                                        exit={{ opacity: 0, y: -20, height: 0 }}
+                                        className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3"
+                                    >
+                                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                        <p className="text-sm font-medium text-red-400 leading-relaxed">{error}</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
+                                {/* Email Field */}
+                                <div className="space-y-1.5 group">
+                                    <label htmlFor="login-email" className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest pl-1 group-focus-within:text-white transition-colors">
+                                        Email Address
+                                    </label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-white transition-colors" />
+                                        <Input
+                                            id="login-email"
+                                            type="email"
+                                            placeholder="osu@kyokushin.in"
+                                            required
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="pl-12 h-14 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-zinc-600 focus:border-red-500/50 focus:bg-white/10 transition-all font-medium"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Password Field */}
+                                <div className="space-y-1.5 group">
+                                    <div className="flex justify-between items-end pl-1 mb-1.5">
+                                        <label htmlFor="login-password" className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest group-focus-within:text-white transition-colors">
+                                            Password
+                                        </label>
+                                        <Link href="/forgot-password" className="text-[11px] font-bold text-red-500 hover:text-red-400 transition-colors uppercase tracking-widest">
+                                            Forgot?
+                                        </Link>
+                                    </div>
+                                    <div className="relative">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-white transition-colors" />
+                                        <Input
+                                            id="login-password"
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="••••••••"
+                                            required
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="pl-12 pr-12 h-14 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-zinc-600 focus:border-red-500/50 focus:bg-white/10 transition-all font-medium"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-zinc-500 hover:text-white transition-colors rounded-xl hover:bg-white/5"
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    className="w-full h-14 mt-4 text-base font-bold bg-white text-black hover:bg-zinc-200 rounded-2xl shadow-xl hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all duration-300 flex items-center justify-center gap-2 group active:scale-[0.98]"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? (
+                                        <span className="flex items-center gap-2">
+                                            <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                            Authenticating...
+                                        </span>
+                                    ) : (
+                                        <>
+                                            Access Portal <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        </>
+                                    )}
+                                </Button>
+                            </form>
+                        </div>
+
+                        {/* Registration Prompt */}
+                        <div className="mt-8 text-center">
+                            <p className="text-sm text-zinc-500 font-medium">
+                                Don't have an account yet?{" "}
+                                <Link href="/register" className="text-white font-bold hover:text-red-400 transition-colors inline-block relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-red-500 after:scale-x-0 outline-none hover:after:scale-x-100 after:origin-left after:transition-transform">
+                                    Create one now
+                                </Link>
+                            </p>
+                        </div>
+                    </motion.div>
+                </div>
+
             </div>
         </div>
     );

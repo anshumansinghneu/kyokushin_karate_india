@@ -396,89 +396,113 @@ export default function RegisterPage() {
     const STEP_LABELS = ["You", "Contact", "Training", role === "STUDENT" ? "Guardian" : "Experience", "Dojo", "Payment"];
 
     return (
-        <div className="min-h-screen w-full flex relative overflow-hidden bg-black text-white font-sans selection:bg-red-500/30">
-            {/* Dynamic Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-red-900/20 via-zinc-950 to-black z-0" />
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] z-0 pointer-events-none" />
+        <div className="min-h-screen w-full flex relative overflow-hidden bg-[#050507] text-white font-sans selection:bg-red-500/30">
+            {/* Split Screen Container */}
+            <div className="w-full flex h-screen">
 
-            {/* Left Side - Hero Section (hidden on mobile & tablet for more content space) */}
-            <div className="hidden lg:flex w-1/2 relative flex-col justify-between p-16 z-10">
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                >
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center text-white font-bold text-2xl shadow-[0_0_30px_rgba(220,38,38,0.6)] group-hover:scale-110 transition-transform duration-500">K</div>
-                        <span className="text-3xl font-black tracking-tighter text-white">KYOKUSHIN</span>
-                    </Link>
-                </motion.div>
-
-                <div className="space-y-10">
-                    <motion.div
-                        initial={{ opacity: 0, x: -50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                    >
-                        <h1 className="text-8xl font-black leading-[0.9] tracking-tighter mb-8 text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40">
-                            FORGE<br />
-                            <span className="text-red-600">YOUR</span><br />
-                            LEGACY
-                        </h1>
-                        <p className="text-2xl text-zinc-400 max-w-lg leading-relaxed font-light">
-                            Join the elite ranks. Discipline, strength, and spirit await those who dare to begin.
-                        </p>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.8, delay: 0.4 }}
-                        className="flex gap-4"
-                    >
-                        <div className="h-1 w-24 bg-gradient-to-r from-red-600 to-transparent rounded-full" />
-                    </motion.div>
-                </div>
-
-                <div className="flex justify-between items-end text-xs text-zinc-600 uppercase tracking-widest font-medium">
-                    <span>© {new Date().getFullYear()} Kyokushin India</span>
-                    <span>Osu!</span>
-                </div>
-            </div>
-
-            {/* Right Side - Form Section */}
-            <div className="w-full lg:w-1/2 flex flex-col relative z-20 h-screen overflow-y-auto scrollbar-hide">
-                <div className="min-h-full flex flex-col justify-start p-3 sm:p-4 md:p-8 lg:p-12 py-4 sm:py-6 md:py-8 pb-32 md:pb-8">
-                    <div className="max-w-2xl w-full mx-auto">
-                        {/* Header */}
-                        <div className="flex items-center justify-between mb-6">
-                            <Link href="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group">
-                                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                                <span className="hidden sm:inline">Back</span>
-                            </Link>
-                            <div className="text-right">
-                                <p className="text-xs text-zinc-500">Already a member?</p>
-                                <Link href="/login" className="text-red-500 font-bold text-sm hover:text-red-400 transition-colors">Sign In</Link>
-                            </div>
+                {/* ── Left Side: The Visual Brand ─────────────── */}
+                <div className="hidden lg:flex w-[55%] relative flex-col justify-between overflow-hidden">
+                    {/* Background Image / Effects */}
+                    <div className="absolute inset-0 z-0">
+                        {/* Authentic Kyokushin Kanji watermark */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[30rem] font-black text-white/5 select-none pointer-events-none mix-blend-overlay">
+                            極真
                         </div>
+                        <img 
+                            src="/training-bg.png" 
+                            alt="Karate training" 
+                            className="w-full h-full object-cover filter grayscale contrast-125 opacity-70"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-black/95 mix-blend-overlay" />
+                        <div className="absolute inset-0 bg-red-900/20 mix-blend-multiply" />
+                        <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-[#050507] to-transparent z-10" />
+                        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 pointer-events-none mix-blend-overlay" />
+                    </div>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
-                            className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 p-4 sm:p-6 md:p-8 rounded-2xl shadow-2xl"
+                    <div className="relative z-20 p-12 h-full flex flex-col justify-between">
+                        {/* Back Button & Logo */}
+                        <motion.div 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6 }}
+                            className="flex justify-between items-center"
                         >
-                            <div className="mb-4 sm:mb-6">
-                                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1">Join the Dojo</h2>
-                                <p className="text-sm text-zinc-400">Begin your martial arts journey</p>
+                            <Link href="/" className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition-all text-xs font-bold uppercase tracking-widest text-zinc-300 hover:text-white">
+                                <ArrowLeft className="w-4 h-4" /> Return Home
+                            </Link>
+
+                            <div className="flex items-center gap-3">
+                                <img src="/kkfi-logo.png" alt="Kyokushin Karate India" className="w-12 h-12 object-contain" />
+                                <span className="font-black tracking-tighter text-xl border-l border-white/10 pl-3">O S U !</span>
+                            </div>
+                        </motion.div>
+
+                        {/* Title Context */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                            className="max-w-xl"
+                        >
+                            <h1 className="text-5xl xl:text-7xl font-black leading-[0.9] tracking-tighter mb-6 text-white drop-shadow-2xl uppercase">
+                                FORGE YOUR<br/>
+                                <span className="text-red-600">LEGACY.</span>
+                            </h1>
+                            <p className="text-base text-zinc-400 font-medium leading-relaxed max-w-md border-l-2 border-red-600 pl-4">
+                                Join the elite ranks. Discipline, strength, and spirit await those who dare to begin the path of Kyokushin Karate.
+                            </p>
+                        </motion.div>
+                    </div>
+                </div>
+
+                {/* ── Right Side: The Form ─────────────── */}
+                <div className="w-full lg:w-[45%] flex flex-col relative z-20 h-screen overflow-y-auto scrollbar-hide bg-[#050507]">
+                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 pointer-events-none z-0 mix-blend-overlay" />
+
+                    {/* Mobile Only Header */}
+                    <div className="lg:hidden absolute top-6 left-6 right-6 flex justify-between items-center z-50">
+                        <Link href="/" className="p-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-zinc-400 hover:text-white relative z-10">
+                            <ArrowLeft className="w-5 h-5" />
+                        </Link>
+                        <div className="flex items-center gap-2 relative z-10">
+                            <img src="/kkfi-logo.png" alt="KKFI" className="w-8 h-8 object-contain" />
+                            <span className="font-black tracking-tighter text-white uppercase">O S U !</span>
+                        </div>
+                    </div>
+
+                    <div className="min-h-full flex flex-col justify-start p-4 sm:p-12 lg:p-16 py-20 pb-32">
+                        <div className="max-w-xl w-full mx-auto">
+                            
+                            {/* Sign In Link Header */}
+                            <div className="flex items-center justify-end mb-8">
+                                <div className="text-right">
+                                    <p className="text-xs text-zinc-500 font-medium">Already a member?</p>
+                                    <Link href="/login" className="text-white font-bold text-sm hover:text-red-400 transition-colors inline-block relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-red-500 after:scale-x-0 outline-none hover:after:scale-x-100 after:origin-left after:transition-transform">
+                                        Sign In Here
+                                    </Link>
+                                </div>
                             </div>
 
-                            {authError && (
-                                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm font-medium flex items-center gap-3">
-                                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                                    {authError}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+                                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                                transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                                className="bg-black/40 backdrop-blur-3xl border border-white/10 p-6 sm:p-10 rounded-[2rem] shadow-2xl relative overflow-hidden"
+                            >
+                                {/* Subtle internal gradient glow */}
+                                <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-500/10 blur-[100px] rounded-full pointer-events-none" />
+                                
+                                <div className="mb-8 relative z-10">
+                                    <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">Join the Dojo</h2>
+                                    <p className="text-sm font-medium text-zinc-400">Begin your martial arts journey</p>
                                 </div>
-                            )}
+
+                                {authError && (
+                                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm font-medium flex items-center gap-3 relative z-10">
+                                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                                        {authError}
+                                    </div>
+                                )}
 
                             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                                 {/* Step Progress Bar */}
@@ -1197,5 +1221,6 @@ export default function RegisterPage() {
                 </div>
             </div>
         </div>
+    </div>
     );
 }
