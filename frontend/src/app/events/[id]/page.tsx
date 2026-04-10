@@ -175,9 +175,9 @@ export default function EventDetailPage() {
     const categories = Array.isArray(event.categories) ? event.categories : [];
 
     return (
-        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
-            {/* Hero Section */}
-            <div className="relative h-[50vh] w-full">
+        <div className="min-h-screen w-full bg-[#050505] text-white relative">
+            {/* Hero */}
+            <div className="relative min-h-[380px] w-full">
                 <div className="absolute inset-0">
                     {event.imageUrl ? (
                         <img
@@ -186,38 +186,60 @@ export default function EventDetailPage() {
                             className="w-full h-full object-cover"
                             onError={(e) => {
                                 e.currentTarget.style.display = 'none';
-                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
                             }}
                         />
                     ) : null}
-                    {/* Fallback Gradient (shown if no image or on error) */}
-                    <div className={`absolute inset-0 bg-gradient-to-r from-red-900/50 to-black/50 mix-blend-overlay ${event.imageUrl ? 'hidden' : ''}`} />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-black/40" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
                 </div>
 
-                <div className="absolute inset-0 container-responsive flex flex-col justify-end pb-12 z-10">
-                    <Link href="/events" className="text-gray-400 hover:text-white flex items-center gap-2 mb-6 transition-colors w-fit">
-                        <ArrowLeft className="w-4 h-4" /> Back to Events
+                <div className="absolute inset-0 container-responsive flex flex-col justify-end pb-10 z-10">
+                    <Link href="/events" className="text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white flex items-center gap-2 mb-5 transition-colors w-fit">
+                        <ArrowLeft className="w-3.5 h-3.5" /> All Events
                     </Link>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                    >
-                        <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm font-bold uppercase tracking-wider border border-red-500/20 mb-4 inline-block">
-                            {event.type}
-                        </span>
-                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 leading-tight">{event.name}</h1>
-                        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:gap-6 text-base sm:text-lg text-gray-300 mb-8">
-                            <span className="flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" /> {new Date(event.startDate).toLocaleDateString()}</span>
-                            <span className="flex items-center gap-2"><Clock className="w-5 h-5 text-primary" /> {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            <span className="flex items-center gap-2"><MapPin className="w-5 h-5 text-primary" /> {event.location || event.dojo?.city || 'TBD'}</span>
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                        {/* Badges */}
+                        <div className="flex flex-wrap items-center gap-2 mb-4">
+                            <span className="px-2.5 py-1 rounded bg-red-600 text-white text-[8px] font-extrabold uppercase tracking-[2px]">
+                                {event.type.replace('_', ' ')}
+                            </span>
+                            {event.status && (
+                                <span className={`px-2.5 py-1 rounded text-[8px] font-bold uppercase tracking-[2px] ${
+                                    event.status === 'COMPLETED' ? 'bg-zinc-700 text-zinc-300' :
+                                    'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                                }`}>
+                                    {event.status}
+                                </span>
+                            )}
+                        </div>
+
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight mb-4 leading-snug max-w-3xl">
+                            {event.name}
+                        </h1>
+
+                        {/* Meta row */}
+                        <div className="flex flex-wrap items-center gap-4 text-[12px] text-zinc-400">
+                            <span className="flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5 text-red-500" />
+                                {new Date(event.startDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-red-500" />
+                                {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {(event.location || event.dojo?.city) && (
+                                <span className="flex items-center gap-1.5">
+                                    <MapPin className="w-3.5 h-3.5 text-red-500" />
+                                    {event.location || event.dojo?.city}
+                                </span>
+                            )}
                         </div>
                     </motion.div>
                 </div>
             </div>
 
-            <div className="container-responsive py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="container-responsive py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
                 {/* Left Column: Details */}
                 <div className="lg:col-span-2 space-y-12">
                     {/* Description */}
@@ -226,8 +248,8 @@ export default function EventDetailPage() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                     >
-                        <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
-                            <span className="w-1 h-8 bg-primary rounded-full" />
+                        <h2 className="text-lg font-black uppercase tracking-tight mb-5 flex items-center gap-3">
+                            <div className="w-[3px] h-5 rounded-full bg-red-600" />
                             Event Overview
                         </h2>
                         <p className="text-gray-400 text-lg leading-relaxed">
@@ -241,8 +263,8 @@ export default function EventDetailPage() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                     >
-                        <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
-                            <span className="w-1 h-8 bg-primary rounded-full" />
+                        <h2 className="text-lg font-black uppercase tracking-tight mb-5 flex items-center gap-3">
+                            <div className="w-[3px] h-5 rounded-full bg-red-600" />
                             Categories
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -266,8 +288,8 @@ export default function EventDetailPage() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                     >
-                        <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
-                            <span className="w-1 h-8 bg-primary rounded-full" />
+                        <h2 className="text-lg font-black uppercase tracking-tight mb-5 flex items-center gap-3">
+                            <div className="w-[3px] h-5 rounded-full bg-red-600" />
                             Event Schedule
                         </h2>
                         <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-white/10">
@@ -391,7 +413,7 @@ export default function EventDetailPage() {
                                 </div>
                             ) : (
                                 !showFeedbackForm && (
-                                    <p className="text-gray-600 text-sm">No feedback yet. Be the first to share your experience!</p>
+                                    <p className="text-zinc-600 text-sm">No feedback yet.</p>
                                 )
                             )}
                         </motion.section>
@@ -404,27 +426,27 @@ export default function EventDetailPage() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="glass-card p-4 sm:p-8 sticky top-8"
+                        className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6 sticky top-24"
                     >
                         {!isRegistering ? (
                             <>
-                                <div className="text-center mb-8">
-                                    <p className="text-gray-400 text-sm uppercase tracking-wider mb-2">Registration Fee</p>
-                                    <p className="text-5xl font-black text-white">₹{event.memberFee}</p>
+                                <div className="mb-5">
+                                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1">Registration Fee</p>
+                                    <p className="text-3xl font-black text-white">₹{event.memberFee}</p>
                                 </div>
 
-                                <div className="space-y-4 mb-8">
-                                    <div className="flex items-center gap-3 text-gray-300">
-                                        <CheckCircle className="w-5 h-5 text-green-500" />
+                                <div className="space-y-2.5 mb-6 pb-5 border-b border-white/[0.05]">
+                                    <div className="flex items-center gap-2.5 text-sm text-zinc-400">
+                                        <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
                                         <span>Official Tournament T-Shirt</span>
                                     </div>
-                                    <div className="flex items-center gap-3 text-gray-300">
-                                        <CheckCircle className="w-5 h-5 text-green-500" />
+                                    <div className="flex items-center gap-2.5 text-sm text-zinc-400">
+                                        <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
                                         <span>Participation Certificate</span>
                                     </div>
                                 </div>
 
-                                <Button onClick={handleRegister} className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20">
+                                <Button onClick={handleRegister} className="w-full h-12 text-xs font-bold uppercase tracking-wider bg-white text-black hover:bg-zinc-200 rounded-xl">
                                     Register Now
                                 </Button>
                                 <p className="text-center text-xs text-gray-500 mt-4">
