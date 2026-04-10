@@ -108,15 +108,16 @@ export default function TestimonialsSection() {
                     viewport={{ once: true }}
                     className="text-center mb-14"
                 >
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full mb-6">
-                        <Users className="w-4 h-4 text-red-500" />
-                        <span className="text-xs font-bold text-red-400 uppercase tracking-wider">Success Stories</span>
-                    </div>
-                    <h2 className="text-3xl sm:text-5xl font-black mb-4 tracking-tight text-white">
-                        What Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800">Warriors</span> Say
+                    <h2 className="text-2xl sm:text-4xl font-black mb-4 tracking-tight text-white uppercase">
+                        What Our <span style={{
+                            background: 'linear-gradient(180deg, #ef4444, #991b1b)',
+                            WebkitBackgroundClip: 'text',
+                            backgroundClip: 'text',
+                            color: 'transparent',
+                        }}>Warriors</span> Say
                     </h2>
-                    <p className="text-gray-400 max-w-xl mx-auto">
-                        Hear from students, instructors, and parents about their Kyokushin journey with KKFI.
+                    <p className="text-zinc-500 max-w-lg mx-auto text-sm">
+                        From students, instructors, and parents across India.
                     </p>
                 </motion.div>
 

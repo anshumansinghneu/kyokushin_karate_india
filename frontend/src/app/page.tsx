@@ -305,18 +305,21 @@ export default function Home() {
           )}
 
           {/* CTA SECTION */}
-          <section className="py-12 sm:py-20 md:py-32 relative overflow-hidden flex items-center justify-center">
-            <div className="absolute inset-0 bg-red-900/20" />
-            <div className="container-responsive text-center relative z-10">
-              <h2 className="text-3xl sm:text-5xl md:text-8xl font-black tracking-tighter mb-6 sm:mb-8 opacity-20 select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full pointer-events-none hidden sm:block">
-                KYOKUSHIN
-              </h2>
-              <h3 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-6 sm:mb-8 relative">
-                READY TO START YOUR JOURNEY?
+          <section className="py-16 sm:py-20 md:py-28 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+            <div className="container-responsive text-center relative z-10 flex flex-col items-center">
+              <img src="/kkfi-logo.png" alt="KKFI" className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.15)] mb-6 opacity-60" />
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight mb-6">
+                Ready to start your <span style={{
+                  background: 'linear-gradient(180deg, #ef4444, #991b1b)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  color: 'transparent',
+                }}>journey?</span>
               </h3>
               <Link href="/register">
-                <Button className="h-14 md:h-16 px-8 md:px-10 rounded-full bg-white text-black hover:bg-gray-200 text-base sm:text-lg md:text-xl font-bold tracking-wide transition-transform hover:scale-105 active:scale-95 min-h-[44px]">
-                  BECOME A MEMBER
+                <Button className="h-12 md:h-14 px-8 md:px-10 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs sm:text-sm font-bold uppercase tracking-wider transition-transform hover:scale-105 active:scale-95">
+                  Become a Member
                 </Button>
               </Link>
             </div>

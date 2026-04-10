@@ -192,19 +192,13 @@ export default function HeroSectionV2({ heroOpacity, heroScale, content }: HeroP
                     transition={{ duration: 1.5, ease: "easeOut" }}
                     className="relative w-full"
                 >
-                    {/* Top Label */}
+                    {/* Top accent line */}
                     <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                        className="flex items-center justify-center gap-2 md:gap-4 mb-4 md:mb-8"
-                    >
-                        <div className="h-[1px] w-8 md:w-12 bg-red-600/50" />
-                        <span className="text-xs md:text-base font-bold text-red-500 uppercase tracking-[0.2em] md:tracking-[0.4em] drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
-                            The Ultimate Truth
-                        </span>
-                        <div className="h-[1px] w-8 md:w-12 bg-red-600/50" />
-                    </motion.div>
+                        initial={{ opacity: 0, scaleX: 0 }}
+                        animate={{ opacity: 1, scaleX: 1 }}
+                        transition={{ duration: 0.8, delay: 0.5 }}
+                        className="w-10 h-[2px] bg-gradient-to-r from-red-600/0 via-red-600 to-red-600/0 mb-6 md:mb-8 mx-auto"
+                    />
 
                     {/* Main Headline */}
                     <motion.h1
