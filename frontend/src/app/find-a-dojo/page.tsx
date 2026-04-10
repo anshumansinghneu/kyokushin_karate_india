@@ -337,6 +337,15 @@ function DojoDetailPanel({
 }) {
   const coords = getCoords(dojo);
 
+  /* Close panel on Escape key */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
   return (
     <>
       {/* Gradient dim overlay */}
@@ -357,16 +366,21 @@ function DojoDetailPanel({
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed top-0 right-0 bottom-0 w-full sm:w-[380px] z-[40] bg-black/[0.92] backdrop-blur-2xl border-l border-red-600/20 shadow-[-20px_0_60px_rgba(0,0,0,0.6)] overflow-y-auto"
+        className="fixed top-0 right-0 bottom-0 w-full sm:w-[380px] z-[40] bg-black/[0.92] backdrop-blur-2xl border-l border-red-600/20 shadow-[-20px_0_60px_rgba(0,0,0,0.6)] relative"
+        role="dialog"
+        aria-modal="true"
+        aria-label={dojo.name}
       >
-        <div className="p-6 sm:p-8 flex flex-col min-h-full">
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 rounded-lg bg-white/[0.06] border border-white/10 flex items-center justify-center text-zinc-400 hover:bg-red-600 hover:text-white transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+        {/* Close button – outside scroll wrapper so it stays visible */}
+        <button
+          onClick={onClose}
+          aria-label="Close detail panel"
+          className="absolute top-4 right-4 z-10 w-9 h-9 rounded-lg bg-white/[0.06] border border-white/10 flex items-center justify-center text-zinc-400 hover:bg-red-600 hover:text-white transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="p-6 sm:p-8 flex flex-col min-h-full overflow-y-auto">
 
           {/* Branch badge */}
           <div
