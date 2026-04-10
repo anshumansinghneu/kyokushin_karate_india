@@ -738,44 +738,36 @@ export default function SeminarsPage() {
             {/* ─── CTA ─── */}
             <section className="py-8 md:py-12">
                 <div className="container-responsive">
-                    <div className="relative border border-white/[0.06] rounded-2xl overflow-hidden">
+                    <div className="relative border border-white/[0.06] rounded-2xl overflow-hidden text-center p-8 md:p-14">
                         {/* Red gradient top accent */}
                         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-600/40 to-transparent" />
 
-                        <div className="flex flex-col lg:flex-row">
-                            {/* Left — text */}
-                            <div className="flex-1 p-8 md:p-12 lg:p-14">
-                                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-3 leading-tight">
-                                    Want a seminar at<br />your <span style={{
-                                        background: 'linear-gradient(180deg, #ef4444, #991b1b)',
-                                        WebkitBackgroundClip: 'text',
-                                        backgroundClip: 'text',
-                                        color: 'transparent',
-                                    }}>organization?</span>
-                                </h2>
-                                <p className="text-sm text-zinc-500 max-w-md leading-relaxed mb-8">
-                                    KKFI conducts self-defense workshops for schools, colleges, corporates, and community groups.
-                                </p>
-                                <div className="flex flex-wrap gap-3">
-                                    <a
-                                        href="mailto:info@kyokushinfoundation.com"
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors"
-                                    >
-                                        <Mail size={14} /> Get In Touch
-                                    </a>
-                                    <a
-                                        href="tel:+919956745114"
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-white/[0.04] border border-white/[0.08] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/[0.08] transition-colors"
-                                    >
-                                        <Phone size={14} /> +91-9956745114
-                                    </a>
-                                </div>
-                            </div>
+                        <img src="/kkfi-logo.png" alt="KKFI" className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.15)] mx-auto mb-5 opacity-60" />
 
-                            {/* Right — decorative */}
-                            <div className="hidden lg:flex w-[300px] items-center justify-center relative bg-gradient-to-br from-red-950/20 to-transparent">
-                                <img src="/kkfi-logo.png" alt="KKFI" className="w-28 h-28 object-contain opacity-20" />
-                            </div>
+                        <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-3 leading-tight">
+                            Want a seminar at your <span style={{
+                                background: 'linear-gradient(180deg, #ef4444, #991b1b)',
+                                WebkitBackgroundClip: 'text',
+                                backgroundClip: 'text',
+                                color: 'transparent',
+                            }}>organization?</span>
+                        </h2>
+                        <p className="text-sm text-zinc-500 max-w-md mx-auto leading-relaxed mb-8">
+                            KKFI conducts self-defense workshops for schools, colleges, corporates, and community groups.
+                        </p>
+                        <div className="flex flex-wrap gap-3 justify-center">
+                            <a
+                                href="mailto:info@kyokushinfoundation.com"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors"
+                            >
+                                <Mail size={14} /> Get In Touch
+                            </a>
+                            <a
+                                href="tel:+919956745114"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-white/[0.04] border border-white/[0.08] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/[0.08] transition-colors"
+                            >
+                                <Phone size={14} /> +91-9956745114
+                            </a>
                         </div>
                     </div>
                 </div>
