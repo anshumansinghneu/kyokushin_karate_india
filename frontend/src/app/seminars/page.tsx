@@ -580,21 +580,19 @@ export default function SeminarsPage() {
                         transition={{ duration: 0.7 }}
                         className="text-center"
                     >
+                        <img src="/kkfi-logo.png" alt="KKFI" className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.2)] mb-5" />
                         <h1 className="font-black tracking-tighter uppercase leading-[0.9] mb-5" style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)' }}>
                             <span className="text-white">SELF DEFENSE</span>
                             <br />
-                            <span className="inline-flex items-center gap-3 md:gap-4">
-                                <img src="/kkfi-logo.png" alt="KKFI" className="w-10 h-10 md:w-14 md:h-14 inline-block rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.2)]" />
-                                <span
-                                    className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
-                                    style={{
-                                        background: 'linear-gradient(180deg, #ef4444, #991b1b)',
-                                        WebkitBackgroundClip: 'text',
-                                        backgroundClip: 'text',
-                                        color: 'transparent',
-                                    }}
-                                >SEMINARS</span>
-                            </span>
+                            <span
+                                className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
+                                style={{
+                                    background: 'linear-gradient(180deg, #ef4444, #991b1b)',
+                                    WebkitBackgroundClip: 'text',
+                                    backgroundClip: 'text',
+                                    color: 'transparent',
+                                }}
+                            >SEMINARS</span>
                         </h1>
                         <p className="text-zinc-500 text-sm max-w-lg mx-auto leading-relaxed">
                             Practical self-defense training for schools, corporates, and communities across India.
