@@ -180,6 +180,149 @@ const MARKER_STYLES = `
 `;
 
 /* ------------------------------------------------------------------ */
+/*  DojoListCard                                                       */
+/* ------------------------------------------------------------------ */
+
+function DojoListCard({
+  dojo,
+  isActive,
+  onHoverStart,
+  onHoverEnd,
+  onClick,
+}: {
+  dojo: Dojo;
+  isActive: boolean;
+  onHoverStart: () => void;
+  onHoverEnd: () => void;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+        isActive
+          ? 'bg-red-600/[0.08] border border-red-600 shadow-[0_0_12px_rgba(220,38,38,0.15)]'
+          : 'bg-red-600/[0.03] border border-transparent hover:bg-red-600/[0.06]'
+      }`}
+      style={{ borderLeft: '3px solid #dc2626' }}
+      onMouseEnter={onHoverStart}
+      onMouseLeave={onHoverEnd}
+      onClick={onClick}
+    >
+      <p
+        className="font-bold uppercase tracking-wide text-white leading-tight"
+        style={{ fontSize: '11px' }}
+      >
+        {dojo.name}
+      </p>
+      <div className="flex items-center gap-2 mt-1" style={{ fontSize: '9px', color: '#71717a' }}>
+        <span>
+          {dojo.city}
+          {dojo.state ? `, ${dojo.state}` : ''}
+        </span>
+        {dojo.chiefInstructor && (
+          <>
+            <span>&middot;</span>
+            <span>Sensei {dojo.chiefInstructor.split(' ')[0]}</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  FloatingDojoList                                                   */
+/* ------------------------------------------------------------------ */
+
+interface FloatingDojoListProps {
+  dojos: Dojo[];
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+  hoveredDojoId: string | null;
+  selectedDojoId: string | null;
+  onHoverStart: (id: string) => void;
+  onHoverEnd: () => void;
+  onSelect: (dojo: Dojo) => void;
+  isLoading: boolean;
+}
+
+function FloatingDojoList({
+  dojos,
+  searchQuery,
+  onSearchChange,
+  hoveredDojoId,
+  selectedDojoId,
+  onHoverStart,
+  onHoverEnd,
+  onSelect,
+  isLoading,
+}: FloatingDojoListProps) {
+  return (
+    <motion.div
+      initial={{ x: 40, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+      className="absolute top-20 sm:top-24 right-4 sm:right-6 lg:right-8 bottom-6 w-[280px] lg:w-[300px] bg-black/80 backdrop-blur-xl border border-red-600/[0.12] rounded-2xl shadow-2xl hidden md:flex flex-col z-20"
+    >
+      {/* Search section */}
+      <div className="p-3 border-b border-red-600/10">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search dojos..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full h-9 pl-9 pr-3 bg-red-600/[0.05] border border-red-600/10 rounded-lg text-xs text-white placeholder:text-zinc-600 focus:border-red-500/30 focus:outline-none transition-colors"
+          />
+        </div>
+      </div>
+
+      {/* Header row */}
+      <div className="px-4 py-3 flex items-center justify-between">
+        <span
+          className="font-extrabold uppercase text-red-600"
+          style={{ fontSize: '9px', letterSpacing: '3px' }}
+        >
+          Active Branches
+        </span>
+        <span
+          className="px-2 py-0.5 bg-red-600/20 text-red-400 font-black rounded-md"
+          style={{ fontSize: '10px' }}
+        >
+          {dojos.length}
+        </span>
+      </div>
+
+      {/* Scrollable list */}
+      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-2 border-white/10 border-t-red-500 rounded-full animate-spin" />
+          </div>
+        ) : dojos.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-zinc-500">
+            <Shield className="w-8 h-8 mb-2 opacity-40" />
+            <span className="text-xs">No dojos found</span>
+          </div>
+        ) : (
+          dojos.map((dojo) => (
+            <DojoListCard
+              key={dojo.id}
+              dojo={dojo}
+              isActive={dojo.id === hoveredDojoId || dojo.id === selectedDojoId}
+              onHoverStart={() => onHoverStart(dojo.id)}
+              onHoverEnd={onHoverEnd}
+              onClick={() => onSelect(dojo)}
+            />
+          ))
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Page Component                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -422,10 +565,19 @@ export default function FindADojoPage() {
       </div>
 
       {/* ============================================================ */}
-      {/*  Task 2 Placeholder — FloatingDojoList                       */}
-      {/*  Will render the search bar + scrollable dojo list panel     */}
-      {/*  positioned on the left side of the viewport.                */}
+      {/*  FLOATING DOJO LIST PANEL                                    */}
       {/* ============================================================ */}
+      <FloatingDojoList
+        dojos={filteredDojos}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        hoveredDojoId={hoveredDojoId}
+        selectedDojoId={selectedDojo?.id ?? null}
+        onHoverStart={setHoveredDojoId}
+        onHoverEnd={() => setHoveredDojoId(null)}
+        onSelect={setSelectedDojo}
+        isLoading={isLoading}
+      />
 
       {/* ============================================================ */}
       {/*  Task 3 Placeholder — DojoDetailPanel                        */}
