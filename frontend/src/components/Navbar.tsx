@@ -14,6 +14,48 @@ import { getUserProfileImage } from "@/lib/imageUtils";
 import api from "@/lib/api";
 import NotificationCenter from "@/components/NotificationCenter";
 
+/* Animated KKFI Brand — cycles: logo spin → KKFI text */
+function AnimatedBrand() {
+    const [showLogo, setShowLogo] = useState(true);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setShowLogo(prev => !prev);
+        }, 4000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="relative w-10 h-10 flex items-center justify-center overflow-hidden">
+            <AnimatePresence mode="wait">
+                {showLogo ? (
+                    <motion.img
+                        key="logo"
+                        src="/kkfi-logo.png"
+                        alt="KKFI"
+                        className="w-9 h-9 rounded-full object-contain"
+                        initial={{ opacity: 0, rotate: -180, scale: 0.5 }}
+                        animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                        exit={{ opacity: 0, rotate: 180, scale: 0.5 }}
+                        transition={{ duration: 0.5, ease: 'easeInOut' }}
+                    />
+                ) : (
+                    <motion.span
+                        key="text"
+                        className="text-xl font-black tracking-tighter bg-gradient-to-r from-[#FF9933] via-white to-[#138808] bg-clip-text text-transparent italic leading-none"
+                        initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
+                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                        exit={{ opacity: 0, scale: 0.5, rotate: 180 }}
+                        transition={{ duration: 0.5, ease: 'easeInOut' }}
+                    >
+                        KKFI
+                    </motion.span>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
 interface NavLink {
     name: string;
     href: string;
@@ -235,8 +277,8 @@ export default function Navbar() {
             {/* Mobile Top Bar */}
             <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#050507]/90 backdrop-blur-2xl border-b border-white/5">
                 <div className="flex items-center justify-between px-5 h-16">
-                    <Link href="/" className="text-2xl font-black tracking-tighter">
-                        <span className="bg-gradient-to-r from-[#FF9933] via-white to-[#138808] bg-clip-text text-transparent italic">KKFI</span>
+                    <Link href="/" className="flex items-center">
+                        <AnimatedBrand />
                     </Link>
                     <div className="flex items-center gap-2">
                         {isAuthenticated && <NotificationCenter />}
@@ -264,7 +306,7 @@ export default function Navbar() {
                 }`}>
                     {/* Brand */}
                     <Link href="/" className="flex flex-shrink-0 items-center justify-center">
-                        <span className="text-2xl font-black tracking-tighter bg-gradient-to-r from-[#FF9933] via-white to-[#138808] bg-clip-text text-transparent italic leading-none">KKFI</span>
+                        <AnimatedBrand />
                     </Link>
 
                     {/* Links */}
