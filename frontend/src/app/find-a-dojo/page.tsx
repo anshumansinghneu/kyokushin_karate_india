@@ -366,7 +366,7 @@ function DojoDetailPanel({
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed top-0 right-0 bottom-0 w-full sm:w-[380px] z-[40] bg-black/[0.92] backdrop-blur-2xl border-l border-red-600/20 shadow-[-20px_0_60px_rgba(0,0,0,0.6)] relative"
+        className="fixed top-0 right-0 bottom-0 w-full sm:w-[380px] z-[40] bg-black/[0.92] backdrop-blur-2xl border-l border-red-600/20 shadow-[-20px_0_60px_rgba(0,0,0,0.6)]"
         role="dialog"
         aria-modal="true"
         aria-label={dojo.name}
@@ -690,7 +690,7 @@ export default function FindADojoPage() {
         {/* Kanji watermark */}
         <span
           aria-hidden="true"
-          className="absolute -top-8 -left-4 text-[10rem] sm:text-[14rem] font-black leading-none text-red-600/10"
+          className="absolute -top-8 -left-4 text-[8rem] sm:text-[10rem] lg:text-[14rem] font-black leading-none text-red-600/10"
           style={{ fontFamily: 'serif' }}
         >
           極
@@ -704,7 +704,7 @@ export default function FindADojoPage() {
           </div>
 
           {/* Heading */}
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight text-white leading-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+          <h1 className="text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-black uppercase tracking-tight text-white leading-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
             Find Your<br />Dojo
           </h1>
         </div>
@@ -724,6 +724,55 @@ export default function FindADojoPage() {
         onSelect={setSelectedDojo}
         isLoading={isLoading}
       />
+
+      {/* ============================================================ */}
+      {/*  MOBILE BOTTOM SHEET — DOJO LIST                             */}
+      {/* ============================================================ */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[20]">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="bg-black/90 backdrop-blur-xl border-t border-red-600/15 rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+        >
+          {/* Drag handle */}
+          <div className="flex justify-center pt-3 pb-2">
+            <div className="w-10 h-1 rounded-full bg-white/20" />
+          </div>
+
+          {/* Search */}
+          <div className="px-4 pb-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
+              <input
+                type="text"
+                placeholder="Search dojos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-9 pl-9 pr-3 bg-red-600/[0.05] border border-red-600/10 rounded-lg text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-red-500/30 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Horizontal scrollable cards */}
+          <div className="flex gap-3 px-4 pb-4 overflow-x-auto scrollbar-none">
+            {filteredDojos.slice(0, 10).map((dojo) => (
+              <div
+                key={dojo.id}
+                onClick={() => setSelectedDojo(dojo)}
+                className="flex-shrink-0 w-[200px] p-3 bg-red-600/[0.04] border border-red-600/[0.08] border-l-[3px] border-l-red-600 rounded-lg cursor-pointer active:scale-95 transition-transform"
+              >
+                <h4 className="text-[11px] font-bold uppercase tracking-wide text-white mb-1 leading-tight line-clamp-2">
+                  {dojo.name}
+                </h4>
+                <span className="text-[9px] text-zinc-500">
+                  {dojo.city}{dojo.state ? `, ${dojo.state}` : ''}
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
 
       {/* ============================================================ */}
       {/*  DOJO DETAIL SLIDE-IN PANEL                                  */}
