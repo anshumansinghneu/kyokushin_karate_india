@@ -26,7 +26,7 @@ function AnimatedBrand() {
     }, []);
 
     return (
-        <div className="relative w-10 h-10 flex items-center justify-center overflow-hidden">
+        <div className="relative w-12 h-10 flex items-center justify-center overflow-hidden">
             <AnimatePresence mode="wait">
                 {showLogo ? (
                     <motion.img
@@ -42,13 +42,16 @@ function AnimatedBrand() {
                 ) : (
                     <motion.span
                         key="text"
-                        className="text-xl font-black tracking-tighter bg-gradient-to-r from-[#FF9933] via-white to-[#138808] bg-clip-text text-transparent italic leading-none"
+                        className="text-xl font-black tracking-tight leading-none whitespace-nowrap"
                         initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
                         animate={{ opacity: 1, scale: 1, rotate: 0 }}
                         exit={{ opacity: 0, scale: 0.5, rotate: 180 }}
                         transition={{ duration: 0.5, ease: 'easeInOut' }}
                     >
-                        KKFI
+                        <span className="text-[#FF9933]">K</span>
+                        <span className="text-[#FF9933]">K</span>
+                        <span className="text-white">F</span>
+                        <span className="text-[#138808]">I</span>
                     </motion.span>
                 )}
             </AnimatePresence>
