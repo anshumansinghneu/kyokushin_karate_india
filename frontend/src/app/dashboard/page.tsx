@@ -62,15 +62,7 @@ export default function DashboardPage() {
     const isExpired = user.membershipStatus === "EXPIRED";
 
     return (
-        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden selection:bg-red-600 selection:text-white">
-            {/* Background layers */}
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,_var(--tw-gradient-stops))] from-red-950/25 via-black to-black" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,_var(--tw-gradient-stops))] from-zinc-800/10 via-transparent to-transparent" />
-                {/* Subtle grid pattern */}
-                <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
-            </div>
-
+        <div className="min-h-screen w-full bg-[#050505] text-white relative selection:bg-red-600 selection:text-white">
             <div className="container-responsive py-6 md:py-8 relative z-10">
                 {/* Membership Expiry Banner */}
                 {isExpired && user.role !== "ADMIN" && (
