@@ -177,6 +177,49 @@ const MARKER_STYLES = `
   background: transparent !important;
   border: none !important;
 }
+
+/* Hover preview popup */
+.kyoku-popup .leaflet-popup-content-wrapper {
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(220,38,38,0.25);
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 25px rgba(220,38,38,0.08);
+  padding: 0;
+  color: #fff;
+}
+.kyoku-popup .leaflet-popup-content {
+  margin: 0;
+  min-width: 200px;
+}
+.kyoku-popup .leaflet-popup-tip {
+  background: rgba(0,0,0,0.92);
+  border-right: 1px solid rgba(220,38,38,0.25);
+  border-bottom: 1px solid rgba(220,38,38,0.25);
+}
+.kyoku-popup .leaflet-popup-close-button { display: none; }
+.kyoku-popup-inner { padding: 14px; }
+.kyoku-popup-badge {
+  font-size: 8px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: #dc2626; margin-bottom: 6px;
+}
+.kyoku-popup-name {
+  font-size: 14px; font-weight: 800;
+  text-transform: uppercase; margin-bottom: 4px; line-height: 1.2;
+}
+.kyoku-popup-loc {
+  font-size: 11px; color: #888; margin-bottom: 10px;
+}
+.kyoku-popup-cta {
+  display: block; width: 100%;
+  padding: 8px; background: #dc2626; color: #fff;
+  text-align: center; font-size: 10px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 2px;
+  border-radius: 6px; border: none; cursor: pointer;
+  transition: background 0.2s;
+}
+.kyoku-popup-cta:hover { background: #b91c1c; }
 `;
 
 /* ------------------------------------------------------------------ */
@@ -602,8 +645,32 @@ export default function FindADojoPage() {
 
       const marker = L.marker(coords, { icon }).addTo(map);
 
-      marker.on('mouseover', () => setHoveredDojoId(dojo.id));
-      marker.on('mouseout', () => setHoveredDojoId(null));
+      const popupContent = `
+        <div class="kyoku-popup-inner">
+          <div class="kyoku-popup-badge">Branch ${dojo.dojoCode || 'N/A'}</div>
+          <div class="kyoku-popup-name">${dojo.name}</div>
+          <div class="kyoku-popup-loc">${dojo.city}${dojo.state ? `, ${dojo.state}` : ''}</div>
+          <button class="kyoku-popup-cta" onclick="document.dispatchEvent(new CustomEvent('dojo-select', { detail: '${dojo.id}' }))">
+            View Dojo →
+          </button>
+        </div>
+      `;
+
+      marker.bindPopup(popupContent, {
+        className: 'kyoku-popup',
+        closeButton: false,
+        offset: [0, -20],
+        autoPan: false,
+      });
+
+      marker.on('mouseover', () => {
+        setHoveredDojoId(dojo.id);
+        marker.openPopup();
+      });
+      marker.on('mouseout', () => {
+        setHoveredDojoId(null);
+        marker.closePopup();
+      });
       marker.on('click', () => setSelectedDojo(dojo));
 
       markersRef.current[dojo.id] = marker;
@@ -657,6 +724,17 @@ export default function FindADojoPage() {
       prevViewRef.current = null;
     }
   }, [selectedDojo, getDojoCoords]);
+
+  /* ---- Listen for popup CTA custom event ---- */
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const id = (e as CustomEvent).detail;
+      const dojo = dojos.find((d) => d.id === id);
+      if (dojo) setSelectedDojo(dojo);
+    };
+    document.addEventListener('dojo-select', handler);
+    return () => document.removeEventListener('dojo-select', handler);
+  }, [dojos]);
 
   /* ---- Render ---- */
   return (
