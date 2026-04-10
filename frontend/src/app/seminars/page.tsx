@@ -335,7 +335,7 @@ function SeminarSection({
             badge: "bg-amber-500/10 border-amber-500/20 text-amber-400",
         },
     }[seminar.accent] || {
-        badge: "bg-red-500/10 border-red-500/20 text-red-400",
+        badge: "bg-white/5 border-white/10 text-zinc-400",
     };
 
     return (
@@ -454,12 +454,12 @@ function DBSeminarSection({ seminar, index }: { seminar: any; index: number }) {
                 <div className="bg-zinc-900/60 backdrop-blur-sm border border-white/[0.06] rounded-3xl overflow-hidden">
                     <div className="p-6 md:p-10 pb-0 md:pb-0">
                         <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6 mb-6">
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-red-500/10 border border-red-500/20 text-red-400 shrink-0">
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 text-zinc-400 shrink-0">
                                 <Shield size={22} />
                             </div>
                             <div className="flex-1 space-y-3">
                                 <div className="flex flex-wrap items-center gap-3">
-                                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 uppercase tracking-wider">
+                                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-400 uppercase tracking-wider">
                                         Seminar
                                     </span>
                                     <span className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
@@ -578,26 +578,21 @@ export default function SeminarsPage() {
                         transition={{ duration: 0.7 }}
                         className="text-center"
                     >
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.5, delay: 0.2 }}
-                            className="inline-flex items-center gap-2 bg-red-600/10 border border-red-600/20 text-red-500 text-xs font-bold px-5 py-2 rounded-full mb-8 uppercase tracking-widest"
-                        >
-                            <Shield size={14} />
-                            Teaching Self Defense
-                        </motion.div>
-                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 tracking-tight">
+                        <h1 className="font-black tracking-tighter uppercase leading-[0.9] mb-5" style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)' }}>
                             <span className="text-white">SELF DEFENSE</span>
                             <br />
-                            <span className="bg-gradient-to-r from-red-500 to-red-700 bg-clip-text text-transparent">
-                                SEMINARS
-                            </span>
+                            <span
+                                className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
+                                style={{
+                                    background: 'linear-gradient(180deg, #ef4444, #991b1b)',
+                                    WebkitBackgroundClip: 'text',
+                                    backgroundClip: 'text',
+                                    color: 'transparent',
+                                }}
+                            >SEMINARS</span>
                         </h1>
-                        <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
-                            Empowering communities through practical self-defense training.
-                            From corporate workshops to school programs, KKFI brings Kyokushin
-                            discipline to every walk of life.
+                        <p className="text-zinc-500 text-sm max-w-lg mx-auto leading-relaxed">
+                            Practical self-defense training for schools, corporates, and communities across India.
                         </p>
                     </motion.div>
                 </div>
@@ -606,24 +601,11 @@ export default function SeminarsPage() {
             {/* ─── Seminars Showcase ─── */}
             <section className="py-8 md:py-16">
                 <div className="container-responsive">
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        className="text-center mb-16"
-                    >
-                        <h2 className="text-3xl md:text-5xl font-black mb-4">
-                            OUR{" "}
-                            <span className="bg-gradient-to-r from-red-500 to-red-700 bg-clip-text text-transparent">
-                                SEMINARS
-                            </span>
-                        </h2>
-                        <div className="w-20 h-1 bg-gradient-to-r from-red-600 to-red-800 mx-auto rounded-full mb-5" />
-                        <p className="text-gray-400 max-w-2xl mx-auto text-base md:text-lg">
-                            Seminars conducted by Kyokushin Karate Foundation of India across
-                            schools, hospitals, and corporate organizations.
-                        </p>
-                    </motion.div>
+                    <div className="flex items-center justify-center gap-3 mb-12">
+                        <div className="flex-1 max-w-[100px] h-px bg-gradient-to-r from-transparent to-white/[0.06]" />
+                        <h2 className="text-lg font-black uppercase tracking-tight text-white">Past Seminars</h2>
+                        <div className="flex-1 max-w-[100px] h-px bg-gradient-to-l from-transparent to-white/[0.06]" />
+                    </div>
 
                     <div className="space-y-12 md:space-y-16">
                         {/* DB-fetched completed seminars (with gallery) */}

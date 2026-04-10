@@ -5,8 +5,94 @@ import { motion } from "framer-motion";
 import { MapPin, ArrowRight, Calendar, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
-import KarateLoader from "@/components/KarateLoader";
-import { SkeletonGrid } from "@/components/SkeletonCard";
+
+const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return {
+        day: date.getDate(),
+        month: date.toLocaleString('default', { month: 'short' }).toUpperCase(),
+        full: date.toLocaleDateString()
+    };
+};
+
+function EventCard({ event, index, isPast = false }: { event: any; index: number, isPast?: boolean }) {
+    const dateObj = formatDate(event.startDate);
+    
+    const getPillStyle = (type: string) => {
+        switch(type) {
+            case 'CAMP': return 'bg-green-500/10 text-green-500';
+            case 'TOURNAMENT': return 'bg-red-500/10 text-red-500';
+            case 'BELT_EXAM': return 'bg-blue-500/10 text-blue-500';
+            case 'SEMINAR': return 'bg-purple-500/10 text-purple-500';
+            default: return 'bg-zinc-500/10 text-zinc-400';
+        }
+    }
+
+    return (
+        <Link href={`/events/${event.id}`} className="block w-full">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="group relative w-full rounded-2xl bg-[#0a0a0a] border border-white/5 overflow-hidden transition-colors hover:border-white/10 flex flex-col h-[320px] sm:h-[280px]"
+            >
+                {/* Subtle Grid Background */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+                
+                {/* Central OSU Watermark */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.02]">
+                    <svg viewBox="0 0 100 100" className="w-full h-full sm:w-[150%] sm:h-[150%] object-contain">
+                        <text x="50" y="55" textAnchor="middle" dominantBaseline="middle" fontSize="30" fontWeight="900" fill="white">OSU</text>
+                        <circle cx="50" cy="50" r="40" stroke="white" strokeWidth="2" fill="none" />
+                    </svg>
+                </div>
+
+                <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between relative z-10">
+                    {/* Top Row: Pill & Date */}
+                    <div className="flex justify-between items-start">
+                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${getPillStyle(event.type)}`}>
+                            {event.type.replace('_', ' ')}
+                        </span>
+                        
+                        <div className="flex flex-col items-end text-right">
+                            <span className={`text-3xl font-black leading-none ${isPast ? 'text-zinc-600' : 'text-white'}`}>{dateObj.day}</span>
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">{dateObj.month}</span>
+                        </div>
+                    </div>
+
+                    {/* Middle: Title & Location */}
+                    <div className="mb-4">
+                        <h3 className={`text-2xl font-bold tracking-tight mb-3 line-clamp-2 ${isPast ? 'text-zinc-400' : 'text-white'}`}>
+                            {event.name}
+                        </h3>
+                        <div className="flex items-center gap-2 text-sm text-zinc-500">
+                            <MapPin className="w-4 h-4 shrink-0" />
+                            <span className="truncate">{event.location}</span>
+                            {!isPast && (
+                                <>
+                                    <span className="hidden sm:inline mx-2">•</span>
+                                    <span className="hidden sm:inline font-bold text-white">₹{event.memberFee}</span>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Bottom: Status & Details Link */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-white/5 gap-4">
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${isPast ? 'text-zinc-600' : 'text-red-500'}`}>
+                            {isPast ? 'COMPLETED' : 'UPCOMING'}
+                        </span>
+                        
+                        <span className="px-5 py-2.5 rounded-full bg-white/5 border border-white/5 text-xs font-bold text-white flex items-center justify-center gap-2 group-hover:bg-white/10 transition-colors w-full sm:w-auto">
+                            View Details <ArrowRight className="w-3 h-3" />
+                        </span>
+                    </div>
+                </div>
+            </motion.div>
+        </Link>
+    );
+}
 
 export default function EventsPage() {
     const [events, setEvents] = useState<any[]>([]);
@@ -38,199 +124,120 @@ export default function EventsPage() {
     const upcomingEvents = filteredEvents.filter(e => new Date(e.startDate) >= now);
     const pastEvents = filteredEvents.filter(e => new Date(e.startDate) < now);
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return {
-            day: date.getDate(),
-            month: date.toLocaleString('default', { month: 'short' }).toUpperCase(),
-            full: date.toLocaleDateString()
-        };
-    };
-
     return (
-        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
-            {/* Background Elements */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_var(--tw-gradient-stops))] from-red-900/20 via-black to-black" />
-
-            <div className="container-responsive py-12 relative z-10">
+        <div className="min-h-screen w-full bg-[#050505] text-white relative">
+            <div className="container-responsive pt-28 md:pt-32 pb-16 relative z-10">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-6">
-                    <div>
-                        <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-3xl md:text-5xl font-black tracking-tighter mb-2"
-                        >
-                            UPCOMING <span className="text-transparent stroke-text" style={{ WebkitTextStroke: '2px #dc2626' }}>EVENTS</span>
-                        </motion.h1>
-                        <p className="text-gray-400 text-lg">Compete, Train, Evolve.</p>
-                    </div>
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6 pb-6 relative">
+                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                    >
+                        <h1 className="font-black tracking-tighter uppercase mb-2" style={{ fontSize: 'clamp(2rem, 6vw, 4rem)' }}>
+                            <span className="text-white">UPCOMING </span>
+                            <span
+                                className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
+                                style={{
+                                    background: 'linear-gradient(180deg, #ef4444, #991b1b)',
+                                    WebkitBackgroundClip: 'text',
+                                    backgroundClip: 'text',
+                                    color: 'transparent',
+                                }}
+                            >EVENTS</span>
+                        </h1>
+                        <p className="text-zinc-500 text-sm">Compete. Train. Evolve.</p>
+                    </motion.div>
 
                     {/* Filter Tabs */}
-                    <div className="flex p-1 bg-white/5 rounded-full border border-white/10 backdrop-blur-md overflow-x-auto">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="flex p-1 bg-white/[0.02] border border-white/[0.04] rounded-xl w-full md:w-auto overflow-x-auto whitespace-nowrap scrollbar-hide"
+                    >
                         {(["ALL", "TOURNAMENT", "CAMP", "SEMINAR", "BELT_EXAM"] as const).map((tab) => {
                             const label = tab === 'BELT_EXAM' ? 'BELT EXAM' : tab;
                             return (
-                            <button
-                                key={tab}
-                                onClick={() => setFilter(tab as any)}
-                                className={`px-5 sm:px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 min-h-[44px] whitespace-nowrap active:scale-95 ${filter === tab
-                                    ? "bg-primary text-white shadow-lg"
-                                    : "text-gray-400 hover:text-white"
+                                <button
+                                    key={tab}
+                                    onClick={() => setFilter(tab as any)}
+                                    className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all shrink-0 ${
+                                        filter === tab
+                                        ? "bg-red-600 text-white shadow-lg shadow-red-600/20"
+                                        : "text-zinc-500 hover:text-white"
                                     }`}
-                            >
-                                {label}
-                            </button>
+                                >
+                                    {label}
+                                </button>
                             );
                         })}
-                    </div>
+                    </motion.div>
                 </div>
 
                 {/* Loading State */}
                 {isLoading ? (
-                    <SkeletonGrid count={4} variant="event" />
+                    <div className="py-32 flex justify-center">
+                        <div className="w-12 h-12 border-4 border-zinc-800 border-t-red-600 rounded-full animate-spin" />
+                    </div>
                 ) : error ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4">
-                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
-                            <Calendar className="w-8 h-8 text-red-400" />
+                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
+                            <Calendar className="w-8 h-8 text-zinc-500" />
                         </div>
-                        <h3 className="text-xl font-bold text-white">Something went wrong</h3>
-                        <p className="text-gray-400 text-center max-w-md">{error}</p>
+                        <h3 className="text-xl font-bold text-white">System Error</h3>
+                        <p className="text-zinc-500 text-center max-w-md">{error}</p>
                         <button
                             onClick={fetchEvents}
-                            className="mt-4 flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-colors active:scale-95"
+                            className="mt-4 flex items-center gap-2 px-6 py-3 rounded-full border border-white/10 hover:bg-white/5 text-white transition-colors text-sm font-bold"
                         >
                             <RefreshCw className="w-4 h-4" /> Try Again
                         </button>
                     </div>
                 ) : filteredEvents.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 gap-4">
-                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
-                            <Calendar className="w-8 h-8 text-red-400" />
+                    <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-70">
+                        <div className="w-20 h-20 flex items-center justify-center rounded-full bg-[#0a0a0a] mb-2">
+                            <Calendar className="w-8 h-8 text-zinc-600" />
                         </div>
-                        <h3 className="text-xl font-bold text-white">No events found</h3>
-                        <p className="text-gray-400 text-center">Check back soon for upcoming {filter !== "ALL" ? filter.toLowerCase() + "s" : "events"}</p>
+                        <h3 className="text-2xl font-bold text-white tracking-tight">No events scheduled</h3>
+                        <p className="text-zinc-500 text-center font-medium">There are currently no {filter !== "ALL" ? filter.toLowerCase().replace('_', ' ') + "s" : "events"} matching your criteria.</p>
+                        <button onClick={() => setFilter("ALL")} className="mt-4 text-white hover:text-red-400 text-sm font-bold flex items-center gap-2 transition-colors">
+                            View All Events <ArrowRight className="w-4 h-4" />
+                        </button>
                     </div>
                 ) : (
-                    <div className="space-y-12">
-                    {/* Upcoming Events */}
-                    {upcomingEvents.length > 0 && (
-                        <div>
-                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                <span className="w-2 h-6 bg-red-600 rounded-full" />
-                                Upcoming Events
-                            </h2>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-                                {upcomingEvents.map((event, index) => {
-                                    const dateObj = formatDate(event.startDate);
-                                    return (
-                                        <Link href={`/events/${event.id}`} key={event.id}>
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 30 }}
-                                            whileInView={{ opacity: 1, y: 0 }}
-                                            viewport={{ once: true, amount: 0.2 }}
-                                            transition={{ delay: index * 0.1, duration: 0.5 }}
-                                            className="group relative min-h-[280px] md:h-[300px] rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-primary/50 transition-colors active:scale-[0.98]"
-                                        >
-                                            <div className="absolute inset-0 bg-gray-900">
-                                                <div className={`absolute inset-0 bg-gradient-to-br ${event.type === 'TOURNAMENT' ? 'from-red-900/50 via-zinc-900 to-black' : 'from-green-900/50 via-zinc-900 to-black'}`} />
-                                                <div className="absolute inset-0 flex items-center justify-center opacity-[0.06]">
-                                                    <svg viewBox="0 0 100 100" className="w-40 h-40" fill="currentColor">
-                                                        <text x="50" y="55" textAnchor="middle" dominantBaseline="middle" fontSize="24" fontWeight="900" className="text-white">OSU</text>
-                                                        <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                                                    </svg>
-                                                </div>
-                                                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:20px_20px]" />
-                                            </div>
-                                            <div className="absolute inset-0 p-4 sm:p-8 flex flex-col justify-between">
-                                                <div className="flex justify-between items-start">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${event.type === 'TOURNAMENT'
-                                                        ? 'bg-red-500/20 text-red-400 border-red-500/20'
-                                                        : 'bg-green-500/20 text-green-400 border-green-500/20'
-                                                        }`}>
-                                                        {event.type}
-                                                    </span>
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-2xl font-black text-white">{dateObj.day}</span>
-                                                        <span className="text-sm font-bold text-gray-400 uppercase">{dateObj.month}</span>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-xl sm:text-3xl font-bold text-white mb-2 group-hover:text-primary transition-colors">{event.name}</h3>
-                                                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-400 text-sm mb-4 sm:mb-6">
-                                                        <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {event.location}</span>
-                                                        <span className="w-1 h-1 rounded-full bg-gray-600" />
-                                                        <span className="text-white font-bold">₹{event.memberFee}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-bold text-primary uppercase tracking-wider">{event.status}</span>
-                                                        <span className="rounded-full bg-white/10 px-4 py-2 text-white border border-white/10 backdrop-blur-md group-hover:bg-primary group-hover:border-primary transition-all text-sm font-semibold inline-flex items-center gap-2">
-                                                            View Details <ArrowRight className="w-4 h-4" />
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                        </Link>
-                                    );
-                                })}
+                    <div className="space-y-20">
+                        {/* Upcoming Events List */}
+                        {upcomingEvents.length > 0 && (
+                            <div>
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="w-1.5 h-6 bg-red-600 rounded-full" />
+                                    <h2 className="text-xl font-bold text-white">Upcoming Events</h2>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
+                                    {upcomingEvents.map((event, index) => (
+                                        <EventCard key={event.id} event={event} index={index} />
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {/* Past Events */}
-                    {pastEvents.length > 0 && (
-                        <div>
-                            <h2 className="text-xl font-bold text-zinc-400 mb-6 flex items-center gap-2">
-                                <span className="w-2 h-6 bg-zinc-600 rounded-full" />
-                                Past Events
-                            </h2>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-                                {pastEvents.map((event, index) => {
-                                    const dateObj = formatDate(event.startDate);
-                                    return (
-                                        <Link href={`/events/${event.id}`} key={event.id}>
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 30 }}
-                                            whileInView={{ opacity: 1, y: 0 }}
-                                            viewport={{ once: true, amount: 0.2 }}
-                                            transition={{ delay: index * 0.05, duration: 0.5 }}
-                                            className="group relative min-h-[280px] md:h-[300px] rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-zinc-600/50 transition-colors active:scale-[0.98] grayscale-[30%] hover:grayscale-0"
-                                        >
-                                            <div className="absolute inset-0 bg-gray-900">
-                                                <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/50 via-zinc-900 to-black" />
-                                                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:20px_20px]" />
-                                            </div>
-                                            <div className="absolute inset-0 p-4 sm:p-8 flex flex-col justify-between">
-                                                <div className="flex justify-between items-start">
-                                                    <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-zinc-700/30 text-zinc-400 border-zinc-600/30">
-                                                        {event.type}
-                                                    </span>
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-2xl font-black text-zinc-400">{dateObj.day}</span>
-                                                        <span className="text-sm font-bold text-zinc-500 uppercase">{dateObj.month}</span>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-xl sm:text-3xl font-bold text-zinc-300 mb-2 group-hover:text-white transition-colors">{event.name}</h3>
-                                                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-zinc-500 text-sm mb-4 sm:mb-6">
-                                                        <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {event.location}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Completed</span>
-                                                        <span className="rounded-full bg-white/5 px-4 py-2 text-zinc-400 border border-white/5 group-hover:bg-white/10 transition-all text-sm font-semibold inline-flex items-center gap-2">
-                                                            View Results <ArrowRight className="w-4 h-4" />
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                        </Link>
-                                    );
-                                })}
+                        {/* Past Events List */}
+                        {pastEvents.length > 0 && (
+                            <div>
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="w-1.5 h-6 bg-zinc-600 rounded-full" />
+                                    <h2 className="text-xl font-bold text-white">Past Events</h2>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
+                                    {pastEvents.map((event, index) => (
+                                        <EventCard key={event.id} event={event} index={index} isPast={true} />
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
                     </div>
                 )}
             </div>
