@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { 
-    Camera, Search, Loader2, ImageIcon, FolderOpen, Tent, 
-    GraduationCap, Trophy, Swords, Dumbbell, Grid3X3, 
-    ChevronRight, ChevronLeft, Sparkles, X, Maximize2, Download, Image as ImageIconSVG 
+import {
+    Camera, Search, Loader2, ImageIcon, FolderOpen, Tent,
+    GraduationCap, Trophy, Swords, Dumbbell, Grid3X3,
+    ChevronRight, ChevronLeft, Sparkles, X, Maximize2, Download, Share2, Image as ImageIconSVG
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -528,7 +528,7 @@ export default function GalleryPage() {
                 )}
             </div>
 
-            {/* ── Lightbox ──────────────────────── */}
+            {/* ── Lightbox with swipe + share ──────────────────────── */}
             <AnimatePresence>
                 {lightboxIndex !== null && photos[lightboxIndex] && (
                     <motion.div
@@ -538,25 +538,44 @@ export default function GalleryPage() {
                         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                         className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050507]/98 backdrop-blur-2xl"
                     >
-                        <div className="absolute top-0 inset-x-0 p-6 flex justify-between items-start z-50 bg-gradient-to-b from-black/80 to-transparent">
-                            <div className="flex flex-col gap-1 max-w-2xl px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl">
+                        <div className="absolute top-0 inset-x-0 p-4 sm:p-6 flex justify-between items-start z-50 bg-gradient-to-b from-black/80 to-transparent">
+                            <div className="flex flex-col gap-1 max-w-[60%] sm:max-w-2xl px-3 sm:px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl">
                                 {photos[lightboxIndex].caption && (
-                                    <h2 className="text-white text-lg font-bold">
+                                    <h2 className="text-white text-sm sm:text-lg font-bold line-clamp-1">
                                         {photos[lightboxIndex].caption}
                                     </h2>
                                 )}
-                                <p className="text-zinc-400 text-sm font-medium">
-                                    Captured by <span className="text-white">{photos[lightboxIndex].uploader.name}</span>
+                                <p className="text-zinc-400 text-xs sm:text-sm font-medium">
+                                    by <span className="text-white">{photos[lightboxIndex].uploader.name}</span>
                                 </p>
                             </div>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <button
+                                    onClick={async () => {
+                                        const photo = photos[lightboxIndex!];
+                                        const shareData = {
+                                            title: photo.caption || "Kyokushin Gallery",
+                                            text: `${photo.caption || "Check out this photo"} by ${photo.uploader.name}`,
+                                            url: window.location.href,
+                                        };
+                                        if (navigator.share) {
+                                            try { await navigator.share(shareData); } catch {}
+                                        } else {
+                                            await navigator.clipboard.writeText(window.location.href);
+                                        }
+                                    }}
+                                    className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-colors backdrop-blur-md"
+                                    title="Share"
+                                >
+                                    <Share2 className="w-5 h-5 text-white" />
+                                </button>
                                 <a
                                     href={getImageUrl(photos[lightboxIndex].imageUrl) || ""}
                                     download
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-colors backdrop-blur-md"
+                                    className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-colors backdrop-blur-md hidden sm:flex"
                                 >
                                     <Download className="w-5 h-5 text-white" />
                                 </a>
@@ -572,21 +591,37 @@ export default function GalleryPage() {
                         {lightboxIndex > 0 && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
-                                className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-white/5 hover:bg-white/10 rounded-full backdrop-blur-md transition-all text-white z-50 group border border-white/10"
+                                className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 p-3 sm:p-4 bg-white/5 hover:bg-white/10 rounded-full backdrop-blur-md transition-all text-white z-50 group border border-white/10 hidden sm:flex"
                             >
-                                <ChevronLeft className="w-8 h-8 group-hover:-translate-x-1 transition-transform" />
+                                <ChevronLeft className="w-6 sm:w-8 h-6 sm:h-8 group-hover:-translate-x-1 transition-transform" />
                             </button>
                         )}
                         {lightboxIndex < photos.length - 1 && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
-                                className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-white/5 hover:bg-white/10 rounded-full backdrop-blur-md transition-all text-white z-50 group border border-white/10"
+                                className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 p-3 sm:p-4 bg-white/5 hover:bg-white/10 rounded-full backdrop-blur-md transition-all text-white z-50 group border border-white/10 hidden sm:flex"
                             >
-                                <ChevronRight className="w-8 h-8 group-hover:translate-x-1 transition-transform" />
+                                <ChevronRight className="w-6 sm:w-8 h-6 sm:h-8 group-hover:translate-x-1 transition-transform" />
                             </button>
                         )}
 
-                        <div className="w-full h-full p-4 md:p-20 flex items-center justify-center relative" onClick={() => setLightboxIndex(null)}>
+                        {/* Swipeable image area */}
+                        <motion.div
+                            className="w-full h-full p-4 md:p-20 flex items-center justify-center relative touch-pan-y"
+                            onClick={() => setLightboxIndex(null)}
+                            drag="x"
+                            dragConstraints={{ left: 0, right: 0 }}
+                            dragElastic={0.2}
+                            onDragEnd={(_e, info) => {
+                                if (Math.abs(info.offset.x) > 80) {
+                                    if (info.offset.x > 0 && lightboxIndex > 0) {
+                                        setLightboxIndex(lightboxIndex - 1);
+                                    } else if (info.offset.x < 0 && lightboxIndex < photos.length - 1) {
+                                        setLightboxIndex(lightboxIndex + 1);
+                                    }
+                                }
+                            }}
+                        >
                             <motion.img
                                 key={photos[lightboxIndex].id}
                                 src={getImageUrl(photos[lightboxIndex].imageUrl) || ""}
@@ -595,13 +630,17 @@ export default function GalleryPage() {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
                                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                                className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10"
-                                onClick={(e) => e.stopPropagation()} 
+                                className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 pointer-events-none select-none"
+                                draggable={false}
                             />
-                        </div>
+                        </motion.div>
 
-                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-white/5 backdrop-blur-xl rounded-full text-xs font-bold text-zinc-300 border border-white/10 shadow-2xl tracking-widest">
-                            {lightboxIndex + 1} OF {photos.length}
+                        {/* Swipe hint on mobile */}
+                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
+                            <div className="px-5 py-2.5 bg-white/5 backdrop-blur-xl rounded-full text-xs font-bold text-zinc-300 border border-white/10 shadow-2xl tracking-widest">
+                                {lightboxIndex + 1} OF {photos.length}
+                            </div>
+                            <span className="text-[10px] text-zinc-600 font-medium sm:hidden">Swipe to navigate</span>
                         </div>
                     </motion.div>
                 )}

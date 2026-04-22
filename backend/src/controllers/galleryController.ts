@@ -11,7 +11,11 @@ export const getGalleryItems = catchAsync(async (req: Request, res: Response) =>
     const limitNum = Math.min(50, Math.max(1, parseInt(limit as string) || 24));
     const skip = (pageNum - 1) * limitNum;
 
-    const where: any = { isApproved: true };
+    const where: any = {
+        isApproved: true,
+        // Exclude seed/demo images (Unsplash placeholders)
+        NOT: { imageUrl: { contains: 'images.unsplash.com' } },
+    };
 
     if (category === 'featured') {
         where.isPublicFeatured = true;

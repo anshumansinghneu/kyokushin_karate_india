@@ -64,6 +64,31 @@ export const recordVisit = catchAsync(async (req: Request, res: Response, _next:
 });
 
 /**
+ * GET /api/analytics/public-stats — public site stats for homepage
+ * Returns total dojos, members, events, and belt promotions (cached 5 min)
+ */
+let publicStatsCache: { data: any; ts: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+export const getPublicStats = catchAsync(async (_req: Request, res: Response) => {
+    if (publicStatsCache && Date.now() - publicStatsCache.ts < CACHE_TTL) {
+        return res.json({ status: 'success', data: publicStatsCache.data });
+    }
+
+    const [dojos, members, events, blackBelts] = await Promise.all([
+        prisma.dojo.count(),
+        prisma.user.count({ where: { role: { in: ['STUDENT', 'INSTRUCTOR'] } } }),
+        prisma.event.count(),
+        prisma.user.count({ where: { currentBeltRank: { contains: 'Dan' } } }),
+    ]);
+
+    const data = { dojos, members, events, blackBelts };
+    publicStatsCache = { data, ts: Date.now() };
+
+    res.json({ status: 'success', data });
+});
+
+/**
  * GET /api/analytics/stats — admin-only analytics dashboard data
  */
 export const getAnalyticsStats = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {

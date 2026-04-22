@@ -67,7 +67,7 @@ function ResetPasswordForm() {
     return (
         <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-black font-sans selection:bg-red-500/30">
             {/* Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-red-900/10 via-black to-black z-0" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-zinc-900/20 via-black to-black z-0" />
             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] z-0 mix-blend-overlay pointer-events-none" />
 
             <Link href="/login" className="absolute top-8 left-8 text-gray-500 hover:text-white flex items-center gap-2 transition-all group text-sm font-medium tracking-wide z-20">
@@ -95,13 +95,13 @@ function ResetPasswordForm() {
                         <p className="text-gray-400 mb-6">
                             Your password has been updated successfully. Redirecting to dashboard...
                         </p>
-                        <div className="w-8 h-8 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin mx-auto" />
+                        <div className="w-8 h-8 border-2 border-zinc-500/30 border-t-zinc-500 rounded-full animate-spin mx-auto" />
                     </div>
                 ) : (
                     <>
                         <div className="mb-8">
-                            <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
-                                <Lock className="w-7 h-7 text-red-500" />
+                            <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
+                                <Lock className="w-7 h-7 text-zinc-400" />
                             </div>
                             <h3 className="text-3xl font-bold text-white mb-2">Set New Password</h3>
                             <p className="text-gray-400">Choose a strong password for your account.</p>
@@ -205,7 +205,7 @@ export default function ResetPasswordPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen w-full bg-black flex items-center justify-center">
-                <div className="w-10 h-10 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                <div className="w-10 h-10 border-2 border-zinc-500/30 border-t-zinc-500 rounded-full animate-spin" />
             </div>
         }>
             <ResetPasswordForm />

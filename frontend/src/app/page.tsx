@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { AnimatePresence, motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import SplashScreen from "@/components/SplashScreen";
-import { ArrowRight, MapPin, Calendar, ChevronRight, X } from "lucide-react";
+import { ArrowRight, MapPin, Calendar, ChevronRight, X, Clock, Users, Building2, Trophy, Award } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
@@ -20,6 +20,190 @@ interface Event {
   type: string;
   startDate: string;
   location: string;
+}
+
+/* 3D Tilt Image Card */
+function TiltImage({ src, alt, caption, sub }: { src: string; alt: string; caption: string; sub: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+  const springX = useSpring(rotateX, { stiffness: 150, damping: 20 });
+  const springY = useSpring(rotateY, { stiffness: 150, damping: 20 });
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    rotateX.set(y * -15);
+    rotateY.set(x * 15);
+  }, [rotateX, rotateY]);
+
+  const handleMouseLeave = useCallback(() => {
+    rotateX.set(0);
+    rotateY.set(0);
+  }, [rotateX, rotateY]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, rotateY: 8, scale: 0.9 }}
+      whileInView={{ opacity: 1, rotateY: 0, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      className="relative"
+      style={{ perspective: '1000px' }}
+    >
+      <motion.div
+        ref={ref}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{ rotateX: springX, rotateY: springY, transformStyle: 'preserve-3d' }}
+        className="aspect-[4/5] bg-gray-900 rounded-2xl overflow-hidden relative group cursor-none"
+      >
+        <div className="absolute inset-0 bg-red-600 mix-blend-overlay opacity-0 group-hover:opacity-20 transition-opacity duration-500" />
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110"
+        />
+        {/* Shine effect on hover */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black to-transparent" style={{ transform: 'translateZ(30px)' }}>
+          <p className="text-white font-bold tracking-wider uppercase">{caption}</p>
+          <p className="text-red-500 text-sm">{sub}</p>
+        </div>
+      </motion.div>
+      {/* Decorative elements */}
+      <div className="absolute -top-10 -right-10 w-40 h-40 border border-red-600/20 rounded-full animate-spin-slow hidden lg:block" />
+      <div className="absolute -bottom-10 -left-10 w-60 h-60 border border-white/5 rounded-full animate-reverse-spin hidden lg:block" />
+    </motion.div>
+  );
+}
+
+/* Animated counter that counts up when scrolled into view */
+function AnimatedCounter({ target, label, icon: Icon, suffix = "" }: { target: number; label: string; icon: typeof Users; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const [inView, setInView] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!inView || target === 0) return;
+    let start = 0;
+    const duration = 2000;
+    const step = Math.max(1, Math.floor(target / 60));
+    const interval = duration / (target / step);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= target) { setCount(target); clearInterval(timer); }
+      else setCount(start);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [inView, target]);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
+      className="text-center group"
+    >
+      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-red-600/20 to-red-900/10 border border-red-500/10 flex items-center justify-center group-hover:border-red-500/30 group-hover:scale-110 transition-all duration-500">
+        <Icon className="w-6 h-6 text-red-500" />
+      </div>
+      <div className="text-4xl md:text-5xl font-black text-white tabular-nums">
+        {count}{suffix}
+      </div>
+      <div className="text-xs text-zinc-500 font-bold uppercase tracking-[0.2em] mt-2">{label}</div>
+    </motion.div>
+  );
+}
+
+/* Countdown timer for the next upcoming event */
+function NextEventCountdown({ event }: { event: Event }) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const target = new Date(event.startDate).getTime();
+    const tick = () => {
+      const now = Date.now();
+      const diff = Math.max(0, target - now);
+      setTimeLeft({
+        days: Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        minutes: Math.floor((diff % 3600000) / 60000),
+        seconds: Math.floor((diff % 60000) / 1000),
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [event.startDate]);
+
+  const blocks = [
+    { value: timeLeft.days, label: "Days" },
+    { value: timeLeft.hours, label: "Hours" },
+    { value: timeLeft.minutes, label: "Min" },
+    { value: timeLeft.seconds, label: "Sec" },
+  ];
+
+  return (
+    <motion.section
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      className="py-16 md:py-24 relative overflow-hidden"
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-red-950/5 to-transparent pointer-events-none" />
+      <div className="container-responsive text-center relative z-10">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 mb-6">
+          <Clock className="w-3.5 h-3.5 text-red-500" />
+          <span className="text-xs font-bold text-red-400 uppercase tracking-widest">Next Event</span>
+        </div>
+        <h3 className="text-2xl md:text-4xl font-black mb-2 text-white">{event.name}</h3>
+        <p className="text-zinc-500 text-sm mb-8 flex items-center justify-center gap-2">
+          <MapPin className="w-3.5 h-3.5" /> {event.location || "Location TBA"} &bull; {new Date(event.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+        </p>
+
+        <div className="flex justify-center gap-3 sm:gap-5 mb-10">
+          {blocks.map(({ value, label }) => (
+            <div key={label} className="relative">
+              <div className="w-[72px] h-[80px] sm:w-[88px] sm:h-[96px] bg-gradient-to-b from-zinc-900 to-black rounded-xl border border-white/[0.06] flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden">
+                <motion.span
+                  key={value}
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="text-3xl sm:text-4xl font-mono font-black text-white"
+                >
+                  {String(value).padStart(2, "0")}
+                </motion.span>
+              </div>
+              <span className="block text-[10px] text-zinc-600 font-bold uppercase tracking-[0.15em] mt-2">{label}</span>
+            </div>
+          ))}
+        </div>
+
+        <Link href={`/events/${event.id}`}>
+          <Button className="h-12 px-8 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold uppercase tracking-wider transition-transform hover:scale-105 active:scale-95">
+            Register Now <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </Link>
+      </div>
+    </motion.section>
+  );
 }
 
 export default function Home() {
@@ -40,6 +224,7 @@ export default function Home() {
   const [content, setContent] = useState<Record<string, any>>({});
   const [newEventFlash, setNewEventFlash] = useState<Event | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [siteStats, setSiteStats] = useState({ dojos: 0, members: 0, events: 0, blackBelts: 0 });
   const { isAuthenticated } = useAuthStore();
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -53,10 +238,11 @@ export default function Home() {
         api.get('/events'),
         api.get('/content'),
         api.get('/posts?type=BLOG'),
-        api.get('/posts?type=MEDIA_MENTION')
+        api.get('/posts?type=MEDIA_MENTION'),
+        api.get('/analytics/public-stats')
       ]);
 
-      const [eventsRes, contentRes, blogsRes, mediaRes] = results;
+      const [eventsRes, contentRes, blogsRes, mediaRes, statsRes] = results;
 
       if (eventsRes.status === 'fulfilled') {
         const events = eventsRes.value.data.data.events.slice(0, 5);
@@ -89,6 +275,10 @@ export default function Home() {
         console.error("Failed to fetch media mentions", mediaRes.reason);
       }
 
+      if (statsRes.status === 'fulfilled') {
+        setSiteStats(statsRes.value.data.data);
+      }
+
       setDataLoaded(true);
     };
     fetchData();
@@ -115,15 +305,16 @@ export default function Home() {
             content={content}
           />
 
-          {/* PHILOSOPHY SECTION (Parallax) */}
-          <section className="py-10 sm:py-16 md:py-32 relative">
+          {/* PHILOSOPHY SECTION — 3D perspective scroll + tilt */}
+          <section className="py-10 sm:py-16 md:py-32 relative" style={{ perspective: '1200px' }}>
             <div className="container-responsive">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-16 items-center">
                 <motion.div
-                  initial={{ opacity: 0, x: -50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, rotateY: -8, x: -60 }}
+                  whileInView={{ opacity: 1, rotateY: 0, x: 0 }}
                   viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 0.8 }}
+                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ transformStyle: 'preserve-3d' }}
                 >
                   <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-8 leading-tight">
                     KEEP YOUR HEAD LOW, <br />
@@ -131,8 +322,8 @@ export default function Home() {
                   </h2>
                   <div className="space-y-4 sm:space-y-6 text-gray-400 text-base sm:text-lg leading-relaxed">
                     <p>
-                      "The heart of our karate is real fighting. There can be no proof without real fighting.
-                      Without proof there is no trust. Without trust there is no respect. This is a definition in the world of Martial Arts."
+                      &ldquo;The heart of our karate is real fighting. There can be no proof without real fighting.
+                      Without proof there is no trust. Without trust there is no respect. This is a definition in the world of Martial Arts.&rdquo;
                     </p>
                     <p className="font-serif italic text-xl sm:text-2xl text-white border-l-4 border-red-600 pl-4 sm:pl-6 py-2">
                       — Masutatsu Oyama
@@ -140,29 +331,13 @@ export default function Home() {
                   </div>
                 </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8 }}
-                  className="relative"
-                >
-                  <div className="aspect-[4/5] bg-gray-900 rounded-2xl overflow-hidden relative group">
-                    <div className="absolute inset-0 bg-red-600 mix-blend-overlay opacity-0 group-hover:opacity-20 transition-opacity duration-500" />
-                    <img
-                      src={content['mas_oyama_image']?.value || "/oyama.png"}
-                      alt="Mas Oyama"
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black to-transparent">
-                      <p className="text-white font-bold tracking-wider uppercase">Sosai Masutatsu Oyama</p>
-                      <p className="text-red-500 text-sm">Founder of Kyokushin</p>
-                    </div>
-                  </div>
-                  {/* Decorative elements - hidden on mobile */}
-                  <div className="absolute -top-10 -right-10 w-40 h-40 border border-red-600/20 rounded-full animate-spin-slow hidden lg:block" />
-                  <div className="absolute -bottom-10 -left-10 w-60 h-60 border border-white/5 rounded-full animate-reverse-spin hidden lg:block" />
-                </motion.div>
+                {/* 3D Tilt Image */}
+                <TiltImage
+                  src={content['mas_oyama_image']?.value || "/oyama.png"}
+                  alt="Mas Oyama"
+                  caption="Sosai Masutatsu Oyama"
+                  sub="Founder of Kyokushin"
+                />
               </div>
             </div>
           </section>
@@ -171,6 +346,26 @@ export default function Home() {
 
           {/* LEADERSHIP SECTION */}
           <LeadershipSection />
+
+          {/* ANIMATED STATS COUNTER */}
+          {(siteStats.dojos > 0 || siteStats.members > 0) && (
+            <section className="py-16 md:py-28 relative">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(220,38,38,0.04),transparent_70%)] pointer-events-none" />
+              <div className="container-responsive relative z-10">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+                  <AnimatedCounter target={siteStats.dojos} label="Dojos" icon={Building2} suffix="+" />
+                  <AnimatedCounter target={siteStats.members} label="Members" icon={Users} suffix="+" />
+                  <AnimatedCounter target={siteStats.events} label="Events" icon={Trophy} />
+                  <AnimatedCounter target={siteStats.blackBelts} label="Black Belts" icon={Award} />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* NEXT EVENT COUNTDOWN */}
+          {featuredEvents.length > 0 && new Date(featuredEvents[0].startDate) > new Date() && (
+            <NextEventCountdown event={featuredEvents[0]} />
+          )}
 
           {/* MONTHLY CHAMPIONS */}
           <MonthlyChampions />

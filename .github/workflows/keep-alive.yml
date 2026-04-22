@@ -6,21 +6,27 @@ on:
     - cron: '*/10 * * * *'
   workflow_dispatch: # Allow manual trigger
 
+concurrency:
+  group: keep-alive
+  cancel-in-progress: true
+
 jobs:
   ping:
     runs-on: ubuntu-latest
+    # Never report failure — this is a best-effort keep-alive ping,
+    # so GitHub won't send failure notification emails
+    continue-on-error: true
     steps:
       - name: Ping health endpoint
         run: |
           echo "Pinging backend to prevent cold start..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://kyokushin-api.onrender.com/health)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://kyokushin-api.onrender.com/health) || true
           echo "Response status: $STATUS"
-          if [ "$STATUS" -eq 200 ]; then
+          if [ "$STATUS" = "200" ]; then
             echo "Backend is alive"
           else
-            echo "Backend returned $STATUS — may be waking up"
-            # Retry once after 30s if first attempt fails (cold start)
+            echo "Backend returned $STATUS — may be waking up, retrying..."
             sleep 30
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://kyokushin-api.onrender.com/health)
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://kyokushin-api.onrender.com/health) || true
             echo "Retry status: $STATUS"
           fi

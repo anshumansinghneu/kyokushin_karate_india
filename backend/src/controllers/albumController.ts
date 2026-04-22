@@ -11,7 +11,15 @@ export const getAlbums = catchAsync(async (req: Request, res: Response) => {
     const limitNum = Math.min(50, Math.max(1, parseInt(limit as string) || 24));
     const skip = (pageNum - 1) * limitNum;
 
-    const where: any = {};
+    const where: any = {
+        // Exclude seed/demo albums and albums with only placeholder images
+        NOT: {
+            OR: [
+                { name: { startsWith: 'Demo Album' } },
+                { coverImageUrl: { contains: 'images.unsplash.com' } },
+            ],
+        },
+    };
     if (type && type !== 'ALL') where.type = type;
     if (search) where.name = { contains: search as string, mode: 'insensitive' };
 
@@ -67,6 +75,11 @@ export const getAlbum = catchAsync(async (req: Request, res: Response, next: Nex
     });
 
     if (!album) return next(new AppError('Album not found', 404));
+
+    // Block access to seed/demo albums
+    if (album.name?.startsWith('Demo Album') || album.coverImageUrl?.includes('images.unsplash.com')) {
+        return next(new AppError('Album not found', 404));
+    }
 
     const photos = await prisma.albumPhoto.findMany({
         where: { albumId: id },

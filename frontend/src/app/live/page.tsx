@@ -180,8 +180,8 @@ export default function LivePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/[0.08] border border-red-500/[0.12] text-xs font-medium text-red-400 tracking-wide mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-600 text-xs font-bold text-white tracking-wide mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               LIVE NOW
             </div>
             <h1 className="text-4xl md:text-5xl font-black tracking-tight">
