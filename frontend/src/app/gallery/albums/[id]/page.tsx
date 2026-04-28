@@ -14,6 +14,8 @@ import { getImageUrl } from "@/lib/imageUtils";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+type MediaType = 'IMAGE' | 'VIDEO';
+
 interface Photo {
     id: string;
     imageUrl: string;
@@ -22,6 +24,11 @@ interface Photo {
     isPublicFeatured: boolean;
     uploader: { id: string; name: string };
     order: number;
+    mediaType: MediaType;
+    videoUrl: string | null;
+    videoProvider: string | null;
+    videoId: string | null;
+    duration: number | null;
 }
 
 interface AlbumDetail {

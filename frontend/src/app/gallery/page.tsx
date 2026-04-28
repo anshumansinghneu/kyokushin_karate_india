@@ -182,6 +182,8 @@ function AlbumCard3D({ album, index }: { album: Album; index: number }) {
     );
 }
 
+export type MediaType = 'IMAGE' | 'VIDEO';
+
 export interface GalleryPhoto {
     id: string;
     imageUrl: string;
@@ -191,6 +193,11 @@ export interface GalleryPhoto {
     uploader: { id: string; name: string };
     event: { id: string; name: string } | null;
     dojo: { id: string; name: string } | null;
+    mediaType: MediaType;
+    videoUrl: string | null;
+    videoProvider: string | null;
+    videoId: string | null;
+    duration: number | null;
 }
 
 function FloatingPhoto({ photo, index, onClick }: { photo: GalleryPhoto; index: number; onClick: () => void }) {
