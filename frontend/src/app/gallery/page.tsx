@@ -5,11 +5,12 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 import {
     Camera, Search, Loader2, ImageIcon, FolderOpen, Tent,
     GraduationCap, Trophy, Swords, Dumbbell, Grid3X3,
-    ChevronRight, ChevronLeft, Sparkles, X, Maximize2, Download, Share2, Image as ImageIconSVG
+    ChevronRight, ChevronLeft, Sparkles, X, Maximize2, Download, Share2, Image as ImageIconSVG, ExternalLink
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { getImageUrl } from "@/lib/imageUtils";
+import VideoPlayer from "@/components/gallery/VideoPlayer";
 import Link from "next/link";
 
 interface Album {
@@ -561,15 +562,17 @@ export default function GalleryPage() {
                                 <button
                                     onClick={async () => {
                                         const photo = photos[lightboxIndex!];
+                                        const isVideo = photo.mediaType === 'VIDEO' && photo.videoUrl;
+                                        const shareUrl = isVideo ? photo.videoUrl! : window.location.href;
                                         const shareData = {
                                             title: photo.caption || "Kyokushin Gallery",
-                                            text: `${photo.caption || "Check out this photo"} by ${photo.uploader.name}`,
-                                            url: window.location.href,
+                                            text: `${photo.caption || "Check out this"} by ${photo.uploader.name}`,
+                                            url: shareUrl,
                                         };
                                         if (navigator.share) {
                                             try { await navigator.share(shareData); } catch {}
                                         } else {
-                                            await navigator.clipboard.writeText(window.location.href);
+                                            await navigator.clipboard.writeText(shareUrl);
                                         }
                                     }}
                                     className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-colors backdrop-blur-md"
@@ -577,15 +580,27 @@ export default function GalleryPage() {
                                 >
                                     <Share2 className="w-5 h-5 text-white" />
                                 </button>
-                                <a
-                                    href={getImageUrl(photos[lightboxIndex].imageUrl) || ""}
-                                    download
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-colors backdrop-blur-md hidden sm:flex"
-                                >
-                                    <Download className="w-5 h-5 text-white" />
-                                </a>
+                                {photos[lightboxIndex].mediaType === 'VIDEO' && photos[lightboxIndex].videoUrl ? (
+                                    <a
+                                        href={photos[lightboxIndex].videoUrl!}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-colors backdrop-blur-md hidden sm:flex"
+                                        title={`Watch on ${photos[lightboxIndex].videoProvider === 'youtube' ? 'YouTube' : 'Vimeo'}`}
+                                    >
+                                        <ExternalLink className="w-5 h-5 text-white" />
+                                    </a>
+                                ) : (
+                                    <a
+                                        href={getImageUrl(photos[lightboxIndex].imageUrl) || ""}
+                                        download
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl transition-colors backdrop-blur-md hidden sm:flex"
+                                    >
+                                        <Download className="w-5 h-5 text-white" />
+                                    </a>
+                                )}
                                 <button
                                     onClick={() => setLightboxIndex(null)}
                                     className="p-3 bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400 rounded-xl transition-colors backdrop-blur-md"
@@ -629,19 +644,27 @@ export default function GalleryPage() {
                                 }
                             }}
                         >
-                            <div className="relative flex items-center justify-center max-w-full max-h-[85vh]">
-                                <motion.img
-                                    key={photos[lightboxIndex].id}
-                                    src={getImageUrl(photos[lightboxIndex].imageUrl) || ""}
-                                    alt={photos[lightboxIndex].caption || "Full screen photo"}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.25 }}
-                                    className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 pointer-events-none select-none"
-                                    draggable={false}
+                            {photos[lightboxIndex].mediaType === 'VIDEO' && photos[lightboxIndex].videoProvider && photos[lightboxIndex].videoId ? (
+                                <VideoPlayer
+                                    provider={photos[lightboxIndex].videoProvider}
+                                    videoId={photos[lightboxIndex].videoId}
+                                    title={photos[lightboxIndex].caption || undefined}
                                 />
-                            </div>
+                            ) : (
+                                <div className="relative flex items-center justify-center max-w-full max-h-[85vh]">
+                                    <motion.img
+                                        key={photos[lightboxIndex].id}
+                                        src={getImageUrl(photos[lightboxIndex].imageUrl) || ""}
+                                        alt={photos[lightboxIndex].caption || "Full screen photo"}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.25 }}
+                                        className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 pointer-events-none select-none"
+                                        draggable={false}
+                                    />
+                                </div>
+                            )}
                         </motion.div>
 
                         {/* Swipe hint on mobile */}

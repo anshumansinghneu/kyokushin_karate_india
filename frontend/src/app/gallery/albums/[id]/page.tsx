@@ -5,12 +5,13 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 import {
     Camera, X, ChevronLeft, ChevronRight, Upload, Loader2, ImageIcon,
     Download, Share2, ZoomIn, ZoomOut, Info, Eye, Trash2, ArrowLeft,
-    Tent, GraduationCap, Trophy, Swords, Dumbbell, Calendar,
+    Tent, GraduationCap, Trophy, Swords, Dumbbell, Calendar, ExternalLink,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 import { getImageUrl } from "@/lib/imageUtils";
+import VideoPlayer from "@/components/gallery/VideoPlayer";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -603,15 +604,28 @@ export default function AlbumDetailPage() {
                             </button>
                         )}
 
-                        {/* Image */}
-                        <div className="relative flex items-center justify-center max-w-[90vw] max-h-[85vh]">
-                            <img
-                                src={currentPhotoUrl}
-                                alt={currentPhoto.caption || "Photo"}
-                                className={`w-auto h-auto max-h-full max-w-full object-contain rounded-lg transition-transform duration-300 ${zoomed ? "scale-150 cursor-zoom-out" : "cursor-zoom-in"}`}
-                                onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }}
-                            />
-                        </div>
+                        {/* Image or Video */}
+                        {currentPhoto.mediaType === 'VIDEO' && currentPhoto.videoProvider && currentPhoto.videoId ? (
+                            <div
+                                className="relative flex items-center justify-center w-full max-w-[90vw] max-h-[85vh]"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <VideoPlayer
+                                    provider={currentPhoto.videoProvider}
+                                    videoId={currentPhoto.videoId}
+                                    title={currentPhoto.caption || undefined}
+                                />
+                            </div>
+                        ) : (
+                            <div className="relative flex items-center justify-center max-w-[90vw] max-h-[85vh]">
+                                <img
+                                    src={currentPhotoUrl}
+                                    alt={currentPhoto.caption || "Photo"}
+                                    className={`w-auto h-auto max-h-full max-w-full object-contain rounded-lg transition-transform duration-300 ${zoomed ? "scale-150 cursor-zoom-out" : "cursor-zoom-in"}`}
+                                    onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }}
+                                />
+                            </div>
+                        )}
 
                         {/* Bottom bar */}
                         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
@@ -628,12 +642,27 @@ export default function AlbumDetailPage() {
                                     <button onClick={(e) => { e.stopPropagation(); setShowInfo(!showInfo); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20" title="Info (i)">
                                         <Info className="w-4 h-4" />
                                     </button>
-                                    <button onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20" title="Zoom">
-                                        {zoomed ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
-                                    </button>
-                                    <button onClick={(e) => { e.stopPropagation(); handleDownload(currentPhotoUrl!, currentPhoto.caption); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20" title="Download">
-                                        <Download className="w-4 h-4" />
-                                    </button>
+                                    {currentPhoto.mediaType !== 'VIDEO' && (
+                                        <button onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20" title="Zoom">
+                                            {zoomed ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
+                                        </button>
+                                    )}
+                                    {currentPhoto.mediaType === 'VIDEO' && currentPhoto.videoUrl ? (
+                                        <a
+                                            href={currentPhoto.videoUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="p-2 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+                                            title={`Watch on ${currentPhoto.videoProvider === 'youtube' ? 'YouTube' : 'Vimeo'}`}
+                                        >
+                                            <ExternalLink className="w-4 h-4" />
+                                        </a>
+                                    ) : (
+                                        <button onClick={(e) => { e.stopPropagation(); handleDownload(currentPhotoUrl!, currentPhoto.caption); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20" title="Download">
+                                            <Download className="w-4 h-4" />
+                                        </button>
+                                    )}
                                     {(isAdmin || currentPhoto.uploader.id === user?.id) && (
                                         <button onClick={(e) => { e.stopPropagation(); handleDeletePhoto(currentPhoto.id); }} className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400" title="Delete">
                                             <Trash2 className="w-4 h-4" />
