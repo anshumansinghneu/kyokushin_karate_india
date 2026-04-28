@@ -260,7 +260,6 @@ export default function AlbumDetailPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const isAdmin = user?.role === "ADMIN";
-    const isInstructor = user?.role === "INSTRUCTOR";
     const canUpload = !!token;
 
     const fetchAlbum = useCallback(async () => {
