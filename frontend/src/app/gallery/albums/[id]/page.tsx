@@ -604,12 +604,14 @@ export default function AlbumDetailPage() {
                         )}
 
                         {/* Image */}
-                        <img
-                            src={currentPhotoUrl}
-                            alt={currentPhoto.caption || "Photo"}
-                            className={`max-h-[85vh] max-w-[90vw] object-contain rounded-lg transition-transform duration-300 ${zoomed ? "scale-150 cursor-zoom-out" : "cursor-zoom-in"}`}
-                            onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }}
-                        />
+                        <div className="relative flex items-center justify-center max-w-[90vw] max-h-[85vh]">
+                            <img
+                                src={currentPhotoUrl}
+                                alt={currentPhoto.caption || "Photo"}
+                                className={`w-auto h-auto max-h-full max-w-full object-contain rounded-lg transition-transform duration-300 ${zoomed ? "scale-150 cursor-zoom-out" : "cursor-zoom-in"}`}
+                                onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }}
+                            />
+                        </div>
 
                         {/* Bottom bar */}
                         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
