@@ -5,7 +5,8 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 import {
     Camera, Search, Loader2, ImageIcon, FolderOpen, Tent,
     GraduationCap, Trophy, Swords, Dumbbell, Grid3X3,
-    ChevronRight, ChevronLeft, Sparkles, X, Maximize2, Download, Share2, Image as ImageIconSVG, ExternalLink
+    ChevronRight, ChevronLeft, Sparkles, X, Maximize2, Download, Share2,
+    Image as ImageIconSVG, ExternalLink, Play
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -41,6 +42,13 @@ const ALBUM_TYPE_CONFIG: Record<string, { label: string; icon: typeof Camera; co
 function seededRandom(seed: number) {
     const x = Math.sin(seed * 9301 + 49297) * 49297;
     return x - Math.floor(x);
+}
+
+function formatDuration(seconds: number | null): string | null {
+    if (seconds == null || seconds < 0) return null;
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 // ----------------------------------------------------------------------
@@ -210,6 +218,8 @@ function FloatingPhoto({ photo, index, onClick }: { photo: GalleryPhoto; index: 
     const imgUrl = getImageUrl(photo.imageUrl);
     const rotation = (seededRandom(index + 1) - 0.5) * 5;
     const offsetY = (seededRandom(index + 50) - 0.5) * 10;
+    const isVideo = photo.mediaType === 'VIDEO';
+    const durationLabel = formatDuration(photo.duration);
 
     useEffect(() => {
         const el = ref.current;
@@ -247,12 +257,16 @@ function FloatingPhoto({ photo, index, onClick }: { photo: GalleryPhoto; index: 
                 scale: { type: "spring", stiffness: 300, damping: 25 },
             }}
             className="group cursor-pointer"
-            style={{ gridRowEnd: `span ${rowSpan}` }}
+            style={{ gridRowEnd: `span ${rowSpan}`, gridColumn: isVideo ? 'span 2' : undefined }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={onClick}
         >
-            <div className="relative rounded-xl overflow-hidden border border-white/[0.08] group-hover:border-red-500/30 transition-all duration-500 bg-zinc-900 shadow-xl shadow-black/40">
+            <div className={`relative rounded-xl overflow-hidden border transition-all duration-500 bg-zinc-900 shadow-xl shadow-black/40 ${
+                isVideo
+                  ? 'border-red-500/30 group-hover:border-red-500/60 shadow-[0_0_30px_rgba(220,38,38,0.25)] group-hover:shadow-[0_0_45px_rgba(220,38,38,0.45)]'
+                  : 'border-white/[0.08] group-hover:border-red-500/30'
+            }`}>
                 {!loaded && <div className="w-full aspect-[4/3] animate-pulse bg-white/5" />}
                 {inView && imgUrl && (
                     <img
@@ -263,23 +277,42 @@ function FloatingPhoto({ photo, index, onClick }: { photo: GalleryPhoto; index: 
                         onLoad={(e) => handleImageLoad(e.currentTarget)}
                     />
                 )}
-                
-                {loaded && (
+
+                {isVideo && loaded && (
                     <>
-                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <motion.div
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: isHovered ? 1 : 0.8, opacity: isHovered ? 1 : 0 }}
-                                className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-2xl"
+                                animate={isHovered ? { scale: [1, 1.1, 1] } : { scale: 1 }}
+                                transition={{ duration: 1.2, repeat: isHovered ? Infinity : 0 }}
+                                className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-md border border-white/30 shadow-2xl flex items-center justify-center"
                             >
-                                <Maximize2 className="w-5 h-5 text-white" />
+                                <Play className="w-7 h-7 text-white ml-1" fill="currentColor" />
                             </motion.div>
                         </div>
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#050507] via-[#050507]/60 to-transparent flex flex-col justify-end p-4 pt-16">
-                            {photo.caption && <p className="text-sm font-bold text-white mb-1 drop-shadow-md">{photo.caption}</p>}
-                            <p className="text-xs font-semibold text-zinc-400">by {photo.uploader.name}</p>
-                        </div>
+                        {durationLabel && (
+                            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-md border border-white/10 text-white text-xs font-bold pointer-events-none">
+                                {durationLabel}
+                            </div>
+                        )}
                     </>
+                )}
+
+                {loaded && !isVideo && (
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: isHovered ? 1 : 0.8, opacity: isHovered ? 1 : 0 }}
+                            className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-2xl"
+                        >
+                            <Maximize2 className="w-5 h-5 text-white" />
+                        </motion.div>
+                    </div>
+                )}
+                {loaded && (
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#050507] via-[#050507]/60 to-transparent flex flex-col justify-end p-4 pt-16 pointer-events-none">
+                        {photo.caption && <p className="text-sm font-bold text-white mb-1 drop-shadow-md">{photo.caption}</p>}
+                        <p className="text-xs font-semibold text-zinc-400">by {photo.uploader.name}</p>
+                    </div>
                 )}
             </div>
         </motion.div>

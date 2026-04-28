@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 import {
     Camera, X, ChevronLeft, ChevronRight, Upload, Loader2, ImageIcon,
     Download, Share2, ZoomIn, ZoomOut, Info, Eye, Trash2, ArrowLeft,
-    Tent, GraduationCap, Trophy, Swords, Dumbbell, Calendar, ExternalLink,
+    Tent, GraduationCap, Trophy, Swords, Dumbbell, Calendar, ExternalLink, Play,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -59,6 +59,13 @@ function seededRandom(seed: number) {
     return x - Math.floor(x);
 }
 
+function formatDuration(seconds: number | null): string | null {
+    if (seconds == null || seconds < 0) return null;
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; index: number; onClick: () => void; onDelete?: () => void }) {
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(false);
@@ -67,6 +74,8 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
     const cardRef = useRef<HTMLDivElement>(null);
     const [inView, setInView] = useState(false);
     const imgUrl = getImageUrl(photo.imageUrl);
+    const isVideo = photo.mediaType === 'VIDEO';
+    const durationLabel = formatDuration(photo.duration);
 
     const handleImageLoad = (img: HTMLImageElement) => {
         setLoaded(true);
@@ -128,21 +137,29 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
                 scale: { type: "spring", stiffness: 300, damping: 25 },
             }}
             className="cursor-pointer"
-            style={{ perspective: 600, gridRowEnd: `span ${rowSpan}` }}
+            style={{ perspective: 600, gridRowEnd: `span ${rowSpan}`, gridColumn: isVideo ? 'span 2' : undefined }}
             onClick={onClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
         >
             <motion.div
-                className="relative rounded-2xl overflow-hidden border border-white/[0.08] group"
+                className={`relative rounded-2xl overflow-hidden border group transition-all duration-500 ${
+                    isVideo
+                      ? 'border-red-500/30 group-hover:border-red-500/60 shadow-[0_0_30px_rgba(220,38,38,0.25)] group-hover:shadow-[0_0_45px_rgba(220,38,38,0.45)]'
+                      : 'border-white/[0.08]'
+                }`}
                 style={{
                     rotateX: isHovered ? rotateX : 0,
                     rotateY: isHovered ? rotateY : 0,
                     transformStyle: "preserve-3d",
-                    boxShadow: isHovered
-                        ? "0 25px 50px rgba(0,0,0,0.5), 0 0 40px rgba(220,38,38,0.05)"
-                        : "0 10px 30px rgba(0,0,0,0.3)",
+                    boxShadow: isVideo
+                        ? (isHovered
+                            ? "0 25px 50px rgba(0,0,0,0.5), 0 0 45px rgba(220,38,38,0.45)"
+                            : "0 10px 30px rgba(0,0,0,0.3), 0 0 30px rgba(220,38,38,0.25)")
+                        : (isHovered
+                            ? "0 25px 50px rgba(0,0,0,0.5), 0 0 40px rgba(220,38,38,0.05)"
+                            : "0 10px 30px rgba(0,0,0,0.3)"),
                 }}
             >
                 {/* Loading shimmer */}
@@ -166,8 +183,27 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
                         onError={() => setError(true)}
                     />
                 )}
-                {/* Hover overlay — frosted glass */}
-                {loaded && (
+                {/* Video play badge + duration pill */}
+                {isVideo && loaded && (
+                    <>
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <motion.div
+                                animate={isHovered ? { scale: [1, 1.1, 1] } : { scale: 1 }}
+                                transition={{ duration: 1.2, repeat: isHovered ? Infinity : 0 }}
+                                className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-md border border-white/30 shadow-2xl flex items-center justify-center"
+                            >
+                                <Play className="w-7 h-7 text-white ml-1" fill="currentColor" />
+                            </motion.div>
+                        </div>
+                        {durationLabel && (
+                            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-md border border-white/10 text-white text-xs font-bold pointer-events-none">
+                                {durationLabel}
+                            </div>
+                        )}
+                    </>
+                )}
+                {/* Hover overlay — frosted glass (images only) */}
+                {loaded && !isVideo && (
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl flex flex-col justify-end p-5">
                         <div style={{ backdropFilter: "blur(6px)" }} className="absolute inset-x-0 bottom-0 h-24 rounded-b-2xl" />
                         <div className="relative z-10">
