@@ -30,3 +30,41 @@ export function parseVideoUrl(url: string): ParsedVideo | null {
 
   return null;
 }
+
+export interface VideoMetadata {
+  provider: 'youtube' | 'vimeo';
+  id: string;
+  thumbnailUrl: string;
+  duration: number | null;
+  title: string;
+}
+
+export async function fetchVideoMetadata(url: string): Promise<VideoMetadata> {
+  const parsed = parseVideoUrl(url);
+  if (!parsed) {
+    throw new Error('Could not parse video URL. Supported: YouTube and Vimeo links.');
+  }
+
+  const oembedUrl =
+    parsed.provider === 'youtube'
+      ? `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`
+      : `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`;
+
+  const res = await fetch(oembedUrl);
+  if (!res.ok) {
+    throw new Error('Video metadata could not be fetched. Verify the video is public and try again.');
+  }
+  const data = (await res.json()) as { thumbnail_url?: string; duration?: number; title?: string };
+
+  if (!data.thumbnail_url) {
+    throw new Error('Video metadata missing thumbnail. Provider may have rejected the request.');
+  }
+
+  return {
+    provider: parsed.provider,
+    id: parsed.id,
+    thumbnailUrl: data.thumbnail_url,
+    duration: typeof data.duration === 'number' ? data.duration : null,
+    title: data.title ?? '',
+  };
+}
