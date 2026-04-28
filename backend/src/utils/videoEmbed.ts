@@ -50,11 +50,23 @@ export async function fetchVideoMetadata(url: string): Promise<VideoMetadata> {
       ? `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`
       : `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`;
 
-  const res = await fetch(oembedUrl);
+  let res: Response;
+  try {
+    res = await fetch(oembedUrl);
+  } catch {
+    throw new Error(`Could not reach ${parsed.provider} to fetch video metadata. Check your connection and try again.`);
+  }
+
   if (!res.ok) {
     throw new Error('Video metadata could not be fetched. Verify the video is public and try again.');
   }
-  const data = (await res.json()) as { thumbnail_url?: string; duration?: number; title?: string };
+
+  let data: { thumbnail_url?: string; duration?: number; title?: string };
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error('Video metadata response was not valid JSON. The provider may be having issues.');
+  }
 
   if (!data.thumbnail_url) {
     throw new Error('Video metadata missing thumbnail. Provider may have rejected the request.');
