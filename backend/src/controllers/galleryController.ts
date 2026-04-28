@@ -195,6 +195,7 @@ export const deleteGalleryItem = catchAsync(async (req: Request, res: Response) 
 // POST /api/gallery/video — Admin/Instructor: add a YouTube/Vimeo video to the gallery
 export const uploadGalleryVideo = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user.id;
+    const userRole = req.user.role;
     const { videoUrl, caption, eventId, dojoId, albumId } = req.body;
 
     if (!videoUrl) {
@@ -208,6 +209,8 @@ export const uploadGalleryVideo = catchAsync(async (req: Request, res: Response)
         throw new AppError(err.message || 'Failed to fetch video metadata', 400);
     }
 
+    const autoApprove = userRole === 'ADMIN' || userRole === 'INSTRUCTOR';
+
     const item = await prisma.gallery.create({
         data: {
             uploadedBy: userId,
@@ -215,9 +218,9 @@ export const uploadGalleryVideo = catchAsync(async (req: Request, res: Response)
             caption: caption || meta.title || null,
             eventId: eventId || null,
             dojoId: dojoId || null,
-            isApproved: true,
-            approvedBy: userId,
-            approvedAt: new Date(),
+            isApproved: autoApprove,
+            approvedBy: autoApprove ? userId : null,
+            approvedAt: autoApprove ? new Date() : null,
             mediaType: 'VIDEO',
             videoUrl,
             videoProvider: meta.provider,
