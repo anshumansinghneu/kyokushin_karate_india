@@ -63,9 +63,18 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
+    const [rowSpan, setRowSpan] = useState(20);
     const cardRef = useRef<HTMLDivElement>(null);
     const [inView, setInView] = useState(false);
     const imgUrl = getImageUrl(photo.imageUrl);
+
+    const handleImageLoad = (img: HTMLImageElement) => {
+        setLoaded(true);
+        const rowHeight = 10;
+        const gap = 20;
+        const span = Math.ceil((img.getBoundingClientRect().height + gap) / (rowHeight + gap));
+        setRowSpan(span);
+    };
 
     // Per-card random rotation and offset (stable across re-renders)
     const rotation = useMemo(() => (seededRandom(index + 1) - 0.5) * 6, [index]); // -3 to +3 deg
@@ -118,8 +127,8 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
                 rotate: { type: "spring", stiffness: 200, damping: 20 },
                 scale: { type: "spring", stiffness: 300, damping: 25 },
             }}
-            className="break-inside-avoid mb-5 cursor-pointer"
-            style={{ perspective: 600 }}
+            className="cursor-pointer"
+            style={{ perspective: 600, gridRowEnd: `span ${rowSpan}` }}
             onClick={onClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseMove={handleMouseMove}
@@ -153,7 +162,7 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
                         alt={photo.caption || "Photo"}
                         className={`w-full rounded-2xl transition-all duration-700 group-hover:scale-110 ${loaded ? "opacity-100" : "opacity-0 absolute"}`}
                         loading="lazy"
-                        onLoad={() => setLoaded(true)}
+                        onLoad={(e) => handleImageLoad(e.currentTarget)}
                         onError={() => setError(true)}
                     />
                 )}
@@ -456,7 +465,14 @@ export default function AlbumDetailPage() {
                         <p className="text-zinc-600">No photos in this album yet</p>
                     </div>
                 ) : (
-                    <div className="columns-2 md:columns-3 lg:columns-4 gap-5">
+                    <div
+                        className="grid gap-5"
+                        style={{
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                            gridAutoFlow: 'dense',
+                            gridAutoRows: '10px',
+                        }}
+                    >
                         {photos.map((photo, i) => (
                             <FloatingPhotoCard
                                 key={photo.id}

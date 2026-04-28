@@ -204,6 +204,7 @@ export interface GalleryPhoto {
 function FloatingPhoto({ photo, index, onClick }: { photo: GalleryPhoto; index: number; onClick: () => void }) {
     const [loaded, setLoaded] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
+    const [rowSpan, setRowSpan] = useState(20);
     const ref = useRef<HTMLDivElement>(null);
     const [inView, setInView] = useState(false);
     const imgUrl = getImageUrl(photo.imageUrl);
@@ -221,6 +222,14 @@ function FloatingPhoto({ photo, index, onClick }: { photo: GalleryPhoto; index: 
         return () => observer.disconnect();
     }, []);
 
+    const handleImageLoad = (img: HTMLImageElement) => {
+        setLoaded(true);
+        const rowHeight = 10;
+        const gap = 20;
+        const span = Math.ceil((img.getBoundingClientRect().height + gap) / (rowHeight + gap));
+        setRowSpan(span);
+    };
+
     return (
         <motion.div
             ref={ref}
@@ -237,7 +246,8 @@ function FloatingPhoto({ photo, index, onClick }: { photo: GalleryPhoto; index: 
                 rotate: { type: "spring", stiffness: 200, damping: 20 },
                 scale: { type: "spring", stiffness: 300, damping: 25 },
             }}
-            className="break-inside-avoid mb-5 group cursor-pointer"
+            className="group cursor-pointer"
+            style={{ gridRowEnd: `span ${rowSpan}` }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={onClick}
@@ -250,7 +260,7 @@ function FloatingPhoto({ photo, index, onClick }: { photo: GalleryPhoto; index: 
                         alt={photo.caption || "Photo"}
                         className={`w-full transition-all duration-700 group-hover:scale-105 ${loaded ? "opacity-100" : "opacity-0 absolute"}`}
                         loading="lazy"
-                        onLoad={() => setLoaded(true)}
+                        onLoad={(e) => handleImageLoad(e.currentTarget)}
                     />
                 )}
                 
@@ -509,12 +519,19 @@ export default function GalleryPage() {
                             <div className="h-px w-32 bg-gradient-to-l from-transparent to-white/10" />
                         </div>
 
-                        <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-5 space-y-5 pb-16">
+                        <div
+                            className="grid gap-5 pb-16"
+                            style={{
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                                gridAutoFlow: 'dense',
+                                gridAutoRows: '10px',
+                            }}
+                        >
                             {photos.map((photo, i) => (
-                                <FloatingPhoto 
-                                    key={photo.id} 
-                                    photo={photo} 
-                                    index={i} 
+                                <FloatingPhoto
+                                    key={photo.id}
+                                    photo={photo}
+                                    index={i}
                                     onClick={() => setLightboxIndex(i)}
                                 />
                             ))}
