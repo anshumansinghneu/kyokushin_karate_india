@@ -3,6 +3,7 @@ import { protect, restrictTo } from '../middleware/authMiddleware';
 import {
     getGalleryItems,
     uploadGalleryItem,
+    uploadGalleryVideo,
     getPendingGalleryItems,
     approveGalleryItem,
     toggleFeatured,
@@ -16,6 +17,7 @@ router.get('/', getGalleryItems);
 
 // Authenticated
 router.post('/', protect, uploadGalleryItem);
+router.post('/video', protect, restrictTo('ADMIN', 'INSTRUCTOR'), uploadGalleryVideo);
 router.delete('/:id', protect, deleteGalleryItem);
 
 // Admin/Instructor only
