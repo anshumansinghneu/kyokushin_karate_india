@@ -13,6 +13,8 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { getImageUrl } from "@/lib/imageUtils";
 import VideoPlayer from "@/components/gallery/VideoPlayer";
+import HeroMosaic from "@/components/gallery/HeroMosaic";
+import MarqueeStrip from "@/components/gallery/MarqueeStrip";
 import Link from "next/link";
 
 interface Album {
@@ -342,6 +344,15 @@ export default function GalleryPage() {
     const [mounted, setMounted] = useState(false);
     useEffect(() => { setMounted(true); }, []);
 
+    const openLightboxById = (photoId: string) => {
+        const idx = photos.findIndex(p => p.id === photoId);
+        if (idx >= 0) setLightboxIndex(idx);
+    };
+
+    const HERO_DESKTOP = 6;
+    const heroIds = new Set(photos.slice(0, HERO_DESKTOP).map(p => p.id));
+    const marqueeItems = photos.filter(p => !heroIds.has(p.id));
+
     const fetchAlbums = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -412,46 +423,20 @@ export default function GalleryPage() {
 
     return (
         <div className="min-h-screen bg-[#050507] text-white selection:bg-red-500/30">
-            {/* Awesome Hero Section Modified */}
-            <div className="relative w-full overflow-hidden text-center flex flex-col items-center justify-center pt-40 pb-32 sm:pt-48 sm:pb-40">
-                {/* Advanced Cinematic Lights */}
-                <div className="absolute top-0 inset-x-0 mx-auto w-[600px] h-[600px] bg-red-600 opacity-[0.03] blur-[150px] rounded-full pointer-events-none mix-blend-screen" />
-                <div className="absolute top-[20%] left-[10%] w-[300px] h-[300px] bg-orange-500 opacity-[0.03] blur-[120px] rounded-full pointer-events-none mix-blend-screen" />
-                
-                {/* Clean dark background — no stock images */}
-                <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/10 to-transparent pointer-events-none" />
-                
-                <div className="relative z-20 max-w-5xl mx-auto px-4 pointer-events-none">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 30 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-                    >
-                        <h1 className="font-black tracking-tighter uppercase leading-[0.9] drop-shadow-2xl" style={{ fontSize: 'clamp(2.5rem, 8vw, 5rem)' }}>
-                            <span className="text-white">THE </span>
-                            <span
-                                className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
-                                style={{
-                                    background: 'linear-gradient(180deg, #ef4444, #991b1b)',
-                                    WebkitBackgroundClip: 'text',
-                                    backgroundClip: 'text',
-                                    color: 'transparent',
-                                }}
-                            >DOJO</span>
-                            <span className="text-white"> WALL</span>
-                        </h1>
-
-                        <p className="mt-6 text-zinc-500 max-w-lg mx-auto text-sm leading-relaxed">
-                            Training, grading, tournaments, and camp memories from Kyokushin dojos across India.
-                        </p>
-                    </motion.div>
-                </div>
-            </div>
+            <HeroMosaic
+                pool={photos}
+                paused={lightboxIndex !== null}
+                onTileClick={openLightboxById}
+            />
+            <MarqueeStrip
+                items={marqueeItems}
+                onTileClick={openLightboxById}
+            />
 
             {/* Content Container */}
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-20 relative z-30">
                 {/* Search & Filters Dock */}
-                <div className="sticky top-6 z-40 mb-20 flex flex-col items-center gap-6">
+                <div className="mb-12 flex flex-col items-center gap-6">
                     {/* Background glow for the dock area */}
                     <div className="absolute inset-0 bg-red-500/5 blur-[100px] pointer-events-none w-[60%] mx-auto h-[150px]" />
                     
@@ -506,6 +491,15 @@ export default function GalleryPage() {
                     </motion.div>
                 </div>
 
+                {/* Browse by Event Divider */}
+                <div className="flex items-center justify-center gap-4 mb-10">
+                    <div className="h-px w-32 bg-gradient-to-r from-transparent to-white/10" />
+                    <span className="text-xs font-black text-white uppercase tracking-[0.2em] px-4 py-2 bg-white/5 border border-white/10 rounded-full">
+                        Browse by Event
+                    </span>
+                    <div className="h-px w-32 bg-gradient-to-l from-transparent to-white/10" />
+                </div>
+
                 {/* Albums Grid */}
                 <div className="min-h-[400px]">
                     {isLoading ? (
@@ -544,49 +538,6 @@ export default function GalleryPage() {
                     )}
                 </div>
 
-                {/* ── All Photos Masonry Gallery ──────────────────────────── */}
-                {photos.length > 0 && (
-                    <div className="mt-32">
-                        <div className="flex items-center justify-center gap-4 mb-16">
-                            <div className="h-px w-32 bg-gradient-to-r from-transparent to-white/10" />
-                            <span className="text-xs font-black text-white uppercase tracking-[0.2em] px-4 py-2 bg-white/5 border border-white/10 rounded-full">
-                                Latest Global Uploads
-                            </span>
-                            <div className="h-px w-32 bg-gradient-to-l from-transparent to-white/10" />
-                        </div>
-
-                        <div
-                            className="grid gap-5 pb-16"
-                            style={{
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                                gridAutoFlow: 'dense',
-                                gridAutoRows: '10px',
-                            }}
-                        >
-                            {photos.map((photo, i) => (
-                                <FloatingPhoto
-                                    key={photo.id}
-                                    photo={photo}
-                                    index={i}
-                                    onClick={() => setLightboxIndex(i)}
-                                />
-                            ))}
-                        </div>
-
-                        {photoPage < photoTotalPages && (
-                            <div className="flex justify-center mt-4">
-                                <button
-                                    onClick={() => setPhotoPage(p => p + 1)}
-                                    disabled={photosLoading}
-                                    className="px-8 py-4 rounded-full text-sm font-bold bg-white text-black hover:bg-zinc-200 transition-all flex items-center gap-3 shadow-xl hover:shadow-2xl hover:shadow-white/20 hover:-translate-y-1 duration-300 disabled:opacity-50 disabled:transform-none"
-                                >
-                                    {photosLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                                    {photosLoading ? "Loading more..." : "Load More Memories"}
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
 
             {/* ── Lightbox with swipe + share ──────────────────────── */}
