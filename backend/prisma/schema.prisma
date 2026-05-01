@@ -105,6 +105,11 @@ enum VerificationStatus {
   REJECTED
 }
 
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
 model User {
   id                    String           @id @default(uuid())
   email                 String           @unique
@@ -454,6 +459,12 @@ model Gallery {
 
   caption           String?
   uploadedAt        DateTime  @default(now())
+
+  mediaType         MediaType @default(IMAGE)
+  videoUrl          String?
+  videoProvider     String?
+  videoId           String?
+  duration          Int?
 
   albums            AlbumPhoto[]
 }

@@ -4,11 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import {
     Plus, Pencil, Trash2, Image, Loader2, Pin, PinOff, X, Upload,
     Tent, GraduationCap, Trophy, Swords, Dumbbell, Camera, FolderOpen,
-    ImagePlus, ImageMinus,
+    ImagePlus, ImageMinus, Video as VideoIcon,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 import { getImageUrl } from "@/lib/imageUtils";
+import AddVideoModal from "./AddVideoModal";
 
 interface Album {
     id: string;
@@ -58,6 +59,10 @@ export default function AlbumManager() {
     const [allPhotos, setAllPhotos] = useState<GalleryPhoto[]>([]);
     const [showPhotoPicker, setShowPhotoPicker] = useState(false);
     const [loadingPhotos, setLoadingPhotos] = useState(false);
+
+    // Add Video modal
+    const [showVideoModal, setShowVideoModal] = useState(false);
+    const [videoTargetAlbumId, setVideoTargetAlbumId] = useState<string | undefined>(undefined);
 
     const fetchAlbums = useCallback(async () => {
         setLoading(true);
@@ -204,12 +209,20 @@ export default function AlbumManager() {
                     <h2 className="text-xl font-bold text-white">Photo Albums</h2>
                     <p className="text-sm text-gray-500 mt-1">Organize gallery photos into albums</p>
                 </div>
-                <button
-                    onClick={handleCreate}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors"
-                >
-                    <Plus className="w-4 h-4" /> New Album
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => { setVideoTargetAlbumId(undefined); setShowVideoModal(true); }}
+                        className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm font-semibold border border-white/10 transition-colors"
+                    >
+                        <VideoIcon className="w-4 h-4 text-red-400" /> Add Video
+                    </button>
+                    <button
+                        onClick={handleCreate}
+                        className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors"
+                    >
+                        <Plus className="w-4 h-4" /> New Album
+                    </button>
+                </div>
             </div>
 
             {/* Albums List */}
@@ -454,6 +467,13 @@ export default function AlbumManager() {
                     </div>
                 </div>
             )}
+
+            <AddVideoModal
+                open={showVideoModal}
+                onClose={() => setShowVideoModal(false)}
+                onSaved={() => fetchAlbums()}
+                albumId={videoTargetAlbumId}
+            />
         </div>
     );
 }

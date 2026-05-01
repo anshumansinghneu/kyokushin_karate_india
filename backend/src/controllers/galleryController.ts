@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../prisma';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/errorHandler';
+import { fetchVideoMetadata } from '../utils/videoEmbed';
 
 // GET /api/gallery — Public: fetch approved gallery items
 export const getGalleryItems = catchAsync(async (req: Request, res: Response) => {
@@ -188,5 +189,72 @@ export const deleteGalleryItem = catchAsync(async (req: Request, res: Response) 
     res.status(204).json({
         status: 'success',
         data: null,
+    });
+});
+
+// POST /api/gallery/video — Admin/Instructor: add a YouTube/Vimeo video to the gallery
+export const uploadGalleryVideo = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const { videoUrl, caption, eventId, dojoId, albumId } = req.body;
+
+    if (!videoUrl) {
+        throw new AppError('videoUrl is required', 400);
+    }
+
+    let meta;
+    try {
+        meta = await fetchVideoMetadata(videoUrl);
+    } catch (err: any) {
+        throw new AppError(err.message || 'Failed to fetch video metadata', 400);
+    }
+
+    const autoApprove = userRole === 'ADMIN' || userRole === 'INSTRUCTOR';
+
+    const item = await prisma.gallery.create({
+        data: {
+            uploadedBy: userId,
+            imageUrl: meta.thumbnailUrl,
+            caption: caption || meta.title || null,
+            eventId: eventId || null,
+            dojoId: dojoId || null,
+            isApproved: autoApprove,
+            approvedBy: autoApprove ? userId : null,
+            approvedAt: autoApprove ? new Date() : null,
+            mediaType: 'VIDEO',
+            videoUrl,
+            videoProvider: meta.provider,
+            videoId: meta.id,
+            duration: meta.duration,
+        },
+        include: {
+            uploader: { select: { id: true, name: true } },
+            event: { select: { id: true, name: true } },
+            dojo: { select: { id: true, name: true } },
+        },
+    });
+
+    if (albumId) {
+        try {
+            const maxOrder = await prisma.albumPhoto.findFirst({
+                where: { albumId },
+                orderBy: { order: 'desc' },
+                select: { order: true },
+            });
+            await prisma.albumPhoto.create({
+                data: {
+                    albumId,
+                    galleryId: item.id,
+                    order: (maxOrder?.order ?? -1) + 1,
+                },
+            });
+        } catch (e: any) {
+            if (e.code !== 'P2002' && e.code !== 'P2003') throw e;
+        }
+    }
+
+    res.status(201).json({
+        status: 'success',
+        data: { item },
     });
 });

@@ -5,14 +5,17 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 import {
     Camera, X, ChevronLeft, ChevronRight, Upload, Loader2, ImageIcon,
     Download, Share2, ZoomIn, ZoomOut, Info, Eye, Trash2, ArrowLeft,
-    Tent, GraduationCap, Trophy, Swords, Dumbbell, Calendar,
+    Tent, GraduationCap, Trophy, Swords, Dumbbell, Calendar, ExternalLink, Play,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 import { getImageUrl } from "@/lib/imageUtils";
+import VideoPlayer from "@/components/gallery/VideoPlayer";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+
+type MediaType = 'IMAGE' | 'VIDEO';
 
 interface Photo {
     id: string;
@@ -22,6 +25,11 @@ interface Photo {
     isPublicFeatured: boolean;
     uploader: { id: string; name: string };
     order: number;
+    mediaType: MediaType;
+    videoUrl: string | null;
+    videoProvider: string | null;
+    videoId: string | null;
+    duration: number | null;
 }
 
 interface AlbumDetail {
@@ -51,13 +59,31 @@ function seededRandom(seed: number) {
     return x - Math.floor(x);
 }
 
+function formatDuration(seconds: number | null): string | null {
+    if (seconds == null || seconds < 0) return null;
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; index: number; onClick: () => void; onDelete?: () => void }) {
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
+    const [rowSpan, setRowSpan] = useState(20);
     const cardRef = useRef<HTMLDivElement>(null);
     const [inView, setInView] = useState(false);
     const imgUrl = getImageUrl(photo.imageUrl);
+    const isVideo = photo.mediaType === 'VIDEO';
+    const durationLabel = formatDuration(photo.duration);
+
+    const handleImageLoad = (img: HTMLImageElement) => {
+        setLoaded(true);
+        const rowHeight = 10;
+        const gap = 20;
+        const span = Math.ceil((img.getBoundingClientRect().height + gap) / (rowHeight + gap));
+        setRowSpan(span);
+    };
 
     // Per-card random rotation and offset (stable across re-renders)
     const rotation = useMemo(() => (seededRandom(index + 1) - 0.5) * 6, [index]); // -3 to +3 deg
@@ -110,22 +136,30 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
                 rotate: { type: "spring", stiffness: 200, damping: 20 },
                 scale: { type: "spring", stiffness: 300, damping: 25 },
             }}
-            className="break-inside-avoid mb-5 cursor-pointer"
-            style={{ perspective: 600 }}
+            className="cursor-pointer"
+            style={{ perspective: 600, gridRowEnd: `span ${rowSpan}`, gridColumn: isVideo ? 'span 2' : undefined }}
             onClick={onClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
         >
             <motion.div
-                className="relative rounded-2xl overflow-hidden border border-white/[0.08] group"
+                className={`relative rounded-2xl overflow-hidden border group transition-all duration-500 ${
+                    isVideo
+                      ? 'border-red-500/30 group-hover:border-red-500/60 shadow-[0_0_30px_rgba(220,38,38,0.25)] group-hover:shadow-[0_0_45px_rgba(220,38,38,0.45)]'
+                      : 'border-white/[0.08]'
+                }`}
                 style={{
                     rotateX: isHovered ? rotateX : 0,
                     rotateY: isHovered ? rotateY : 0,
                     transformStyle: "preserve-3d",
-                    boxShadow: isHovered
-                        ? "0 25px 50px rgba(0,0,0,0.5), 0 0 40px rgba(220,38,38,0.05)"
-                        : "0 10px 30px rgba(0,0,0,0.3)",
+                    boxShadow: isVideo
+                        ? (isHovered
+                            ? "0 25px 50px rgba(0,0,0,0.5), 0 0 45px rgba(220,38,38,0.45)"
+                            : "0 10px 30px rgba(0,0,0,0.3), 0 0 30px rgba(220,38,38,0.25)")
+                        : (isHovered
+                            ? "0 25px 50px rgba(0,0,0,0.5), 0 0 40px rgba(220,38,38,0.05)"
+                            : "0 10px 30px rgba(0,0,0,0.3)"),
                 }}
             >
                 {/* Loading shimmer */}
@@ -145,12 +179,31 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
                         alt={photo.caption || "Photo"}
                         className={`w-full rounded-2xl transition-all duration-700 group-hover:scale-110 ${loaded ? "opacity-100" : "opacity-0 absolute"}`}
                         loading="lazy"
-                        onLoad={() => setLoaded(true)}
+                        onLoad={(e) => handleImageLoad(e.currentTarget)}
                         onError={() => setError(true)}
                     />
                 )}
-                {/* Hover overlay — frosted glass */}
-                {loaded && (
+                {/* Video play badge + duration pill */}
+                {isVideo && loaded && (
+                    <>
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <motion.div
+                                animate={isHovered ? { scale: [1, 1.1, 1] } : { scale: 1 }}
+                                transition={{ duration: 1.2, repeat: isHovered ? Infinity : 0 }}
+                                className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-md border border-white/30 shadow-2xl flex items-center justify-center"
+                            >
+                                <Play className="w-7 h-7 text-white ml-1" fill="currentColor" />
+                            </motion.div>
+                        </div>
+                        {durationLabel && (
+                            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-md border border-white/10 text-white text-xs font-bold pointer-events-none">
+                                {durationLabel}
+                            </div>
+                        )}
+                    </>
+                )}
+                {/* Hover overlay — frosted glass (images only) */}
+                {loaded && !isVideo && (
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl flex flex-col justify-end p-5">
                         <div style={{ backdropFilter: "blur(6px)" }} className="absolute inset-x-0 bottom-0 h-24 rounded-b-2xl" />
                         <div className="relative z-10">
@@ -207,7 +260,6 @@ export default function AlbumDetailPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const isAdmin = user?.role === "ADMIN";
-    const isInstructor = user?.role === "INSTRUCTOR";
     const canUpload = !!token;
 
     const fetchAlbum = useCallback(async () => {
@@ -448,7 +500,14 @@ export default function AlbumDetailPage() {
                         <p className="text-zinc-600">No photos in this album yet</p>
                     </div>
                 ) : (
-                    <div className="columns-2 md:columns-3 lg:columns-4 gap-5">
+                    <div
+                        className="grid gap-5"
+                        style={{
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                            gridAutoFlow: 'dense',
+                            gridAutoRows: '10px',
+                        }}
+                    >
                         {photos.map((photo, i) => (
                             <FloatingPhotoCard
                                 key={photo.id}
@@ -596,13 +655,28 @@ export default function AlbumDetailPage() {
                             </button>
                         )}
 
-                        {/* Image */}
-                        <img
-                            src={currentPhotoUrl}
-                            alt={currentPhoto.caption || "Photo"}
-                            className={`max-h-[85vh] max-w-[90vw] object-contain rounded-lg transition-transform duration-300 ${zoomed ? "scale-150 cursor-zoom-out" : "cursor-zoom-in"}`}
-                            onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }}
-                        />
+                        {/* Image or Video */}
+                        {currentPhoto.mediaType === 'VIDEO' && currentPhoto.videoProvider && currentPhoto.videoId ? (
+                            <div
+                                className="relative flex items-center justify-center w-full max-w-[90vw] max-h-[85vh]"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <VideoPlayer
+                                    provider={currentPhoto.videoProvider}
+                                    videoId={currentPhoto.videoId}
+                                    title={currentPhoto.caption || undefined}
+                                />
+                            </div>
+                        ) : (
+                            <div className="relative flex items-center justify-center max-w-[90vw] max-h-[85vh]">
+                                <img
+                                    src={currentPhotoUrl}
+                                    alt={currentPhoto.caption || "Photo"}
+                                    className={`w-auto h-auto max-h-full max-w-full object-contain rounded-lg transition-transform duration-300 ${zoomed ? "scale-150 cursor-zoom-out" : "cursor-zoom-in"}`}
+                                    onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }}
+                                />
+                            </div>
+                        )}
 
                         {/* Bottom bar */}
                         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
@@ -619,12 +693,27 @@ export default function AlbumDetailPage() {
                                     <button onClick={(e) => { e.stopPropagation(); setShowInfo(!showInfo); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20" title="Info (i)">
                                         <Info className="w-4 h-4" />
                                     </button>
-                                    <button onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20" title="Zoom">
-                                        {zoomed ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
-                                    </button>
-                                    <button onClick={(e) => { e.stopPropagation(); handleDownload(currentPhotoUrl!, currentPhoto.caption); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20" title="Download">
-                                        <Download className="w-4 h-4" />
-                                    </button>
+                                    {currentPhoto.mediaType !== 'VIDEO' && (
+                                        <button onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20" title="Zoom">
+                                            {zoomed ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
+                                        </button>
+                                    )}
+                                    {currentPhoto.mediaType === 'VIDEO' && currentPhoto.videoUrl ? (
+                                        <a
+                                            href={currentPhoto.videoUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="p-2 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+                                            title={`Watch on ${currentPhoto.videoProvider === 'youtube' ? 'YouTube' : 'Vimeo'}`}
+                                        >
+                                            <ExternalLink className="w-4 h-4" />
+                                        </a>
+                                    ) : (
+                                        <button onClick={(e) => { e.stopPropagation(); handleDownload(currentPhotoUrl!, currentPhoto.caption); }} className="p-2 rounded-full bg-white/10 hover:bg-white/20" title="Download">
+                                            <Download className="w-4 h-4" />
+                                        </button>
+                                    )}
                                     {(isAdmin || currentPhoto.uploader.id === user?.id) && (
                                         <button onClick={(e) => { e.stopPropagation(); handleDeletePhoto(currentPhoto.id); }} className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400" title="Delete">
                                             <Trash2 className="w-4 h-4" />
