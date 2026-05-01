@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Play } from "lucide-react";
 import { getImageUrl } from "@/lib/imageUtils";
-import { buildEmbedUrl } from "./VideoPlayer";
 import type { GalleryPhoto } from "@/app/gallery/page";
 
 interface MosaicTileProps {
@@ -20,12 +19,11 @@ export default function MosaicTile({ photo, isActiveVideo, phaseIndex, onClick }
     const thumb = getImageUrl(photo.imageUrl) || "";
     const [thumbLoaded, setThumbLoaded] = useState(false);
 
-    // Cross-fade key: change when photo.id changes so framer-motion / CSS can re-trigger fade
-    const key = photo.id;
+    // Reset load state on swap so the new image fades in via the opacity transition
+    useEffect(() => { setThumbLoaded(false); }, [photo.id]);
 
     return (
         <div
-            key={key}
             onClick={onClick}
             className="relative w-full h-full overflow-hidden rounded-2xl border border-white/10 cursor-pointer group bg-zinc-900"
             style={{
@@ -35,6 +33,7 @@ export default function MosaicTile({ photo, isActiveVideo, phaseIndex, onClick }
         >
             {/* Thumbnail layer (always rendered for fast paint and as a fallback). */}
             <img
+                key={photo.id}
                 src={thumb}
                 alt={photo.caption || (isVideo ? 'Video' : 'Photo')}
                 onLoad={() => setThumbLoaded(true)}

@@ -1,0 +1,106 @@
+<h2>Gallery Page: Album-First Layout</h2>
+<p class="subtitle">How should the album grid look on the main gallery page?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Card Grid with Cover Photo</h3>
+      <div style="background:#1a1a2e;border-radius:8px;padding:16px;margin:12px 0;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div style="border-radius:6px;overflow:hidden;border:1px solid #333;">
+            <div style="height:100px;background:linear-gradient(135deg,#e74c3c,#c0392b);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;">Cover Photo</div>
+            <div style="padding:8px;background:#222;">
+              <div style="font-size:11px;font-weight:bold;color:#eee;">Summer Camp 2026</div>
+              <div style="font-size:9px;color:#888;margin-top:2px;">🏕 Camp · 24 photos</div>
+            </div>
+          </div>
+          <div style="border-radius:6px;overflow:hidden;border:1px solid #333;">
+            <div style="height:100px;background:linear-gradient(135deg,#3498db,#2980b9);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;">Cover Photo</div>
+            <div style="padding:8px;background:#222;">
+              <div style="font-size:11px;font-weight:bold;color:#eee;">Delhi Seminar</div>
+              <div style="font-size:9px;color:#888;margin-top:2px;">📚 Seminar · 18 photos</div>
+            </div>
+          </div>
+          <div style="border-radius:6px;overflow:hidden;border:1px solid #333;">
+            <div style="height:100px;background:linear-gradient(135deg,#f39c12,#e67e22);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;">Cover Photo</div>
+            <div style="padding:8px;background:#222;">
+              <div style="font-size:11px;font-weight:bold;color:#eee;">National Tournament</div>
+              <div style="font-size:9px;color:#888;margin-top:2px;">🏆 Tournament · 56 photos</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:10px;padding:8px;background:#1e1e3a;border-radius:4px;text-align:center;font-size:10px;color:#888;">
+          + "All Photos" link at the bottom to see unorganized photos
+        </div>
+      </div>
+      <p>Clean card grid. Each album shows cover photo, name, type badge, and photo count.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Stacked Photo Previews</h3>
+      <div style="background:#1a1a2e;border-radius:8px;padding:16px;margin:12px 0;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div style="position:relative;height:120px;">
+            <div style="position:absolute;top:0;left:4px;right:4px;height:80px;background:#c0392b;border-radius:6px;opacity:0.4;transform:rotate(-2deg);"></div>
+            <div style="position:absolute;top:4px;left:2px;right:2px;height:80px;background:#e74c3c;border-radius:6px;opacity:0.6;transform:rotate(1deg);"></div>
+            <div style="position:absolute;top:8px;left:0;right:0;height:80px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;">Cover</div>
+            <div style="position:absolute;bottom:0;left:0;right:0;text-align:center;">
+              <div style="font-size:10px;font-weight:bold;color:#eee;">Summer Camp</div>
+              <div style="font-size:8px;color:#888;">24 photos</div>
+            </div>
+          </div>
+          <div style="position:relative;height:120px;">
+            <div style="position:absolute;top:0;left:4px;right:4px;height:80px;background:#2980b9;border-radius:6px;opacity:0.4;transform:rotate(-2deg);"></div>
+            <div style="position:absolute;top:4px;left:2px;right:2px;height:80px;background:#3498db;border-radius:6px;opacity:0.6;transform:rotate(1deg);"></div>
+            <div style="position:absolute;top:8px;left:0;right:0;height:80px;background:linear-gradient(135deg,#3498db,#2980b9);border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;">Cover</div>
+            <div style="position:absolute;bottom:0;left:0;right:0;text-align:center;">
+              <div style="font-size:10px;font-weight:bold;color:#eee;">Delhi Seminar</div>
+              <div style="font-size:8px;color:#888;">18 photos</div>
+            </div>
+          </div>
+          <div style="position:relative;height:120px;">
+            <div style="position:absolute;top:0;left:4px;right:4px;height:80px;background:#e67e22;border-radius:6px;opacity:0.4;transform:rotate(-2deg);"></div>
+            <div style="position:absolute;top:4px;left:2px;right:2px;height:80px;background:#f39c12;border-radius:6px;opacity:0.6;transform:rotate(1deg);"></div>
+            <div style="position:absolute;top:8px;left:0;right:0;height:80px;background:linear-gradient(135deg,#f39c12,#e67e22);border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;">Cover</div>
+            <div style="position:absolute;bottom:0;left:0;right:0;text-align:center;">
+              <div style="font-size:10px;font-weight:bold;color:#eee;">Tournament</div>
+              <div style="font-size:8px;color:#888;">56 photos</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p>Photos appear stacked like a pile. More visual, feels like physical photo albums.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hero Featured + Grid Below</h3>
+      <div style="background:#1a1a2e;border-radius:8px;padding:16px;margin:12px 0;">
+        <div style="height:80px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:6px;display:flex;align-items:center;padding:16px;margin-bottom:10px;">
+          <div>
+            <div style="font-size:13px;font-weight:bold;color:white;">🔥 Summer Camp 2026</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.7);margin-top:2px;">Latest album · 24 photos · Camp</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+          <div style="height:50px;background:linear-gradient(135deg,#3498db,#2980b9);border-radius:4px;display:flex;align-items:end;padding:4px;">
+            <span style="font-size:8px;color:white;font-weight:bold;">Delhi Seminar</span>
+          </div>
+          <div style="height:50px;background:linear-gradient(135deg,#f39c12,#e67e22);border-radius:4px;display:flex;align-items:end;padding:4px;">
+            <span style="font-size:8px;color:white;font-weight:bold;">Tournament</span>
+          </div>
+          <div style="height:50px;background:linear-gradient(135deg,#2ecc71,#27ae60);border-radius:4px;display:flex;align-items:end;padding:4px;">
+            <span style="font-size:8px;color:white;font-weight:bold;">Grading Day</span>
+          </div>
+        </div>
+      </div>
+      <p>Latest/featured album gets a big hero banner. Rest shown as smaller cards below.</p>
+    </div>
+  </div>
+</div>

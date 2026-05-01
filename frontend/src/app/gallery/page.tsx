@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
@@ -349,9 +349,15 @@ export default function GalleryPage() {
         if (idx >= 0) setLightboxIndex(idx);
     };
 
-    const HERO_DESKTOP = 6;
-    const heroIds = new Set(photos.slice(0, HERO_DESKTOP).map(p => p.id));
-    const marqueeItems = photos.filter(p => !heroIds.has(p.id));
+    // Hero notifies us of its current tile IDs so the marquee can avoid duplication
+    const [heroIds, setHeroIds] = useState<string[]>([]);
+    const handleHeroTileIdsChange = useCallback((ids: string[]) => {
+        setHeroIds(ids);
+    }, []);
+    const marqueeItems = useMemo(() => {
+        const heroSet = new Set(heroIds);
+        return photos.filter(p => !heroSet.has(p.id));
+    }, [photos, heroIds]);
 
     const fetchAlbums = useCallback(async () => {
         setIsLoading(true);
@@ -427,6 +433,7 @@ export default function GalleryPage() {
                 pool={photos}
                 paused={lightboxIndex !== null}
                 onTileClick={openLightboxById}
+                onTileIdsChange={handleHeroTileIdsChange}
             />
             <MarqueeStrip
                 items={marqueeItems}

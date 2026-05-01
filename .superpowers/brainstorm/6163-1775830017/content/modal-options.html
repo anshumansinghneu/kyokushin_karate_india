@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dojo Detail Modal - Style Options</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+  .header { text-align: center; padding: 40px 20px 10px; }
+  .header h1 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+  .header p { color: #888; font-size: 14px; }
+
+  .grid {
+    display: grid; grid-template-columns: 1fr; gap: 28px;
+    max-width: 1100px; margin: 30px auto; padding: 0 20px 60px;
+  }
+
+  .card {
+    border-radius: 18px; overflow: hidden; cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+    position: relative; background: #0c0000;
+    border: 1px solid rgba(220,38,38,0.15);
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+  .card.selected { outline: 3px solid #22c55e; outline-offset: 4px; }
+  .card.selected::after {
+    content: 'SELECTED'; position: absolute; top: 14px; right: 14px;
+    background: #22c55e; color: #000; font-size: 10px; font-weight: 800;
+    letter-spacing: 1px; padding: 4px 10px; border-radius: 6px; z-index: 100;
+  }
+
+  .card-label {
+    display: flex; align-items: center; gap: 12px;
+    padding: 18px 22px; background: rgba(220,38,38,0.04);
+    border-bottom: 1px solid rgba(220,38,38,0.1);
+  }
+  .card-label .letter {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 15px; flex-shrink: 0;
+    background: #dc2626; color: #fff;
+  }
+  .card-label h2 { font-size: 18px; font-weight: 700; }
+  .card-label p { color: #999; font-size: 12px; margin-top: 2px; }
+
+  .mockup-wrap { padding: 20px; position: relative; }
+
+  /* ============ SHARED MAP BG ============ */
+  .scene {
+    position: relative; border-radius: 14px; overflow: hidden;
+    min-height: 420px; background: #080000;
+  }
+  .map-base {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 35% 45%, rgba(220,38,38,0.06) 0%, transparent 45%),
+      linear-gradient(170deg, #0c0303, #060000);
+  }
+  .map-base::after {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(220,38,38,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(220,38,38,0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+  .pin-marker {
+    position: absolute; z-index: 15;
+    width: 14px; height: 14px;
+    border-radius: 50% 50% 50% 0;
+    background: #dc2626; border: 2px solid rgba(255,255,255,0.7);
+    transform: rotate(-45deg);
+    box-shadow: 0 0 15px rgba(220,38,38,0.4);
+  }
+  .pin-marker.active {
+    width: 18px; height: 18px;
+    box-shadow: 0 0 30px rgba(220,38,38,0.7), 0 0 60px rgba(220,38,38,0.2);
+  }
+  .pin-marker::after {
+    content: ''; position: absolute; top: -6px; left: -6px;
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 1px solid rgba(220,38,38,0.2);
+    animation: rp 2.5s infinite;
+  }
+  .pin-marker.active::after { top: -8px; left: -8px; width: 34px; height: 34px; }
+  @keyframes rp { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(2.5)} }
+
+  .kanji-w {
+    position: absolute; font-size: 140px; font-weight: 900;
+    color: rgba(220,38,38,0.03); z-index: 1; line-height: 1;
+  }
+
+  /* Label showing "before" vs "after click" */
+  .state-label {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    z-index: 50; display: flex; gap: 0;
+    background: rgba(0,0,0,0.7); border-radius: 8px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .state-label span {
+    padding: 6px 16px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 2px; color: #666;
+  }
+  .state-label span.on { background: rgba(220,38,38,0.15); color: #dc2626; }
+
+  /* ============ A: CINEMATIC SLIDE-IN ============ */
+  .scene-a .slide-panel {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 380px;
+    background: rgba(0,0,0,0.92); backdrop-filter: blur(24px);
+    border-left: 1px solid rgba(220,38,38,0.2);
+    z-index: 40; padding: 24px;
+    box-shadow: -20px 0 60px rgba(0,0,0,0.6), 0 0 40px rgba(220,38,38,0.05);
+    display: flex; flex-direction: column;
+  }
+  .scene-a .slide-panel .close-btn {
+    position: absolute; top: 16px; right: 16px;
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #888;
+  }
+  .scene-a .slide-panel .sp-badge {
+    display: inline-block; font-size: 9px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 3px;
+    background: #dc2626; color: #fff;
+    padding: 4px 12px; border-radius: 4px; margin-bottom: 12px;
+    box-shadow: 0 0 15px rgba(220,38,38,0.3);
+    width: fit-content;
+  }
+  .scene-a .slide-panel h3 {
+    font-size: 26px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: -0.5px; line-height: 1.1; margin-bottom: 16px;
+  }
+  .scene-a .slide-panel .meta-row {
+    display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .scene-a .slide-panel .meta-tag {
+    padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600;
+    background: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.1);
+    color: #ccc;
+  }
+  .scene-a .slide-panel .info-block {
+    flex: 1; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;
+  }
+  .scene-a .slide-panel .info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px; border-radius: 10px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+  }
+  .scene-a .info-row .label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+  .scene-a .info-row .value { font-size: 13px; font-weight: 700; }
+  .scene-a .info-row .value.green { color: #4ade80; }
+  .scene-a .slide-panel .action-btns { display: flex; flex-direction: column; gap: 8px; }
+  .scene-a .sp-btn {
+    padding: 14px; border-radius: 12px; text-align: center;
+    font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
+  }
+  .scene-a .sp-btn.primary { background: #fff; color: #000; }
+  .scene-a .sp-btn.secondary {
+    background: rgba(255,255,255,0.04); color: #fff;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  /* Zoom indicator on map */
+  .scene-a .zoom-ring {
+    position: absolute; z-index: 12;
+    width: 80px; height: 80px; border-radius: 50%;
+    border: 1px solid rgba(220,38,38,0.2);
+    top: 28%; left: 22%; transform: translate(-50%,-50%);
+    animation: zoom-breathe 2s ease-in-out infinite;
+  }
+  .scene-a .zoom-ring-2 {
+    position: absolute; z-index: 11;
+    width: 120px; height: 120px; border-radius: 50%;
+    border: 1px solid rgba(220,38,38,0.08);
+    top: 28%; left: 22%; transform: translate(-50%,-50%);
+    animation: zoom-breathe 2s ease-in-out infinite 0.3s;
+  }
+  @keyframes zoom-breathe {
+    0%,100% { opacity: 0.3; transform: translate(-50%,-50%) scale(1); }
+    50% { opacity: 0.7; transform: translate(-50%,-50%) scale(1.1); }
+  }
+  .scene-a .map-dim {
+    position: absolute; inset: 0; z-index: 8;
+    background: linear-gradient(to left, rgba(0,0,0,0.6), transparent 60%);
+  }
+
+  /* ============ B: EXPLOSIVE CENTER MODAL ============ */
+  .scene-b .modal-backdrop {
+    position: absolute; inset: 0; z-index: 35;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+  }
+  .scene-b .modal-box {
+    position: absolute; z-index: 40;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 520px; max-width: 90%;
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 0 80px rgba(220,38,38,0.15), 0 30px 60px rgba(0,0,0,0.5);
+  }
+  .scene-b .modal-glow {
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(220,38,38,0.4), rgba(220,38,38,0.05), rgba(220,38,38,0.3));
+    border-radius: 20px;
+  }
+  .scene-b .modal-inner {
+    background: #080000; border-radius: 18px; padding: 28px;
+    position: relative; overflow: hidden;
+  }
+  .scene-b .modal-inner .kanji-modal {
+    position: absolute; top: -10px; right: -10px;
+    font-size: 120px; font-weight: 900; color: rgba(220,38,38,0.04);
+    line-height: 1;
+  }
+  .scene-b .modal-inner .close-btn {
+    position: absolute; top: 16px; right: 16px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #888; z-index: 5;
+  }
+  .scene-b .modal-inner .mb-badge {
+    display: inline-block; font-size: 9px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 3px;
+    background: #dc2626; color: #fff;
+    padding: 4px 12px; border-radius: 4px; margin-bottom: 12px;
+    box-shadow: 0 0 20px rgba(220,38,38,0.4);
+  }
+  .scene-b .modal-inner h3 {
+    font-size: 30px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: -0.5px; line-height: 1.1; margin-bottom: 6px;
+    position: relative; z-index: 2;
+  }
+  .scene-b .modal-inner .loc { font-size: 13px; color: #888; margin-bottom: 20px; }
+  .scene-b .modal-inner .divider {
+    height: 1px; background: linear-gradient(to right, #dc2626, transparent);
+    margin-bottom: 16px;
+  }
+  .scene-b .modal-inner .detail-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
+  }
+  .scene-b .detail-cell {
+    padding: 12px; border-radius: 10px;
+    background: rgba(220,38,38,0.04); border: 1px solid rgba(220,38,38,0.08);
+  }
+  .scene-b .detail-cell .dc-label {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 2px; color: #dc2626; margin-bottom: 4px;
+  }
+  .scene-b .detail-cell .dc-value { font-size: 13px; font-weight: 700; }
+  .scene-b .modal-inner .btn-row { display: flex; gap: 10px; }
+  .scene-b .mb-btn {
+    flex: 1; padding: 14px; border-radius: 12px; text-align: center;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
+  }
+  .scene-b .mb-btn.white { background: #fff; color: #000; }
+  .scene-b .mb-btn.ghost {
+    background: rgba(255,255,255,0.04); color: #fff;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  /* Entrance effect hints */
+  .scene-b .entrance-hint {
+    position: absolute; z-index: 38;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 200px; height: 200px; border-radius: 50%;
+    border: 1px solid rgba(220,38,38,0.1);
+    animation: explode-ring 2s ease-out infinite;
+  }
+  @keyframes explode-ring {
+    0% { opacity: 0.8; width: 50px; height: 50px; }
+    100% { opacity: 0; width: 400px; height: 400px; }
+  }
+
+  /* ============ C: MAP TAKEOVER ============ */
+  .scene-c .zoomed-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 40% 45%, rgba(220,38,38,0.1) 0%, transparent 35%),
+      linear-gradient(170deg, #0e0404, #060000);
+  }
+  .scene-c .zoomed-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(220,38,38,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(220,38,38,0.03) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+  .scene-c .zoomed-pin {
+    position: absolute; top: 38%; left: 38%; z-index: 15;
+    width: 24px; height: 24px; border-radius: 50% 50% 50% 0;
+    background: #dc2626; border: 3px solid rgba(255,255,255,0.8);
+    transform: rotate(-45deg);
+    box-shadow: 0 0 40px rgba(220,38,38,0.7), 0 0 80px rgba(220,38,38,0.2);
+  }
+  .scene-c .zoomed-pin::after {
+    content: ''; position: absolute; top: -12px; left: -12px;
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 1px solid rgba(220,38,38,0.3);
+    animation: rp 2s infinite;
+  }
+  .scene-c .zoomed-area-label {
+    position: absolute; top: 30%; left: 46%; z-index: 20;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 2px; color: rgba(255,255,255,0.3);
+  }
+  /* Expanded inline card */
+  .scene-c .inline-card {
+    position: absolute; z-index: 30;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 60%, transparent);
+    padding: 80px 28px 24px;
+  }
+  .scene-c .inline-card .ic-top {
+    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;
+  }
+  .scene-c .inline-card .ic-badge {
+    display: inline-block; font-size: 9px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 3px;
+    background: #dc2626; color: #fff;
+    padding: 4px 12px; border-radius: 4px; margin-bottom: 8px;
+    box-shadow: 0 0 15px rgba(220,38,38,0.3);
+  }
+  .scene-c .inline-card h3 {
+    font-size: 28px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: -0.5px; line-height: 1.1;
+  }
+  .scene-c .inline-card .ic-close {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #888;
+  }
+  .scene-c .inline-card .ic-details {
+    display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .scene-c .ic-pill {
+    padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 600;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    color: #ccc;
+  }
+  .scene-c .ic-pill.red {
+    background: rgba(220,38,38,0.1); border-color: rgba(220,38,38,0.2); color: #f87171;
+  }
+  .scene-c .inline-card .ic-actions { display: flex; gap: 10px; }
+  .scene-c .ic-btn {
+    padding: 12px 24px; border-radius: 12px; font-size: 11px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 2px;
+  }
+  .scene-c .ic-btn.white { background: #fff; color: #000; }
+  .scene-c .ic-btn.ghost {
+    background: rgba(255,255,255,0.04); color: #fff;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  /* Back button */
+  .scene-c .back-btn {
+    position: absolute; top: 16px; left: 16px; z-index: 30;
+    padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 700;
+    background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.1);
+    color: #ccc; backdrop-filter: blur(10px);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .tags { display: flex; gap: 8px; padding: 14px 20px; flex-wrap: wrap; }
+  .tag {
+    padding: 5px 12px; border-radius: 6px; font-size: 10px; font-weight: 600;
+    background: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.12); color: #f87171;
+  }
+  .tag.g { color: #4ade80; background: rgba(34,197,94,0.06); border-color: rgba(34,197,94,0.12); }
+  .tag.b { color: #818cf8; background: rgba(99,102,241,0.06); border-color: rgba(99,102,241,0.12); }
+
+  .indicator {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3);
+    color: #4ade80; padding: 10px 24px; border-radius: 12px;
+    font-size: 13px; font-weight: 600; display: none; z-index: 100;
+  }
+  .indicator.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Dojo Detail View - After Clicking a Pin</h1>
+  <p>How should dojo details appear when someone taps a pin or card? Click to pick.</p>
+</div>
+
+<div class="grid">
+
+  <!-- A: Cinematic Slide-In -->
+  <div class="card" data-choice="a" onclick="selectCard(this)">
+    <div class="card-label">
+      <div class="letter">A</div>
+      <div>
+        <h2>Cinematic Slide-In Panel</h2>
+        <p>Full-height panel slides from right, map zooms into selected dojo and stays visible</p>
+      </div>
+    </div>
+    <div class="mockup-wrap">
+      <div class="scene scene-a">
+        <div class="map-base"></div>
+        <div class="kanji-w" style="top:5px;right:400px;">極</div>
+        <div class="state-label"><span>Map view</span><span class="on">After click &rarr;</span></div>
+
+        <!-- Map pins -->
+        <div class="pin-marker" style="top:50%;left:15%;"></div>
+        <div class="pin-marker active" style="top:30%;left:25%;"></div>
+        <div class="pin-marker" style="top:60%;left:35%;"></div>
+        <div class="pin-marker" style="top:40%;left:50%;"></div>
+
+        <!-- Zoom rings around active pin -->
+        <div class="zoom-ring"></div>
+        <div class="zoom-ring-2"></div>
+
+        <!-- Dim overlay toward panel -->
+        <div class="map-dim"></div>
+
+        <!-- Slide-in panel -->
+        <div class="slide-panel">
+          <div class="close-btn">&times;</div>
+          <div class="sp-badge">Official Branch 001</div>
+          <h3>Mas Oyama<br/>Warrior Academy</h3>
+          <div class="meta-row">
+            <div class="meta-tag">Guwahati, Assam</div>
+            <div class="meta-tag">Sensei Das</div>
+          </div>
+          <div class="info-block">
+            <div class="info-row">
+              <span class="label">Status</span>
+              <span class="value green">Verified & Active</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Students</span>
+              <span class="value">45+</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Established</span>
+              <span class="value">2019</span>
+            </div>
+          </div>
+          <div class="action-btns">
+            <div class="sp-btn primary">View Full Profile</div>
+            <div class="sp-btn secondary">Get Directions</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tags">
+      <div class="tag g">Map stays visible</div>
+      <div class="tag">Smooth zoom-in</div>
+      <div class="tag">Rich detail panel</div>
+      <div class="tag b">Desktop-friendly</div>
+    </div>
+  </div>
+
+  <!-- B: Explosive Center Modal -->
+  <div class="card" data-choice="b" onclick="selectCard(this)">
+    <div class="card-label">
+      <div class="letter">B</div>
+      <div>
+        <h2>Explosive Center Modal</h2>
+        <p>Dramatic red glow border, kanji watermark, 3D entrance pulse radiating from click point</p>
+      </div>
+    </div>
+    <div class="mockup-wrap">
+      <div class="scene scene-b">
+        <div class="map-base"></div>
+        <div class="kanji-w" style="top:5px;right:20px;">極</div>
+
+        <!-- Map pins behind blur -->
+        <div class="pin-marker" style="top:30%;left:20%;"></div>
+        <div class="pin-marker" style="top:50%;left:40%;"></div>
+        <div class="pin-marker" style="top:60%;left:65%;"></div>
+
+        <!-- Backdrop blur -->
+        <div class="modal-backdrop"></div>
+
+        <!-- Explosion ring hint -->
+        <div class="entrance-hint"></div>
+
+        <!-- Modal -->
+        <div class="modal-box">
+          <div class="modal-glow">
+            <div class="modal-inner">
+              <div class="kanji-modal">極</div>
+              <div class="close-btn">&times;</div>
+              <div class="mb-badge">Official Branch 001</div>
+              <h3>Mas Oyama<br/>Warrior Academy</h3>
+              <div class="loc">Guwahati, Assam &bull; Sensei Das</div>
+              <div class="divider"></div>
+              <div class="detail-grid">
+                <div class="detail-cell">
+                  <div class="dc-label">Status</div>
+                  <div class="dc-value" style="color:#4ade80;">Active</div>
+                </div>
+                <div class="detail-cell">
+                  <div class="dc-label">Branch</div>
+                  <div class="dc-value">001</div>
+                </div>
+                <div class="detail-cell">
+                  <div class="dc-label">City</div>
+                  <div class="dc-value">Guwahati</div>
+                </div>
+                <div class="detail-cell">
+                  <div class="dc-label">State</div>
+                  <div class="dc-value">Assam</div>
+                </div>
+              </div>
+              <div class="btn-row">
+                <div class="mb-btn white">View Profile</div>
+                <div class="mb-btn ghost">Directions</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tags">
+      <div class="tag">Red glow border</div>
+      <div class="tag">Dramatic entrance</div>
+      <div class="tag g">High impact</div>
+      <div class="tag">Kanji watermark</div>
+    </div>
+  </div>
+
+  <!-- C: Map Takeover -->
+  <div class="card" data-choice="c" onclick="selectCard(this)">
+    <div class="card-label">
+      <div class="letter">C</div>
+      <div>
+        <h2>Map Takeover - Inline Expansion</h2>
+        <p>Map zooms in deeply, detail card rises from bottom as gradient overlay, no separate modal</p>
+      </div>
+    </div>
+    <div class="mockup-wrap">
+      <div class="scene scene-c">
+        <div class="zoomed-bg"></div>
+        <div class="kanji-w" style="top:5px;right:20px;">極</div>
+
+        <!-- Zoomed in pin -->
+        <div class="zoomed-pin"></div>
+        <div class="zoomed-area-label">Guwahati, Assam</div>
+
+        <!-- Back button -->
+        <div class="back-btn">&larr; Back to all dojos</div>
+
+        <!-- Inline card rising from bottom -->
+        <div class="inline-card">
+          <div class="ic-top">
+            <div>
+              <div class="ic-badge">Official Branch 001</div>
+              <h3>Mas Oyama<br/>Warrior Academy</h3>
+            </div>
+            <div class="ic-close">&times;</div>
+          </div>
+          <div class="ic-details">
+            <div class="ic-pill">Guwahati, Assam</div>
+            <div class="ic-pill red">Sensei Das</div>
+            <div class="ic-pill">Verified & Active</div>
+          </div>
+          <div class="ic-actions">
+            <div class="ic-btn white">View Full Profile</div>
+            <div class="ic-btn ghost">Get Directions</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tags">
+      <div class="tag g">No modal overlay</div>
+      <div class="tag">Immersive zoom</div>
+      <div class="tag b">Mobile-friendly</div>
+      <div class="tag">Seamless flow</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="indicator" id="indicator"></div>
+
+<script>
+  let selected = null;
+  function selectCard(el) {
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selected = el.dataset.choice;
+    const names = {
+      a: 'Cinematic Slide-In Panel',
+      b: 'Explosive Center Modal',
+      c: 'Map Takeover - Inline Expansion'
+    };
+    const ind = document.getElementById('indicator');
+    ind.textContent = 'Selected: ' + names[selected] + ' — tell me in the terminal!';
+    ind.className = 'indicator show';
+    if (window.__record) window.__record({ type: 'click', choice: selected, text: names[selected] });
+  }
+</script>
+
+</body>
+</html>

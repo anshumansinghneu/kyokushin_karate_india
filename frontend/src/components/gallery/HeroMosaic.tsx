@@ -9,6 +9,8 @@ interface HeroMosaicProps {
     /** Pause swap timer when true (e.g., lightbox open). */
     paused: boolean;
     onTileClick: (photoId: string) => void;
+    /** Called whenever the tile selection changes, so siblings (e.g. marquee) can avoid rendering duplicates. */
+    onTileIdsChange?: (ids: string[]) => void;
 }
 
 const DESKTOP_TILE_COUNT = 6;
@@ -52,7 +54,7 @@ function pickWeighted(pool: GalleryPhoto[], count: number): GalleryPhoto[] {
     return shuffle(chosen).slice(0, count);
 }
 
-export default function HeroMosaic({ pool, paused, onTileClick }: HeroMosaicProps) {
+export default function HeroMosaic({ pool, paused, onTileClick, onTileIdsChange }: HeroMosaicProps) {
     const [isMobile, setIsMobile] = useState(false);
     const tileCount = isMobile ? MOBILE_TILE_COUNT : DESKTOP_TILE_COUNT;
     const gridAreas = isMobile ? MOBILE_GRID_AREAS : DESKTOP_GRID_AREAS;
@@ -77,6 +79,11 @@ export default function HeroMosaic({ pool, paused, onTileClick }: HeroMosaicProp
         setTiles(initial);
         usedIdsRef.current = new Set(initial.map(t => t.id));
     }, [pool, tileCount]);
+
+    // Notify parent of current tile IDs whenever they change
+    useEffect(() => {
+        onTileIdsChange?.(tiles.map(t => t.id));
+    }, [tiles, onTileIdsChange]);
 
     // Swap timer
     useEffect(() => {

@@ -28,7 +28,7 @@ export default function MarqueeStrip({ items, onTileClick }: MarqueeStripProps) 
             </div>
 
             {/* Strip */}
-            <div className="relative w-full overflow-hidden h-[22vh] md:h-[22vh]" style={{ height: 'clamp(140px, 22vh, 240px)' }}>
+            <div className="relative w-full overflow-hidden" style={{ height: 'clamp(140px, 22vh, 240px)' }}>
                 <div
                     className="flex h-full gap-3 marquee-track"
                     style={{ width: 'max-content' }}

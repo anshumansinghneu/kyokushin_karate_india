@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register Page - Design Options</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; }
+  .header { text-align: center; padding: 40px 20px 10px; }
+  .header h1 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+  .header p { color: #888; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 32px; max-width: 1200px; margin: 30px auto; padding: 0 20px 60px; }
+  .card {
+    border-radius: 18px; overflow: hidden; cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+    position: relative; background: #0c0000; border: 1px solid rgba(220,38,38,0.15);
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+  .card.selected { outline: 3px solid #22c55e; outline-offset: 4px; }
+  .card.selected::after {
+    content: 'SELECTED'; position: absolute; top: 14px; right: 14px;
+    background: #22c55e; color: #000; font-size: 10px; font-weight: 800;
+    letter-spacing: 1px; padding: 4px 10px; border-radius: 6px; z-index: 100;
+  }
+  .card-label {
+    display: flex; align-items: center; gap: 12px; padding: 18px 22px;
+    background: rgba(220,38,38,0.04); border-bottom: 1px solid rgba(220,38,38,0.1);
+  }
+  .card-label .letter {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 15px; flex-shrink: 0; background: #dc2626; color: #fff;
+  }
+  .card-label h2 { font-size: 18px; font-weight: 700; }
+  .card-label p { color: #999; font-size: 12px; margin-top: 2px; }
+  .mockup { padding: 20px; }
+
+  /* ============ SHARED ============ */
+  .split { display: grid; grid-template-columns: 1fr 1fr; min-height: 480px; border-radius: 12px; overflow: hidden; }
+
+  /* Left panel shared */
+  .left-panel {
+    position: relative; background: #0a0a0a; overflow: hidden; display: flex;
+    flex-direction: column; justify-content: flex-end; padding: 30px;
+  }
+  .left-panel .bg-img {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #1a0505, #0a0a0a);
+    opacity: 0.8;
+  }
+  .left-panel .fist-overlay {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 60%, rgba(220,38,38,0.08), transparent 60%);
+  }
+  .left-panel .texture {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 40%;
+    background: linear-gradient(to left, rgba(5,5,7,1), transparent);
+  }
+  .left-panel .content { position: relative; z-index: 2; }
+  .left-panel .logo-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 40px;
+  }
+  .left-panel .logo {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #dc2626; display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 12px; color: #fff; border: 2px solid rgba(255,255,255,0.2);
+  }
+  .left-panel .osu { font-weight: 900; font-size: 14px; letter-spacing: 3px; color: #fff; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 20px; font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;
+  }
+
+  /* Right panel shared */
+  .right-panel {
+    background: #050507; padding: 30px; display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+  }
+  .right-panel .glow {
+    position: absolute; top: -60px; right: -60px; width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(220,38,38,0.06), transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Form elements */
+  .form-input {
+    width: 100%; padding: 10px 14px; border-radius: 10px; font-size: 12px;
+    color: #fff; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: rgba(220,38,38,0.4); }
+  .form-input::placeholder { color: #555; }
+  .form-label { font-size: 11px; color: #888; margin-bottom: 4px; display: block; font-weight: 500; }
+  .form-btn {
+    width: 100%; padding: 12px; border-radius: 12px; font-size: 11px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 2px; border: none; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-red { background: #dc2626; color: #fff; }
+  .btn-ghost { background: rgba(255,255,255,0.04); color: #fff; border: 1px solid rgba(255,255,255,0.08); }
+
+  /* ============ OPTION A: POLISH ============ */
+  .opt-a .badge { background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.2); color: #f87171; }
+  .opt-a .title {
+    font-size: 48px; font-weight: 900; line-height: 0.9; text-transform: uppercase;
+    letter-spacing: -2px; margin-bottom: 12px;
+  }
+  .opt-a .title .red { color: #dc2626; }
+  .opt-a .subtitle { font-size: 13px; color: #888; line-height: 1.5; border-left: 2px solid #dc2626; padding-left: 12px; }
+
+  /* Progress bar A — same numbered circles, cleaner */
+  .progress-a { display: flex; align-items: center; gap: 4px; margin-bottom: 20px; }
+  .progress-a .step-dot {
+    width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 10px; font-weight: 800;
+    background: #1a1a1a; color: #555; border: 1px solid #333; transition: all 0.2s;
+  }
+  .progress-a .step-dot.active { background: #dc2626; color: #fff; border-color: #dc2626; }
+  .progress-a .step-dot.done { background: #16a34a; color: #fff; border-color: #16a34a; }
+  .progress-a .step-line { flex: 1; height: 2px; background: #222; border-radius: 1px; }
+  .progress-a .step-line.done { background: #16a34a; }
+
+  .role-toggle-a { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .role-btn-a {
+    padding: 12px; border-radius: 12px; text-align: center; font-size: 12px; font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02);
+    color: #888; cursor: pointer; transition: all 0.2s;
+  }
+  .role-btn-a.active { border-color: rgba(220,38,38,0.4); background: rgba(220,38,38,0.08); color: #fff; }
+  .role-btn-a .icon { font-size: 16px; margin-bottom: 2px; }
+
+  /* ============ OPTION B: REWORK ============ */
+  .opt-b .badge { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: #999; }
+  .opt-b .title {
+    font-size: 52px; font-weight: 900; line-height: 0.88; text-transform: uppercase;
+    letter-spacing: -2px; margin-bottom: 14px;
+  }
+  .opt-b .title .red {
+    background: linear-gradient(180deg, #ef4444, #991b1b);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .opt-b .subtitle { font-size: 13px; color: #666; line-height: 1.5; max-width: 280px; }
+
+  /* Progress bar B — thin line with active dot */
+  .progress-b { position: relative; margin-bottom: 24px; }
+  .progress-b .track { height: 2px; background: #1a1a1a; border-radius: 1px; width: 100%; }
+  .progress-b .fill {
+    height: 2px; background: linear-gradient(90deg, #dc2626, #ef4444); border-radius: 1px;
+    width: 16%; transition: width 0.3s;
+  }
+  .progress-b .label-row {
+    display: flex; justify-content: space-between; margin-top: 8px;
+  }
+  .progress-b .step-label {
+    font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #444;
+  }
+  .progress-b .step-label.active { color: #dc2626; }
+
+  .form-header-b { margin-bottom: 20px; }
+  .form-header-b h2 {
+    font-size: 22px; font-weight: 800; margin-bottom: 4px; color: #fff;
+  }
+  .form-header-b p { font-size: 12px; color: #666; }
+
+  /* Role toggle B — pill style */
+  .role-toggle-b {
+    display: flex; gap: 0; background: rgba(255,255,255,0.03); border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06); padding: 3px; margin-bottom: 20px;
+  }
+  .role-btn-b {
+    flex: 1; padding: 10px; border-radius: 10px; text-align: center; font-size: 12px;
+    font-weight: 700; color: #666; cursor: pointer; transition: all 0.2s; border: none;
+    background: transparent;
+  }
+  .role-btn-b.active { background: #dc2626; color: #fff; box-shadow: 0 4px 15px rgba(220,38,38,0.3); }
+
+  /* Input group B — floating label style */
+  .input-group-b { position: relative; margin-bottom: 14px; }
+  .input-b {
+    width: 100%; padding: 14px 14px 8px; border-radius: 12px; font-size: 13px;
+    color: #fff; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+    outline: none; transition: all 0.2s;
+  }
+  .input-b:focus { border-color: rgba(220,38,38,0.3); background: rgba(255,255,255,0.03); }
+  .input-b::placeholder { color: transparent; }
+  .float-label {
+    position: absolute; top: 12px; left: 14px; font-size: 12px; color: #555;
+    transition: all 0.2s; pointer-events: none;
+  }
+  .input-b:focus + .float-label, .input-b:not(:placeholder-shown) + .float-label {
+    top: 4px; font-size: 9px; color: #dc2626; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  /* Section divider B */
+  .section-divider-b {
+    display: flex; align-items: center; gap: 10px; margin: 16px 0 12px;
+  }
+  .section-divider-b .line { flex: 1; height: 1px; background: rgba(255,255,255,0.04); }
+  .section-divider-b .label {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+    color: #555; white-space: nowrap;
+  }
+
+  .tags { display: flex; gap: 8px; padding: 14px 20px; flex-wrap: wrap; }
+  .tag {
+    padding: 5px 12px; border-radius: 6px; font-size: 10px; font-weight: 600;
+    background: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.12); color: #f87171;
+  }
+  .tag.g { color: #4ade80; background: rgba(34,197,94,0.06); border-color: rgba(34,197,94,0.12); }
+  .tag.b { color: #818cf8; background: rgba(99,102,241,0.06); border-color: rgba(99,102,241,0.12); }
+
+  .indicator {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3);
+    color: #4ade80; padding: 10px 24px; border-radius: 12px;
+    font-size: 13px; font-weight: 600; display: none; z-index: 100;
+  }
+  .indicator.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Register Page - Design Direction</h1>
+  <p>Same split layout. Two approaches to polish the form side. Click to pick.</p>
+</div>
+
+<div class="grid">
+
+  <!-- OPTION A: Polish -->
+  <div class="card" data-choice="a" onclick="selectCard(this)">
+    <div class="card-label">
+      <div class="letter">A</div>
+      <div>
+        <h2>Polish What's There</h2>
+        <p>Cleaner step circles, refined inputs, tighter spacing. Same structure, better execution.</p>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="split opt-a">
+        <!-- Left -->
+        <div class="left-panel">
+          <div class="bg-img"></div>
+          <div class="fist-overlay"></div>
+          <div class="texture"></div>
+          <div class="content">
+            <div class="logo-row">
+              <div class="logo">KKFI</div>
+              <span class="osu">O S U !</span>
+            </div>
+            <div class="badge"><span style="width:6px;height:6px;border-radius:50%;background:#dc2626;"></span> Enrollment Portal</div>
+            <div class="title">FORGE<br/>YOUR<br/><span class="red">LEGACY.</span></div>
+            <div class="subtitle">Join the elite ranks. Discipline, strength, and spirit await those who dare to begin the path of Kyokushin Karate.</div>
+          </div>
+        </div>
+        <!-- Right -->
+        <div class="right-panel">
+          <div class="glow"></div>
+          <div style="position:relative;z-index:2;">
+            <div style="text-align:right;margin-bottom:16px;">
+              <span style="font-size:10px;color:#666;">Already a member?</span><br/>
+              <span style="font-size:12px;font-weight:700;color:#fff;">Sign In Here</span>
+            </div>
+
+            <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:24px;">
+              <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;">Join the Dojo</h2>
+              <p style="font-size:11px;color:#666;margin-bottom:16px;">Begin your martial arts journey</p>
+
+              <!-- Progress circles — cleaned up -->
+              <div class="progress-a">
+                <div class="step-dot active">1</div>
+                <div class="step-line"></div>
+                <div class="step-dot">2</div>
+                <div class="step-line"></div>
+                <div class="step-dot">3</div>
+                <div class="step-line"></div>
+                <div class="step-dot">4</div>
+                <div class="step-line"></div>
+                <div class="step-dot">5</div>
+                <div class="step-line"></div>
+                <div class="step-dot">6</div>
+              </div>
+
+              <!-- Role toggle -->
+              <div class="role-toggle-a">
+                <div class="role-btn-a active"><span class="icon">👤</span> Student</div>
+                <div class="role-btn-a"><span class="icon">🥋</span> Instructor</div>
+              </div>
+
+              <!-- Inputs -->
+              <div style="margin-bottom:10px;">
+                <span class="form-label">Full Name</span>
+                <input class="form-input" placeholder="Enter full name" />
+              </div>
+              <div style="margin-bottom:10px;">
+                <span class="form-label">Email</span>
+                <input class="form-input" placeholder="your@email.com" />
+              </div>
+
+              <div style="display:flex;gap:8px;margin-top:16px;">
+                <button class="form-btn btn-red" style="flex:1;">Next →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tags">
+      <div class="tag">Same structure</div>
+      <div class="tag g">Cleaner circles</div>
+      <div class="tag">Better inputs</div>
+      <div class="tag">Quick to implement</div>
+    </div>
+  </div>
+
+  <!-- OPTION B: Rework -->
+  <div class="card" data-choice="b" onclick="selectCard(this)">
+    <div class="card-label">
+      <div class="letter">B</div>
+      <div>
+        <h2>Significant Rework</h2>
+        <p>Thin progress line, floating label inputs, pill role toggle, section dividers. Premium feel.</p>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="split opt-b">
+        <!-- Left -->
+        <div class="left-panel">
+          <div class="bg-img"></div>
+          <div class="fist-overlay"></div>
+          <div class="texture"></div>
+          <div class="content">
+            <div class="logo-row">
+              <div class="logo">KKFI</div>
+              <span class="osu">O S U !</span>
+            </div>
+            <div class="badge">Kyokushin Karate Foundation of India</div>
+            <div class="title">FORGE<br/>YOUR<br/><span class="red">LEGACY.</span></div>
+            <div class="subtitle">Join the elite ranks. Discipline, strength, and spirit await those who dare to begin the path of Kyokushin Karate.</div>
+          </div>
+        </div>
+        <!-- Right -->
+        <div class="right-panel">
+          <div class="glow"></div>
+          <div style="position:relative;z-index:2;">
+            <div style="text-align:right;margin-bottom:20px;">
+              <span style="font-size:10px;color:#666;">Already a member?</span>
+              <span style="font-size:12px;font-weight:700;color:#dc2626;margin-left:6px;">Sign In →</span>
+            </div>
+
+            <!-- Thin progress line -->
+            <div class="progress-b">
+              <div class="track"><div class="fill"></div></div>
+              <div class="label-row">
+                <span class="step-label active">Role</span>
+                <span class="step-label">Details</span>
+                <span class="step-label">Body</span>
+                <span class="step-label">Location</span>
+                <span class="step-label">Belt</span>
+                <span class="step-label">Payment</span>
+              </div>
+            </div>
+
+            <div class="form-header-b">
+              <h2>Join the Dojo</h2>
+              <p>Step 1 of 6 — Choose your role</p>
+            </div>
+
+            <!-- Pill role toggle -->
+            <div class="role-toggle-b">
+              <div class="role-btn-b active">Student</div>
+              <div class="role-btn-b">Instructor</div>
+            </div>
+
+            <!-- Section divider -->
+            <div class="section-divider-b">
+              <div class="line"></div>
+              <span class="label">Basic Details</span>
+              <div class="line"></div>
+            </div>
+
+            <!-- Floating label inputs -->
+            <div class="input-group-b">
+              <input class="input-b" placeholder="Full Name" value=""/>
+              <span class="float-label">Full Name</span>
+            </div>
+            <div class="input-group-b">
+              <input class="input-b" placeholder="Email" value=""/>
+              <span class="float-label">Email Address</span>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:20px;">
+              <button class="form-btn btn-red" style="flex:1;">Continue →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tags">
+      <div class="tag b">Thin progress line</div>
+      <div class="tag b">Floating label inputs</div>
+      <div class="tag">Pill toggle</div>
+      <div class="tag g">Premium feel</div>
+      <div class="tag">Section dividers</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="indicator" id="indicator"></div>
+
+<script>
+  let selected = null;
+  function selectCard(el) {
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selected = el.dataset.choice;
+    const names = { a: 'Polish What\'s There', b: 'Significant Rework' };
+    const ind = document.getElementById('indicator');
+    ind.textContent = 'Selected: ' + names[selected] + ' — tell me in the terminal!';
+    ind.className = 'indicator show';
+    if (window.__record) window.__record({ type: 'click', choice: selected, text: names[selected] });
+  }
+</script>
+
+</body>
+</html>
