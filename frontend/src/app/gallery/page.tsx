@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
     Camera, Search, Loader2, ImageIcon, FolderOpen, Tent,
@@ -338,6 +339,8 @@ export default function GalleryPage() {
     const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
 
     const fetchAlbums = useCallback(async () => {
         setIsLoading(true);
@@ -587,6 +590,8 @@ export default function GalleryPage() {
             </div>
 
             {/* ── Lightbox with swipe + share ──────────────────────── */}
+            {/* Portaled to document.body so it escapes PageTransition's containing block */}
+            {mounted && createPortal(
             <AnimatePresence>
                 {lightboxIndex !== null && photos[lightboxIndex] && (
                     <motion.div
@@ -726,7 +731,9 @@ export default function GalleryPage() {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>,
+            document.body
+            )}
         </div>
     );
 }

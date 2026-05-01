@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
     Camera, X, ChevronLeft, ChevronRight, Upload, Loader2, ImageIcon,
@@ -250,6 +251,8 @@ export default function AlbumDetailPage() {
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [zoomed, setZoomed] = useState(false);
     const [showInfo, setShowInfo] = useState(true);
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
 
     // Upload (multi-file)
     const [showUpload, setShowUpload] = useState(false);
@@ -629,6 +632,8 @@ export default function AlbumDetailPage() {
             </AnimatePresence>
 
             {/* Lightbox */}
+            {/* Portaled to document.body so it escapes PageTransition's containing block */}
+            {mounted && createPortal(
             <AnimatePresence>
                 {lightboxIndex !== null && currentPhoto && currentPhotoUrl && (
                     <motion.div
@@ -728,7 +733,9 @@ export default function AlbumDetailPage() {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>,
+            document.body
+            )}
         </div>
     );
 }
