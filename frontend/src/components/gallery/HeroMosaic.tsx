@@ -13,27 +13,89 @@ interface HeroMosaicProps {
     onTileIdsChange?: (ids: string[]) => void;
 }
 
-const DESKTOP_TILE_COUNT = 6;
-const MOBILE_TILE_COUNT = 4;
+const DESKTOP_IDEAL = 6;
+const MOBILE_IDEAL = 4;
 const SWAP_INTERVAL_MS = 5000;
 
-/** Layout: 3 columns × 3 rows. Tile 1 is large (col 1-2, row 1-2). */
-const DESKTOP_GRID_AREAS: Array<{ col: string; row: string }> = [
-    { col: '1 / span 2', row: '1 / span 2' }, // tile 1 (large)
-    { col: '3', row: '1' },                   // tile 2
-    { col: '3', row: '2' },                   // tile 3
-    { col: '3', row: '3' },                   // tile 4
-    { col: '1', row: '3' },                   // tile 5
-    { col: '2', row: '3' },                   // tile 6
-];
+interface Layout {
+    areas: Array<{ col: string; row: string }>;
+    cols: string;
+    rows: string;
+    height: string;
+}
 
-/** Mobile layout: 3 columns × 2 rows. Tile 1 spans top row; tiles 2-4 fill bottom row. */
-const MOBILE_GRID_AREAS: Array<{ col: string; row: string }> = [
-    { col: '1 / span 3', row: '1' }, // tile 1 (large)
-    { col: '1', row: '2' },          // tile 2
-    { col: '2', row: '2' },          // tile 3
-    { col: '3', row: '2' },          // tile 4
-];
+/** Choose a grid layout that exactly fits `count` tiles — no empty cells. */
+function getLayout(count: number, isMobile: boolean): Layout {
+    if (count <= 1) {
+        return {
+            areas: [{ col: '1', row: '1' }],
+            cols: '1fr',
+            rows: '1fr',
+            height: isMobile ? '50vh' : '60vh',
+        };
+    }
+    if (count === 2) {
+        return {
+            areas: [{ col: '1', row: '1' }, { col: '2', row: '1' }],
+            cols: '1fr 1fr',
+            rows: '1fr',
+            height: isMobile ? '40vh' : '55vh',
+        };
+    }
+    if (count === 3) {
+        return {
+            areas: [
+                { col: '1', row: '1 / span 2' }, // large left
+                { col: '2', row: '1' },          // top right
+                { col: '2', row: '2' },          // bottom right
+            ],
+            cols: '1.6fr 1fr',
+            rows: '1fr 1fr',
+            height: isMobile ? '55vh' : '65vh',
+        };
+    }
+    if (count === 4) {
+        return {
+            areas: [
+                { col: '1 / span 3', row: '1' }, // hero across top
+                { col: '1', row: '2' },
+                { col: '2', row: '2' },
+                { col: '3', row: '2' },
+            ],
+            cols: 'repeat(3, 1fr)',
+            rows: '2fr 1fr',
+            height: isMobile ? '60vh' : '70vh',
+        };
+    }
+    if (count === 5) {
+        return {
+            areas: [
+                { col: '1 / span 2', row: '1 / span 2' }, // large
+                { col: '3', row: '1' },
+                { col: '3', row: '2' },
+                { col: '1', row: '3' },
+                { col: '2 / span 2', row: '3' },          // wide bottom-right
+            ],
+            cols: '2fr 2fr 1.4fr',
+            rows: 'repeat(3, 1fr)',
+            height: isMobile ? '70vh' : '75vh',
+        };
+    }
+    // count >= 6 — full desktop layout (slice to 6 if more)
+    return {
+        areas: [
+            { col: '1 / span 2', row: '1 / span 2' },
+            { col: '3', row: '1' },
+            { col: '3', row: '2' },
+            { col: '3', row: '3' },
+            { col: '1', row: '3' },
+            { col: '2', row: '3' },
+        ],
+        cols: '2fr 2fr 1.4fr',
+        rows: 'repeat(3, 1fr)',
+        height: isMobile ? '75vh' : '80vh',
+    };
+}
 
 function shuffle<T>(arr: T[]): T[] {
     const a = arr.slice();
@@ -56,8 +118,11 @@ function pickWeighted(pool: GalleryPhoto[], count: number): GalleryPhoto[] {
 
 export default function HeroMosaic({ pool, paused, onTileClick, onTileIdsChange }: HeroMosaicProps) {
     const [isMobile, setIsMobile] = useState(false);
-    const tileCount = isMobile ? MOBILE_TILE_COUNT : DESKTOP_TILE_COUNT;
-    const gridAreas = isMobile ? MOBILE_GRID_AREAS : DESKTOP_GRID_AREAS;
+    const ideal = isMobile ? MOBILE_IDEAL : DESKTOP_IDEAL;
+    // Adapt to whatever the pool actually has — no empty cells
+    const tileCount = Math.min(ideal, pool.length);
+    const layout = useMemo(() => getLayout(tileCount, isMobile), [tileCount, isMobile]);
+    const gridAreas = layout.areas;
 
     // Track viewport — listen to media query
     useEffect(() => {
@@ -123,25 +188,28 @@ export default function HeroMosaic({ pool, paused, onTileClick, onTileIdsChange 
 
     if (tiles.length === 0) {
         return (
-            <div className="w-full h-[80vh] md:h-[80vh] flex items-center justify-center bg-zinc-950 border-y border-white/5">
+            <div className="w-full h-[60vh] flex items-center justify-center bg-zinc-950 border-y border-white/5">
                 <p className="text-zinc-500 text-sm">No memories yet — be the first to upload.</p>
             </div>
         );
     }
+
+    // Defensive slice: never render more tiles than the layout has slots for
+    const visibleTiles = tiles.slice(0, gridAreas.length);
 
     return (
         <div className="relative w-full">
             <div
                 className="grid w-full"
                 style={{
-                    gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : '2fr 2fr 1.4fr',
-                    gridTemplateRows: isMobile ? '2fr 1fr' : 'repeat(3, 1fr)',
+                    gridTemplateColumns: layout.cols,
+                    gridTemplateRows: layout.rows,
                     gap: '12px',
-                    height: isMobile ? '60vh' : '80vh',
+                    height: layout.height,
                     padding: '12px',
                 }}
             >
-                {tiles.map((photo, i) => (
+                {visibleTiles.map((photo, i) => (
                     <div key={`slot-${i}`} style={{ gridColumn: gridAreas[i].col, gridRow: gridAreas[i].row }}>
                         <MosaicTile
                             photo={photo}
