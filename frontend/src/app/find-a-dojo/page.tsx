@@ -550,6 +550,7 @@ export default function FindADojoPage() {
   /* ---- State (all existing state preserved) ---- */
   const [dojos, setDojos] = useState<Dojo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [mapReady, setMapReady] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredDojoId, setHoveredDojoId] = useState<string | null>(null);
   const [selectedDojo, setSelectedDojo] = useState<Dojo | null>(null);
@@ -657,6 +658,7 @@ export default function FindADojoPage() {
       }).addTo(map);
 
       mapInstanceRef.current = map;
+      setMapReady(true);
     };
 
     initMap();
@@ -666,6 +668,7 @@ export default function FindADojoPage() {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
+      setMapReady(false);
     };
   }, [isLoading]);
 
@@ -745,7 +748,7 @@ export default function FindADojoPage() {
         map.fitBounds(L.latLngBounds([6.5, 68.0], [37.0, 97.5]), { padding: [20, 20], animate: true, duration: 1 });
       }
     }
-  }, [filteredDojos, searchQuery, getDojoCoords, selectedDojo]);
+  }, [filteredDojos, searchQuery, getDojoCoords, selectedDojo, mapReady]);
 
   /* ---- Hover sync: add/remove .active class on pin ---- */
   useEffect(() => {
