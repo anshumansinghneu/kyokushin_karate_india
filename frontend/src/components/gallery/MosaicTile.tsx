@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Play } from "lucide-react";
 import { getImageUrl } from "@/lib/imageUtils";
 import type { GalleryPhoto } from "@/app/gallery/page";
@@ -19,9 +19,6 @@ export default function MosaicTile({ photo, isActiveVideo, phaseIndex, onClick }
     const thumb = getImageUrl(photo.imageUrl) || "";
     const [thumbLoaded, setThumbLoaded] = useState(false);
 
-    // Reset load state on swap so the new image fades in via the opacity transition
-    useEffect(() => { setThumbLoaded(false); }, [photo.id]);
-
     return (
         <div
             onClick={onClick}
@@ -31,9 +28,9 @@ export default function MosaicTile({ photo, isActiveVideo, phaseIndex, onClick }
                 animationDelay: `${phaseIndex * 0.9}s`,
             }}
         >
-            {/* Thumbnail layer (always rendered for fast paint and as a fallback). */}
+            {/* Thumbnail layer — same <img> across swaps so the browser keeps the
+                previous image visible while the new src is loading (no black flash). */}
             <img
-                key={photo.id}
                 src={thumb}
                 alt={photo.caption || (isVideo ? 'Video' : 'Photo')}
                 onLoad={() => setThumbLoaded(true)}
