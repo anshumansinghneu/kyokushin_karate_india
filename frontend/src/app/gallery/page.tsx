@@ -13,7 +13,7 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { getImageUrl } from "@/lib/imageUtils";
 import VideoPlayer from "@/components/gallery/VideoPlayer";
-import HeroMosaic from "@/components/gallery/HeroMosaic";
+import DojoWall from "@/components/gallery/DojoWall";
 import MarqueeStrip from "@/components/gallery/MarqueeStrip";
 import Link from "next/link";
 
@@ -429,9 +429,8 @@ export default function GalleryPage() {
 
     return (
         <div className="min-h-screen bg-[#050507] text-white selection:bg-red-500/30">
-            <HeroMosaic
+            <DojoWall
                 pool={photos}
-                paused={lightboxIndex !== null}
                 onTileClick={openLightboxById}
                 onTileIdsChange={handleHeroTileIdsChange}
             />
