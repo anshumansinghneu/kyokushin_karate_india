@@ -14,6 +14,23 @@
 
 `docs/superpowers/specs/2026-06-08-dojo-wall-featured-video-design.md`
 
+## Amendment (during execution)
+
+Tasks 2 & 3 diverged from the code blocks below for a good reason: the original
+`composeTiles(previousOlderOrder)` + `useRef`-in-`useMemo` approach violates React 19 /
+Next 16 lint rules (`react-compiler` forbids ref read/write during render;
+`react-hooks/set-state-in-effect` forbids the effect fallback). **Resolved by seeding
+the older-batch shuffle from the items' ids** so ordering is a pure function of the data
+(stable across renders, changes only when data changes) — no refs/state/effects for
+ordering. As shipped:
+- `composeTiles({ rest, gateOpen, recentCount? })` returns `GalleryPhoto[]` directly and
+  shuffles `older` with `fisherYatesShuffle(older, mulberry32(hashString(olderIds)))`.
+  New exports: `hashString`, `mulberry32`. Removed: `previousOlderOrder`/`rng` params,
+  `ComposeTilesResult`.
+- `useDojoWallOrder` arms a `setTimeout` (delay 0 if the 10-min mark already passed) to
+  flip `gateOpen`; `tiles = useMemo(() => composeTiles({ rest, gateOpen }), [rest, gateOpen])`.
+- Its public return — `{ featured, tiles }` — is unchanged, so Tasks 4–7 below are unaffected.
+
 ## Conventions for this plan
 
 - All paths are relative to repo root `/Users/anshumansingh/kyokushin_karate`.
