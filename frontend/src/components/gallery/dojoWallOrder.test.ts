@@ -92,49 +92,52 @@ describe("resolveFirstVisit", () => {
 });
 
 describe("composeTiles", () => {
-  const rest = Array.from({ length: RECENT_COUNT + 4 }, (_, i) =>
-    photo(`r${i}`, new Date(Date.UTC(2026, 0, RECENT_COUNT + 4 - i)).toISOString())
+  const rest = Array.from({ length: RECENT_COUNT + 6 }, (_, i) =>
+    photo(`r${i}`, new Date(Date.UTC(2026, 0, RECENT_COUNT + 6 - i)).toISOString())
   );
 
   it("returns only the recent slice when the gate is closed", () => {
-    const { tiles } = composeTiles({ rest, gateOpen: false });
+    const tiles = composeTiles({ rest, gateOpen: false });
     expect(tiles).toHaveLength(RECENT_COUNT);
     expect(tiles.map((p) => p.id)).toEqual(rest.slice(0, RECENT_COUNT).map((p) => p.id));
   });
 
-  it("appends all older items (shuffled) when the gate is open", () => {
-    const { tiles } = composeTiles({ rest, gateOpen: true, rng: () => 0 });
+  it("appends all older items when the gate is open, recent kept in date order on top", () => {
+    const tiles = composeTiles({ rest, gateOpen: true });
     expect(tiles).toHaveLength(rest.length);
     // recent stays in date order up top
     expect(tiles.slice(0, RECENT_COUNT).map((p) => p.id)).toEqual(
       rest.slice(0, RECENT_COUNT).map((p) => p.id)
     );
-    // every older item is present somewhere
+    // every older item is present exactly once in the tail
     const olderIds = rest.slice(RECENT_COUNT).map((p) => p.id).sort();
     const tailIds = tiles.slice(RECENT_COUNT).map((p) => p.id).sort();
     expect(tailIds).toEqual(olderIds);
   });
 
-  it("reuses a previous older order unchanged when the older set is identical (shuffle once)", () => {
-    const first = composeTiles({ rest, gateOpen: true, rng: () => 0 });
-    const second = composeTiles({
-      rest,
-      gateOpen: true,
-      previousOlderOrder: first.olderOrder,
-      rng: () => 0.999, // different rng must NOT matter — order is reused
-    });
-    expect(second.olderOrder.map((p) => p.id)).toEqual(first.olderOrder.map((p) => p.id));
+  it("actually shuffles the older items (tail order differs from date order)", () => {
+    const tiles = composeTiles({ rest, gateOpen: true });
+    const tail = tiles.slice(RECENT_COUNT).map((p) => p.id);
+    const olderInDateOrder = rest.slice(RECENT_COUNT).map((p) => p.id);
+    expect(tail).not.toEqual(olderInDateOrder);
   });
 
-  it("re-shuffles when the older set changes", () => {
-    const stale = [photo("ghost", "2020-01-01T00:00:00Z")];
-    const { olderOrder } = composeTiles({
-      rest,
-      gateOpen: true,
-      previousOlderOrder: stale,
-      rng: () => 0,
-    });
-    expect(olderOrder.map((p) => p.id)).not.toEqual(["ghost"]);
-    expect(olderOrder).toHaveLength(rest.length - RECENT_COUNT);
+  it("is deterministic — same input yields the same order every call (stable, no reshuffle)", () => {
+    const a = composeTiles({ rest, gateOpen: true });
+    const b = composeTiles({ rest, gateOpen: true });
+    expect(a.map((p) => p.id)).toEqual(b.map((p) => p.id));
+  });
+
+  it("produces a different older order when the older set changes", () => {
+    const baseTail = composeTiles({ rest, gateOpen: true })
+      .slice(RECENT_COUNT)
+      .map((p) => p.id);
+    // Add one more older item — the seed (derived from older ids) changes.
+    const grown = [...rest, photo("rX", "2025-06-01T00:00:00Z")];
+    const grownTail = composeTiles({ rest: grown, gateOpen: true })
+      .slice(RECENT_COUNT)
+      .map((p) => p.id);
+    expect(grownTail).not.toEqual(baseTail);
+    expect(grownTail).toHaveLength(grown.length - RECENT_COUNT);
   });
 });

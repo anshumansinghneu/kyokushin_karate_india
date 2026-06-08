@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { GalleryPhoto } from "@/app/gallery/page";
 import {
   FIRST_VISIT_KEY,
   GATE_MS,
   composeTiles,
-  isGateOpen,
   resolveFirstVisit,
   selectFeatured,
   sortNewestFirst,
@@ -32,19 +31,17 @@ function readFirstVisit(): number {
 }
 
 export function useDojoWallOrder(pool: GalleryPhoto[]): DojoWallOrder {
-  // Client-only: resolved in an effect so SSR render is deterministic (gate closed).
-  const [firstVisit, setFirstVisit] = useState<number | null>(null);
+  // Gate starts closed so the SSR/first-paint render is deterministic. After
+  // mount we read the persisted first-visit time and arm a timer to open the
+  // gate at the 10-minute mark. The setState lives in the timer callback (a
+  // delay of 0 when the mark has already passed), never synchronously in the
+  // effect body, so it doesn't trigger cascading renders.
   const [gateOpen, setGateOpen] = useState(false);
 
   useEffect(() => {
-    const fv = readFirstVisit();
-    setFirstVisit(fv);
-    if (isGateOpen(fv, Date.now())) {
-      setGateOpen(true);
-      return;
-    }
-    const remaining = GATE_MS - (Date.now() - fv);
-    const timer = setTimeout(() => setGateOpen(true), Math.max(0, remaining));
+    const firstVisit = readFirstVisit();
+    const remaining = Math.max(0, GATE_MS - (Date.now() - firstVisit));
+    const timer = setTimeout(() => setGateOpen(true), remaining);
     return () => clearTimeout(timer);
   }, []);
 
@@ -53,21 +50,10 @@ export function useDojoWallOrder(pool: GalleryPhoto[]): DojoWallOrder {
     return selectFeatured(sorted);
   }, [pool]);
 
-  // Keep the shuffled older order stable across renders (shuffle once).
-  const olderOrderRef = useRef<GalleryPhoto[] | null>(null);
-
-  const tiles = useMemo(() => {
-    const result = composeTiles({
-      rest,
-      gateOpen,
-      previousOlderOrder: olderOrderRef.current,
-    });
-    olderOrderRef.current = result.olderOrder;
-    return result.tiles;
-  }, [rest, gateOpen]);
-
-  // firstVisit is read but intentionally only drives the effect above.
-  void firstVisit;
+  // Ordering is a pure function of (rest, gateOpen): the older batch is shuffled
+  // with a seed derived from its ids, so the order is stable across re-renders
+  // and only changes when the data does. No refs or effects needed for ordering.
+  const tiles = useMemo(() => composeTiles({ rest, gateOpen }), [rest, gateOpen]);
 
   return { featured, tiles };
 }
