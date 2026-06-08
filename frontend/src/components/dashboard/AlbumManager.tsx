@@ -108,14 +108,17 @@ export default function AlbumManager() {
                 coverImageUrl: form.coverImageUrl || null,
             };
             if (editingId) {
-                await api.patch(`/albums/${editingId}`, payload);
+                const res = await api.patch(`/albums/${editingId}`, payload);
+                const updated: Album = res.data.data.album;
+                setAlbums(prev => prev.map(a => a.id === updated.id ? updated : a));
                 showToast("Album updated", "success");
             } else {
-                await api.post("/albums", payload);
+                const res = await api.post("/albums", payload);
+                const created: Album = res.data.data.album;
+                setAlbums(prev => [created, ...prev.filter(a => a.id !== created.id)]);
                 showToast("Album created", "success");
             }
             setShowForm(false);
-            fetchAlbums();
         } catch (err: any) {
             console.error("Album save error:", err.response?.data || err.message || err);
             showToast(err.response?.data?.message || "Save failed", "error");
@@ -128,8 +131,8 @@ export default function AlbumManager() {
         if (!confirm("Delete this album? Photos will not be deleted.")) return;
         try {
             await api.delete(`/albums/${id}`);
+            setAlbums(prev => prev.filter(a => a.id !== id));
             showToast("Album deleted", "success");
-            fetchAlbums();
         } catch {
             showToast("Delete failed", "error");
         }
@@ -137,9 +140,13 @@ export default function AlbumManager() {
 
     const handleTogglePin = async (album: Album) => {
         try {
-            await api.patch(`/albums/${album.id}`, { isPinned: !album.isPinned });
+            const res = await api.patch(`/albums/${album.id}`, { isPinned: !album.isPinned });
+            const updated: Album = res.data.data.album;
+            // Pinning unpins all others on the backend — mirror that in local state
+            setAlbums(prev => prev.map(a =>
+                a.id === updated.id ? updated : (updated.isPinned ? { ...a, isPinned: false } : a)
+            ));
             showToast(album.isPinned ? "Unpinned" : "Pinned as featured", "success");
-            fetchAlbums();
         } catch {
             showToast("Failed to update", "error");
         }
@@ -178,9 +185,11 @@ export default function AlbumManager() {
         if (!managingAlbumId) return;
         try {
             await api.post(`/albums/${managingAlbumId}/photos`, { galleryIds });
+            setAlbums(prev => prev.map(a =>
+                a.id === managingAlbumId ? { ...a, photoCount: a.photoCount + galleryIds.length } : a
+            ));
             showToast(`Added ${galleryIds.length} photo(s)`, "success");
             openPhotoManager(managingAlbumId);
-            fetchAlbums();
         } catch {
             showToast("Failed to add photos", "error");
         }
@@ -190,9 +199,11 @@ export default function AlbumManager() {
         if (!managingAlbumId) return;
         try {
             await api.delete(`/albums/${managingAlbumId}/photos/${photoId}`);
+            setAlbums(prev => prev.map(a =>
+                a.id === managingAlbumId ? { ...a, photoCount: Math.max(0, a.photoCount - 1) } : a
+            ));
             showToast("Photo removed from album", "success");
             openPhotoManager(managingAlbumId);
-            fetchAlbums();
         } catch {
             showToast("Failed to remove photo", "error");
         }
