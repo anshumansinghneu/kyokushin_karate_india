@@ -1,18 +1,17 @@
-# Remove Vouchers from Public Signup & Event Registration — Design
+# Remove Voucher from New-User Signup — Design
 
 **Date:** 2026-06-16
 **Status:** Approved
 
 ## Goal
 
-Stop new users from signing up for free via a voucher, and stop members from
-using vouchers when registering for events. Membership **renewal** keeps its
-voucher flow (it has no other payment path today), and all **admin/instructor**
-voucher tooling is retained so the feature can be restructured and reused later.
+Stop new users from signing up for free via a voucher. Event registration,
+membership renewal, and all **admin/instructor** voucher tooling are retained so
+the feature keeps working and can be restructured/reused later.
 
 ## Scope
 
-### Removed — member self-service voucher entry points
+### Removed — voucher at new-user signup only
 
 1. **`/register` (signup)** — `frontend/src/app/register/page.tsx`
    - Remove voucher state (`voucherCode`, `voucherValidating`, `voucherValid`,
@@ -20,37 +19,30 @@ voucher tooling is retained so the feature can be restructured and reused later.
    - New users use the existing Razorpay pay flow only (the `paymentStep`
      "form" → "paying" → "verifying" → "done" path already exists and stays).
 
-2. **`/events/[id]` (event registration)** — `frontend/src/app/events/[id]/page.tsx`
-   - Remove voucher state, `handleValidateEventVoucher`, and the
-     voucher-redeem branch.
-   - Members use the existing paid-event (Razorpay) and free-event
-     (`handleFreeRegistration`) paths only.
-
-3. **Auth store** — `frontend/src/store/authStore.ts`
+2. **Auth store** — `frontend/src/store/authStore.ts`
    - Remove the `registerWithVoucher` method and its type declaration. The
      register page is its only consumer.
 
-### Removed — backend public routes
+### Removed — backend public route
 
-In `backend/src/routes/voucherRoutes.ts`, delete these route registrations:
+In `backend/src/routes/voucherRoutes.ts`, delete this route registration:
 
 - `POST /vouchers/redeem/registration` (currently **unauthenticated** — must be
   removed so the free-signup path cannot be hit directly by bypassing the UI).
-- `POST /vouchers/redeem/event/:eventId` (only the public events page used it;
-  `EnrollStudentModal` uses `/events/:id/enroll-student`, not this).
 
-The corresponding controller functions `redeemVoucherForRegistration` and
-`redeemVoucherForEvent` in `backend/src/controllers/voucherController.ts` are
-**kept in place (unused)** so the logic is available to restructure later.
-Remove their now-unused imports from `voucherRoutes.ts` only.
+The corresponding controller function `redeemVoucherForRegistration` in
+`backend/src/controllers/voucherController.ts` is **kept in place (unused)** so
+the logic is available to restructure later. Remove its now-unused import from
+`voucherRoutes.ts` only.
 
 ## Explicitly untouched
 
+- **`/events/[id]` (event registration)** — voucher flow stays fully functional
+  (UI + `POST /vouchers/redeem/event/:eventId`).
 - **`/renew-membership`** — stays voucher-only and fully functional.
-- Backend `POST /vouchers/validate` and `POST /vouchers/redeem/renewal` — kept
-  (used by the renewal page and the instructor modals).
-- `POST /vouchers/redeem/register-student` and admin routes
-  (`create`, `all`, `:id/deactivate`) — kept.
+- Backend `POST /vouchers/validate`, `POST /vouchers/redeem/event/:eventId`,
+  `POST /vouchers/redeem/renewal`, `POST /vouchers/redeem/register-student`, and
+  admin routes (`create`, `all`, `:id/deactivate`) — all kept.
 - Admin/instructor UI: `VoucherManager`, `RegisterStudentModal`,
   `EnrollStudentModal`, `PaymentManagement` voucher display — all kept.
 
@@ -63,20 +55,19 @@ Remove their now-unused imports from `voucherRoutes.ts` only.
 
 ## Error handling
 
-- After removal, `POST /vouchers/redeem/registration` and
-  `POST /vouchers/redeem/event/:eventId` return the app's standard 404 for
-  unmatched routes. No special handling needed.
-- Register and event pages must still surface their existing pay-flow errors;
-  removing the voucher branch must not affect the pay/free code paths.
+- After removal, `POST /vouchers/redeem/registration` returns the app's standard
+  404 for unmatched routes. No special handling needed.
+- The register page must still surface its existing pay-flow errors; removing the
+  voucher branch must not affect the pay code path.
 
 ## Testing / verification
 
 - `npx tsc --noEmit` passes for both `backend` and `frontend` (no dangling
   references to removed state/methods/imports).
-- `npx next build` succeeds; `/register` and `/events/[id]` compile.
+- `npx next build` succeeds; `/register` compiles.
 - Manual:
   - `/register` shows no voucher field; the pay flow still reaches Razorpay.
-  - `/events/[id]` shows no voucher field; paid and free registration still work.
+  - `/events/[id]` still shows the voucher option and event registration works.
   - `/renew-membership` still works (voucher redemption intact).
   - Admin "Cash Vouchers" tab (create/list/deactivate) still works; instructor
     "register/enroll student" modals still validate + redeem.
