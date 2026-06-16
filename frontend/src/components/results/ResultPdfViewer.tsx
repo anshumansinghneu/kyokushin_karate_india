@@ -6,8 +6,12 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { Loader2, Download } from "lucide-react";
 
-// Worker matched to the installed pdfjs version, served from CDN.
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Bundle the worker from the installed pdfjs-dist (served from our own origin,
+// version-matched automatically) instead of depending on a third-party CDN.
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 export default function ResultPdfViewer({ url }: { url: string }) {
   const containerRef = useRef<HTMLDivElement>(null);

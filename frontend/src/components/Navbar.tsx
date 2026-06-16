@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle, Receipt,
-    ShoppingBag, Calendar, MapPin, Users, Image as ImageIcon, Heart, HandHeart, ShieldCheck, Radio, Swords, Shield, BookOpen, Award
+    ShoppingBag, Calendar, MapPin, Users, Image as ImageIcon, Heart, HandHeart, ShieldCheck, Radio, Swords, Shield, BookOpen, Award, FileText
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
@@ -222,6 +222,7 @@ export default function Navbar() {
         items: [
             { name: "What is Kyokushin?", href: "/what-is-kyokushin", icon: BookOpen, description: "Learn the art" },
             { name: "Belt System", href: "/belt-system", icon: Award, description: "Ranking guide" },
+            { name: "Belt Test Results", href: "/results", icon: FileText, description: "Official exam results" },
             { name: "Seminars", href: "/seminars", icon: Shield, description: "Self-defense classes" },
             { name: "Gallery", href: "/gallery", icon: ImageIcon, description: "Photos & moments" },
             { name: "Instructors", href: "/instructors", icon: Users, description: "Our senseis" },
@@ -255,6 +256,7 @@ export default function Navbar() {
             items: [
                 { name: "What is Kyokushin?", href: "/what-is-kyokushin", icon: BookOpen },
                 { name: "Belt System", href: "/belt-system", icon: Award },
+                { name: "Belt Test Results", href: "/results", icon: FileText },
                 { name: "Seminars", href: "/seminars", icon: Shield },
                 { name: "Gallery", href: "/gallery", icon: ImageIcon },
                 { name: "Instructors", href: "/instructors", icon: Users },
