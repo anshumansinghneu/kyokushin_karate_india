@@ -67,3 +67,20 @@ export const restrictTo = (...roles: string[]) => {
         next();
     };
 };
+
+// Like `protect`, but never blocks: attaches req.user if a valid token is present, else continues.
+export const attachUserIfPresent = async (req: any, _res: any, next: any) => {
+  try {
+    let token: string | undefined;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer')) token = authHeader.split(' ')[1];
+    if (!token) return next();
+
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    if (user) req.user = user;
+  } catch {
+    // ignore — anonymous request, leave req.user undefined
+  }
+  return next();
+};
