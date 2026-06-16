@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Users, Shuffle, AlertCircle, CheckCircle, XCircle, Target } from 'lucide-react';
 import { API_URL } from '@/lib/config';
+import { getToken } from '@/lib/tokenStorage';
 
 interface BracketGeneratorProps {
     eventId: string;
@@ -56,7 +57,7 @@ const BracketGenerator: React.FC<BracketGeneratorProps> = ({ eventId, onBrackets
         });
 
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const url = `${API_URL}/tournaments/${eventId}/generate/stream`;
 
             const response = await fetch(url, {

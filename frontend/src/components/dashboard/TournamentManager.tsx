@@ -16,6 +16,7 @@ import api from "@/lib/api";
 import { API_URL } from "@/lib/config";
 import { useToast } from "@/contexts/ToastContext";
 import { getImageUrl } from "@/lib/imageUtils";
+import { getToken } from "@/lib/tokenStorage";
 
 interface Tournament {
     id: string;
@@ -366,7 +367,7 @@ export default function TournamentManager() {
         });
 
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const url = `${API_URL}/tournaments/${viewingTournament.id}/generate/stream`;
 
             const response = await fetch(url, {

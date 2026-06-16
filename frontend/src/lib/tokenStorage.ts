@@ -23,14 +23,14 @@ export function getRefreshToken(): string | null {
 export function setTokens(token: string, refreshToken?: string | null, remember?: boolean): void {
   if (typeof window === 'undefined') return;
   const persist = remember === undefined ? isRemembered() : remember;
-  if (remember !== undefined) localStorage.setItem(REMEMBER, remember ? '1' : '');
+  if (remember !== undefined) localStorage.setItem(REMEMBER, remember ? '1' : '0');
   const store = persist ? localStorage : sessionStorage;
   const other = persist ? sessionStorage : localStorage;
   store.setItem(TOKEN, token);
   other.removeItem(TOKEN);
+  other.removeItem(REFRESH);
   if (refreshToken) {
     store.setItem(REFRESH, refreshToken);
-    other.removeItem(REFRESH);
   }
 }
 

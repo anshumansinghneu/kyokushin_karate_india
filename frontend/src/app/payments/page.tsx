@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Receipt, Download, IndianRupee, Calendar, CheckCircle, XCircle, Clock, FileText, AlertCircle, RefreshCw } from 'lucide-react';
 import api from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { getToken } from '@/lib/tokenStorage';
 
 interface Payment {
     id: string;
@@ -71,7 +72,7 @@ export default function PaymentHistoryPage() {
     const { showToast } = useToast();
 
     const fetchPayments = useCallback(() => {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         if (!token) { router.push('/login'); return; }
         setLoading(true);
         setError(false);

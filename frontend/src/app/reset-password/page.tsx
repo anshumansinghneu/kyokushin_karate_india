@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
+import { setTokens } from "@/lib/tokenStorage";
 import { Suspense } from "react";
 
 function ResetPasswordForm() {
@@ -52,7 +53,7 @@ function ResetPasswordForm() {
             const res = await api.post("/auth/reset-password", { token, password });
             const { token: jwt } = res.data;
             if (jwt) {
-                localStorage.setItem("token", jwt);
+                setTokens(jwt, null, true);
             }
             setSuccess(true);
             // Auto-redirect to dashboard after 2s
