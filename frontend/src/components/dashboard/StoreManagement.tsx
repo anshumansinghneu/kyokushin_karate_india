@@ -236,12 +236,6 @@ function OrderManagement() {
                                             </div>
                                         )}
 
-                                        {/* Payment */}
-                                        <div className="flex gap-4 text-xs text-gray-500">
-                                            {order.razorpayPaymentId && <span>Payment ID: {order.razorpayPaymentId}</span>}
-                                            {order.razorpayOrderId && <span>Order Ref: {order.razorpayOrderId}</span>}
-                                        </div>
-
                                         {/* Status Actions */}
                                         {nextStatuses.length > 0 && (
                                             <div className="flex flex-wrap gap-2 pt-2 border-t border-white/10">

@@ -29,7 +29,6 @@ interface Invoice {
     taxAmount: number;
     totalAmount: number;
     currency: string;
-    razorpayPaymentId: string;
     paidAt: string;
     description: string;
     user: {
@@ -125,9 +124,6 @@ export default function PaymentHistoryPage() {
             doc.setFont('helvetica', 'normal');
             doc.text(`Invoice No: ${invoice.invoiceNumber}`, 15, y);
             doc.text(`Date: ${new Date(invoice.paidAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, W - 15, y, { align: 'right' });
-
-            y += 5;
-            doc.text(`Transaction ID: ${invoice.razorpayPaymentId || 'N/A'}`, 15, y);
 
             // ─── Divider ───
             y += 8;

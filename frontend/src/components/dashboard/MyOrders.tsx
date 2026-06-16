@@ -164,26 +164,17 @@ export default function MyOrders() {
                                     ))}
                                 </div>
 
-                                {/* Shipping & Payment */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {order.shippingAddress && (
-                                        <div className="bg-white/5 rounded-xl p-4">
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Shipping Address</p>
-                                            <p className="text-sm text-white">{order.shippingName}</p>
-                                            <p className="text-xs text-gray-400">{order.shippingPhone}</p>
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                {order.shippingAddress}, {order.shippingCity}, {order.shippingState} - {order.shippingPincode}
-                                            </p>
-                                        </div>
-                                    )}
-                                    {order.razorpayPaymentId && (
-                                        <div className="bg-white/5 rounded-xl p-4">
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Info</p>
-                                            <p className="text-sm text-white">Transaction ID: {order.razorpayPaymentId}</p>
-                                            <p className="text-xs text-gray-400">Total: ₹{order.totalAmount}</p>
-                                        </div>
-                                    )}
-                                </div>
+                                {/* Shipping */}
+                                {order.shippingAddress && (
+                                    <div className="bg-white/5 rounded-xl p-4">
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Shipping Address</p>
+                                        <p className="text-sm text-white">{order.shippingName}</p>
+                                        <p className="text-xs text-gray-400">{order.shippingPhone}</p>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            {order.shippingAddress}, {order.shippingCity}, {order.shippingState} - {order.shippingPincode}
+                                        </p>
+                                    </div>
+                                )}
                             </motion.div>
                         )}
                     </motion.div>

@@ -10,8 +10,6 @@ import { useToast } from "@/contexts/ToastContext";
 
 interface Payment {
     id: string;
-    razorpayOrderId: string;
-    razorpayPaymentId: string | null;
     amount: number;
     currency: string;
     status: string;
@@ -124,8 +122,7 @@ export default function PaymentManagement() {
             filtered = filtered.filter(p =>
                 (p.user?.name || '').toLowerCase().includes(lowerSearch) ||
                 (p.user?.email || '').toLowerCase().includes(lowerSearch) ||
-                (p.user?.membershipNumber || "").toLowerCase().includes(lowerSearch) ||
-                (p.razorpayPaymentId || "").toLowerCase().includes(lowerSearch)
+                (p.user?.membershipNumber || "").toLowerCase().includes(lowerSearch)
             );
         }
 
@@ -140,9 +137,9 @@ export default function PaymentManagement() {
     const formatDate = (date: string) => new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     const handleExportCSV = () => {
-        const headers = "Date,Name,Email,Membership #,Type,Amount,Status,Transaction ID,Voucher\n";
+        const headers = "Date,Name,Email,Membership #,Type,Amount,Status,Voucher\n";
         const rows = filteredPayments.map(p =>
-            `${formatDate(p.createdAt)},${p.user?.name || 'Unknown'},${p.user?.email || 'N/A'},${p.user?.membershipNumber || 'N/A'},${p.type},${p.amount.toFixed(2)},${p.status},${p.razorpayPaymentId || 'N/A'},${extractVoucherCode(p.description) || 'N/A'}`
+            `${formatDate(p.createdAt)},${p.user?.name || 'Unknown'},${p.user?.email || 'N/A'},${p.user?.membershipNumber || 'N/A'},${p.type},${p.amount.toFixed(2)},${p.status},${extractVoucherCode(p.description) || 'N/A'}`
         ).join("\n");
         const blob = new Blob([headers + rows], { type: "text/csv" });
         const url = window.URL.createObjectURL(blob);
@@ -341,17 +338,16 @@ export default function PaymentManagement() {
                                 <th className="py-3 px-4">Amount</th>
                                 <th className="py-3 px-4">Status</th>
                                 <th className="py-3 px-4 hidden md:table-cell">Voucher</th>
-                                <th className="py-3 px-4 hidden lg:table-cell">Transaction ID</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm text-gray-300">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={7} className="py-8 text-center text-gray-500">Loading payments...</td>
+                                    <td colSpan={6} className="py-8 text-center text-gray-500">Loading payments...</td>
                                 </tr>
                             ) : paginatedPayments.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="py-8 text-center text-gray-500">No payments found.</td>
+                                    <td colSpan={6} className="py-8 text-center text-gray-500">No payments found.</td>
                                 </tr>
                             ) : (
                                 <AnimatePresence>
@@ -393,11 +389,6 @@ export default function PaymentManagement() {
                                                 ) : (
                                                     <span className="text-xs text-gray-600">—</span>
                                                 )}
-                                            </td>
-                                            <td className="py-3 px-4 hidden lg:table-cell">
-                                                <span className="text-xs text-gray-500 font-mono">
-                                                    {payment.razorpayPaymentId || '—'}
-                                                </span>
                                             </td>
                                         </motion.tr>
                                     ))}
