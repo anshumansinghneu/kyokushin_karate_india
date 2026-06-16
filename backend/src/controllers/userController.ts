@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
-import { sendInstructorApprovalEmail, sendMembershipActiveEmail, sendRejectionEmail, sendRegistrationEmail, sendAdminCreatedUserEmail } from '../services/emailService';
+import { sendMembershipActiveEmail, sendRejectionEmail, sendRegistrationEmail, sendAdminCreatedUserEmail } from '../services/emailService';
 
 export const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const currentUser = req.user;
@@ -281,38 +281,50 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
         return next(new AppError('User not found', 404));
     }
 
-    // Instructor Approval
+    // Instructor Approval — fully activates the membership (no separate admin step)
     if (currentUser.role === 'INSTRUCTOR') {
         if (userToApprove.primaryInstructorId !== currentUser.id) {
             return next(new AppError('You can only approve students assigned to you', 403));
         }
 
-        if (userToApprove.isInstructorApproved) {
-            return next(new AppError('Student is already approved by instructor', 400));
+        // Idempotency guard: already activated
+        if (userToApprove.membershipStatus === 'ACTIVE' && userToApprove.membershipNumber) {
+            const { passwordHash: _p, ...safeApproved } = userToApprove as any;
+            return res.status(200).json({
+                status: 'success',
+                message: 'Student is already approved.',
+                data: { user: safeApproved },
+            });
         }
+
+        const membershipNumber = await generateMembershipNumber(userToApprove.role);
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + 1);
 
         const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: {
+                membershipStatus: 'ACTIVE',
+                membershipNumber,
+                membershipStartDate: startDate,
+                membershipEndDate: endDate,
                 isInstructorApproved: true,
                 instructorApprovedAt: new Date(),
-                // Status remains PENDING until Admin approves
-            }
+                approvedBy: currentUser.id,
+                approvedAt: new Date(),
+            },
         });
 
-        // Notify Admin about Instructor Approval (non-blocking)
-        const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
-        if (admin) {
-            sendInstructorApprovalEmail(admin.email, userToApprove.name, currentUser.name)
-                .catch(err => console.error('[APPROVE] Instructor approval email failed:', err?.message));
-        }
+        // Notify the student their membership is active (non-blocking)
+        sendMembershipActiveEmail(updatedUser.email, updatedUser.name, updatedUser.membershipNumber!)
+            .catch(err => console.error('[APPROVE] Membership active email failed:', err?.message));
 
+        const { passwordHash: _p, ...safeApprovedUser } = updatedUser as any;
         res.status(200).json({
             status: 'success',
-            message: 'Student approved by instructor. Waiting for Admin confirmation.',
-            data: {
-                user: (() => { const { passwordHash: _p, ...safe } = updatedUser as any; return safe; })()
-            }
+            message: 'Student approved and membership activated.',
+            data: { user: safeApprovedUser },
         });
         return;
     }
