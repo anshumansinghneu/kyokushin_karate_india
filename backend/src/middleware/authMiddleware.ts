@@ -69,7 +69,7 @@ export const restrictTo = (...roles: string[]) => {
 };
 
 // Like `protect`, but never blocks: attaches req.user if a valid token is present, else continues.
-export const attachUserIfPresent = async (req: any, _res: any, next: any) => {
+export const attachUserIfPresent = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     let token: string | undefined;
     const authHeader = req.headers.authorization;

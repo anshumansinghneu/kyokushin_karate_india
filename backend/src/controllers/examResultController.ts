@@ -14,7 +14,7 @@ const LOCAL_UPLOADS_DIR = path.join(__dirname, '../uploads');
 
 // GET /api/exam-results — public lists published; admins (if authenticated) see all.
 export const getExamResults = catchAsync(async (req: Request, res: Response) => {
-  const isAdmin = (req as any).user?.role === 'ADMIN';
+  const isAdmin = req.user?.role === 'ADMIN';
   const where = isAdmin ? {} : { isPublished: true };
 
   const results = await prisma.examResult.findMany({
@@ -28,7 +28,7 @@ export const getExamResults = catchAsync(async (req: Request, res: Response) => 
 
 // GET /api/exam-results/:id — public detail (published only unless admin).
 export const getExamResult = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const isAdmin = (req as any).user?.role === 'ADMIN';
+  const isAdmin = req.user?.role === 'ADMIN';
   const result = await prisma.examResult.findUnique({
     where: { id: req.params.id },
     include: { creator: { select: { id: true, name: true } } },
@@ -57,7 +57,7 @@ export const createExamResult = catchAsync(async (req: Request, res: Response, n
       awardedDate: awardedDate ? new Date(awardedDate) : null,
       location: location || null,
       isPublished: isPublished === undefined ? true : !!isPublished,
-      createdBy: (req as any).user.id,
+      createdBy: req.user.id,
     },
   });
 
@@ -76,25 +76,25 @@ export const updateExamResult = catchAsync(async (req: Request, res: Response, n
   if (location !== undefined) data.location = location || null;
   if (isPublished !== undefined) data.isPublished = !!isPublished;
 
+  const existing = await prisma.examResult.findUnique({ where: { id: req.params.id } });
+  if (!existing) return next(new AppError('Result not found', 404));
+
   const result = await prisma.examResult.update({
     where: { id: req.params.id },
     data,
-  }).catch(() => null);
-
-  if (!result) return next(new AppError('Result not found', 404));
+  });
 
   res.status(200).json({ status: 'success', data: { result } });
 });
 
 // DELETE /api/exam-results/:id — ADMIN.
 export const deleteExamResult = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const deleted = await prisma.examResult.delete({
-    where: { id: req.params.id },
-  }).catch(() => null);
+  const existing = await prisma.examResult.findUnique({ where: { id: req.params.id } });
+  if (!existing) return next(new AppError('Result not found', 404));
 
-  if (!deleted) return next(new AppError('Result not found', 404));
+  await prisma.examResult.delete({ where: { id: req.params.id } });
 
-  res.status(204).json({ status: 'success', data: null });
+  res.status(204).end();
 });
 
 // Resolve PDF bytes from either a local /uploads path or an http(s) URL.
@@ -102,7 +102,8 @@ async function loadPdfBytes(pdfUrl: string): Promise<Buffer | null> {
   try {
     if (pdfUrl.startsWith('/uploads/')) {
       const rel = pdfUrl.replace('/uploads/', '');
-      const full = path.join(LOCAL_UPLOADS_DIR, rel);
+      const full = path.resolve(LOCAL_UPLOADS_DIR, rel);
+      if (!full.startsWith(path.resolve(LOCAL_UPLOADS_DIR) + path.sep)) return null;
       if (!fs.existsSync(full)) return null;
       return fs.readFileSync(full);
     }
