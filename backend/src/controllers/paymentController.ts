@@ -135,7 +135,6 @@ export const getPaymentInvoice = catchAsync(async (req: Request, res: Response, 
                 taxAmount: payment.taxAmount,
                 totalAmount: payment.totalAmount,
                 currency: payment.currency,
-                razorpayPaymentId: payment.razorpayPaymentId || null,  // historical — kept for old records
                 paidAt: payment.paidAt,
                 description: payment.description,
                 user: payment.user,

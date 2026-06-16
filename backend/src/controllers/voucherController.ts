@@ -153,7 +153,7 @@ export const validateVoucher = catchAsync(async (req: Request, res: Response, ne
 });
 
 // ─── Redeem Voucher for Registration (Public — during registration) ────
-// Creates user account with voucher instead of Razorpay payment
+// Creates user account with a voucher
 export const redeemVoucherForRegistration = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const {
         voucherCode,
