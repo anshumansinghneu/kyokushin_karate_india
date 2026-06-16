@@ -189,6 +189,7 @@ model User {
   trainingSessions      TrainingSession[]
   posts                 Post[]
   monthlyRecognitions   MonthlyRecognition[]
+  examResults           ExamResult[]     @relation("ExamResultCreator")
 
   // Audit & Notes
   profileViews          ProfileView[]    @relation("ProfileViewed")
@@ -838,4 +839,22 @@ model AnonymousMessage {
 
   @@index([isRead, isArchived])
   @@index([senderId, createdAt])
+}
+
+model ExamResult {
+  id          String    @id @default(uuid())
+  title       String
+  testDate    DateTime?
+  awardedDate DateTime?
+  location    String?
+  pdfUrl      String
+  isPublished Boolean   @default(true)
+
+  createdBy   String
+  creator     User      @relation("ExamResultCreator", fields: [createdBy], references: [id])
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isPublished, createdAt])
 }
