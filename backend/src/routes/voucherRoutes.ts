@@ -2,7 +2,6 @@ import express from 'express';
 import {
     createVoucher,
     validateVoucher,
-    redeemVoucherForRegistration,
     redeemVoucherForEvent,
     redeemVoucherForRenewal,
     registerStudentOnBehalf,
@@ -15,7 +14,6 @@ const router = express.Router();
 
 // ── Public Routes (no auth needed) ──
 router.post('/validate', validateVoucher);                           // Validate a voucher code
-router.post('/redeem/registration', redeemVoucherForRegistration);   // Register with voucher
 
 // ── Protected Routes (login required) ──
 router.use(protect);
