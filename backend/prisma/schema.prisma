@@ -645,11 +645,6 @@ model Payment {
   totalAmount       Float         // amount + taxAmount
   currency          String        @default("INR")
 
-  // Razorpay
-  razorpayOrderId   String?       @unique
-  razorpayPaymentId String?
-  razorpaySignature String?
-
   status            PaymentStatus @default(PENDING)
 
   // Who paid (null for new registrations before user creation)
@@ -668,7 +663,6 @@ model Payment {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
-  @@index([razorpayOrderId])
   @@index([userId])
   @@index([status])
 }
@@ -728,8 +722,6 @@ model MerchOrder {
   items           MerchOrderItem[]
   status          OrderStatus @default(PENDING)
   totalAmount     Float
-  razorpayOrderId String?
-  razorpayPaymentId String?
   shippingName    String?
   shippingPhone   String?
   shippingAddress String?  @db.Text
