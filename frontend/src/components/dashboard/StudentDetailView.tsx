@@ -13,6 +13,7 @@ import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 import { getImageUrl } from "@/lib/imageUtils";
 import { useAuthStore } from "@/store/authStore";
+import { trainingStartDate } from "@/lib/trainingStart";
 
 interface StudentDetailViewProps {
     studentId: string;
@@ -33,6 +34,8 @@ interface StudentProfile {
     state: string;
     dateOfBirth: string;
     createdAt: string;
+    experienceYears?: number | null;
+    experienceMonths?: number | null;
     dojo: {
         id: string;
         name: string;
@@ -569,7 +572,7 @@ export default function StudentDetailView({ studentId, onClose }: StudentDetailV
                                                 <div className="absolute left-6 w-5 h-5 rounded-full bg-gray-500 border-4 border-black"></div>
                                                 <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                                                     <p className="text-white font-medium">Started Training</p>
-                                                    <p className="text-sm text-gray-400">{formatDate(student.createdAt)}</p>
+                                                    <p className="text-sm text-gray-400">{formatDate(trainingStartDate(student.createdAt, student.experienceYears, student.experienceMonths).toISOString())}</p>
                                                 </div>
                                             </div>
                                         </div>

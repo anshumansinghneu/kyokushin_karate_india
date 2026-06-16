@@ -12,7 +12,7 @@ interface ProfileCompletionBarProps {
         phone?: string;
         city?: string;
         state?: string;
-        dob?: string;
+        dateOfBirth?: string;
         height?: number | string;
         weight?: number | string;
         profilePhotoUrl?: string;
@@ -36,7 +36,7 @@ export default function ProfileCompletionBar({ user }: ProfileCompletionBarProps
             { key: 'phone', label: 'Phone', filled: !!user?.phone },
             { key: 'city', label: 'City', filled: !!user?.city },
             { key: 'state', label: 'State', filled: !!user?.state },
-            { key: 'dob', label: 'Date of Birth', filled: !!user?.dob },
+            { key: 'dateOfBirth', label: 'Date of Birth', filled: !!user?.dateOfBirth },
             { key: 'height', label: 'Height', filled: !!user?.height },
             { key: 'weight', label: 'Weight', filled: !!user?.weight },
             { key: 'profilePhotoUrl', label: 'Profile Photo', filled: !!user?.profilePhotoUrl },

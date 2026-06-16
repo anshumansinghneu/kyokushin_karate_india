@@ -19,6 +19,7 @@ interface MembershipCardProps {
         createdAt?: string;
         experienceYears?: number;
         experienceMonths?: number;
+        beltHistory?: Array<{ promotionDate?: string }>;
         dojo?: { name: string; city?: string } | null;
     };
     showDownload?: boolean;
@@ -34,6 +35,16 @@ const BELT_ACCENTS: Record<string, { color: string; rgb: string }> = {
     Brown:  { color: '#a16207', rgb: '161,98,7' },
     Black:  { color: '#dc2626', rgb: '220,38,38' },
 };
+
+// "Holding this belt since" — the award date of the current (latest) belt,
+// falling back to membership start / join date if there's no promotion history.
+function beltSinceDate(user?: { beltHistory?: Array<{ promotionDate?: string }>; membershipStartDate?: string; createdAt?: string }): string | null {
+    const dates = (user?.beltHistory || []).map(b => b.promotionDate).filter(Boolean) as string[];
+    if (dates.length) {
+        return dates.reduce((a, b) => (new Date(a) > new Date(b) ? a : b));
+    }
+    return user?.membershipStartDate || user?.createdAt || null;
+}
 
 const ROLE_TITLES: Record<string, string> = {
     ADMIN: 'SHIHAN',
@@ -96,9 +107,10 @@ export default function MembershipCard({ user, showDownload = true }: Membership
         ? new Date(user.membershipEndDate).toLocaleDateString('en-IN', { month: '2-digit', year: '2-digit' })
         : '--/--';
 
-    const memberSince = user?.membershipStartDate
-        ? new Date(user.membershipStartDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
-        : user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '--';
+    const _beltSince = beltSinceDate(user);
+    const beltSince = _beltSince
+        ? new Date(_beltSince).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
+        : '--';
 
     // Dan level for display (e.g. "5TH DAN" for the slash mark)
     const danMatch = belt.match(/(\d+)\w*\s*Dan/i);
@@ -120,8 +132,9 @@ export default function MembershipCard({ user, showDownload = true }: Membership
             const pdfValidThru = user?.membershipEndDate
                 ? new Date(user.membershipEndDate).toLocaleDateString('en-IN', { month: '2-digit', year: '2-digit' })
                 : user?.membershipStatus === 'ACTIVE' ? 'Active' : user?.membershipStatus || '--';
-            const pdfMemberSince = user?.membershipStartDate
-                ? new Date(user.membershipStartDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
+            const _pdfBeltSince = beltSinceDate(user);
+            const pdfMemberSince = _pdfBeltSince
+                ? new Date(_pdfBeltSince).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
                 : '--';
 
             const pdfAccent: [number, number, number] = isBlack
@@ -446,7 +459,7 @@ export default function MembershipCard({ user, showDownload = true }: Membership
                                 {/* Since + Belt rank with slash accent */}
                                 <div className="flex items-center gap-2 mt-2">
                                     <span className="text-[7px] sm:text-[8px] text-gray-500 tracking-[0.1em] font-medium">
-                                        SINCE {memberSince.toUpperCase()}
+                                        SINCE {beltSince.toUpperCase()}
                                     </span>
                                     <span className="w-4 h-[1px]" style={{ background: accent.color }} />
                                     <span className="text-[7px] sm:text-[8px] font-bold tracking-[0.1em]"
