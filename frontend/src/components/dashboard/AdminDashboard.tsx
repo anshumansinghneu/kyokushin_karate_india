@@ -37,6 +37,7 @@ const CertificateManager = lazy(() => import('./CertificateManager'));
 const AlbumManager = lazy(() => import('./AlbumManager'));
 const EventReviewManager = lazy(() => import('./EventReviewManager'));
 const AnonymousMessageManager = lazy(() => import('./AnonymousMessageManager'));
+const ResultsManager = lazy(() => import('./ResultsManager'));
 
 import OrganizationGraph from "./OrganizationGraph";
 import GlobalSearch from "./GlobalSearch";
@@ -54,9 +55,9 @@ function TabLoader() {
     );
 }
 
-type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers' | 'analytics' | 'certificates' | 'albums' | 'event-reviews' | 'anonymous-messages';
+type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 'media' | 'recognition' | 'belt-verifications' | 'belt-promotions' | 'belt-exam-grading' | 'tournaments' | 'announcements' | 'payments' | 'live-management' | 'store' | 'vouchers' | 'analytics' | 'certificates' | 'albums' | 'event-reviews' | 'anonymous-messages' | 'results';
 
-const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers', 'analytics', 'certificates', 'albums', 'event-reviews', 'anonymous-messages'];
+const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers', 'analytics', 'certificates', 'albums', 'event-reviews', 'anonymous-messages', 'results'];
 
 export default function AdminDashboard({ user, initialTab }: { user: any; initialTab?: string }) {
     const { showToast } = useToast();
@@ -160,6 +161,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
             id: 'content', header: 'CONTENT',
             items: [
                 { id: 'albums', label: 'Photo Albums', icon: Image },
+                { id: 'results', label: 'Belt Test Results', icon: FileText },
                 { id: 'blogs', label: 'Blogs', icon: FileText },
                 { id: 'media', label: 'Media', icon: Newspaper },
                 { id: 'recognition', label: 'Monthly Recognition', icon: Trophy },
@@ -683,6 +685,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                         {activeTab === 'albums' && <motion.div key="albums" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><AlbumManager /></Suspense></motion.div>}
                         {activeTab === 'event-reviews' && <motion.div key="event-reviews" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><EventReviewManager /></Suspense></motion.div>}
                         {activeTab === 'anonymous-messages' && <motion.div key="anonymous-messages" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><AnonymousMessageManager /></Suspense></motion.div>}
+                        {activeTab === 'results' && <motion.div key="results" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}><Suspense fallback={<TabLoader />}><ResultsManager /></Suspense></motion.div>}
                     </AnimatePresence>
                     </div>
                 </div>
