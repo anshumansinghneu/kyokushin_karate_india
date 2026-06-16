@@ -17,7 +17,7 @@ export default function RegisterPage() {
     const [role, setRole] = useState<"STUDENT" | "INSTRUCTOR">("STUDENT");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [paymentStep, setPaymentStep] = useState<"form" | "paying" | "verifying" | "done">("form");
+    const [paymentStep, setPaymentStep] = useState<"form" | "verifying" | "done">("form");
     const [step, setStep] = useState(1);
     const TOTAL_STEPS = 6;
     const [formData, setFormData] = useState({
@@ -60,7 +60,7 @@ export default function RegisterPage() {
     const { register, isLoading, error: authError } = useAuthStore();
     const router = useRouter();
 
-    // Fetch Locations on Mount + Fetch Payment Config
+    // Fetch Locations on Mount
     useEffect(() => {
         const fetchLocations = async () => {
             try {
@@ -335,7 +335,7 @@ export default function RegisterPage() {
 
     const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
-    const STEP_LABELS = ["You", "Contact", "Training", role === "STUDENT" ? "Guardian" : "Experience", "Dojo", "Payment"];
+    const STEP_LABELS = ["You", "Contact", "Training", role === "STUDENT" ? "Guardian" : "Experience", "Dojo", "Account"];
 
     return (
         <div className="min-h-screen w-full flex relative overflow-hidden bg-[#050507] text-white font-sans selection:bg-red-500/30">
