@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_URL } from './config';
+import { getToken, getRefreshToken, setTokens, clearTokens } from './tokenStorage';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAYS = [3000, 6000, 10000]; // 3s, 6s, 10s — gives Render ~19s to wake up
@@ -15,7 +16,7 @@ const api = axios.create({
 // Add a request interceptor to attach the token
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -60,7 +61,7 @@ api.interceptors.response.use(
             originalRequest?.url?.includes('/auth/refresh');
 
         if (error.response?.status === 401 && !originalRequest?._retry && !isAuthEndpoint) {
-            const refreshToken = localStorage.getItem('refreshToken');
+            const refreshToken = getRefreshToken();
 
             if (refreshToken) {
                 if (_isRefreshing) {
@@ -83,8 +84,7 @@ api.interceptors.response.use(
                         { headers: { 'Content-Type': 'application/json' } }
                     );
                     const { token: newToken, refreshToken: newRT } = resp.data;
-                    localStorage.setItem('token', newToken);
-                    if (newRT) localStorage.setItem('refreshToken', newRT);
+                    setTokens(newToken, newRT);
 
                     processQueue(null, newToken);
                     originalRequest.headers.Authorization = `Bearer ${newToken}`;
@@ -92,8 +92,7 @@ api.interceptors.response.use(
                 } catch (refreshErr) {
                     processQueue(refreshErr, null);
                     // Refresh failed — clear everything and redirect
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('refreshToken');
+                    clearTokens();
                     if (typeof window !== 'undefined' &&
                         !window.location.pathname.includes('/login') &&
                         !window.location.pathname.includes('/register')) {
@@ -106,8 +105,7 @@ api.interceptors.response.use(
             }
 
             // No refresh token — hard redirect
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
+            clearTokens();
             if (typeof window !== 'undefined' &&
                 !window.location.pathname.includes('/login') &&
                 !window.location.pathname.includes('/register')) {

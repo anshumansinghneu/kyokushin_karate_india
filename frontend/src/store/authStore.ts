@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '@/lib/api';
+import { getToken, getRefreshToken, setTokens, clearTokens, setRememberedEmail } from '@/lib/tokenStorage';
 
 interface User {
     id: string;
@@ -43,7 +44,7 @@ interface AuthState {
     error: string | null;
     _hasCheckedAuth: boolean; // prevents duplicate checkAuth calls
 
-    login: (credentials: any) => Promise<void>;
+    login: (credentials: any, rememberMe?: boolean) => Promise<void>;
     register: (data: any) => Promise<void>;
     logout: () => void;
     checkAuth: () => Promise<void>;
@@ -53,7 +54,7 @@ interface AuthState {
 }
 
 // Read token synchronously so first render already knows auth state
-const _initialToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+const _initialToken = getToken();
 
 export const useAuthStore = create<AuthState>((set, get) => ({
     user: null,
@@ -63,15 +64,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     error: null,
     _hasCheckedAuth: false,
 
-    login: async (credentials) => {
+    login: async (credentials, rememberMe = true) => {
         set({ isLoading: true, error: null });
         try {
             const response = await api.post('/auth/login', credentials);
             const { token, refreshToken } = response.data;
             const { user } = response.data.data;
 
-            localStorage.setItem('token', token);
-            if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+            setTokens(token, refreshToken, rememberMe);
+            setRememberedEmail(rememberMe ? credentials.email : null);
             set({ token, user, isAuthenticated: true, isLoading: false, _hasCheckedAuth: true });
         } catch (error: any) {
             set({
@@ -89,8 +90,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const { token, refreshToken } = response.data;
             const { user } = response.data.data;
 
-            localStorage.setItem('token', token);
-            if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+            setTokens(token, refreshToken, true);
             set({ token, user, isAuthenticated: true, isLoading: false, _hasCheckedAuth: true });
         } catch (error: any) {
             set({
@@ -102,11 +102,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     logout: () => {
-        const rt = localStorage.getItem('refreshToken');
+        const rt = getRefreshToken();
         // Best-effort revoke on backend
         if (rt) api.post('/auth/logout', { refreshToken: rt }).catch(() => {});
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
+        clearTokens();
         set({ user: null, token: null, isAuthenticated: false, _hasCheckedAuth: false });
     },
 
@@ -115,7 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (get()._hasCheckedAuth) return;
         set({ _hasCheckedAuth: true });
 
-        const token = localStorage.getItem('token');
+        const token = getToken();
         if (!token) {
             set({ isLoading: false, isAuthenticated: false });
             return;
@@ -151,15 +150,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 }
             }
             console.error('checkAuth failed:', error);
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
+            clearTokens();
             set({ user: null, token: null, isAuthenticated: false, isLoading: false });
         }
     },
 
     /** Force-fetch latest user data from the API (no guard). */
     fetchUser: async () => {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         if (!token) return;
         try {
             const response = await api.get('/auth/me');
@@ -171,17 +169,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     /** Attempt to refresh the access token using the stored refresh token. */
     refreshSession: async () => {
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = getRefreshToken();
         if (!refreshToken) return false;
         try {
             const resp = await api.post('/auth/refresh', { refreshToken });
             const { token: newToken, refreshToken: newRT } = resp.data;
-            localStorage.setItem('token', newToken);
-            if (newRT) localStorage.setItem('refreshToken', newRT);
+            setTokens(newToken, newRT);
             set({ token: newToken });
             return true;
         } catch {
-            localStorage.removeItem('refreshToken');
+            clearTokens();
             return false;
         }
     },

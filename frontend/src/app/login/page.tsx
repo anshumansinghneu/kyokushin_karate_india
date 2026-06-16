@@ -8,22 +8,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Lock, Mail, ChevronRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import { getRememberedEmail } from "@/lib/tokenStorage";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(true);
     const { login, isLoading, error } = useAuthStore();
     const router = useRouter();
 
     useEffect(() => {
         useAuthStore.setState({ error: null });
+        const remembered = getRememberedEmail();
+        if (remembered) setEmail(remembered);
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await login({ email, password });
+            await login({ email, password }, rememberMe);
             router.push("/dashboard");
         } catch (err) {
             // Error managed by the store
@@ -188,6 +192,16 @@ export default function LoginPage() {
                                         </button>
                                     </div>
                                 </div>
+
+                                <label className="flex items-center gap-2 text-[12px] font-medium text-zinc-400 select-none cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        className="h-4 w-4 rounded border-white/20 bg-transparent accent-red-600"
+                                    />
+                                    Remember me
+                                </label>
 
                                 <Button
                                     className="w-full h-14 mt-4 text-base font-bold bg-white text-black hover:bg-zinc-200 rounded-2xl shadow-xl hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all duration-300 flex items-center justify-center gap-2 group active:scale-[0.98]"
