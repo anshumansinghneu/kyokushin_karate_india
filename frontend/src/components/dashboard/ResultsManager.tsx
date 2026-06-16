@@ -21,7 +21,8 @@ const emptyForm = { id: "", title: "", testDate: "", awardedDate: "", location: 
 
 function toInputDate(d: string | null): string {
   if (!d) return "";
-  return new Date(d).toISOString().slice(0, 10);
+  // Slice the raw ISO string at "T" to get YYYY-MM-DD without timezone shift.
+  return d.split("T")[0];
 }
 
 export default function ResultsManager() {
