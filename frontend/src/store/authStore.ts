@@ -45,7 +45,6 @@ interface AuthState {
 
     login: (credentials: any) => Promise<void>;
     register: (data: any) => Promise<void>;
-    registerWithVoucher: (data: any) => Promise<void>;
     logout: () => void;
     checkAuth: () => Promise<void>;
     fetchUser: () => Promise<void>;
@@ -96,26 +95,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } catch (error: any) {
             set({
                 error: error.response?.data?.message || 'Registration failed',
-                isLoading: false
-            });
-            throw error;
-        }
-    },
-
-    // Register with cash voucher
-    registerWithVoucher: async (data) => {
-        set({ isLoading: true, error: null });
-        try {
-            const response = await api.post('/vouchers/redeem/registration', data);
-            const { token, refreshToken } = response.data;
-            const { user } = response.data.data;
-
-            localStorage.setItem('token', token);
-            if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-            set({ token, user, isAuthenticated: true, isLoading: false, _hasCheckedAuth: true });
-        } catch (error: any) {
-            set({
-                error: error.response?.data?.message || 'Voucher redemption failed',
                 isLoading: false
             });
             throw error;
