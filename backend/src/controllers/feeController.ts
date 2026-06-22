@@ -3,6 +3,7 @@ import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { normalizeFeeUpdate, FeeStatus } from '../utils/feeStatus';
+import { remindDojo } from '../services/feeReminderService';
 
 // GET /api/fees/dojo/:dojoId?month=&year=
 export const getDojoFees = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -99,4 +100,24 @@ export const getMyFees = catchAsync(async (req: Request, res: Response) => {
     orderBy: [{ year: 'desc' }, { month: 'desc' }],
   });
   res.status(200).json({ status: 'success', data: { fees } });
+});
+
+// POST /api/fees/remind
+export const remindUnpaid = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const currentUser = req.user;
+  const { dojoId, month, year } = req.body;
+  if (!dojoId || !month || !year) {
+    return next(new AppError('dojoId, month and year are required', 400));
+  }
+
+  if (currentUser.role !== 'ADMIN') {
+    const teaches = await prisma.user.findFirst({
+      where: { dojoId, primaryInstructorId: currentUser.id },
+      select: { id: true },
+    });
+    if (!teaches) return next(new AppError('You can only send reminders for your own dojo', 403));
+  }
+
+  const result = await remindDojo(dojoId, parseInt(month), parseInt(year));
+  res.status(200).json({ status: 'success', data: result });
 });

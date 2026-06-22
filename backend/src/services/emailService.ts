@@ -698,6 +698,19 @@ ${btn('Renew Now – ₹295', SITE_URL + '/renew-membership')}
     await send(email, subject, html, text);
 };
 
+export const sendFeeReminderEmail = async (email: string, name: string, message: string) => {
+    const SITE_URL = getSiteUrl();
+    const subject = '📬 KKFI Training Fee Reminder';
+    const html = wrapHtml(subject, `
+<h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Training Fee Reminder</h2>
+<p style="white-space:pre-line;">${message}</p>
+${btn('View My Fees', SITE_URL + '/dashboard/my-fees')}
+<p style="color:#888;font-size:13px;">If you have already paid, please ignore this message. Osu!</p>
+`);
+    const text = `${message}\n\nView your fees: ${SITE_URL}/dashboard/my-fees\n\nOsu!`;
+    await send(email, subject, html, text);
+};
+
 // ── Order Confirmation Email ─────────────────────────────────────────
 export const sendOrderConfirmationEmail = async (
     email: string,

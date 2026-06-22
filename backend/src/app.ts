@@ -34,6 +34,7 @@ import examResultRouter from './routes/examResultRoutes';
 import feeRouter from './routes/feeRoutes';
 import attendanceRouter from './routes/attendanceRoutes';
 import { sendRenewalReminders } from './services/renewalReminderService';
+import { sendFeeRemindersAllDojos } from './services/feeReminderService';
 import { verifySmtp, sendTestEmail } from './services/emailService';
 import { globalErrorHandler } from './utils/errorHandler';
 
@@ -170,6 +171,21 @@ app.get('/api/cron/renewal-reminders', async (req, res) => {
     }
 });
 
+// ─── Cron Endpoint: Fee Reminders ────────────────────────────────────
+app.get('/api/cron/fee-reminders', async (req, res) => {
+    const secret = req.query.secret || req.headers['x-cron-secret'];
+    if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
+        return res.status(401).json({ status: 'fail', message: 'Invalid cron secret' });
+    }
+    try {
+        const result = await sendFeeRemindersAllDojos();
+        res.status(200).json({ status: 'success', data: result });
+    } catch (err) {
+        console.error('[CRON] Fee reminder error:', err);
+        res.status(500).json({ status: 'error', message: 'Failed to send fee reminders' });
+    }
+});
+
 // ─── Daily Timer: Auto send renewal reminders ────────────────────────
 // Runs once every 24 hours while the server is up
 let _reminderInterval: NodeJS.Timeout | null = null;
@@ -178,10 +194,12 @@ function startRenewalReminderScheduler() {
     // Run once on startup (delayed 60s to let things settle)
     setTimeout(() => {
         sendRenewalReminders().catch(err => console.error('[CRON] Auto reminder error:', err));
+        sendFeeRemindersAllDojos().catch(err => console.error('[CRON] Auto fee reminder error:', err));
     }, 60_000);
     // Then run every 24 hours
     _reminderInterval = setInterval(() => {
         sendRenewalReminders().catch(err => console.error('[CRON] Auto reminder error:', err));
+        sendFeeRemindersAllDojos().catch(err => console.error('[CRON] Auto fee reminder error:', err));
     }, TWENTY_FOUR_HOURS);
 }
 startRenewalReminderScheduler();
