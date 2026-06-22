@@ -58,12 +58,15 @@ export default function InstructorFeesPage() {
         api.get(`/fees/dojo/${dojoId}`, { params: { month, year } }),
         api.get(`/attendance/dojo/${dojoId}`, { params: { month, year } }),
       ]);
-      setMonthlyFee(feeRes.data.data.monthlyFee);
-      setFeeInput(feeRes.data.data.monthlyFee != null ? String(feeRes.data.data.monthlyFee) : "");
+      const d = feeRes.data.data;
+      setMonthlyFee(d.monthlyFee);
+      setFeeInput(d.monthlyFee != null ? String(d.monthlyFee) : "");
+      setDueDayInput(d.feeDueDay != null ? String(d.feeDueDay) : "10");
+      setTemplateInput(d.feeReminderTemplate || DEFAULT_FEE_REMINDER_TEMPLATE);
       const attByUser = new Map<string, number>(
         attRes.data.data.roster.map((r: any) => [r.student.id, r.attendance?.classesAttended ?? 0])
       );
-      const merged: RosterRow[] = feeRes.data.data.roster.map((r: any) => ({
+      const merged: RosterRow[] = d.roster.map((r: any) => ({
         userId: r.student.id,
         name: r.student.name,
         membershipNumber: r.student.membershipNumber,

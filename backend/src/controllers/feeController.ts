@@ -29,11 +29,11 @@ export const getDojoFees = catchAsync(async (req: Request, res: Response, next: 
   });
   const feeByUser = new Map(fees.map((f) => [f.userId, f]));
 
-  const dojo = await prisma.dojo.findUnique({ where: { id: dojoId }, select: { monthlyFee: true } });
+  const dojo = await prisma.dojo.findUnique({ where: { id: dojoId }, select: { monthlyFee: true, feeDueDay: true, feeReminderTemplate: true } });
 
   const roster = students.map((student) => ({ student, fee: feeByUser.get(student.id) ?? null }));
 
-  res.status(200).json({ status: 'success', data: { monthlyFee: dojo?.monthlyFee ?? null, roster } });
+  res.status(200).json({ status: 'success', data: { monthlyFee: dojo?.monthlyFee ?? null, feeDueDay: dojo?.feeDueDay ?? 10, feeReminderTemplate: dojo?.feeReminderTemplate ?? null, roster } });
 });
 
 // POST /api/fees/mark
@@ -47,11 +47,13 @@ export const markFee = catchAsync(async (req: Request, res: Response, next: Next
   const y = parseInt(year);
   if (m < 1 || m > 12) return next(new AppError('month must be 1-12', 400));
 
-  if (currentUser.role !== 'ADMIN') {
-    const student = await prisma.user.findUnique({ where: { id: userId }, select: { primaryInstructorId: true } });
-    if (!student || student.primaryInstructorId !== currentUser.id) {
-      return next(new AppError('You can only manage your own students', 403));
-    }
+  const student = await prisma.user.findUnique({ where: { id: userId }, select: { primaryInstructorId: true, dojoId: true } });
+  if (!student) return next(new AppError('Student not found', 404));
+  if (currentUser.role !== 'ADMIN' && student.primaryInstructorId !== currentUser.id) {
+    return next(new AppError('You can only manage your own students', 403));
+  }
+  if (student.dojoId !== dojoId) {
+    return next(new AppError('Student does not belong to this dojo', 400));
   }
 
   let feeAmount: number;
@@ -118,6 +120,7 @@ export const remindUnpaid = catchAsync(async (req: Request, res: Response, next:
     if (!teaches) return next(new AppError('You can only send reminders for your own dojo', 403));
   }
 
-  const result = await remindDojo(dojoId, parseInt(month), parseInt(year));
+  const instructorId = currentUser.role !== 'ADMIN' ? currentUser.id : undefined;
+  const result = await remindDojo(dojoId, parseInt(month), parseInt(year), new Date(), instructorId);
   res.status(200).json({ status: 'success', data: result });
 });

@@ -13,15 +13,18 @@ export async function remindDojo(
   dojoId: string,
   month: number,
   year: number,
-  today: Date = new Date()
+  today: Date = new Date(),
+  instructorId?: string
 ): Promise<{ sent: number; skipped: number; errors: number }> {
   const result = { sent: 0, skipped: 0, errors: 0 };
 
   const dojo = await prisma.dojo.findUnique({ where: { id: dojoId } });
   if (!dojo || dojo.monthlyFee == null) return result;
 
+  const studentWhere: any = { dojoId, role: 'STUDENT', membershipStatus: 'ACTIVE' };
+  if (instructorId) studentWhere.primaryInstructorId = instructorId;
   const students = await prisma.user.findMany({
-    where: { dojoId, role: 'STUDENT', membershipStatus: 'ACTIVE' },
+    where: studentWhere,
     select: { id: true, name: true, email: true },
   });
 
