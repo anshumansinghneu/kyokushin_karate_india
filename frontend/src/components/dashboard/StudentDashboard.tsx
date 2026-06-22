@@ -224,6 +224,7 @@ export default function StudentDashboard({ user }: { user: any }) {
                                         { href: '/payments', icon: CreditCard, label: 'Payments' },
                                         { href: '/calendar', icon: CalendarDays, label: 'Calendar' },
                                         { href: '/verify', icon: ShieldCheck, label: 'Verify' },
+                                        { href: '/dashboard/my-fees', icon: CreditCard, label: 'My Fees' },
                                     ].map((link, i) => {
                                         const Icon = link.icon;
                                         return (
