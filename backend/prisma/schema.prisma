@@ -204,7 +204,7 @@ model User {
   eventFeedbacks        EventFeedback[]  @relation("FeedbackAuthor")
   anonymousMessages     AnonymousMessage[] @relation("AnonymousMessageSender")
   monthlyFees           MonthlyFee[]
-  monthlyAttendance     MonthlyAttendance[]
+  attendanceRecords     AttendanceRecord[]
 
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
@@ -234,7 +234,7 @@ model Dojo {
   members      User[]   @relation("DojoMembers")       // Users whose primary dojo is this
   instructors  User[]   @relation("InstructorDojos")   // Many-to-many: instructors who teach here
   monthlyFees       MonthlyFee[]
-  monthlyAttendance MonthlyAttendance[]
+  attendanceRecords AttendanceRecord[]
 
   gallery      Gallery[] @relation("DojoGallery")
   events       Event[]   @relation("DojoEvents")
@@ -891,20 +891,23 @@ model MonthlyFee {
   @@index([status])
 }
 
-model MonthlyAttendance {
-  id              String   @id @default(uuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  dojoId          String
-  dojo            Dojo     @relation(fields: [dojoId], references: [id])
-  month           Int      // 1-12
-  year            Int
-  classesAttended Int      @default(0)
-  markedBy        String   // instructor user id
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+}
 
-  @@unique([userId, month, year])
-  @@index([dojoId, year, month])
+model AttendanceRecord {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  dojoId    String
+  dojo      Dojo             @relation(fields: [dojoId], references: [id])
+  date      DateTime         // UTC midnight of the calendar day
+  status    AttendanceStatus
+  markedBy  String           // instructor user id
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([userId, date])
+  @@index([dojoId, date])
 }
