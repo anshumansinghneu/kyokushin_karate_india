@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { Loader2 } from "lucide-react";
+import { renderFeePreview, DEFAULT_FEE_REMINDER_TEMPLATE } from "@/lib/feePreview";
 
 type FeeStatus = "UNPAID" | "PARTIAL" | "PAID" | "WAIVED";
 
@@ -35,6 +36,10 @@ export default function InstructorFeesPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [reminding, setReminding] = useState(false);
   const [message, setMessage] = useState("");
+  const [feeInput, setFeeInput] = useState<string>("");
+  const [dueDayInput, setDueDayInput] = useState<string>("10");
+  const [templateInput, setTemplateInput] = useState<string>(DEFAULT_FEE_REMINDER_TEMPLATE);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   const dojoId = user?.dojoId;
 
@@ -54,6 +59,7 @@ export default function InstructorFeesPage() {
         api.get(`/attendance/dojo/${dojoId}`, { params: { month, year } }),
       ]);
       setMonthlyFee(feeRes.data.data.monthlyFee);
+      setFeeInput(feeRes.data.data.monthlyFee != null ? String(feeRes.data.data.monthlyFee) : "");
       const attByUser = new Map<string, number>(
         attRes.data.data.roster.map((r: any) => [r.student.id, r.attendance?.classesAttended ?? 0])
       );
@@ -120,6 +126,25 @@ export default function InstructorFeesPage() {
     }
   };
 
+  const saveSettings = async () => {
+    if (!dojoId) return;
+    setSavingSettings(true);
+    setMessage("");
+    try {
+      await api.patch(`/dojos/${dojoId}`, {
+        monthlyFee: feeInput === "" ? null : Number(feeInput),
+        feeDueDay: Number(dueDayInput),
+        feeReminderTemplate: templateInput,
+      });
+      setMessage("Dojo fee settings saved");
+      await load();
+    } catch (e: any) {
+      setMessage(e?.response?.data?.message || "Failed to save settings");
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -129,6 +154,36 @@ export default function InstructorFeesPage() {
         <p className="text-gray-400 mb-4">
           {monthlyFee != null ? `Monthly fee: ₹${monthlyFee}` : "No monthly fee set for this dojo yet."}
         </p>
+
+        <details className="mb-6 rounded-lg border border-gray-800 bg-gray-900 p-4">
+          <summary className="cursor-pointer font-semibold">Dojo fee settings</summary>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="text-sm">Monthly fee (₹)
+              <input type="number" min={0} value={feeInput} onChange={(e) => setFeeInput(e.target.value)}
+                className="mt-1 w-full bg-black border border-gray-700 rounded px-2 py-1" />
+            </label>
+            <label className="text-sm">Fee due day (1-28)
+              <input type="number" min={1} max={28} value={dueDayInput} onChange={(e) => setDueDayInput(e.target.value)}
+                className="mt-1 w-full bg-black border border-gray-700 rounded px-2 py-1" />
+            </label>
+          </div>
+          <label className="mt-3 block text-sm">Reminder template
+            <textarea value={templateInput} onChange={(e) => setTemplateInput(e.target.value)} rows={3}
+              className="mt-1 w-full bg-black border border-gray-700 rounded px-2 py-1" />
+          </label>
+          <p className="mt-1 text-xs text-gray-500">Merge fields: {"{name} {amount} {month} {year} {dojoName} {dueDate}"}</p>
+          <div className="mt-2 rounded bg-black border border-gray-800 p-3 text-sm text-gray-300">
+            <div className="text-xs text-gray-500 mb-1">Preview</div>
+            {renderFeePreview(templateInput, {
+              name: "Riku", amount: feeInput || "800", month: MONTHS[month - 1], year,
+              dojoName: user?.dojo?.name || "your dojo", dueDate: `${dueDayInput} ${MONTHS[month - 1]} ${year}`,
+            })}
+          </div>
+          <button onClick={saveSettings} disabled={savingSettings}
+            className="mt-3 bg-red-600 hover:bg-red-700 rounded px-4 py-2 disabled:opacity-50">
+            {savingSettings ? "Saving…" : "Save settings"}
+          </button>
+        </details>
 
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="bg-gray-900 border border-gray-700 rounded px-3 py-2">
