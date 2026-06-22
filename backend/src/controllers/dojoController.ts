@@ -177,7 +177,7 @@ export const createDojo = catchAsync(async (req: Request, res: Response, next: N
 });
 
 export const updateDojo = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { name, city, state, country, address, contactEmail, contactPhone, latitude, longitude, instructorId } = req.body;
+    const { name, city, state, country, address, contactEmail, contactPhone, latitude, longitude, instructorId, monthlyFee, feeDueDay, feeReminderTemplate } = req.body;
 
     // Build update data with only valid Dojo model fields
     const updateData: any = {};
@@ -190,6 +190,13 @@ export const updateDojo = catchAsync(async (req: Request, res: Response, next: N
     if (contactPhone !== undefined) updateData.contactPhone = contactPhone;
     if (latitude !== undefined) updateData.latitude = latitude ? parseFloat(latitude) : null;
     if (longitude !== undefined) updateData.longitude = longitude ? parseFloat(longitude) : null;
+    if (monthlyFee !== undefined) updateData.monthlyFee = monthlyFee === null || monthlyFee === '' ? null : parseFloat(monthlyFee);
+    if (feeDueDay !== undefined) {
+        const d = parseInt(feeDueDay);
+        if (Number.isNaN(d) || d < 1 || d > 28) return next(new AppError('feeDueDay must be between 1 and 28', 400));
+        updateData.feeDueDay = d;
+    }
+    if (feeReminderTemplate !== undefined) updateData.feeReminderTemplate = feeReminderTemplate === '' ? null : feeReminderTemplate;
 
     try {
         // If instructorId provided, add to many-to-many instructors
