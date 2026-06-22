@@ -90,6 +90,7 @@ enum NotificationType {
   REJECTION
   BELT_PROMOTION
   EVENT_REMINDER
+  FEE_REMINDER
   GENERAL
 }
 
@@ -202,6 +203,8 @@ model User {
   passwordResetTokens   PasswordResetToken[]
   eventFeedbacks        EventFeedback[]  @relation("FeedbackAuthor")
   anonymousMessages     AnonymousMessage[] @relation("AnonymousMessageSender")
+  monthlyFees           MonthlyFee[]
+  monthlyAttendance     MonthlyAttendance[]
 
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
@@ -224,9 +227,14 @@ model Dojo {
   contactPhone String?
   latitude     Float?
   longitude    Float?
+  monthlyFee          Float?    // Per-dojo flat monthly training fee (INR)
+  feeDueDay           Int       @default(10)  // Day of month fees are considered due
+  feeReminderTemplate String?   // Merge-field template; null falls back to default
 
   members      User[]   @relation("DojoMembers")       // Users whose primary dojo is this
   instructors  User[]   @relation("InstructorDojos")   // Many-to-many: instructors who teach here
+  monthlyFees       MonthlyFee[]
+  monthlyAttendance MonthlyAttendance[]
 
   gallery      Gallery[] @relation("DojoGallery")
   events       Event[]   @relation("DojoEvents")
@@ -849,4 +857,54 @@ model ExamResult {
   updatedAt   DateTime  @updatedAt
 
   @@index([isPublished, createdAt])
+}
+
+enum FeeStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  WAIVED
+}
+
+model MonthlyFee {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  dojoId         String
+  dojo           Dojo      @relation(fields: [dojoId], references: [id])
+  month          Int       // 1-12
+  year           Int
+  amount         Float     // snapshot of dojo monthlyFee at time of record
+  status         FeeStatus @default(UNPAID)
+  amountPaid     Float     @default(0)
+  paidAt         DateTime?
+  method         String?   // free text: CASH / UPI / etc
+  markedBy       String    // instructor user id, or "SYSTEM" for auto rows
+  notes          String?
+  remindersSent  Int       @default(0)
+  lastReminderAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([userId, month, year])
+  @@index([dojoId, year, month])
+  @@index([status])
+}
+
+model MonthlyAttendance {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  dojoId          String
+  dojo            Dojo     @relation(fields: [dojoId], references: [id])
+  month           Int      // 1-12
+  year            Int
+  classesAttended Int      @default(0)
+  markedBy        String   // instructor user id
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, month, year])
+  @@index([dojoId, year, month])
 }
