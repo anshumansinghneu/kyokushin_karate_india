@@ -493,9 +493,32 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
                                 <p className="text-xs text-gray-500">Share knowledge with the community</p>
                             </button>
 
-                            <Link href="/dashboard/fees" className="block rounded-lg border border-gray-800 bg-gray-900 p-4 hover:border-red-600">
-                                <div className="font-semibold">Attendance &amp; Fees</div>
-                                <div className="text-sm text-gray-400">Mark monthly attendance and fee collection</div>
+                            <Link
+                                href="/dashboard/attendance"
+                                className="group p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-red-500/[0.05] hover:border-red-500/20 transition-all text-left block"
+                            >
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                                        <ClipboardCheck className="w-5 h-5 text-red-400" />
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 text-gray-700 ml-auto group-hover:text-red-400 group-hover:translate-x-0.5 transition-all" />
+                                </div>
+                                <h3 className="text-sm font-bold text-white mb-1">Attendance</h3>
+                                <p className="text-xs text-gray-500">Mark daily present/absent</p>
+                            </Link>
+
+                            <Link
+                                href="/dashboard/fees"
+                                className="group p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] hover:bg-green-500/[0.05] hover:border-green-500/20 transition-all text-left block"
+                            >
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
+                                        <Calendar className="w-5 h-5 text-green-400" />
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 text-gray-700 ml-auto group-hover:text-green-400 group-hover:translate-x-0.5 transition-all" />
+                                </div>
+                                <h3 className="text-sm font-bold text-white mb-1">Fees</h3>
+                                <p className="text-xs text-gray-500">Mark monthly fee collection</p>
                             </Link>
                         </div>
                     </div>
