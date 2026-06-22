@@ -492,6 +492,11 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
                                 <h3 className="text-sm font-bold text-white mb-1">Write Blog</h3>
                                 <p className="text-xs text-gray-500">Share knowledge with the community</p>
                             </button>
+
+                            <Link href="/dashboard/fees" className="block rounded-lg border border-gray-800 bg-gray-900 p-4 hover:border-red-600">
+                                <div className="font-semibold">Attendance &amp; Fees</div>
+                                <div className="text-sm text-gray-400">Mark monthly attendance and fee collection</div>
+                            </Link>
                         </div>
                     </div>
 
