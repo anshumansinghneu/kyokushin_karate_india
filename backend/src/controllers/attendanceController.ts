@@ -22,67 +22,86 @@ export const getDojoAttendance = catchAsync(async (req: Request, res: Response, 
     orderBy: { name: 'asc' },
   });
 
-  const records = await prisma.monthlyAttendance.findMany({
-    where: { dojoId, month, year, userId: { in: students.map((s) => s.id) } },
-  });
-  const byUser = new Map(records.map((r) => [r.userId, r]));
+  const monthStart = new Date(Date.UTC(year, month - 1, 1));
+  const nextMonthStart = new Date(Date.UTC(year, month, 1));
 
-  const roster = students.map((student) => ({ student, attendance: byUser.get(student.id) ?? null }));
+  const records = await prisma.attendanceRecord.findMany({
+    where: {
+      dojoId,
+      userId: { in: students.map((s) => s.id) },
+      date: { gte: monthStart, lt: nextMonthStart },
+    },
+  });
+
+  const daysByUser = new Map<string, Record<string, string>>();
+  for (const r of records) {
+    const day = String(new Date(r.date).getUTCDate());
+    const m = daysByUser.get(r.userId) ?? {};
+    m[day] = r.status;
+    daysByUser.set(r.userId, m);
+  }
+
+  const roster = students.map((student) => {
+    const days = daysByUser.get(student.id) ?? {};
+    const presentCount = Object.values(days).filter((s) => s === 'PRESENT').length;
+    return { student, days, presentCount };
+  });
+
   res.status(200).json({ status: 'success', data: { roster } });
 });
 
-// POST /api/attendance/mark
+// POST /api/attendance/mark  — body: { userId, dojoId, year, month, day, status }
 export const markAttendance = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const currentUser = req.user;
-  const { dojoId, month, year, entries } = req.body;
-  if (!dojoId || !month || !year || !Array.isArray(entries)) {
-    return next(new AppError('dojoId, month, year and entries[] are required', 400));
+  const { userId, dojoId, year, month, day, status } = req.body;
+  if (!userId || !dojoId || !year || !month || !day) {
+    return next(new AppError('userId, dojoId, year, month and day are required', 400));
   }
-  const m = parseInt(month);
   const y = parseInt(year);
+  const m = parseInt(month);
+  const d = parseInt(day);
   if (m < 1 || m > 12) return next(new AppError('month must be 1-12', 400));
-  if (entries.length === 0) return next(new AppError('entries[] must not be empty', 400));
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  if (d < 1 || d > daysInMonth) return next(new AppError('day is out of range for that month', 400));
 
-  const ids: string[] = entries.map((e: any) => e.userId);
-
-  if (currentUser.role !== 'ADMIN') {
-    const owned = await prisma.user.findMany({
-      where: { id: { in: ids }, primaryInstructorId: currentUser.id },
-      select: { id: true },
-    });
-    const ownedSet = new Set(owned.map((o) => o.id));
-    if (!ids.every((id) => ownedSet.has(id))) {
-      return next(new AppError('You can only manage your own students', 403));
-    }
+  const clearing = status === null || status === 'CLEAR' || status === undefined;
+  if (!clearing && status !== 'PRESENT' && status !== 'ABSENT') {
+    return next(new AppError('status must be PRESENT, ABSENT, or null to clear', 400));
   }
 
-  const attendance = await prisma.$transaction(
-    entries.map((e: any) =>
-      prisma.monthlyAttendance.upsert({
-        where: { userId_month_year: { userId: e.userId, month: m, year: y } },
-        create: {
-          userId: e.userId, dojoId, month: m, year: y,
-          classesAttended: parseInt(e.classesAttended) || 0,
-          notes: e.notes ?? null,
-          markedBy: currentUser.id,
-        },
-        update: {
-          classesAttended: parseInt(e.classesAttended) || 0,
-          notes: e.notes ?? null,
-          markedBy: currentUser.id,
-        },
-      })
-    )
-  );
+  const student = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { primaryInstructorId: true, dojoId: true },
+  });
+  if (!student) return next(new AppError('Student not found', 404));
+  if (currentUser.role !== 'ADMIN' && student.primaryInstructorId !== currentUser.id) {
+    return next(new AppError('You can only manage your own students', 403));
+  }
+  if (student.dojoId !== dojoId) {
+    return next(new AppError('Student does not belong to this dojo', 400));
+  }
 
-  res.status(200).json({ status: 'success', results: attendance.length, data: { attendance } });
+  const date = new Date(Date.UTC(y, m - 1, d));
+
+  if (clearing) {
+    await prisma.attendanceRecord.deleteMany({ where: { userId, date } });
+    return res.status(200).json({ status: 'success', data: { record: null } });
+  }
+
+  const record = await prisma.attendanceRecord.upsert({
+    where: { userId_date: { userId, date } },
+    create: { userId, dojoId, date, status, markedBy: currentUser.id },
+    update: { status, markedBy: currentUser.id },
+  });
+
+  res.status(200).json({ status: 'success', data: { record } });
 });
 
 // GET /api/attendance/me
 export const getMyAttendance = catchAsync(async (req: Request, res: Response) => {
-  const attendance = await prisma.monthlyAttendance.findMany({
+  const attendance = await prisma.attendanceRecord.findMany({
     where: { userId: req.user.id },
-    orderBy: [{ year: 'desc' }, { month: 'desc' }],
+    orderBy: { date: 'desc' },
   });
   res.status(200).json({ status: 'success', data: { attendance } });
 });
