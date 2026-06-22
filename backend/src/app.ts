@@ -31,6 +31,7 @@ import analyticsRouter from './routes/analyticsRoutes';
 import feedbackRouter from './routes/eventFeedbackRoutes';
 import anonymousMessageRouter from './routes/anonymousMessageRoutes';
 import examResultRouter from './routes/examResultRoutes';
+import feeRouter from './routes/feeRoutes';
 import { sendRenewalReminders } from './services/renewalReminderService';
 import { verifySmtp, sendTestEmail } from './services/emailService';
 import { globalErrorHandler } from './utils/errorHandler';
@@ -136,6 +137,7 @@ app.use('/api/analytics', analyticsRouter);  // Site visit analytics
 app.use('/api/feedback', feedbackRouter);  // Event feedback & reviews
 app.use('/api/anonymous-messages', anonymousMessageRouter);  // Anonymous messaging
 app.use('/api/exam-results', examResultRouter);  // Published belt-test results
+app.use('/api/fees', feeRouter);  // Monthly fee ledger
 app.use('/api', noteRouter);  // Notes and profile views
 
 // Serve static files (uploads)
