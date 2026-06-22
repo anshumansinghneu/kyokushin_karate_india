@@ -17,7 +17,6 @@ interface RosterRow {
   status: FeeStatus;
   amountPaid: number;
   method: string;
-  classesAttended: number;
   notes: string;
 }
 
@@ -54,18 +53,12 @@ export default function InstructorFeesPage() {
     setLoading(true);
     setMessage("");
     try {
-      const [feeRes, attRes] = await Promise.all([
-        api.get(`/fees/dojo/${dojoId}`, { params: { month, year } }),
-        api.get(`/attendance/dojo/${dojoId}`, { params: { month, year } }),
-      ]);
+      const feeRes = await api.get(`/fees/dojo/${dojoId}`, { params: { month, year } });
       const d = feeRes.data.data;
       setMonthlyFee(d.monthlyFee);
       setFeeInput(d.monthlyFee != null ? String(d.monthlyFee) : "");
       setDueDayInput(d.feeDueDay != null ? String(d.feeDueDay) : "10");
       setTemplateInput(d.feeReminderTemplate || DEFAULT_FEE_REMINDER_TEMPLATE);
-      const attByUser = new Map<string, number>(
-        attRes.data.data.roster.map((r: any) => [r.student.id, r.attendance?.classesAttended ?? 0])
-      );
       const merged: RosterRow[] = d.roster.map((r: any) => ({
         userId: r.student.id,
         name: r.student.name,
@@ -74,7 +67,6 @@ export default function InstructorFeesPage() {
         status: (r.fee?.status ?? "UNPAID") as FeeStatus,
         amountPaid: r.fee?.amountPaid ?? 0,
         method: r.fee?.method ?? "",
-        classesAttended: attByUser.get(r.student.id) ?? 0,
         notes: r.fee?.notes ?? "",
       }));
       setRows(merged);
@@ -95,10 +87,6 @@ export default function InstructorFeesPage() {
     setSavingId(row.userId);
     setMessage("");
     try {
-      await api.post("/attendance/mark", {
-        dojoId, month, year,
-        entries: [{ userId: row.userId, classesAttended: row.classesAttended, notes: row.notes }],
-      });
       await api.post("/fees/mark", {
         userId: row.userId, dojoId, month, year,
         status: row.status,
@@ -153,7 +141,7 @@ export default function InstructorFeesPage() {
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold mb-2">Attendance &amp; Fees</h1>
+        <h1 className="text-2xl font-bold mb-2">Monthly Fees</h1>
         <p className="text-gray-400 mb-4">
           {monthlyFee != null ? `Monthly fee: ₹${monthlyFee}` : "No monthly fee set for this dojo yet."}
         </p>
@@ -210,7 +198,6 @@ export default function InstructorFeesPage() {
               <thead className="text-gray-400 text-left">
                 <tr>
                   <th className="py-2 pr-3">Student</th>
-                  <th className="py-2 pr-3">Classes</th>
                   <th className="py-2 pr-3">Fee status</th>
                   <th className="py-2 pr-3">Amount paid</th>
                   <th className="py-2 pr-3">Method</th>
@@ -223,11 +210,6 @@ export default function InstructorFeesPage() {
                     <td className="py-2 pr-3">
                       <div>{r.name}</div>
                       <div className="text-xs text-gray-500">{r.membershipNumber || r.currentBeltRank || ""}</div>
-                    </td>
-                    <td className="py-2 pr-3">
-                      <input type="number" min={0} value={r.classesAttended}
-                        onChange={(e) => update(r.userId, { classesAttended: Number(e.target.value) })}
-                        className="w-16 bg-gray-900 border border-gray-700 rounded px-2 py-1" />
                     </td>
                     <td className="py-2 pr-3">
                       <select value={r.status} onChange={(e) => update(r.userId, { status: e.target.value as FeeStatus })}
