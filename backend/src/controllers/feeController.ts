@@ -124,3 +124,40 @@ export const remindUnpaid = catchAsync(async (req: Request, res: Response, next:
   const result = await remindDojo(dojoId, parseInt(month), parseInt(year), new Date(), instructorId);
   res.status(200).json({ status: 'success', data: result });
 });
+
+// PATCH /api/fees/dojo-settings — instructor/admin set fee config for their OWN dojo
+// (narrow alternative to the admin-only PATCH /dojos/:id)
+export const updateDojoFeeSettings = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const currentUser = req.user;
+  const { dojoId, monthlyFee, feeDueDay, feeReminderTemplate } = req.body;
+  if (!dojoId) return next(new AppError('dojoId is required', 400));
+
+  if (currentUser.role !== 'ADMIN' && currentUser.dojoId !== dojoId) {
+    return next(new AppError('You can only update fee settings for your own dojo', 403));
+  }
+
+  const data: any = {};
+  if (monthlyFee !== undefined) {
+    data.monthlyFee = monthlyFee === null || monthlyFee === '' ? null : parseFloat(monthlyFee);
+  }
+  if (feeDueDay !== undefined) {
+    const d = parseInt(feeDueDay);
+    if (Number.isNaN(d) || d < 1 || d > 28) return next(new AppError('feeDueDay must be between 1 and 28', 400));
+    data.feeDueDay = d;
+  }
+  if (feeReminderTemplate !== undefined) {
+    data.feeReminderTemplate = feeReminderTemplate === '' ? null : feeReminderTemplate;
+  }
+
+  try {
+    const dojo = await prisma.dojo.update({
+      where: { id: dojoId },
+      data,
+      select: { id: true, monthlyFee: true, feeDueDay: true, feeReminderTemplate: true },
+    });
+    res.status(200).json({ status: 'success', data: { dojo } });
+  } catch (error: any) {
+    if (error.code === 'P2025') return next(new AppError('No dojo found with that ID', 404));
+    throw error;
+  }
+});

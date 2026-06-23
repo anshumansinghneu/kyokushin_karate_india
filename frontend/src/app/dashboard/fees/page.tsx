@@ -122,7 +122,8 @@ export default function InstructorFeesPage() {
     setSavingSettings(true);
     setMessage("");
     try {
-      await api.patch(`/dojos/${dojoId}`, {
+      await api.patch(`/fees/dojo-settings`, {
+        dojoId,
         monthlyFee: feeInput === "" ? null : Number(feeInput),
         feeDueDay: Number(dueDayInput),
         feeReminderTemplate: templateInput,
