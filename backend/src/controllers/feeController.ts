@@ -4,6 +4,9 @@ import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { normalizeFeeUpdate, FeeStatus } from '../utils/feeStatus';
 import { remindDojo } from '../services/feeReminderService';
+import { renderFeeReceiptTemplate, DEFAULT_FEE_RECEIPT_TEMPLATE } from '../utils/feeReceipt';
+import { monthName } from '../utils/feeReminder';
+import { sendFeeReceiptEmail } from '../services/emailService';
 
 // GET /api/fees/dojo/:dojoId?month=&year=
 export const getDojoFees = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -91,6 +94,43 @@ export const markFee = catchAsync(async (req: Request, res: Response, next: Next
       markedBy: currentUser.id,
     },
   });
+
+  // Auto receipt: confirm Paid/Partial payments to the student (fire-and-forget).
+  if (normalized.status === 'PAID' || normalized.status === 'PARTIAL') {
+    try {
+      const [recipient, dojo] = await Promise.all([
+        prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } }),
+        prisma.dojo.findUnique({ where: { id: dojoId }, select: { name: true } }),
+      ]);
+      if (recipient?.email) {
+        const outstanding = Math.max(normalized.amount - normalized.amountPaid, 0);
+        const message = renderFeeReceiptTemplate(DEFAULT_FEE_RECEIPT_TEMPLATE, {
+          name: recipient.name,
+          dojoName: dojo?.name ?? 'your dojo',
+          month: monthName(m),
+          year: y,
+          amount: normalized.amount,
+          amountPaid: normalized.amountPaid,
+          outstanding,
+          method: method || '—',
+          date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+        });
+        await sendFeeReceiptEmail(recipient.email, recipient.name, message);
+        await prisma.notification.create({
+          data: {
+            userId,
+            type: 'FEE_RECEIPT',
+            title: `Payment received — ${monthName(m)} ${y}`,
+            message,
+            emailSent: true,
+            emailSentAt: new Date(),
+          },
+        });
+      }
+    } catch (err) {
+      console.error('[FEE-RECEIPT] Failed to send receipt:', err);
+    }
+  }
 
   res.status(200).json({ status: 'success', data: { fee } });
 });
