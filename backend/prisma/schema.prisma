@@ -91,6 +91,7 @@ enum NotificationType {
   BELT_PROMOTION
   EVENT_REMINDER
   FEE_REMINDER
+  FEE_RECEIPT
   GENERAL
 }
 
