@@ -56,4 +56,24 @@ describe('computeYearLedger', () => {
     expect(l.totals.totalExpected).toBe(0);
     expect(l.months.find((m) => m.month === 1)!.status).toBe('UNPAID');
   });
+
+  it('does not count amountPaid on a WAIVED record toward paid/outstanding', () => {
+    const join = new Date('2026-01-01T00:00:00Z');
+    const l = computeYearLedger(2026, join, 1000, [
+      { month: 2, amount: 1000, amountPaid: 500, status: 'WAIVED' },
+    ], TODAY);
+    const feb = l.months.find((m) => m.month === 2)!;
+    expect(feb.expected).toBe(0);
+    expect(feb.paid).toBe(0);
+    // Jan, Mar..Jun unpaid at 1000 = 5 months; Feb waived contributes 0
+    expect(l.totals.totalPaid).toBe(0);
+    expect(l.totals.totalExpected).toBe(5000);
+  });
+
+  it('bills full Jan-Dec for a past year even when the member joined mid-year of an earlier year', () => {
+    const join = new Date('2024-06-10T00:00:00Z'); // joined June 2024
+    const l = computeYearLedger(2025, join, 500, [], TODAY); // querying 2025 (past, after join year)
+    expect(l.totals.totalExpected).toBe(6000); // 12 * 500
+    expect(l.months.every((m) => m.status === 'UNPAID')).toBe(true);
+  });
 });

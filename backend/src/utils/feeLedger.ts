@@ -61,9 +61,10 @@ export function computeYearLedger(
     const rec = recordByMonth.get(m);
     if (rec) {
       const expected = rec.status === 'WAIVED' ? 0 : rec.amount;
-      months.push({ month: m, expected, paid: rec.amountPaid, status: rec.status });
+      const paid = rec.status === 'WAIVED' ? 0 : rec.amountPaid;
+      months.push({ month: m, expected, paid, status: rec.status });
       totalExpected += expected;
-      totalPaid += rec.amountPaid;
+      totalPaid += paid;
     } else {
       months.push({ month: m, expected: fee, paid: 0, status: 'UNPAID' });
       totalExpected += fee;
