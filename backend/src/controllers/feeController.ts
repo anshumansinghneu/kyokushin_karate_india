@@ -249,3 +249,67 @@ export const getStudentLedger = catchAsync(async (req: Request, res: Response, n
     },
   });
 });
+
+// GET /api/fees/summary/dojo/:dojoId?year=
+export const getDojoFeeSummary = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const currentUser = req.user;
+  const { dojoId } = req.params;
+  const year = parseInt(req.query.year as string) || new Date().getFullYear();
+
+  const where: any = { role: 'STUDENT', dojoId };
+  if (currentUser.role !== 'ADMIN') where.primaryInstructorId = currentUser.id;
+
+  const students = await prisma.user.findMany({
+    where,
+    select: {
+      id: true, name: true, membershipNumber: true,
+      membershipStartDate: true, createdAt: true,
+    },
+    orderBy: { name: 'asc' },
+  });
+
+  const dojo = await prisma.dojo.findUnique({ where: { id: dojoId }, select: { monthlyFee: true } });
+  const dojoMonthlyFee = dojo?.monthlyFee ?? null;
+
+  const fees = await prisma.monthlyFee.findMany({
+    where: { dojoId, year, userId: { in: students.map((s) => s.id) } },
+    select: { userId: true, month: true, amount: true, amountPaid: true, status: true },
+  });
+  const feesByUser = new Map<string, LedgerFeeRecord[]>();
+  for (const f of fees) {
+    const arr = feesByUser.get(f.userId) ?? [];
+    arr.push({ month: f.month, amount: f.amount, amountPaid: f.amountPaid, status: f.status as any });
+    feesByUser.set(f.userId, arr);
+  }
+
+  let expectedTotal = 0;
+  let collectedTotal = 0;
+  const rows = students.map((s) => {
+    const joinDate = s.membershipStartDate ?? s.createdAt;
+    const ledger = computeYearLedger(year, joinDate, dojoMonthlyFee, feesByUser.get(s.id) ?? []);
+    expectedTotal += ledger.totals.totalExpected;
+    collectedTotal += ledger.totals.totalPaid;
+    return {
+      userId: s.id,
+      name: s.name,
+      membershipNumber: s.membershipNumber,
+      expected: ledger.totals.totalExpected,
+      paid: ledger.totals.totalPaid,
+      outstanding: ledger.totals.totalOutstanding,
+    };
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      year,
+      dojoMonthlyFee,
+      totals: {
+        expected: expectedTotal,
+        collected: collectedTotal,
+        outstanding: Math.max(expectedTotal - collectedTotal, 0),
+      },
+      rows,
+    },
+  });
+});
