@@ -7,6 +7,7 @@ import { remindDojo } from '../services/feeReminderService';
 import { renderFeeReceiptTemplate, DEFAULT_FEE_RECEIPT_TEMPLATE } from '../utils/feeReceipt';
 import { monthName } from '../utils/feeReminder';
 import { sendFeeReceiptEmail } from '../services/emailService';
+import { computeYearLedger, LedgerFeeRecord } from '../utils/feeLedger';
 
 // GET /api/fees/dojo/:dojoId?month=&year=
 export const getDojoFees = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -200,4 +201,51 @@ export const updateDojoFeeSettings = catchAsync(async (req: Request, res: Respon
     if (error.code === 'P2025') return next(new AppError('No dojo found with that ID', 404));
     throw error;
   }
+});
+
+// GET /api/fees/ledger/:userId?year=
+export const getStudentLedger = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const currentUser = req.user;
+  const { userId } = req.params;
+  const year = parseInt(req.query.year as string) || new Date().getFullYear();
+
+  const student = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true, name: true, membershipNumber: true, dojoId: true,
+      primaryInstructorId: true, membershipStartDate: true, createdAt: true,
+    },
+  });
+  if (!student) return next(new AppError('Student not found', 404));
+
+  const isSelf = currentUser.id === userId;
+  const isOwnInstructor = student.primaryInstructorId === currentUser.id;
+  if (currentUser.role !== 'ADMIN' && !isSelf && !isOwnInstructor) {
+    return next(new AppError('You are not allowed to view this ledger', 403));
+  }
+
+  const dojo = student.dojoId
+    ? await prisma.dojo.findUnique({ where: { id: student.dojoId }, select: { monthlyFee: true } })
+    : null;
+
+  const fees = await prisma.monthlyFee.findMany({
+    where: { userId, year },
+    select: { month: true, amount: true, amountPaid: true, status: true },
+  });
+  const records: LedgerFeeRecord[] = fees.map((f) => ({
+    month: f.month, amount: f.amount, amountPaid: f.amountPaid, status: f.status as any,
+  }));
+
+  const joinDate = student.membershipStartDate ?? student.createdAt;
+  const ledger = computeYearLedger(year, joinDate, dojo?.monthlyFee ?? null, records);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      year,
+      student: { id: student.id, name: student.name, membershipNumber: student.membershipNumber },
+      dojoMonthlyFee: dojo?.monthlyFee ?? null,
+      ledger,
+    },
+  });
 });
