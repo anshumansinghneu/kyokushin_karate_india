@@ -21,6 +21,7 @@ interface RosterRow {
 }
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 export default function InstructorFeesPage() {
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -60,6 +61,8 @@ export default function InstructorFeesPage() {
     if (!dojoId) return;
     setLoading(true);
     setMessage("");
+    setLedgerByUser({});
+    setExpandedId(null);
     try {
       const feeRes = await api.get(`/fees/dojo/${dojoId}`, { params: { month, year } });
       const d = feeRes.data.data;
@@ -78,8 +81,10 @@ export default function InstructorFeesPage() {
         notes: r.fee?.notes ?? "",
       }));
       setRows(merged);
-      const summaryRes = await api.get(`/fees/summary/dojo/${dojoId}`, { params: { year } });
-      setSummary(summaryRes.data.data);
+      try {
+        const summaryRes = await api.get(`/fees/summary/dojo/${dojoId}`, { params: { year } });
+        setSummary(summaryRes.data.data);
+      } catch { /* non-critical; the totals banner just won't render */ }
     } catch (e: any) {
       setMessage(e?.response?.data?.message || "Failed to load roster");
     } finally {
@@ -111,8 +116,6 @@ export default function InstructorFeesPage() {
       setSavingId(null);
     }
   };
-
-  const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
   const toggleExpand = async (userId: string) => {
     if (expandedId === userId) { setExpandedId(null); return; }
