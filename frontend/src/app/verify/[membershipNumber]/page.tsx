@@ -91,20 +91,19 @@ export default function VerifyPage() {
     const isActive = member?.membershipStatus === 'ACTIVE';
 
     return (
-        <div className="min-h-screen bg-[#060606] text-white relative">
+        <div className="min-h-screen bg-black text-white relative">
             {/* Background elements */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-red-950/[0.12] rounded-full blur-[150px]" />
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.012)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.012)_1px,transparent_1px)] bg-[size:48px_48px]" />
             </div>
 
             {/* Top accent */}
-            <div className="h-[2px] bg-gradient-to-r from-transparent via-red-600/80 to-transparent" />
+            <div className="h-[2px] bg-[#FF0000]" />
 
             <div className="relative z-10 max-w-xl mx-auto px-5 pt-6 sm:pt-8 pb-20">
                 {/* Back link */}
                 <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}>
-                    <Link href="/verify" className="inline-flex items-center gap-1.5 text-[11px] text-gray-600 hover:text-gray-300 transition-colors mb-6 uppercase tracking-wider font-medium">
+                    <Link href="/verify" className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-white transition-colors mb-6 uppercase tracking-wider font-medium">
                         <ArrowLeft className="w-3 h-3" />
                         Back to search
                     </Link>
@@ -118,8 +117,8 @@ export default function VerifyPage() {
                     transition={{ duration: 0.3, delay: 0.05 }}
                     className="mb-8"
                 >
-                    <div className={`flex items-center bg-white/[0.03] rounded-xl border transition-all duration-300 ${isFocused ? 'border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.06)]' : 'border-white/[0.06]'}`}>
-                        <div className="pl-4 text-gray-600">
+                    <div className={`flex items-center bg-white/[0.03] rounded-xl border transition-all duration-300 ${isFocused ? 'border-[#FF0000]/40 shadow-[0_0_20px_rgba(255,0,0,0.08)]' : 'border-white/[0.06]'}`}>
+                        <div className="pl-4 text-gray-400">
                             <Search className="w-[18px] h-[18px]" />
                         </div>
                         <input
@@ -129,16 +128,16 @@ export default function VerifyPage() {
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             placeholder="Enter membership ID"
-                            className="flex-1 px-3 py-3.5 bg-transparent text-white text-sm placeholder-gray-600 focus:outline-none font-mono"
+                            className="flex-1 px-3 py-3.5 bg-transparent text-white text-sm placeholder-gray-400 focus:outline-none font-mono"
                         />
                         <div className="pr-1.5">
                             <button
                                 type="submit"
                                 disabled={loading || !searchQuery.trim()}
-                                className="flex items-center gap-1.5 px-4 py-2 bg-white text-black font-semibold text-xs rounded-lg hover:bg-gray-200 disabled:bg-white/[0.05] disabled:text-gray-600 transition-all"
+                                className="flex items-center gap-1.5 px-4 py-2 bg-[#FF0000] text-white font-bold uppercase tracking-wider text-xs rounded-none hover:bg-[#8B0000] disabled:bg-white/[0.05] disabled:text-gray-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 {loading ? (
-                                    <div className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                                    <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-transparent rounded-full animate-spin" />
                                 ) : (
                                     <>Verify <ArrowRight className="w-3 h-3" /></>
                                 )}
@@ -160,15 +159,15 @@ export default function VerifyPage() {
                             <div className="flex flex-col items-center gap-4">
                                 <div className="relative">
                                     <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
-                                        <Fingerprint className="w-5 h-5 text-red-500/60" />
+                                        <Fingerprint className="w-5 h-5 text-[#FF4D4D]" />
                                     </div>
-                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#060606] border border-white/[0.08] flex items-center justify-center">
-                                        <div className="w-2.5 h-2.5 border-2 border-red-500/60 border-t-transparent rounded-full animate-spin" />
+                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-black border border-white/[0.08] flex items-center justify-center">
+                                        <div className="w-2.5 h-2.5 border-2 border-[#FF0000] border-t-transparent rounded-full animate-spin" />
                                     </div>
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-sm text-gray-400 font-medium">Verifying membership</p>
-                                    <p className="text-[11px] text-gray-600 mt-1 font-mono">Checking KKFI records...</p>
+                                    <p className="text-sm text-gray-300 font-medium">Verifying membership</p>
+                                    <p className="text-[11px] text-gray-400 mt-1 font-mono">Checking KKFI records...</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -188,10 +187,10 @@ export default function VerifyPage() {
                                         <XCircle className="w-6 h-6 text-red-400" />
                                     </div>
                                     <h2 className="text-base font-bold text-white mb-2">Membership Not Found</h2>
-                                    <p className="text-sm text-gray-500 max-w-xs mx-auto leading-relaxed">{error}</p>
+                                    <p className="text-sm text-gray-400 max-w-xs mx-auto leading-relaxed">{error}</p>
                                     <button
                                         onClick={() => { setSearched(false); setError(''); setSearchQuery(''); }}
-                                        className="mt-5 px-5 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-sm text-gray-300 hover:bg-white/[0.08] hover:text-white transition-all"
+                                        className="mt-5 px-5 py-2.5 rounded-none border border-white/20 text-sm text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                     >
                                         Try a different ID
                                     </button>
@@ -246,7 +245,7 @@ export default function VerifyPage() {
                                         </div>
                                     </div>
                                     {member.membershipEndDate && (
-                                        <span className="text-[10px] text-gray-600 font-mono">
+                                        <span className="text-[10px] text-gray-400 font-mono">
                                             exp {new Date(member.membershipEndDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
                                         </span>
                                     )}
@@ -268,7 +267,7 @@ export default function VerifyPage() {
                                                 </div>
                                             )}
                                             {isActive && (
-                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-[#060606] flex items-center justify-center">
+                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-black flex items-center justify-center">
                                                     <CheckCircle className="w-3 h-3 text-white" />
                                                 </div>
                                             )}
@@ -277,7 +276,7 @@ export default function VerifyPage() {
                                             <h2 className="text-xl font-black text-white truncate tracking-tight">{member.name}</h2>
                                             <div className="flex items-center gap-2 mt-1.5">
                                                 <span className="px-2 py-0.5 rounded bg-white/[0.06] text-[10px] text-gray-400 font-mono">{member.membershipNumber}</span>
-                                                <span className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold">
+                                                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
                                                     {member.role === 'INSTRUCTOR' ? 'Instructor' : member.role === 'ADMIN' ? 'Admin' : 'Student'}
                                                 </span>
                                             </div>
@@ -296,7 +295,7 @@ export default function VerifyPage() {
                                 <div className="divide-y divide-white/[0.04]">
                                     {/* Belt Rank - special treatment */}
                                     <div className="flex items-center justify-between px-5 py-4">
-                                        <span className="text-[11px] text-gray-500 uppercase tracking-wider font-medium">Belt Rank</span>
+                                        <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Belt Rank</span>
                                         <div className="flex items-center gap-2.5">
                                             <div className={`w-3.5 h-3.5 rounded-full ${beltStyle?.bg} ring-4 ${beltStyle?.ring}`} />
                                             <span className={`text-sm font-bold ${beltStyle?.text}`}>{member.currentBeltRank}</span>
@@ -306,10 +305,10 @@ export default function VerifyPage() {
                                     {/* Dojo */}
                                     {member.dojo && (
                                         <div className="flex items-center justify-between px-5 py-4">
-                                            <span className="text-[11px] text-gray-500 uppercase tracking-wider font-medium">Dojo</span>
+                                            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Dojo</span>
                                             <div className="text-right">
                                                 <span className="text-sm font-semibold text-white">{member.dojo.name}</span>
-                                                <p className="text-[11px] text-gray-600 flex items-center gap-1 justify-end mt-0.5">
+                                                <p className="text-[11px] text-gray-400 flex items-center gap-1 justify-end mt-0.5">
                                                     <MapPin className="w-2.5 h-2.5" />
                                                     {member.dojo.city}
                                                 </p>
@@ -320,7 +319,7 @@ export default function VerifyPage() {
                                     {/* Member since */}
                                     {member.membershipStartDate && (
                                         <div className="flex items-center justify-between px-5 py-4">
-                                            <span className="text-[11px] text-gray-500 uppercase tracking-wider font-medium">Member Since</span>
+                                            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Member Since</span>
                                             <span className="text-sm font-semibold text-white">
                                                 {new Date(member.membershipStartDate).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
                                             </span>
@@ -330,7 +329,7 @@ export default function VerifyPage() {
                                     {/* Experience */}
                                     {member.experience && (
                                         <div className="flex items-center justify-between px-5 py-4">
-                                            <span className="text-[11px] text-gray-500 uppercase tracking-wider font-medium">Experience</span>
+                                            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Experience</span>
                                             <span className="text-sm font-semibold text-white font-mono">{member.experience.display}</span>
                                         </div>
                                     )}
@@ -338,7 +337,7 @@ export default function VerifyPage() {
                                     {/* Promotions */}
                                     {typeof member.totalPromotions === 'number' && member.totalPromotions > 0 && (
                                         <div className="flex items-center justify-between px-5 py-4">
-                                            <span className="text-[11px] text-gray-500 uppercase tracking-wider font-medium">Promotions</span>
+                                            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Promotions</span>
                                             <div className="flex items-center gap-1.5">
                                                 <Star className="w-3.5 h-3.5 text-amber-500" />
                                                 <span className="text-sm font-semibold text-white">{member.totalPromotions}</span>
@@ -349,10 +348,10 @@ export default function VerifyPage() {
                                     {/* Last promotion */}
                                     {member.lastPromotion && (
                                         <div className="flex items-center justify-between px-5 py-4">
-                                            <span className="text-[11px] text-gray-500 uppercase tracking-wider font-medium">Last Promotion</span>
+                                            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Last Promotion</span>
                                             <div className="text-right">
                                                 <span className="text-sm font-semibold text-white">{member.lastPromotion.newBelt} Belt</span>
-                                                <p className="text-[10px] text-gray-600 font-mono mt-0.5">
+                                                <p className="text-[10px] text-gray-400 font-mono mt-0.5">
                                                     {new Date(member.lastPromotion.promotionDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                 </p>
                                             </div>
@@ -370,9 +369,9 @@ export default function VerifyPage() {
                             >
                                 <div className="flex items-center gap-2">
                                     <Image src="/kkfi-logo.avif" alt="KKFI" width={14} height={14} className="w-3.5 h-3.5 opacity-30" />
-                                    <span className="text-[10px] text-gray-600">Kyokushin Karate Foundation of India</span>
+                                    <span className="text-[10px] text-gray-400">Kyokushin Karate Foundation of India</span>
                                 </div>
-                                <span className="text-[10px] text-gray-700 font-mono">
+                                <span className="text-[10px] text-gray-400 font-mono">
                                     {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                 </span>
                             </motion.div>
@@ -386,7 +385,7 @@ export default function VerifyPage() {
                             >
                                 <button
                                     onClick={() => { setSearched(false); setMember(null); setSearchQuery(''); }}
-                                    className="text-xs text-gray-600 hover:text-white transition-colors font-medium"
+                                    className="text-xs text-gray-400 hover:text-white transition-colors font-medium"
                                 >
                                     Verify another member &rarr;
                                 </button>

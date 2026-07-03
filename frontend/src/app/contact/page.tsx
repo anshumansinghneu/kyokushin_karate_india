@@ -33,29 +33,26 @@ export default function ContactPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#080808]">
+        <div className="min-h-screen bg-black">
             {/* Top accent */}
-            <div className="h-px bg-gradient-to-r from-transparent via-red-600/50 to-transparent" />
+            <div className="h-px bg-gradient-to-r from-transparent via-[#FF0000]/50 to-transparent" />
 
             {/* Hero */}
             <div className="relative pt-28 pb-14 overflow-hidden">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808006_1px,transparent_1px),linear-gradient(to_bottom,#80808006_1px,transparent_1px)] bg-[size:32px_32px]" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-red-600/[0.04] rounded-full blur-[100px]" />
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                     className="relative z-10 text-center max-w-3xl mx-auto px-5"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-gray-400 tracking-wide mb-6">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-bold uppercase text-gray-300 tracking-[0.1em] mb-6">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#FF0000]" />
                         GET IN TOUCH
                     </div>
                     <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
-                        Contact <span className="text-red-500">KKFI</span>
+                        Contact <span className="text-[#FF0000]">KKFI</span>
                     </h1>
-                    <p className="text-gray-500 text-base md:text-lg max-w-lg mx-auto leading-relaxed">
+                    <p className="text-gray-400 text-base md:text-lg max-w-lg mx-auto leading-relaxed">
                         Get in touch with Kyokushin Karate Foundation of India. We&apos;d love to hear from you.
                     </p>
                 </motion.div>
@@ -75,23 +72,23 @@ export default function ContactPage() {
                             href={GOOGLE_MAPS_LINK}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group block bg-white/[0.02] border border-white/[0.06] rounded-xl p-5 hover:border-red-500/25 transition-all duration-300"
+                            className="group block bg-white/5 border border-white/10 rounded-xl p-5 hover:border-[#FF0000]/25 transition-all duration-300"
                         >
                             <div className="flex items-start gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-red-500/[0.08] border border-red-500/[0.12] flex items-center justify-center flex-shrink-0">
-                                    <MapPin className="w-5 h-5 text-red-500" />
+                                <div className="w-10 h-10 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center flex-shrink-0">
+                                    <MapPin className="w-5 h-5 text-[#FF0000]" />
                                 </div>
                                 <div className="flex-1">
                                     <h3 className="text-white font-bold mb-1 flex items-center gap-2">
                                         Our Location
-                                        <ExternalLink className="w-3.5 h-3.5 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <ExternalLink className="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </h3>
-                                    <p className="text-gray-500 text-sm leading-relaxed">
+                                    <p className="text-gray-400 text-sm leading-relaxed">
                                         Shuklaganj Bypass Rd, Poni Road,<br />
                                         Shuklaganj, Netua Grameen,<br />
                                         Uttar Pradesh 209861, India
                                     </p>
-                                    <span className="text-red-500/70 text-xs font-semibold mt-2 inline-block group-hover:text-red-400 transition-colors">
+                                    <span className="text-[#FF4D4D] text-xs font-semibold mt-2 inline-block group-hover:text-[#FF0000] transition-colors">
                                         Open in Google Maps →
                                     </span>
                                 </div>
@@ -101,11 +98,11 @@ export default function ContactPage() {
                         <motion.a
                             variants={fadeUp}
                             href="tel:+919956745114"
-                            className="group block bg-white/[0.02] border border-white/[0.06] rounded-xl p-5 hover:border-red-500/25 transition-all duration-300"
+                            className="group block bg-white/5 border border-white/10 rounded-xl p-5 hover:border-[#FF0000]/25 transition-all duration-300"
                         >
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-red-500/[0.08] border border-red-500/[0.12] flex items-center justify-center flex-shrink-0">
-                                    <Phone className="w-5 h-5 text-red-500" />
+                                <div className="w-10 h-10 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center flex-shrink-0">
+                                    <Phone className="w-5 h-5 text-[#FF0000]" />
                                 </div>
                                 <div>
                                     <h3 className="text-white font-bold mb-0.5">Phone</h3>
@@ -119,11 +116,11 @@ export default function ContactPage() {
                         <motion.a
                             variants={fadeUp}
                             href="mailto:contact@kyokushin.in"
-                            className="group block bg-white/[0.02] border border-white/[0.06] rounded-xl p-5 hover:border-red-500/25 transition-all duration-300"
+                            className="group block bg-white/5 border border-white/10 rounded-xl p-5 hover:border-[#FF0000]/25 transition-all duration-300"
                         >
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-red-500/[0.08] border border-red-500/[0.12] flex items-center justify-center flex-shrink-0">
-                                    <Mail className="w-5 h-5 text-red-500" />
+                                <div className="w-10 h-10 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center flex-shrink-0">
+                                    <Mail className="w-5 h-5 text-[#FF0000]" />
                                 </div>
                                 <div>
                                     <h3 className="text-white font-bold mb-0.5">Email</h3>
@@ -136,15 +133,15 @@ export default function ContactPage() {
 
                         <motion.div
                             variants={fadeUp}
-                            className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5"
+                            className="bg-white/5 border border-white/10 rounded-xl p-5"
                         >
                             <div className="flex items-start gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-red-500/[0.08] border border-red-500/[0.12] flex items-center justify-center flex-shrink-0">
-                                    <Clock className="w-5 h-5 text-red-500" />
+                                <div className="w-10 h-10 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center flex-shrink-0">
+                                    <Clock className="w-5 h-5 text-[#FF0000]" />
                                 </div>
                                 <div>
                                     <h3 className="text-white font-bold mb-2">Training Hours</h3>
-                                    <div className="text-gray-500 text-sm space-y-1">
+                                    <div className="text-gray-300 text-sm space-y-1">
                                         <div className="flex justify-between gap-8">
                                             <span>Mon – Fri</span>
                                             <span className="text-gray-400 font-mono text-xs">6:00 AM – 8:00 PM</span>
@@ -165,7 +162,7 @@ export default function ContactPage() {
                         {/* Map */}
                         <motion.div
                             variants={fadeUp}
-                            className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden"
+                            className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
                         >
                             <iframe
                                 src={GOOGLE_MAPS_EMBED}
@@ -187,64 +184,64 @@ export default function ContactPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2, duration: 0.5 }}
                     >
-                        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-6 md:p-8">
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-6 md:p-8">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-9 h-9 rounded-lg bg-red-500/[0.08] border border-red-500/[0.12] flex items-center justify-center">
-                                    <Send className="w-4 h-4 text-red-500" />
+                                <div className="w-9 h-9 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center">
+                                    <Send className="w-4 h-4 text-[#FF0000]" />
                                 </div>
                                 <h3 className="text-lg font-bold text-white">Send Us a Message</h3>
                             </div>
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em] mb-1.5 block">Name</label>
+                                        <label className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.15em] mb-1.5 block">Name</label>
                                         <input
                                             type="text"
                                             required
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                             placeholder="Your name"
-                                            className="w-full h-11 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-red-500/40 transition-colors"
+                                            className="w-full h-11 rounded-none border-b-2 border-white/20 bg-transparent px-1 text-sm text-white placeholder:text-gray-400 focus:outline-none focus-visible:border-[#FF0000] transition-colors"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em] mb-1.5 block">Email</label>
+                                        <label className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.15em] mb-1.5 block">Email</label>
                                         <input
                                             type="email"
                                             required
                                             value={formData.email}
                                             onChange={e => setFormData({ ...formData, email: e.target.value })}
                                             placeholder="your@email.com"
-                                            className="w-full h-11 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-red-500/40 transition-colors"
+                                            className="w-full h-11 rounded-none border-b-2 border-white/20 bg-transparent px-1 text-sm text-white placeholder:text-gray-400 focus:outline-none focus-visible:border-[#FF0000] transition-colors"
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em] mb-1.5 block">Subject</label>
+                                    <label className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.15em] mb-1.5 block">Subject</label>
                                     <input
                                         type="text"
                                         required
                                         value={formData.subject}
                                         onChange={e => setFormData({ ...formData, subject: e.target.value })}
                                         placeholder="What is this regarding?"
-                                        className="w-full h-11 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-red-500/40 transition-colors"
+                                        className="w-full h-11 rounded-none border-b-2 border-white/20 bg-transparent px-1 text-sm text-white placeholder:text-gray-400 focus:outline-none focus-visible:border-[#FF0000] transition-colors"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em] mb-1.5 block">Message</label>
+                                    <label className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.15em] mb-1.5 block">Message</label>
                                     <textarea
                                         required
                                         rows={5}
                                         value={formData.message}
                                         onChange={e => setFormData({ ...formData, message: e.target.value })}
                                         placeholder="Your message..."
-                                        className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-red-500/40 transition-colors resize-none"
+                                        className="w-full rounded-none border border-white/20 bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-400 focus:outline-none focus-visible:border-[#FF0000] transition-colors resize-none"
                                     />
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={sending}
-                                    className="w-full h-12 rounded-lg bg-white text-black font-bold text-sm flex items-center justify-center gap-2 transition-all hover:bg-gray-200 disabled:opacity-60 active:scale-[0.98]"
+                                    className="w-full h-12 min-h-[44px] rounded-none bg-[#FF0000] text-white font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-2 transition-all hover:bg-[#8B0000] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-60 active:scale-[0.98]"
                                 >
                                     {sending ? (
                                         <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
@@ -266,19 +263,19 @@ export default function ContactPage() {
                     transition={{ delay: 0.3 }}
                     className="mt-16 text-center"
                 >
-                    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-8 md:p-12 relative overflow-hidden">
-                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-600/30 to-transparent" />
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-8 md:p-12 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FF0000]/30 to-transparent" />
                         <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
-                            Begin Your <span className="text-red-500">Journey</span>
+                            Begin Your <span className="text-[#FF0000]">Journey</span>
                         </h2>
-                        <p className="text-gray-500 mb-6 max-w-lg mx-auto text-sm">
+                        <p className="text-gray-400 mb-6 max-w-lg mx-auto text-sm">
                             Whether you&apos;re a beginner or an experienced martial artist, Kyokushin welcomes you. Visit us or reach out today.
                         </p>
                         <a
                             href={GOOGLE_MAPS_LINK}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-white text-black font-bold px-6 py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors active:scale-[0.97]"
+                            className="inline-flex items-center gap-2 min-h-[44px] bg-transparent border border-white/20 text-white font-bold uppercase tracking-wider px-6 py-3 rounded-none text-sm hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black transition-colors active:scale-[0.97]"
                         >
                             <MapPin className="w-4 h-4" />
                             Get Directions

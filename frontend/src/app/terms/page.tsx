@@ -6,13 +6,13 @@ import { ArrowLeft } from "lucide-react";
 
 export default function TermsPage() {
     return (
-        <div className="min-h-screen w-full bg-[#080808] text-white relative">
+        <div className="min-h-screen w-full bg-black text-white relative">
             {/* Top accent */}
-            <div className="h-px bg-gradient-to-r from-transparent via-red-600/50 to-transparent" />
+            <div className="h-px bg-white/10" />
 
             <div className="max-w-3xl mx-auto px-5 pt-24 pb-20 relative z-10">
                 {/* Back Button */}
-                <Link href="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-white text-sm mb-10 transition-colors">
+                <Link href="/" className="inline-flex items-center gap-2 text-gray-300 hover:text-white text-xs font-bold uppercase tracking-wider mb-10 transition-colors rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                     <ArrowLeft className="w-3.5 h-3.5" />
                     Back to Home
                 </Link>
@@ -22,12 +22,12 @@ export default function TermsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <h1 className="text-4xl md:text-5xl font-black mb-3 tracking-tight">
-                        Terms of <span className="text-red-500">Service</span>
+                    <h1 className="text-4xl md:text-5xl font-extrabold mb-3 tracking-tight">
+                        Terms of <span className="text-[#FF0000]">Service</span>
                     </h1>
-                    <p className="text-gray-600 text-sm font-mono mb-14">Last updated: November 25, 2025</p>
+                    <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-14">Last updated: November 25, 2025</p>
 
-                    <div className="space-y-10 text-gray-400 leading-relaxed text-[15px]">
+                    <div className="space-y-10 text-gray-300 leading-relaxed text-[15px]">
                         <section>
                             <h2 className="text-lg font-bold text-white mb-3">1. Acceptance of Terms</h2>
                             <p>
@@ -182,7 +182,7 @@ export default function TermsPage() {
                             <p>
                                 For questions about these terms, contact:
                             </p>
-                            <div className="mt-4 p-4 bg-white/[0.02] border border-white/[0.06] rounded-lg space-y-1 text-sm">
+                            <div className="mt-4 p-6 bg-white/5 border border-white/10 rounded-xl space-y-1 text-sm">
                                 <p>Email: contact@kyokushin.in</p>
                                 <p>Phone: +91 99567 45114</p>
                                 <p>Address: Shuklaganj Bypass Rd, Poni Road, Shuklaganj, Netua Grameen, Uttar Pradesh 209861, India</p>

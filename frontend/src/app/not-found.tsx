@@ -8,9 +8,6 @@ import { Button } from "@/components/ui/button";
 export default function NotFound() {
     return (
         <div className="min-h-screen w-full bg-black text-white flex items-center justify-center relative overflow-hidden">
-            {/* Background Elements */}
-            <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-950/20 via-black to-black pointer-events-none" />
-            <div className="fixed top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-[0.03] pointer-events-none" />
 
             <div className="container-responsive relative z-10">
                 <motion.div
@@ -48,7 +45,7 @@ export default function NotFound() {
                             <Link href="/">
                                 <Button
                                     size="lg"
-                                    className="bg-red-600 hover:bg-red-700 text-white px-8 py-6 text-lg rounded-full"
+                                    className="bg-[#FF0000] hover:bg-[#8B0000] text-white px-8 py-6 text-lg rounded-none"
                                 >
                                     <Home className="w-5 h-5 mr-2" />
                                     Go Home
@@ -59,7 +56,7 @@ export default function NotFound() {
                                 variant="outline"
                                 size="lg"
                                 onClick={() => window.history.back()}
-                                className="border-white/20 hover:bg-white/5 px-8 py-6 text-lg rounded-full"
+                                className="border-white/20 hover:bg-white/10 px-8 py-6 text-lg rounded-none"
                             >
                                 <ArrowLeft className="w-5 h-5 mr-2" />
                                 Go Back
@@ -72,7 +69,7 @@ export default function NotFound() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 0.1 }}
                         transition={{ delay: 0.5 }}
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-red-600 blur-[200px] -z-10"
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#FF0000] blur-[200px] -z-10"
                     />
                 </motion.div>
             </div>

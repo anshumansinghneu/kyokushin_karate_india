@@ -68,10 +68,9 @@ function ResetPasswordForm() {
     return (
         <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-black font-sans selection:bg-red-500/30">
             {/* Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-zinc-900/20 via-black to-black z-0" />
             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] z-0 mix-blend-overlay pointer-events-none" />
 
-            <Link href="/login" className="absolute top-8 left-8 text-gray-500 hover:text-white flex items-center gap-2 transition-all group text-sm font-medium tracking-wide z-20">
+            <Link href="/login" className="absolute top-8 left-8 text-gray-400 hover:text-white flex items-center gap-2 transition-all group text-sm font-medium tracking-wide z-20">
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                 BACK TO LOGIN
             </Link>
@@ -85,9 +84,9 @@ function ResetPasswordForm() {
                 {success ? (
                     <div className="text-center">
                         <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3 }}
                             className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center"
                         >
                             <CheckCircle className="w-10 h-10 text-green-500" />
@@ -121,11 +120,11 @@ function ResetPasswordForm() {
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2 group">
-                                <label htmlFor="reset-password" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">
+                                <label htmlFor="reset-password" className="text-xs font-bold text-gray-300 uppercase tracking-wider ml-1 group-focus-within:text-[#FF0000] transition-colors">
                                     New Password
                                 </label>
                                 <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-white transition-colors" />
                                     <Input
                                         id="reset-password"
                                         type={showPassword ? "text" : "password"}
@@ -133,12 +132,12 @@ function ResetPasswordForm() {
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="pl-12 pr-12 h-14 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-gray-600 focus:border-red-500/50 focus:ring-red-500/20 transition-all"
+                                        className="pl-12 pr-12 h-14 placeholder:text-gray-400 focus-visible:border-[#FF0000] transition-colors"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                                     >
                                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                     </button>
@@ -147,12 +146,12 @@ function ResetPasswordForm() {
                                 {/* Password Requirements */}
                                 {password.length > 0 && (
                                     <div className="space-y-1 mt-2 ml-1">
-                                        <div className={`flex items-center gap-2 text-xs ${hasMinLength ? 'text-green-400' : 'text-gray-500'}`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${hasMinLength ? 'bg-green-400' : 'bg-gray-600'}`} />
+                                        <div className={`flex items-center gap-2 text-xs ${hasMinLength ? 'text-green-400' : 'text-gray-400'}`}>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${hasMinLength ? 'bg-green-400' : 'bg-gray-500'}`} />
                                             At least 8 characters
                                         </div>
-                                        <div className={`flex items-center gap-2 text-xs ${hasSpecialChar ? 'text-green-400' : 'text-gray-500'}`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${hasSpecialChar ? 'bg-green-400' : 'bg-gray-600'}`} />
+                                        <div className={`flex items-center gap-2 text-xs ${hasSpecialChar ? 'text-green-400' : 'text-gray-400'}`}>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${hasSpecialChar ? 'bg-green-400' : 'bg-gray-500'}`} />
                                             Contains a special character
                                         </div>
                                     </div>
@@ -160,11 +159,11 @@ function ResetPasswordForm() {
                             </div>
 
                             <div className="space-y-2 group">
-                                <label htmlFor="reset-confirm-password" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">
+                                <label htmlFor="reset-confirm-password" className="text-xs font-bold text-gray-300 uppercase tracking-wider ml-1 group-focus-within:text-[#FF0000] transition-colors">
                                     Confirm Password
                                 </label>
                                 <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-white transition-colors" />
                                     <Input
                                         id="reset-confirm-password"
                                         type="password"
@@ -172,7 +171,7 @@ function ResetPasswordForm() {
                                         required
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className={`pl-12 h-14 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-gray-600 focus:border-red-500/50 focus:ring-red-500/20 transition-all ${confirmPassword.length > 0 && !passwordsMatch ? 'border-red-500/50' : ''}`}
+                                        className={`pl-12 h-14 placeholder:text-gray-400 focus-visible:border-[#FF0000] transition-colors ${confirmPassword.length > 0 && !passwordsMatch ? 'border-red-500' : ''}`}
                                     />
                                 </div>
                                 {confirmPassword.length > 0 && !passwordsMatch && (
@@ -182,7 +181,7 @@ function ResetPasswordForm() {
 
                             <Button
                                 type="submit"
-                                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl shadow-lg shadow-red-900/20 hover:shadow-red-900/40 transition-all duration-300"
+                                className="w-full h-14 text-lg bg-[#FF0000] hover:bg-[#8B0000] text-white transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 disabled={isLoading || !token}
                             >
                                 {isLoading ? (

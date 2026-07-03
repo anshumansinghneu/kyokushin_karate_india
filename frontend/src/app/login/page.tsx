@@ -35,7 +35,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen w-full flex relative overflow-hidden bg-[#050507] text-white font-sans selection:bg-red-500/30">
+        <div className="min-h-screen w-full flex relative overflow-hidden bg-black text-white font-sans selection:bg-red-500/30">
             {/* Split Screen Container */}
             <div className="w-full flex h-screen">
                 
@@ -55,13 +55,13 @@ export default function LoginPage() {
                         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-black/95 mix-blend-overlay" />
                         <div className="absolute inset-0 bg-red-900/20 mix-blend-multiply" />
                         {/* Gradient fade to the right edge to blend with the form side */}
-                        <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-[#050507] to-transparent z-10" />
+                        <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-black to-transparent z-10" />
                         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 pointer-events-none mix-blend-overlay" />
                     </div>
 
                     <div className="relative z-20 p-12 h-full flex flex-col justify-between">
                         {/* Back Button & Logo */}
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.6 }}
@@ -88,7 +88,7 @@ export default function LoginPage() {
                                 THE ULTIMATE<br/>
                                 <span className="text-red-600">TRUTH.</span>
                             </h1>
-                            <p className="text-base text-zinc-400 font-medium leading-relaxed max-w-md border-l-2 border-red-600 pl-4">
+                            <p className="text-base text-gray-300 font-medium leading-relaxed max-w-md pl-4">
                                 Enter your credentials to manage your dojo, review events, and continue your journey in Kyokushin Karate.
                             </p>
                         </motion.div>
@@ -96,7 +96,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* ── Right Side: The Form ─────────────── */}
-                <div className="w-full lg:w-[45%] flex flex-col justify-center items-center p-6 sm:p-12 relative z-20 bg-[#050507]">
+                <div className="w-full lg:w-[45%] flex flex-col justify-center items-center p-6 sm:p-12 relative z-20 bg-black">
                     <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 pointer-events-none z-0 mix-blend-overlay" />
                     
                     {/* Mobile Only Header */}
@@ -144,11 +144,11 @@ export default function LoginPage() {
                             <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
                                 {/* Email Field */}
                                 <div className="space-y-1.5 group">
-                                    <label htmlFor="login-email" className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest pl-1 group-focus-within:text-white transition-colors">
+                                    <label htmlFor="login-email" className="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-1 group-focus-within:text-white transition-colors">
                                         Email Address
                                     </label>
                                     <div className="relative">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-white transition-colors" />
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-white transition-colors" />
                                         <Input
                                             id="login-email"
                                             type="email"
@@ -156,7 +156,7 @@ export default function LoginPage() {
                                             required
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            className="pl-12 h-14 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-zinc-600 focus:border-red-500/50 focus:bg-white/10 transition-all font-medium"
+                                            className="pl-12 h-14 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-gray-400 focus:border-[#FF0000] focus:bg-white/10 transition-all font-medium"
                                         />
                                     </div>
                                 </div>
@@ -164,7 +164,7 @@ export default function LoginPage() {
                                 {/* Password Field */}
                                 <div className="space-y-1.5 group">
                                     <div className="flex justify-between items-end pl-1 mb-1.5">
-                                        <label htmlFor="login-password" className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest group-focus-within:text-white transition-colors">
+                                        <label htmlFor="login-password" className="text-[11px] font-bold text-gray-400 uppercase tracking-widest group-focus-within:text-white transition-colors">
                                             Password
                                         </label>
                                         <Link href="/forgot-password" className="text-[11px] font-bold text-red-500 hover:text-red-400 transition-colors uppercase tracking-widest">
@@ -172,7 +172,7 @@ export default function LoginPage() {
                                         </Link>
                                     </div>
                                     <div className="relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-white transition-colors" />
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-white transition-colors" />
                                         <Input
                                             id="login-password"
                                             type={showPassword ? "text" : "password"}
@@ -180,12 +180,12 @@ export default function LoginPage() {
                                             required
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="pl-12 pr-12 h-14 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-zinc-600 focus:border-red-500/50 focus:bg-white/10 transition-all font-medium"
+                                            className="pl-12 pr-12 h-14 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-gray-400 focus:border-[#FF0000] focus:bg-white/10 transition-all font-medium"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-zinc-500 hover:text-white transition-colors rounded-xl hover:bg-white/5"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"
                                             aria-label={showPassword ? "Hide password" : "Show password"}
                                         >
                                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -204,12 +204,12 @@ export default function LoginPage() {
                                 </label>
 
                                 <Button
-                                    className="w-full h-14 mt-4 text-base font-bold bg-white text-black hover:bg-zinc-200 rounded-2xl shadow-xl hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all duration-300 flex items-center justify-center gap-2 group active:scale-[0.98]"
+                                    className="w-full h-14 mt-4 text-base font-bold uppercase tracking-wider bg-[#FF0000] text-white hover:bg-[#8B0000] rounded-none transition-all duration-300 flex items-center justify-center gap-2 group active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                     disabled={isLoading}
                                 >
                                     {isLoading ? (
                                         <span className="flex items-center gap-2">
-                                            <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                             Authenticating...
                                         </span>
                                     ) : (
@@ -223,7 +223,7 @@ export default function LoginPage() {
 
                         {/* Registration Prompt */}
                         <div className="mt-8 text-center">
-                            <p className="text-sm text-zinc-500 font-medium">
+                            <p className="text-sm text-gray-400 font-medium">
                                 Don't have an account yet?{" "}
                                 <Link href="/register" className="text-white font-bold hover:text-red-400 transition-colors inline-block relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-red-500 after:scale-x-0 outline-none hover:after:scale-x-100 after:origin-left after:transition-transform">
                                     Create one now

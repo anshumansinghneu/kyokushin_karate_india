@@ -31,10 +31,9 @@ export default function ForgotPasswordPage() {
     return (
         <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-black font-sans selection:bg-red-500/30">
             {/* Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-zinc-900/20 via-black to-black z-0" />
             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] z-0 mix-blend-overlay pointer-events-none" />
 
-            <Link href="/login" className="absolute top-8 left-8 text-gray-500 hover:text-white flex items-center gap-2 transition-all group text-sm font-medium tracking-wide z-20">
+            <Link href="/login" className="absolute top-8 left-8 text-gray-400 hover:text-white flex items-center gap-2 transition-all group text-sm font-medium tracking-wide z-20">
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                 BACK TO LOGIN
             </Link>
@@ -49,9 +48,9 @@ export default function ForgotPasswordPage() {
                     /* Success State */
                     <div className="text-center">
                         <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3 }}
                             className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center"
                         >
                             <CheckCircle className="w-10 h-10 text-green-500" />
@@ -63,11 +62,11 @@ export default function ForgotPasswordPage() {
                         <p className="text-white font-mono text-sm bg-white/5 px-4 py-2 rounded-lg inline-block mb-6">
                             {email}
                         </p>
-                        <p className="text-gray-500 text-sm mb-8">
+                        <p className="text-gray-400 text-sm mb-8">
                             The link will expire in 1 hour. If you don't see the email, check your spam folder.
                         </p>
                         <Link href="/login">
-                            <Button className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-12 px-8">
+                            <Button variant="outline" className="focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                                 Return to Login
                             </Button>
                         </Link>
@@ -96,11 +95,11 @@ export default function ForgotPasswordPage() {
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2 group">
-                                <label htmlFor="forgot-email" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 group-focus-within:text-red-500 transition-colors">
+                                <label htmlFor="forgot-email" className="text-xs font-bold text-gray-300 uppercase tracking-wider ml-1 group-focus-within:text-[#FF0000] transition-colors">
                                     Email Address
                                 </label>
                                 <div className="relative">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-white transition-colors" />
                                     <Input
                                         id="forgot-email"
                                         type="email"
@@ -108,14 +107,14 @@ export default function ForgotPasswordPage() {
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="pl-12 h-14 bg-white/5 border-white/10 rounded-xl text-white placeholder:text-gray-600 focus:border-red-500/50 focus:ring-red-500/20 transition-all"
+                                        className="pl-12 h-14 placeholder:text-gray-400 focus-visible:border-[#FF0000] transition-colors"
                                     />
                                 </div>
                             </div>
 
                             <Button
                                 type="submit"
-                                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl shadow-lg shadow-red-900/20 hover:shadow-red-900/40 transition-all duration-300 flex items-center justify-center gap-2"
+                                className="w-full h-14 text-lg bg-[#FF0000] hover:bg-[#8B0000] text-white transition-colors duration-300 flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
@@ -131,9 +130,9 @@ export default function ForgotPasswordPage() {
                             </Button>
                         </form>
 
-                        <p className="text-center text-gray-500 text-sm mt-8">
+                        <p className="text-center text-gray-400 text-sm mt-8">
                             Remember your password?{" "}
-                            <Link href="/login" className="text-white font-bold hover:text-red-500 transition-colors">
+                            <Link href="/login" className="text-white font-bold hover:text-[#FF0000] transition-colors">
                                 Sign In
                             </Link>
                         </p>
