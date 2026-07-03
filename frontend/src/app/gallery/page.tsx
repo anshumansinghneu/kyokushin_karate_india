@@ -121,9 +121,8 @@ function AlbumCard3D({ album, index }: { album: Album; index: number }) {
                     <div
                         className="relative rounded-2xl overflow-hidden border border-white/[0.08] group-hover:border-white/[0.15] transition-all duration-500"
                         style={{
-                            background: "linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
+                            background: "linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
                             backdropFilter: "blur(20px)",
-                            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
                             transformStyle: "preserve-3d",
                         }}
                     >
@@ -179,8 +178,8 @@ function AlbumCard3D({ album, index }: { album: Album; index: number }) {
                                 </span>
                                 {album.date && (
                                     <>
-                                        <span className="w-1 h-1 rounded-full bg-zinc-600" />
-                                        <span className="text-xs text-zinc-500">
+                                        <span className="w-1 h-1 rounded-full bg-zinc-500" />
+                                        <span className="text-xs text-gray-400">
                                             {new Date(album.date).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
                                         </span>
                                     </>
@@ -265,7 +264,7 @@ function FloatingPhoto({ photo, index, onClick }: { photo: GalleryPhoto; index: 
             onMouseLeave={() => setIsHovered(false)}
             onClick={onClick}
         >
-            <div className={`relative rounded-xl overflow-hidden border transition-all duration-500 bg-zinc-900 shadow-xl shadow-black/40 ${
+            <div className={`relative rounded-xl overflow-hidden border transition-all duration-500 bg-white/5 ${
                 isVideo
                   ? 'border-red-500/30 group-hover:border-red-500/60 shadow-[0_0_30px_rgba(220,38,38,0.25)] group-hover:shadow-[0_0_45px_rgba(220,38,38,0.45)]'
                   : 'border-white/[0.08] group-hover:border-red-500/30'
@@ -428,7 +427,7 @@ export default function GalleryPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#050507] text-white selection:bg-red-500/30">
+        <div className="min-h-screen bg-black text-white selection:bg-red-500/30">
             <DojoWall
                 pool={photos}
                 onTileClick={openLightboxById}
@@ -452,13 +451,13 @@ export default function GalleryPage() {
                         transition={{ delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                         className="relative w-full max-w-2xl shadow-2xl group"
                     >
-                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 transition-colors group-focus-within:text-red-500" />
+                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors group-focus-within:text-red-500" />
                         <input
                             type="text"
                             placeholder="Discover tournaments, camps, or dojo memories..."
                             value={searchInput}
                             onChange={(e) => handleSearchChange(e.target.value)}
-                            className="w-full pl-14 pr-6 py-4 bg-[#0A0A0A]/80 backdrop-blur-3xl border border-white/5 rounded-2xl text-base font-medium text-white placeholder-zinc-500 focus:outline-none focus:border-red-500/30 focus:bg-[#0F0F0F]/90 shadow-[0_0_50px_-12px_rgba(0,0,0,1)] transition-all"
+                            className="w-full pl-14 pr-6 py-4 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-xl text-base font-medium text-white placeholder-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black focus:border-red-500/30 focus:bg-white/10 transition-all"
                         />
                         <div className="absolute inset-x-0 -bottom-[1px] h-[1px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent scale-x-0 group-focus-within:scale-x-100 transition-transform duration-700 ease-out" />
                     </motion.div>
@@ -470,21 +469,21 @@ export default function GalleryPage() {
                         transition={{ delay: 0.3 }}
                         className="flex overflow-x-auto w-full justify-start md:justify-center pb-4 hide-scrollbar"
                     >
-                        <div className="flex bg-[#050505]/80 backdrop-blur-3xl border border-white/5 rounded-full p-2 shadow-[0_8px_30px_rgb(0,0,0,0.4)] max-w-full relative">
+                        <div className="flex bg-white/5 backdrop-blur-3xl border border-white/10 p-2 max-w-full relative gap-1">
                             {filters.map(({ key, label, icon: Icon }) => {
                                 const isActive = filter === key;
                                 return (
                                     <button
                                         key={key}
                                         onClick={() => setFilter(key)}
-                                        className={`relative flex items-center gap-2.5 px-6 py-3 rounded-full text-xs font-bold transition-all duration-300 ease-out whitespace-nowrap ${
-                                            isActive ? "text-white shadow-lg scale-[1.02]" : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
+                                        className={`relative flex items-center gap-2.5 px-6 py-3 rounded-none text-xs font-bold transition-colors duration-200 whitespace-nowrap min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                                            isActive ? "text-white" : "text-gray-300 hover:text-white hover:bg-white/10"
                                         }`}
                                     >
                                         {isActive && (
                                             <motion.div
                                                 layoutId="activeFilterBg"
-                                                className="absolute inset-0 bg-gradient-to-b from-red-500/90 to-red-600/90 rounded-full border border-red-400/30 shadow-[0_0_20px_-3px_rgba(239,68,68,0.4)] z-0"
+                                                className="absolute inset-0 bg-[#FF0000] z-0 shadow-[0_0_20px_-3px_rgba(220,38,38,0.4)]"
                                                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
                                             />
                                         )}
@@ -511,7 +510,7 @@ export default function GalleryPage() {
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-32 gap-4">
                             <div className="w-12 h-12 border-4 border-red-500/20 border-t-red-500 rounded-full animate-spin" />
-                            <span className="text-sm font-bold text-zinc-500 tracking-widest uppercase">Fetching Albums</span>
+                            <span className="text-sm font-bold text-gray-300 tracking-widest uppercase">Fetching Albums</span>
                         </div>
                     ) : albums.length > 0 ? (
                         <>
@@ -528,15 +527,15 @@ export default function GalleryPage() {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="flex flex-col items-center justify-center py-20 px-4 text-center border border-white/5 bg-white/[0.02] rounded-3xl mt-12 overflow-hidden relative"
+                            className="flex flex-col items-center justify-center py-20 px-4 text-center border border-white/10 bg-white/5 rounded-xl mt-12 overflow-hidden relative"
                         >
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/5 blur-[120px] rounded-full pointer-events-none" />
                             <div className="relative z-10">
-                                <div className="w-24 h-24 mb-6 rounded-3xl bg-gradient-to-br from-zinc-800 to-black border border-white/10 shadow-2xl flex items-center justify-center mx-auto transform rotate-12 hover:rotate-0 transition-transform duration-500">
-                                    <ImageIconSVG className="w-10 h-10 text-zinc-600" />
+                                <div className="w-24 h-24 mb-6 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
+                                    <ImageIconSVG className="w-10 h-10 text-gray-400" />
                                 </div>
                                 <h3 className="text-2xl font-black text-white">No Albums Found in the Vault</h3>
-                                <p className="text-zinc-500 mt-2 max-w-md mx-auto text-sm font-medium">
+                                <p className="text-gray-300 mt-2 max-w-md mx-auto text-sm font-medium">
                                     We couldn't find any albums matching "{filter === 'ALL' ? searchInput : filters.find(f=>f.key===filter)?.label}". Try broadening your search or modifying your filters.
                                 </p>
                             </div>
@@ -684,7 +683,7 @@ export default function GalleryPage() {
                             <div className="px-5 py-2.5 bg-white/5 backdrop-blur-xl rounded-full text-xs font-bold text-zinc-300 border border-white/10 shadow-2xl tracking-widest">
                                 {lightboxIndex + 1} OF {photos.length}
                             </div>
-                            <span className="text-[10px] text-zinc-600 font-medium sm:hidden">Swipe to navigate</span>
+                            <span className="text-[10px] text-gray-400 font-medium sm:hidden">Swipe to navigate</span>
                         </div>
                     </motion.div>
                 )}

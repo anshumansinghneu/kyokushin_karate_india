@@ -34,14 +34,13 @@ export default function MediaPage() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#080808] text-white">
+        <div className="min-h-screen bg-black text-white">
             {/* Top accent */}
-            <div className="h-px bg-gradient-to-r from-transparent via-red-600/50 to-transparent" />
+            <div className="h-px bg-gradient-to-r from-transparent via-[#FF0000]/50 to-transparent" />
 
             {/* Hero */}
             <div className="relative pt-28 pb-14 overflow-hidden">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808006_1px,transparent_1px),linear-gradient(to_bottom,#80808006_1px,transparent_1px)] bg-[size:32px_32px]" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-red-600/[0.04] rounded-full blur-[100px]" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-[#FF0000]/[0.06] rounded-full blur-[100px]" />
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -49,14 +48,14 @@ export default function MediaPage() {
                     transition={{ duration: 0.6 }}
                     className="relative z-10 text-center max-w-3xl mx-auto px-5"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-gray-400 tracking-wide mb-6">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-bold uppercase text-gray-300 tracking-[0.1em] mb-6">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#FF0000]" />
                         PRESS & COVERAGE
                     </div>
                     <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 leading-[1.05]">
-                        In the <span className="text-red-500">Media</span>
+                        In the <span className="text-[#FF0000]">Media</span>
                     </h1>
-                    <p className="text-gray-500 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+                    <p className="text-gray-300 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
                         Kyokushin making headlines across the globe.
                     </p>
                 </motion.div>
@@ -72,10 +71,10 @@ export default function MediaPage() {
                 ) : posts.length === 0 ? (
                     <div className="text-center py-24">
                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.06] mb-5">
-                            <Newspaper className="w-6 h-6 text-gray-600" />
+                            <Newspaper className="w-6 h-6 text-gray-400" />
                         </div>
                         <h3 className="text-xl font-bold mb-2 text-white">No media mentions yet</h3>
-                        <p className="text-gray-500 text-sm">Check back soon for press coverage.</p>
+                        <p className="text-gray-300 text-sm">Check back soon for press coverage.</p>
                     </div>
                 ) : (
                     <motion.div
@@ -101,10 +100,9 @@ export default function MediaPage() {
                                                     className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full bg-gradient-to-br from-red-900/10 via-transparent to-transparent flex flex-col items-center justify-center relative">
-                                                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:16px_16px]" />
-                                                    <span className="text-white/[0.06] text-3xl font-black relative z-10">KKFI</span>
-                                                    <span className="text-white/[0.04] text-xs font-bold relative z-10 mt-1">MEDIA</span>
+                                                <div className="w-full h-full bg-[#FF0000]/[0.04] flex flex-col items-center justify-center relative">
+                                                    <span className="text-white/[0.08] text-3xl font-black relative z-10">KKFI</span>
+                                                    <span className="text-white/[0.06] text-xs font-bold uppercase tracking-[0.1em] relative z-10 mt-1">MEDIA</span>
                                                 </div>
                                             )}
                                             <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -119,15 +117,15 @@ export default function MediaPage() {
                                         </div>
                                         <div className="p-5">
                                             <div className="flex justify-between items-center mb-2">
-                                                <span className="text-[10px] font-bold text-red-500/80 uppercase tracking-[0.15em]">{post.sourceName}</span>
+                                                <span className="text-[10px] font-bold text-[#FF0000] uppercase tracking-[0.15em]">{post.sourceName}</span>
                                                 {post.attachmentUrl && (
-                                                    <span className="bg-white/[0.04] text-gray-500 px-2 py-0.5 rounded text-[10px] font-mono">PDF</span>
+                                                    <span className="bg-white/[0.04] text-gray-400 px-2 py-0.5 rounded text-[10px] font-mono">PDF</span>
                                                 )}
                                             </div>
                                             <h2 className="text-base font-bold text-white/90 mb-2 group-hover:text-white transition-colors line-clamp-2 leading-snug">
                                                 {post.title}
                                             </h2>
-                                            <div className="text-xs text-gray-600 font-mono mt-3">
+                                            <div className="text-xs text-gray-400 font-mono mt-3">
                                                 {new Date(post.publishedAt).toLocaleDateString()}
                                             </div>
                                         </div>

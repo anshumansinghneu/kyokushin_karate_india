@@ -147,7 +147,7 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
             <motion.div
                 className={`relative rounded-2xl overflow-hidden border group transition-all duration-500 ${
                     isVideo
-                      ? 'border-red-500/30 group-hover:border-red-500/60 shadow-[0_0_30px_rgba(220,38,38,0.25)] group-hover:shadow-[0_0_45px_rgba(220,38,38,0.45)]'
+                      ? 'border-[#FF0000]/30 group-hover:border-[#FF0000]/60 shadow-[0_0_30px_rgba(255,0,0,0.25)] group-hover:shadow-[0_0_45px_rgba(255,0,0,0.45)]'
                       : 'border-white/[0.08]'
                 }`}
                 style={{
@@ -156,11 +156,11 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
                     transformStyle: "preserve-3d",
                     boxShadow: isVideo
                         ? (isHovered
-                            ? "0 25px 50px rgba(0,0,0,0.5), 0 0 45px rgba(220,38,38,0.45)"
-                            : "0 10px 30px rgba(0,0,0,0.3), 0 0 30px rgba(220,38,38,0.25)")
+                            ? "0 0 45px rgba(255,0,0,0.45)"
+                            : "0 0 30px rgba(255,0,0,0.25)")
                         : (isHovered
-                            ? "0 25px 50px rgba(0,0,0,0.5), 0 0 40px rgba(220,38,38,0.05)"
-                            : "0 10px 30px rgba(0,0,0,0.3)"),
+                            ? "0 0 40px rgba(255,0,0,0.10)"
+                            : "none"),
                 }}
             >
                 {/* Loading shimmer */}
@@ -220,7 +220,7 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
                                     <button
                                         onClick={(e) => { e.stopPropagation(); onDelete(); }}
                                         className="p-2 rounded-full border border-red-500/20 hover:bg-red-500/30 text-red-400 transition-all hover:scale-110"
-                                        style={{ background: "rgba(220,38,38,0.1)", backdropFilter: "blur(8px)" }}
+                                        style={{ background: "rgba(255,0,0,0.1)", backdropFilter: "blur(8px)" }}
                                         title="Delete"
                                     >
                                         <Trash2 className="w-3.5 h-3.5" />
@@ -421,14 +421,14 @@ export default function AlbumDetailPage() {
     if (!album) {
         return (
             <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
-                <p className="text-zinc-500 text-lg">Album not found</p>
+                <p className="text-gray-300 text-lg">Album not found</p>
                 <Link href="/gallery" className="text-red-400 hover:text-red-300 text-sm">Back to Gallery</Link>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#050507] text-white">
+        <div className="min-h-screen bg-black text-white">
             {/* Album Header */}
             <div className="relative overflow-hidden">
                 {coverUrl ? (
@@ -436,15 +436,15 @@ export default function AlbumDetailPage() {
                         <img src={coverUrl} alt="" className="w-full h-full object-cover opacity-20 blur-2xl scale-125" />
                     </div>
                 ) : (
-                    <div className="absolute inset-0 bg-gradient-to-b from-red-950/20 via-[#050507] to-[#050507]" />
+                    <div className="absolute inset-0 bg-red-600/[0.06] blur-[120px]" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#050507]/30 via-[#050507]/70 to-[#050507]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/70 to-black" />
 
                 <div className="relative max-w-7xl mx-auto px-4 pt-24 pb-10 sm:pt-28 sm:pb-14">
                     {/* Breadcrumb */}
                     <Link
                         href="/gallery"
-                        className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-white transition-colors mb-6"
+                        className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors mb-6"
                     >
                         <ArrowLeft className="w-3.5 h-3.5" />
                         Back to Gallery
@@ -464,7 +464,7 @@ export default function AlbumDetailPage() {
                                     <span className="text-xs font-semibold text-zinc-300">{config.label}</span>
                                 </div>
                                 {album.date && (
-                                    <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
                                         <Calendar className="w-3.5 h-3.5" />
                                         {new Date(album.date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
                                     </div>
@@ -474,7 +474,7 @@ export default function AlbumDetailPage() {
                             {album.description && (
                                 <p className="mt-2 text-zinc-400 text-sm max-w-2xl">{album.description}</p>
                             )}
-                            <p className="mt-3 text-xs text-zinc-600">
+                            <p className="mt-3 text-xs text-gray-400">
                                 {album.photoCount} photo{album.photoCount !== 1 ? "s" : ""} &middot; Created by {album.creator.name}
                             </p>
                         </div>
@@ -485,7 +485,7 @@ export default function AlbumDetailPage() {
                         <div className="mt-6">
                             <button
                                 onClick={() => setShowUpload(true)}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-semibold transition-colors"
+                                className="inline-flex items-center gap-2 px-6 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] rounded-none text-sm font-bold uppercase tracking-wider text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 <Upload className="w-4 h-4" />
                                 Upload Photo
@@ -499,8 +499,8 @@ export default function AlbumDetailPage() {
             <div className="max-w-7xl mx-auto px-4 pb-16">
                 {photos.length === 0 ? (
                     <div className="text-center py-24">
-                        <ImageIcon className="w-16 h-16 text-zinc-800 mx-auto mb-4" />
-                        <p className="text-zinc-600">No photos in this album yet</p>
+                        <ImageIcon className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+                        <p className="text-gray-400">No photos in this album yet</p>
                     </div>
                 ) : (
                     <div
@@ -530,8 +530,8 @@ export default function AlbumDetailPage() {
                             <button
                                 key={p}
                                 onClick={() => setPage(p)}
-                                className={`w-10 h-10 rounded-full text-sm font-semibold transition-all ${
-                                    p === page ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 border border-white/5 hover:bg-zinc-800"
+                                className={`w-10 min-h-[44px] rounded-none text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                                    p === page ? "bg-[#FF0000] text-white" : "bg-zinc-900 text-zinc-400 border border-white/5 hover:bg-zinc-800"
                                 }`}
                             >
                                 {p}
@@ -593,9 +593,9 @@ export default function AlbumDetailPage() {
                                     onClick={() => fileInputRef.current?.click()}
                                     className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center cursor-pointer hover:border-red-500/30 transition-colors mb-4"
                                 >
-                                    <Upload className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
-                                    <p className="text-sm text-zinc-500">Click to select photos</p>
-                                    <p className="text-xs text-zinc-600 mt-1">Select multiple &middot; Max 5MB each &middot; JPG, PNG, WebP</p>
+                                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                    <p className="text-sm text-gray-300">Click to select photos</p>
+                                    <p className="text-xs text-gray-400 mt-1">Select multiple &middot; Max 5MB each &middot; JPG, PNG, WebP</p>
                                 </div>
                             )}
 
@@ -612,7 +612,7 @@ export default function AlbumDetailPage() {
                             />
 
                             {uploadFiles.length > 0 && (
-                                <p className="text-xs text-zinc-500 mb-4">
+                                <p className="text-xs text-gray-400 mb-4">
                                     {uploadFiles.length} photo{uploadFiles.length > 1 ? "s" : ""} selected
                                     {uploadProgress && <span className="ml-2 text-red-400">&middot; {uploadProgress}</span>}
                                 </p>
@@ -621,7 +621,7 @@ export default function AlbumDetailPage() {
                             <button
                                 onClick={handleUpload}
                                 disabled={uploadFiles.length === 0 || uploading}
-                                className="w-full py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                                className="w-full min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] disabled:opacity-50 disabled:cursor-not-allowed rounded-none text-sm font-bold uppercase tracking-wider text-white transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                                 {uploading ? uploadProgress || "Uploading..." : `Upload ${uploadFiles.length > 1 ? `${uploadFiles.length} Photos` : "Photo"}`}
@@ -728,7 +728,7 @@ export default function AlbumDetailPage() {
                             </div>
                             {/* Counter */}
                             <div className="text-center mt-2">
-                                <span className="text-xs text-zinc-500">{lightboxIndex + 1} / {photos.length}</span>
+                                <span className="text-xs text-gray-400">{lightboxIndex + 1} / {photos.length}</span>
                             </div>
                         </div>
                     </motion.div>

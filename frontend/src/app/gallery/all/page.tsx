@@ -468,14 +468,14 @@ export default function GalleryPage() {
                             <div className="flex justify-end gap-3">
                                 <button
                                     onClick={() => setDeleteTarget(null)}
-                                    className="px-4 py-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors font-medium"
+                                    className="px-4 py-2 min-h-[44px] text-gray-300 hover:text-white border border-white/20 hover:bg-white/10 rounded-none uppercase tracking-wider transition-colors font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                     disabled={isDeleting}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleDelete}
-                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-bold flex items-center gap-2"
+                                    className="px-4 py-2 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none uppercase tracking-wider transition-colors font-bold flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                     disabled={isDeleting}
                                 >
                                     {isDeleting ? <><Loader2 className="w-4 h-4 animate-spin" /> Deleting...</> : <><Trash2 className="w-4 h-4" /> Delete Photo</>}
@@ -510,7 +510,9 @@ export default function GalleryPage() {
                 </AnimatePresence>
                 {/* Fallback if no featured */}
                 {!currentHeroItem && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-red-950/30" />
+                    <div className="absolute inset-0 bg-black">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/10 blur-[120px] rounded-full pointer-events-none" />
+                    </div>
                 )}
 
                 {/* Overlays */}
@@ -570,7 +572,7 @@ export default function GalleryPage() {
                             <div key={s.label} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl">
                                 <s.icon className={`w-3.5 h-3.5 ${s.color}`} />
                                 <span className="text-sm font-bold text-white">{s.value}</span>
-                                <span className="text-xs text-gray-500">{s.label}</span>
+                                <span className="text-xs text-gray-400">{s.label}</span>
                             </div>
                         ))}
                     </motion.div>
@@ -625,10 +627,10 @@ export default function GalleryPage() {
                                 <button
                                     key={cat.id}
                                     onClick={() => setFilter(cat.id)}
-                                    className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 min-h-[44px] flex items-center gap-2 active:scale-95 ${
+                                    className={`px-5 py-2.5 rounded-none text-sm font-bold uppercase tracking-wider transition-colors duration-200 min-h-[44px] flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
                                         filter === cat.id
-                                            ? "bg-red-600 text-white shadow-lg shadow-red-600/25"
-                                            : "bg-zinc-900/80 text-gray-400 hover:bg-zinc-800 hover:text-white border border-white/10 backdrop-blur-sm"
+                                            ? "bg-[#FF0000] hover:bg-[#8B0000] text-white"
+                                            : "bg-transparent text-gray-300 hover:bg-white/10 hover:text-white border border-white/20"
                                     }`}
                                 >
                                     <cat.icon className="w-3.5 h-3.5" />
@@ -711,7 +713,7 @@ export default function GalleryPage() {
                             {(selectedEvent || selectedDojo) && (
                                 <button
                                     onClick={() => { setSelectedEvent(null); setSelectedDojo(null); setFilter("all"); }}
-                                    className="text-xs text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1"
+                                    className="text-xs text-gray-400 hover:text-red-400 transition-colors flex items-center gap-1"
                                 >
                                     <X className="w-3 h-3" /> Clear filters
                                 </button>
@@ -719,7 +721,7 @@ export default function GalleryPage() {
                             {token && (
                                 <button
                                     onClick={() => setShowUpload(true)}
-                                    className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-all active:scale-95 shadow-lg shadow-red-600/20"
+                                    className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none text-sm font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 >
                                     <Upload className="w-4 h-4" />
                                     Upload Photo
@@ -729,7 +731,7 @@ export default function GalleryPage() {
                     </div>
 
                     {/* Results summary */}
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
                         <LayoutGrid className="w-3.5 h-3.5" />
                         <span>
                             Showing {items.length} photo{items.length !== 1 ? 's' : ''}
@@ -757,8 +759,8 @@ export default function GalleryPage() {
                         <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-zinc-900/80 border border-white/10 flex items-center justify-center">
                             <ImageIcon className="w-10 h-10 text-zinc-600" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-400 mb-2">No Photos Found</h3>
-                        <p className="text-gray-600 max-w-md mx-auto">
+                        <h3 className="text-xl font-bold text-white mb-2">No Photos Found</h3>
+                        <p className="text-gray-300 max-w-md mx-auto">
                             {filter === "featured"
                                 ? "No featured photos yet. Check back soon!"
                                 : selectedEvent || selectedDojo
@@ -768,7 +770,7 @@ export default function GalleryPage() {
                         {(selectedEvent || selectedDojo) && (
                             <button
                                 onClick={() => { setSelectedEvent(null); setSelectedDojo(null); setFilter("all"); }}
-                                className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-full font-bold transition-all text-sm"
+                                className="mt-6 inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-transparent border border-white/20 hover:bg-white/10 text-white rounded-none font-bold uppercase tracking-wider transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 <X className="w-4 h-4" />
                                 Clear Filters
@@ -777,7 +779,7 @@ export default function GalleryPage() {
                         {token && !selectedEvent && !selectedDojo && (
                             <button
                                 onClick={() => setShowUpload(true)}
-                                className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition-all"
+                                className="mt-6 inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 <Upload className="w-4 h-4" />
                                 Upload First Photo
@@ -804,7 +806,7 @@ export default function GalleryPage() {
                                 <button
                                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                                     disabled={page === 1}
-                                    className="px-5 py-2.5 bg-zinc-900 border border-white/10 rounded-xl text-sm font-bold disabled:opacity-30 hover:bg-zinc-800 transition-colors min-h-[44px]"
+                                    className="px-5 py-2.5 bg-transparent border border-white/20 rounded-none text-sm font-bold uppercase tracking-wider disabled:opacity-30 hover:bg-white/10 transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 >
                                     <ChevronLeft className="w-4 h-4 inline mr-1" />
                                     Previous
@@ -816,10 +818,10 @@ export default function GalleryPage() {
                                             <button
                                                 key={pageNum}
                                                 onClick={() => setPage(pageNum)}
-                                                className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${
+                                                className={`w-11 h-11 rounded-none text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
                                                     page === pageNum
-                                                        ? "bg-red-600 text-white shadow-lg shadow-red-600/25"
-                                                        : "bg-zinc-900 text-gray-400 hover:bg-zinc-800 border border-white/10"
+                                                        ? "bg-[#FF0000] hover:bg-[#8B0000] text-white"
+                                                        : "bg-transparent text-gray-300 hover:bg-white/10 border border-white/20"
                                                 }`}
                                             >
                                                 {pageNum}
@@ -830,7 +832,7 @@ export default function GalleryPage() {
                                 <button
                                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages}
-                                    className="px-5 py-2.5 bg-zinc-900 border border-white/10 rounded-xl text-sm font-bold disabled:opacity-30 hover:bg-zinc-800 transition-colors min-h-[44px]"
+                                    className="px-5 py-2.5 bg-transparent border border-white/20 rounded-none text-sm font-bold uppercase tracking-wider disabled:opacity-30 hover:bg-white/10 transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 >
                                     Next
                                     <ChevronRight className="w-4 h-4 inline ml-1" />
@@ -861,7 +863,7 @@ export default function GalleryPage() {
                             <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <h3 className="text-xl font-bold">Upload Photos</h3>
-                                    <p className="text-xs text-gray-500 mt-1">Select multiple photos to upload at once</p>
+                                    <p className="text-xs text-gray-300 mt-1">Select multiple photos to upload at once</p>
                                 </div>
                                 <button
                                     onClick={() => !uploading && clearAllUploads()}
@@ -919,7 +921,7 @@ export default function GalleryPage() {
                                     <p className="text-sm text-gray-300 font-medium mb-1">
                                         {isDragging ? "Drop your photos here" : "Drag & drop or click to select"}
                                     </p>
-                                    <p className="text-xs text-gray-600">Select multiple &middot; JPG, PNG, WebP &middot; Max 5MB each</p>
+                                    <p className="text-xs text-gray-400">Select multiple &middot; JPG, PNG, WebP &middot; Max 5MB each</p>
                                 </div>
                             )}
 
@@ -961,7 +963,7 @@ export default function GalleryPage() {
                             <button
                                 onClick={handleUpload}
                                 disabled={uploadFiles.length === 0 || uploading}
-                                className="w-full py-3 bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 disabled:text-gray-600 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 disabled:shadow-none"
+                                className="w-full py-3 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] disabled:bg-white/5 disabled:text-gray-400 text-white rounded-none font-bold uppercase tracking-wider text-sm transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 {uploading ? (
                                     <><Loader2 className="w-4 h-4 animate-spin" /> {uploadProgress || "Uploading..."}</>
@@ -1123,7 +1125,7 @@ export default function GalleryPage() {
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-gray-600 mt-2">
+                                        <p className="text-xs text-gray-400 mt-2">
                                             {new Date(currentItem.uploadedAt).toLocaleDateString("en-IN", {
                                                 day: "numeric", month: "long", year: "numeric",
                                             })}
