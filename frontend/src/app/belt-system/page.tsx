@@ -150,7 +150,7 @@ export default function BeltSystemPage() {
 
       {/* Hero */}
       <section className="relative pt-8 pb-12 md:pt-16 md:pb-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/20 via-black to-black pointer-events-none" />
+        <div className="absolute inset-0 bg-black pointer-events-none" />
         <div className="container mx-auto max-w-4xl relative z-10 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-600/10 border border-red-600/20 text-red-400 text-xs font-bold uppercase tracking-widest mb-6">
@@ -207,11 +207,11 @@ export default function BeltSystemPage() {
                   />
 
                   {/* Card */}
-                  <div className={`sm:ml-16 md:ml-20 bg-zinc-900/50 border ${belt.borderClass} rounded-2xl p-5 md:p-6 hover:border-opacity-60 transition-all group`}>
+                  <div className={`sm:ml-16 md:ml-20 bg-white/5 border ${belt.borderClass} rounded-xl p-5 md:p-6 hover:border-opacity-60 hover:bg-white/[0.07] transition-all group`}>
                     <div className="flex flex-wrap items-start gap-4">
                       {/* Belt color swatch */}
                       <div
-                        className={`w-14 h-14 rounded-xl ${belt.bgClass} shrink-0 flex items-center justify-center shadow-lg ${
+                        className={`w-14 h-14 rounded-xl ${belt.bgClass} shrink-0 flex items-center justify-center ${
                           belt.belt === 'Black (Shodan)' ? 'border border-red-500/50' : ''
                         } ${belt.belt === 'White' ? 'border border-gray-400/30' : ''}`}
                       >
@@ -223,7 +223,7 @@ export default function BeltSystemPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <h3 className={`text-xl font-black ${belt.textClass}`}>{belt.belt} Belt</h3>
-                          <span className="text-xs text-gray-500 font-bold bg-white/5 px-2 py-0.5 rounded-full">
+                          <span className="text-xs text-gray-300 font-bold bg-white/5 px-2 py-0.5 rounded-full">
                             {belt.rank}
                           </span>
                         </div>
@@ -279,7 +279,7 @@ export default function BeltSystemPage() {
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-xs text-gray-500 mt-2 px-1">
+          <div className="flex justify-between text-xs text-gray-400 mt-2 px-1">
             <span>Beginner</span>
             <span>4–6 years →</span>
             <span>Black Belt</span>
@@ -288,7 +288,7 @@ export default function BeltSystemPage() {
       </section>
 
       {/* Dan Ranks */}
-      <section className="px-4 pb-16 md:pb-24 bg-zinc-950/50">
+      <section className="px-4 pb-16 md:pb-24 bg-black">
         <div className="container mx-auto max-w-4xl py-12 md:py-16">
           <motion.h2
             initial="hidden"
@@ -314,7 +314,7 @@ export default function BeltSystemPage() {
                 viewport={{ once: true }}
                 variants={fadeIn}
                 custom={i}
-                className="bg-zinc-900/70 border border-red-500/10 rounded-xl p-5 hover:border-red-500/30 transition-all"
+                className="bg-white/5 border border-red-500/10 rounded-xl p-5 hover:border-red-500/30 hover:bg-white/[0.07] transition-all"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg bg-black border border-red-500/30 flex items-center justify-center">
@@ -326,7 +326,7 @@ export default function BeltSystemPage() {
                   </div>
                 </div>
                 <p className="text-xs text-gray-400 leading-relaxed mb-2">{rank.note}</p>
-                <span className="inline-flex items-center gap-1 text-[10px] text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 text-[10px] text-gray-400 bg-white/5 px-2 py-0.5 rounded-full">
                   <Clock className="w-2.5 h-2.5" />
                   ~{rank.years} years total training
                 </span>
@@ -373,7 +373,7 @@ export default function BeltSystemPage() {
                 viewport={{ once: true }}
                 variants={fadeIn}
                 custom={i}
-                className="bg-zinc-900/50 border border-white/5 rounded-xl p-5"
+                className="bg-white/5 border border-white/10 rounded-xl p-5"
               >
                 <h3 className="font-bold text-white text-sm mb-2">{faq.q}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{faq.a}</p>
@@ -386,7 +386,7 @@ export default function BeltSystemPage() {
       {/* CTA */}
       <section className="px-4 pb-16 md:pb-24">
         <div className="container mx-auto max-w-3xl">
-          <div className="bg-gradient-to-r from-red-600/10 via-red-600/5 to-red-600/10 border border-red-600/20 rounded-2xl p-8 md:p-12 text-center">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-8 md:p-12 text-center">
             <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
               START YOUR BELT JOURNEY
             </h2>
@@ -396,19 +396,19 @@ export default function BeltSystemPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href="/syllabus"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition-all active:scale-95"
+                className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black active:scale-95"
               >
                 View Full Syllabus <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/find-a-dojo"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full font-bold transition-all"
+                className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] bg-transparent hover:bg-white/10 text-white border border-white/20 rounded-none font-bold uppercase tracking-wider transition-all"
               >
                 Find a Dojo <ChevronRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full font-bold transition-all"
+                className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] bg-transparent hover:bg-white/10 text-white border border-white/20 rounded-none font-bold uppercase tracking-wider transition-all"
               >
                 Register Now
               </Link>

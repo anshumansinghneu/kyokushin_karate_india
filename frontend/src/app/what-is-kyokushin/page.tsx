@@ -86,7 +86,7 @@ export default function WhatIsKyokushinPage() {
 
       {/* Hero */}
       <section className="relative pt-8 pb-16 md:pt-16 md:pb-24 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/20 via-black to-black pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(255,0,0,0.12),transparent_60%)] pointer-events-none" />
         <div className="container mx-auto max-w-4xl relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -124,7 +124,7 @@ export default function WhatIsKyokushinPage() {
             custom={0}
             className="prose prose-invert prose-lg max-w-none"
           >
-            <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 md:p-10">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 md:p-10">
               <h2 className="text-2xl md:text-3xl font-black text-white mb-4 tracking-tight">
                 The Ultimate Full-Contact Karate
               </h2>
@@ -199,7 +199,7 @@ export default function WhatIsKyokushinPage() {
                 viewport={{ once: true }}
                 variants={fadeIn}
                 custom={i}
-                className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 hover:border-red-500/20 transition-all"
+                className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors"
               >
                 <span className="text-red-500 font-black text-3xl">{item.year}</span>
                 <h3 className="text-lg font-bold text-white mt-2 mb-2">{item.title}</h3>
@@ -233,7 +233,7 @@ export default function WhatIsKyokushinPage() {
                 viewport={{ once: true }}
                 variants={fadeIn}
                 custom={i}
-                className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 hover:border-red-500/20 transition-all group"
+                className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors group"
               >
                 <div className="w-12 h-12 rounded-xl bg-red-600/10 border border-red-600/20 flex items-center justify-center mb-4 group-hover:bg-red-600/20 transition-colors">
                   <p.icon className="w-6 h-6 text-red-500" />
@@ -295,7 +295,7 @@ export default function WhatIsKyokushinPage() {
                 viewport={{ once: true }}
                 variants={fadeIn}
                 custom={i}
-                className="flex gap-4 bg-zinc-900/50 border border-white/5 rounded-xl p-5 hover:border-red-500/20 transition-all"
+                className="flex gap-4 bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 transition-colors"
               >
                 <div className="w-10 h-10 rounded-lg bg-red-600/10 flex items-center justify-center shrink-0 mt-0.5">
                   <method.icon className="w-5 h-5 text-red-500" />
@@ -336,7 +336,7 @@ export default function WhatIsKyokushinPage() {
                 viewport={{ once: true }}
                 variants={fadeIn}
                 custom={i}
-                className="bg-zinc-900/50 border border-white/5 rounded-xl p-5 hover:border-red-500/20 transition-all"
+                className="bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 transition-colors"
               >
                 <Award className="w-5 h-5 text-red-500 mb-3" />
                 <h3 className="font-bold text-white text-sm mb-1">{b.title}</h3>
@@ -364,23 +364,23 @@ export default function WhatIsKyokushinPage() {
             How Kyokushin compares to Shotokan and other popular karate styles.
           </p>
 
-          <div className="overflow-x-auto rounded-2xl border border-white/5">
+          <div className="overflow-x-auto rounded-xl border border-white/10">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-zinc-900">
-                  <th className="text-left p-4 text-gray-400 font-bold">Aspect</th>
+                <tr className="bg-white/10">
+                  <th className="text-left p-4 text-gray-300 font-bold">Aspect</th>
                   <th className="text-left p-4 text-red-400 font-bold">Kyokushin</th>
-                  <th className="text-left p-4 text-gray-400 font-bold">Shotokan</th>
-                  <th className="text-left p-4 text-gray-400 font-bold">Others</th>
+                  <th className="text-left p-4 text-gray-300 font-bold">Shotokan</th>
+                  <th className="text-left p-4 text-gray-300 font-bold">Others</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON.map((row, i) => (
-                  <tr key={row.aspect} className={i % 2 === 0 ? 'bg-zinc-950' : 'bg-zinc-900/50'}>
-                    <td className="p-4 text-gray-400 font-semibold">{row.aspect}</td>
+                  <tr key={row.aspect} className={i % 2 === 0 ? 'bg-transparent' : 'bg-white/5'}>
+                    <td className="p-4 text-gray-300 font-semibold">{row.aspect}</td>
                     <td className="p-4 text-white font-semibold">{row.kyokushin}</td>
-                    <td className="p-4 text-gray-400">{row.shotokan}</td>
-                    <td className="p-4 text-gray-400">{row.others}</td>
+                    <td className="p-4 text-gray-300">{row.shotokan}</td>
+                    <td className="p-4 text-gray-300">{row.others}</td>
                   </tr>
                 ))}
               </tbody>
@@ -398,7 +398,7 @@ export default function WhatIsKyokushinPage() {
             viewport={{ once: true }}
             variants={fadeIn}
             custom={0}
-            className="bg-gradient-to-b from-red-600/5 to-transparent border border-red-600/10 rounded-2xl p-8 md:p-12 text-center"
+            className="bg-white/5 border border-white/10 rounded-xl p-8 md:p-12 text-center"
           >
             <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-6">
               THE DOJO <span className="text-red-500">KUN</span>
@@ -415,8 +415,8 @@ export default function WhatIsKyokushinPage() {
                 { jp: '一、我々は知性と体力とを向上させ', en: 'We will look upwards in wisdom and strength, not seeking other desires.' },
                 { jp: '一、我々は生涯の修行を空手の道に通じ', en: 'All our lives, through the discipline of karate, we will seek to fulfill the true meaning of the Kyokushin way.' },
               ].map((line, i) => (
-                <div key={i} className="border-l-2 border-red-600/30 pl-4">
-                  <p className="text-xs text-red-400/70 font-mono">{line.jp}</p>
+                <div key={i} className="rounded-lg bg-white/5 px-4 py-3">
+                  <p className="text-xs text-red-400 font-mono">{line.jp}</p>
                   <p className="text-sm text-gray-300 mt-0.5">{line.en}</p>
                 </div>
               ))}
@@ -428,29 +428,29 @@ export default function WhatIsKyokushinPage() {
       {/* CTA */}
       <section className="px-4 pb-16 md:pb-24">
         <div className="container mx-auto max-w-3xl">
-          <div className="bg-gradient-to-r from-red-600/10 via-red-600/5 to-red-600/10 border border-red-600/20 rounded-2xl p-8 md:p-12 text-center">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-8 md:p-12 text-center">
             <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
               READY TO START?
             </h2>
-            <p className="text-gray-400 mb-6 max-w-lg mx-auto">
+            <p className="text-gray-300 mb-6 max-w-lg mx-auto">
               Find a dojo near you and begin your Kyokushin journey. OSU!
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href="/find-a-dojo"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition-all active:scale-95"
+                className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none font-bold uppercase tracking-wider transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 Find a Dojo <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/syllabus"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full font-bold transition-all"
+                className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] bg-transparent hover:bg-white/10 text-white border border-white/20 rounded-none font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 View Syllabus <ChevronRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full font-bold transition-all"
+                className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] bg-transparent hover:bg-white/10 text-white border border-white/20 rounded-none font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 Register Now
               </Link>

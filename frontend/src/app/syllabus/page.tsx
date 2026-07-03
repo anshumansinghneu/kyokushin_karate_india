@@ -213,10 +213,10 @@ export default function SyllabusPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white">
+        <div className="min-h-screen bg-black text-white">
             {/* Hero */}
             <div className="relative overflow-hidden border-b border-white/5">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-red-900/20 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-black" />
                 <div className="max-w-5xl mx-auto px-4 py-20 relative z-10">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full mb-6">
@@ -251,7 +251,7 @@ export default function SyllabusPage() {
                                 entry.belt === 'Brown' ? 'bg-amber-700 border-amber-800' :
                                 'bg-black border-red-500'
                             }`} />
-                            <span className={`text-[9px] sm:text-[10px] font-bold ${expandedBelt === entry.belt ? entry.color : 'text-gray-500'}`}>
+                            <span className={`text-[9px] sm:text-[10px] font-bold ${expandedBelt === entry.belt ? entry.color : 'text-gray-400'}`}>
                                 {entry.belt}
                             </span>
                         </button>
@@ -288,7 +288,7 @@ export default function SyllabusPage() {
                                     </div>
                                     <div>
                                         <h3 className={`text-lg font-black ${entry.color}`}>{entry.belt} Belt</h3>
-                                        <p className="text-xs text-gray-500 font-semibold">{entry.timeRequired} • {entry.kata.length} Kata</p>
+                                        <p className="text-xs text-gray-400 font-semibold">{entry.timeRequired} • {entry.kata.length} Kata</p>
                                     </div>
                                 </div>
                                 <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${expandedBelt === entry.belt ? 'rotate-180' : ''}`} />
@@ -327,7 +327,7 @@ export default function SyllabusPage() {
                                                             <div className="flex items-center gap-3">
                                                                 <Icon className="w-4 h-4 text-gray-400" />
                                                                 <span className="text-sm font-bold text-white">{sectionLabel}</span>
-                                                                <span className="text-[10px] text-gray-500 font-semibold bg-white/5 px-2 py-0.5 rounded-full">{items.length}</span>
+                                                                <span className="text-[10px] text-gray-400 font-semibold bg-white/5 px-2 py-0.5 rounded-full">{items.length}</span>
                                                             </div>
                                                             <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                                                         </button>
@@ -342,7 +342,7 @@ export default function SyllabusPage() {
                                                                     <div className="px-4 pb-4 space-y-2">
                                                                         {items.map((item, idx) => (
                                                                             <div key={idx} className="flex items-start gap-2">
-                                                                                <CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                                                                                <CheckCircle className="w-3.5 h-3.5 text-red-500 mt-0.5 flex-shrink-0" />
                                                                                 <span className="text-sm text-gray-300">{item}</span>
                                                                             </div>
                                                                         ))}

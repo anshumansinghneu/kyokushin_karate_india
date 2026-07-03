@@ -1,14 +1,18 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { ChevronRight } from "lucide-react";
 
 export default function IntroPage() {
-    const [phase, setPhase] = useState(0);
+    const prefersReducedMotion = useReducedMotion();
+    const [rawPhase, setPhase] = useState(0);
+    // With reduced motion, reveal the final composition immediately (no sequence).
+    const phase = prefersReducedMotion ? 5 : rawPhase;
 
     useEffect(() => {
+        if (prefersReducedMotion) return; // Skip the cinematic timer sequence.
         // Sequence controller
         const timer1 = setTimeout(() => setPhase(1), 1000); // Pulse start
         const timer2 = setTimeout(() => setPhase(2), 2500); // Tricolor burst
@@ -23,27 +27,27 @@ export default function IntroPage() {
             clearTimeout(timer4);
             clearTimeout(timer5);
         };
-    }, []);
+    }, [prefersReducedMotion]);
 
     return (
         <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center overflow-hidden relative selection:bg-red-600 selection:text-white">
 
-            {/* Ambient Background - Deep Cinematic Atmosphere */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 via-black to-black pointer-events-none" />
+            {/* Ambient Background - single deliberate red glow on pure black */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,0,0,0.10),transparent_60%)] pointer-events-none" />
 
-            {/* Tricolor Energy Beams */}
+            {/* Energy Beams */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: phase >= 2 ? 0.4 : 0 }}
                 transition={{ duration: 2 }}
                 className="absolute inset-0 pointer-events-none"
             >
-                {/* Saffron Beam */}
-                <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-orange-500/0 via-orange-500/50 to-orange-500/0 blur-xl transform -skew-x-12" />
+                {/* Red Beam */}
+                <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-[#FF0000]/0 via-[#FF0000]/40 to-[#FF0000]/0 blur-xl transform -skew-x-12" />
                 {/* White Beam */}
                 <div className="absolute top-0 left-1/2 w-px h-full bg-gradient-to-b from-white/0 via-white/30 to-white/0 blur-xl transform -skew-x-12" />
-                {/* Green Beam */}
-                <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-green-500/0 via-green-500/50 to-green-500/0 blur-xl transform -skew-x-12" />
+                {/* Red Beam */}
+                <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-[#FF0000]/0 via-[#FF0000]/40 to-[#FF0000]/0 blur-xl transform -skew-x-12" />
             </motion.div>
 
             {/* Central Composition */}
@@ -60,8 +64,6 @@ export default function IntroPage() {
                     transition={{
                         duration: 1.5,
                         ease: [0.16, 1, 0.3, 1], // Apple-style ease
-                        type: "spring",
-                        bounce: 0.3
                     }}
                     className="relative w-48 h-48 md:w-64 md:h-64 mb-12"
                 >
@@ -82,8 +84,8 @@ export default function IntroPage() {
 
                     {/* Diagonal Rays (Thin lines for artistic flair) */}
                     <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        animate={prefersReducedMotion ? undefined : { rotate: 360 }}
+                        transition={prefersReducedMotion ? undefined : { duration: 20, repeat: Infinity, ease: "linear" }}
                         className="absolute inset-0 border border-red-600/20 rounded-full"
                     />
                 </motion.div>
@@ -137,10 +139,8 @@ export default function IntroPage() {
                     className="mt-16"
                 >
                     <Link href="/">
-                        <button className="group relative px-8 py-4 bg-transparent overflow-hidden rounded-full transition-all hover:scale-105">
-                            <div className="absolute inset-0 border border-white/20 rounded-full group-hover:border-red-600/50 transition-colors" />
-                            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
-                            <span className="relative flex items-center gap-3 text-white font-medium tracking-widest text-sm group-hover:text-red-500 transition-colors">
+                        <button className="group relative px-8 min-h-[44px] flex items-center bg-transparent overflow-hidden rounded-none border border-white/20 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+                            <span className="relative flex items-center gap-3 text-white font-bold uppercase tracking-widest text-sm">
                                 ENTER THE DOJO
                                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </span>

@@ -121,13 +121,13 @@ function AnimatedCounter({ target, label, icon: Icon, suffix = "" }: { target: n
       transition={{ duration: 0.6 }}
       className="text-center group"
     >
-      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-red-600/20 to-red-900/10 border border-red-500/10 flex items-center justify-center group-hover:border-red-500/30 group-hover:scale-110 transition-all duration-500">
+      <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-red-500/30 group-hover:scale-110 transition-all duration-500">
         <Icon className="w-6 h-6 text-red-500" />
       </div>
       <div className="text-4xl md:text-5xl font-black text-white tabular-nums">
         {count}{suffix}
       </div>
-      <div className="text-xs text-zinc-500 font-bold uppercase tracking-[0.2em] mt-2">{label}</div>
+      <div className="text-xs text-gray-400 font-bold uppercase tracking-[0.2em] mt-2">{label}</div>
     </motion.div>
   );
 }
@@ -167,21 +167,21 @@ function NextEventCountdown({ event }: { event: Event }) {
       viewport={{ once: true }}
       className="py-16 md:py-24 relative overflow-hidden"
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-red-950/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,0,0,0.05),transparent_70%)] pointer-events-none" />
       <div className="container-responsive text-center relative z-10">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 mb-6">
           <Clock className="w-3.5 h-3.5 text-red-500" />
           <span className="text-xs font-bold text-red-400 uppercase tracking-widest">Next Event</span>
         </div>
         <h3 className="text-2xl md:text-4xl font-black mb-2 text-white">{event.name}</h3>
-        <p className="text-zinc-500 text-sm mb-8 flex items-center justify-center gap-2">
+        <p className="text-gray-400 text-sm mb-8 flex items-center justify-center gap-2">
           <MapPin className="w-3.5 h-3.5" /> {event.location || "Location TBA"} &bull; {new Date(event.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
         </p>
 
         <div className="flex justify-center gap-3 sm:gap-5 mb-10">
           {blocks.map(({ value, label }) => (
             <div key={label} className="relative">
-              <div className="w-[72px] h-[80px] sm:w-[88px] sm:h-[96px] bg-gradient-to-b from-zinc-900 to-black rounded-xl border border-white/[0.06] flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden">
+              <div className="w-[72px] h-[80px] sm:w-[88px] sm:h-[96px] bg-white/5 rounded-xl border border-white/10 flex items-center justify-center overflow-hidden">
                 <motion.span
                   key={value}
                   initial={{ y: -20, opacity: 0 }}
@@ -191,13 +191,13 @@ function NextEventCountdown({ event }: { event: Event }) {
                   {String(value).padStart(2, "0")}
                 </motion.span>
               </div>
-              <span className="block text-[10px] text-zinc-600 font-bold uppercase tracking-[0.15em] mt-2">{label}</span>
+              <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-[0.15em] mt-2">{label}</span>
             </div>
           ))}
         </div>
 
         <Link href={`/events/${event.id}`}>
-          <Button className="h-12 px-8 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold uppercase tracking-wider transition-transform hover:scale-105 active:scale-95">
+          <Button className="min-h-[44px] h-12 px-8 rounded-none bg-[#FF0000] hover:bg-[#8B0000] text-white text-sm font-bold uppercase tracking-wider transition-colors focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black active:scale-95">
             Register Now <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </Link>
@@ -383,7 +383,7 @@ export default function Home() {
                 className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-[90vw] max-w-lg"
               >
                 <Link href={`/events/${newEventFlash.id}`}>
-                  <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-700 rounded-2xl p-4 shadow-2xl shadow-red-900/40 border border-red-500/30 flex items-center gap-4 cursor-pointer hover:scale-[1.02] transition-transform">
+                  <div className="bg-[#8B0000] rounded-2xl p-4 shadow-[0_0_30px_rgba(255,0,0,0.25)] border border-red-500/30 flex items-center gap-4 cursor-pointer hover:scale-[1.02] transition-transform">
                     <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
                       <Calendar className="w-6 h-6 text-white" />
                     </div>
@@ -451,7 +451,7 @@ export default function Home() {
                           )}
                         </div>
                         <div className="p-6 flex-1 flex flex-col">
-                          <div className="text-xs text-gray-500 mb-2">{new Date(post.publishedAt).toLocaleDateString()}</div>
+                          <div className="text-xs text-gray-400 mb-2">{new Date(post.publishedAt).toLocaleDateString()}</div>
                           <h3 className="text-xl font-bold mb-2 group-hover:text-red-500 transition-colors line-clamp-2">{post.title}</h3>
                           <p className="text-gray-400 text-sm line-clamp-3 mb-4 flex-1">{post.excerpt}</p>
                           <span className="text-red-500 text-xs font-bold uppercase tracking-wider">Read More</span>
@@ -505,15 +505,10 @@ export default function Home() {
             <div className="container-responsive text-center relative z-10 flex flex-col items-center">
               <img src="/kkfi-logo.png" alt="KKFI" className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.15)] mb-6 opacity-60" />
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight mb-6">
-                Ready to start your <span style={{
-                  background: 'linear-gradient(180deg, #ef4444, #991b1b)',
-                  WebkitBackgroundClip: 'text',
-                  backgroundClip: 'text',
-                  color: 'transparent',
-                }}>journey?</span>
+                Ready to start your <span className="text-[#FF0000]">journey?</span>
               </h3>
               <Link href="/register">
-                <Button className="h-12 md:h-14 px-8 md:px-10 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs sm:text-sm font-bold uppercase tracking-wider transition-transform hover:scale-105 active:scale-95">
+                <Button className="min-h-[44px] h-12 md:h-14 px-8 md:px-10 rounded-none bg-[#FF0000] hover:bg-[#8B0000] text-white text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black active:scale-95">
                   Become a Member
                 </Button>
               </Link>

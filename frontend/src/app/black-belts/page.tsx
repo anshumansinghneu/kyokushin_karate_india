@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Award, MapPin, Building2, BadgeCheck, User } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
@@ -56,6 +56,7 @@ const getTitle = (dan: number, isPlural: boolean = false) => {
 
 // ─── Fighter Card ───────────────────────────────────────────
 function FighterCard({ member, tier, index }: { member: BlackBelt; tier: DanTier; index: number }) {
+    const reduceMotion = useReducedMotion();
     const photoUrl = getImageUrl(member.profilePhotoUrl || null);
     const location = [member.city, member.state].filter(Boolean).join(", ");
     const initials = member.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
@@ -69,10 +70,10 @@ function FighterCard({ member, tier, index }: { member: BlackBelt; tier: DanTier
 
     const card = (
         <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.1 }}
-            transition={{ delay: (index % 4) * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={reduceMotion ? { duration: 0 } : { delay: (index % 4) * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className={`group relative flex flex-col h-[360px] w-full rounded-2xl bg-white/[0.02] border border-white/[0.04] overflow-hidden transition-all duration-500 hover:border-red-600/15 hover:-translate-y-1 ${tier.bgGlow}`}
         >
             {/* Sweep light on hover */}
@@ -99,7 +100,7 @@ function FighterCard({ member, tier, index }: { member: BlackBelt; tier: DanTier
 
                 {member.membershipNumber && (
                     <div className="absolute top-3 right-3 z-20">
-                        <div className="bg-black/50 backdrop-blur-xl p-1.5 rounded-full border border-white/10 text-white/40 group-hover:text-emerald-400 group-hover:border-emerald-400/30 transition-all duration-500">
+                        <div className="bg-black/50 backdrop-blur-xl p-1.5 rounded-full border border-white/10 text-white/40 group-hover:text-[#FFD700] group-hover:border-[#FFD700]/30 transition-all duration-500">
                             <BadgeCheck className="w-3.5 h-3.5" />
                         </div>
                     </div>
@@ -120,14 +121,14 @@ function FighterCard({ member, tier, index }: { member: BlackBelt; tier: DanTier
                     {member.name}
                 </h3>
 
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-auto text-[11px] text-zinc-500">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-auto text-[11px] text-gray-400">
                     {dojos.slice(0,1).map((d) => (
                         <span key={d.id} className="flex items-center gap-1.5">
                             <Building2 className="w-3 h-3 opacity-40" />
                             <span className="truncate">{d.name}</span>
                         </span>
                     ))}
-                    {dojos.length > 0 && location && <span className="w-1 h-1 rounded-full bg-zinc-700" />}
+                    {dojos.length > 0 && location && <span className="w-1 h-1 rounded-full bg-white/20" />}
                     {location && (
                         <span className="flex items-center gap-1.5">
                             <MapPin className="w-3 h-3 opacity-40" />
@@ -171,7 +172,7 @@ function TierSection({ tier, members }: { tier: DanTier; members: BlackBelt[] })
                                 <div key={i} className={`w-[3px] h-4 rounded-sm opacity-40 ${tier.dan >= 8 ? 'bg-yellow-500' : tier.dan >= 5 ? 'bg-red-500' : 'bg-white'}`} />
                             ))}
                         </div>
-                        <span className="text-[10px] font-semibold text-zinc-500">
+                        <span className="text-[10px] font-semibold text-gray-400">
                             {members.length} {members.length === 1 ? 'Member' : 'Members'}
                         </span>
                     </div>
@@ -192,6 +193,7 @@ function TierSection({ tier, members }: { tier: DanTier; members: BlackBelt[] })
 
 // ─── Main Page ────────────────────────────────────────────────────────
 export default function BlackBeltsPage() {
+    const reduceMotion = useReducedMotion();
     const [blackBelts, setBlackBelts] = useState<BlackBelt[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -231,9 +233,9 @@ export default function BlackBeltsPage() {
     const totalCount = blackBelts.length;
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white relative font-sans">
-            {/* Subtle top vignette */}
-            <div className="absolute top-0 inset-x-0 h-[400px] bg-gradient-to-b from-zinc-900/10 to-transparent pointer-events-none" />
+        <div className="min-h-screen bg-black text-white relative font-sans">
+            {/* Single deliberate red glow */}
+            <div className="absolute top-0 inset-x-0 h-[400px] bg-[radial-gradient(ellipse_at_top,rgba(255,0,0,0.06),transparent_70%)] pointer-events-none" />
 
             {/* ── Hero ─── */}
             <div className="relative pt-20 pb-6 md:pt-24 md:pb-8 overflow-hidden">
@@ -241,28 +243,20 @@ export default function BlackBeltsPage() {
 
                 <div className="container-responsive relative z-10">
                     <motion.div
-                        initial={{ opacity: 0, y: 15 }}
+                        initial={reduceMotion ? false : { opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                        transition={reduceMotion ? { duration: 0 } : { duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                         className="text-center flex flex-col items-center"
                     >
                         {/* Title: BLACK [logo] BELT / REGISTRY */}
                         <h1 className="font-black uppercase leading-[0.9] tracking-tighter mb-5" style={{ fontSize: 'clamp(2.5rem, 7vw, 4.5rem)' }}>
                             <span className="inline-flex items-center gap-3 md:gap-4">
                                 <span className="text-white">BLACK</span>
-                                <img src="/kkfi-logo.png" alt="KKFI" className="w-10 h-10 md:w-14 md:h-14 inline-block rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.2)]" />
+                                <img src="/kkfi-logo.png" alt="KKFI" className="w-10 h-10 md:w-14 md:h-14 inline-block rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(255,0,0,0.2)]" />
                                 <span className="text-white">BELT</span>
                             </span>
                             <br />
-                            <span
-                                className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
-                                style={{
-                                    background: 'linear-gradient(180deg, #ef4444, #991b1b)',
-                                    WebkitBackgroundClip: 'text',
-                                    backgroundClip: 'text',
-                                    color: 'transparent',
-                                }}
-                            >REGISTRY</span>
+                            <span className="text-[#FF0000] drop-shadow-[0_4px_25px_rgba(255,0,0,0.35)]">REGISTRY</span>
                         </h1>
 
                         {/* Divider line with stats inline */}
@@ -272,19 +266,19 @@ export default function BlackBeltsPage() {
                                 <>
                                     <div className="flex items-baseline gap-1.5">
                                         <span className="text-lg font-extrabold text-white">{totalCount}</span>
-                                        <span className="text-[8px] font-semibold text-zinc-600 uppercase tracking-widest">Members</span>
+                                        <span className="text-[8px] font-semibold text-gray-400 uppercase tracking-widest">Members</span>
                                     </div>
-                                    <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                                    <span className="w-1 h-1 rounded-full bg-white/20" />
                                     <div className="flex items-baseline gap-1.5">
                                         <span className="text-lg font-extrabold text-white">{tiers.length}</span>
-                                        <span className="text-[8px] font-semibold text-zinc-600 uppercase tracking-widest">Dan Tiers</span>
+                                        <span className="text-[8px] font-semibold text-gray-400 uppercase tracking-widest">Dan Tiers</span>
                                     </div>
                                 </>
                             )}
                             <div className="flex-1 h-px bg-gradient-to-l from-transparent to-white/[0.06]" />
                         </div>
 
-                        <p className="text-xs md:text-sm text-zinc-600 max-w-md leading-relaxed">
+                        <p className="text-xs md:text-sm text-gray-400 max-w-md leading-relaxed">
                             The highest-ranked practitioners of Kyokushin Karate in India.
                         </p>
                     </motion.div>
@@ -292,16 +286,16 @@ export default function BlackBeltsPage() {
             </div>
 
             {/* ── Tiers Pipeline ──────────────────────────────────────── */}
-            <div className="relative z-10 w-full bg-[#050505] pb-32">
+            <div className="relative z-10 w-full bg-black pb-32">
                 {loading ? (
                     <div className="flex justify-center py-40">
                         <KarateLoader />
                     </div>
                 ) : tiers.length === 0 ? (
                     <div className="container-responsive text-center py-40 flex flex-col items-center">
-                        <Award className="w-12 h-12 text-zinc-700 mb-6 opacity-50" />
+                        <Award className="w-12 h-12 text-gray-500 mb-6 opacity-70" />
                         <h3 className="text-2xl font-light text-white mb-3">No Profiles Found</h3>
-                        <p className="text-zinc-500 font-light max-w-sm">
+                        <p className="text-gray-400 font-light max-w-sm">
                             The registry is currently empty.
                         </p>
                     </div>

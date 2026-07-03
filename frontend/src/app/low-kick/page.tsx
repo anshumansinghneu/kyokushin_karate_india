@@ -1,13 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Trophy, Users, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 export default function LowKickPage() {
+    const prefersReducedMotion = useReducedMotion();
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-blue-600 selection:text-white">
+        <div className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white">
 
             {/* HERO SECTION */}
             <section className="relative h-screen flex items-center justify-center overflow-hidden bg-black">
@@ -76,14 +77,14 @@ export default function LowKickPage() {
 
                         {/* Flag with Slow Floating Effect */}
                         <motion.div
-                            initial={{ scale: 0, rotate: -15 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{ duration: 1.2, delay: 0.8, type: "spring", bounce: 0.4 }}
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 1, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
                             className="relative"
                         >
                             <motion.img
-                                animate={{ y: [-3, 3, -3] }}
-                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                animate={prefersReducedMotion ? undefined : { y: [-3, 3, -3] }}
+                                transition={prefersReducedMotion ? undefined : { duration: 4, repeat: Infinity, ease: "easeInOut" }}
                                 src="/india-flag.png"
                                 alt="India Flag"
                                 className="h-8 md:h-12 w-auto object-contain drop-shadow-2xl"
@@ -144,7 +145,7 @@ export default function LowKickPage() {
                                 <p>
                                     An entrepreneur at heart, he has undertaken projects such as creating a successful surf brand and organizing various combat sports events.
                                 </p>
-                                <div className="pl-6 border-l-2 border-red-600/50 italic text-gray-400">
+                                <div className="rounded-xl bg-white/5 border border-white/10 p-6 italic text-gray-300">
                                     "Leading a small but highly professional team, Abraham brings us a new, fresh, and original event like few others."
                                 </div>
                             </div>
@@ -159,7 +160,7 @@ export default function LowKickPage() {
                 <div className="container-responsive">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
 
-                        {/* REGISTRATION CARD (BLUE) */}
+                        {/* REGISTRATION CARD */}
                         <Link href="/register" className="group relative h-[500px] overflow-hidden cursor-pointer">
                             {/* Background Image */}
                             <div className="absolute inset-0">
@@ -168,8 +169,8 @@ export default function LowKickPage() {
                                     alt="Registration"
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                 />
-                                {/* Blue Overlay */}
-                                <div className="absolute inset-0 bg-blue-900/60 mix-blend-multiply transition-opacity duration-500 group-hover:bg-blue-900/40" />
+                                {/* Black Overlay */}
+                                <div className="absolute inset-0 bg-black/60 transition-opacity duration-500 group-hover:bg-black/40" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />
                             </div>
 
@@ -184,7 +185,7 @@ export default function LowKickPage() {
                                 <h2 className="text-4xl md:text-5xl font-black italic tracking-tighter text-white mb-2 drop-shadow-lg">
                                     REGISTRATION
                                 </h2>
-                                <div className="h-1 w-24 bg-blue-600 transform origin-left transition-transform duration-500 group-hover:scale-x-150" />
+                                <div className="h-1 w-24 bg-[#FFD700] transform origin-left transition-transform duration-500 group-hover:scale-x-150" />
                             </div>
                         </Link>
 
