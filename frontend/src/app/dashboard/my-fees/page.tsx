@@ -75,23 +75,23 @@ export default function MyFeesPage() {
             type="number"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="bg-gray-900 border border-gray-700 rounded px-3 py-2 w-28"
+            className="min-h-[44px] bg-black border border-white/20 rounded-none px-3 py-2 w-28 focus-visible:outline-none focus-visible:border-[#FF0000]"
           />
         </div>
 
         {ledger && (
           <>
             <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                <div className="text-xs text-gray-500">Expected ({year})</div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs uppercase tracking-wider text-gray-400">Expected ({year})</div>
                 <div className="text-xl font-bold">₹{ledger.totals.totalExpected}</div>
               </div>
               <div className="rounded-xl border border-green-500/20 bg-green-500/[0.05] p-4">
-                <div className="text-xs text-gray-500">Paid</div>
+                <div className="text-xs uppercase tracking-wider text-gray-300">Paid</div>
                 <div className="text-xl font-bold text-green-400">₹{ledger.totals.totalPaid}</div>
               </div>
               <div className="rounded-xl border border-red-500/20 bg-red-500/[0.05] p-4">
-                <div className="text-xs text-gray-500">Outstanding</div>
+                <div className="text-xs uppercase tracking-wider text-gray-300">Outstanding</div>
                 <div className="text-xl font-bold text-red-400">₹{ledger.totals.totalOutstanding}</div>
               </div>
             </div>
@@ -110,11 +110,11 @@ export default function MyFeesPage() {
         {loading ? (
           <div className="flex items-center gap-2 text-gray-400"><Loader2 className="animate-spin" size={18} /> Loading…</div>
         ) : fees.length === 0 ? (
-          <p className="text-gray-500">No fee records yet.</p>
+          <p className="text-gray-400">No fee records yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-gray-400 text-left">
+              <thead className="text-gray-300 text-left uppercase tracking-wider text-xs">
                 <tr>
                   <th className="py-2 pr-3">Month</th>
                   <th className="py-2 pr-3">Amount</th>
@@ -125,7 +125,7 @@ export default function MyFeesPage() {
               </thead>
               <tbody>
                 {fees.map((f) => (
-                  <tr key={f.id} className="border-t border-gray-800">
+                  <tr key={f.id} className="border-t border-white/10">
                     <td className="py-2 pr-3">{FULL_MONTHS[f.month - 1]} {f.year}</td>
                     <td className="py-2 pr-3">₹{f.amount}{f.status === "PARTIAL" ? ` (paid ₹${f.amountPaid})` : ""}</td>
                     <td className={`py-2 pr-3 font-medium ${STATUS_STYLE[f.status]}`}>{f.status}</td>

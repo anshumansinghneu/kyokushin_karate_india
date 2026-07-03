@@ -113,7 +113,7 @@ function ChangePasswordForm() {
             {error && <div className="text-red-400 text-sm">{error}</div>}
             {success && <div className="text-emerald-400 text-sm">{success}</div>}
             <button type="submit" disabled={loading}
-                className="w-full h-11 bg-white text-black font-semibold rounded-xl hover:bg-white/90 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50">
+                className="w-full min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold uppercase tracking-wider rounded-none transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Change Password"}
             </button>
         </form>
@@ -290,7 +290,7 @@ export default function ProfilePage() {
     // Show loading while checking auth
     if (authLoading) {
         return (
-            <div className="min-h-screen w-full bg-[#060606] flex items-center justify-center">
+            <div className="min-h-screen w-full bg-black flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="relative">
                         <div className="w-16 h-16 rounded-full border-2 border-white/[0.06] animate-pulse" />
@@ -310,11 +310,9 @@ export default function ProfilePage() {
     const belt = getBeltColor(user?.currentBeltRank);
 
     return (
-        <div className="min-h-screen w-full bg-[#060606] text-white relative overflow-hidden">
+        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
             {/* Background grid */}
             <div className="fixed inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none" />
-            {/* Subtle top glow */}
-            <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-red-500/[0.03] rounded-full blur-[120px] pointer-events-none" />
 
             <div className="container-responsive py-6 sm:py-10 relative z-10">
                 {/* Header */}
@@ -487,10 +485,10 @@ export default function ProfilePage() {
                                 </div>
                                 <button
                                     onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
+                                    className={`inline-flex items-center gap-2 px-4 min-h-[44px] rounded-none text-xs font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
                                         isEditing
-                                            ? 'bg-white text-black hover:bg-white/90'
-                                            : 'border border-white/[0.08] text-white/50 hover:text-white hover:border-white/20'
+                                            ? 'bg-[#FF0000] text-white hover:bg-[#8B0000]'
+                                            : 'border border-white/20 text-white/70 hover:text-white hover:bg-white/10'
                                     }`}
                                 >
                                     {isEditing ? (
@@ -599,11 +597,11 @@ export default function ProfilePage() {
                                 {isEditing && (
                                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                                         className="mt-5 pt-5 border-t border-white/[0.04] flex justify-end gap-3 md:hidden">
-                                        <button onClick={() => setIsEditing(false)} className="px-5 py-2.5 text-sm text-white/50 hover:text-white border border-white/[0.08] rounded-lg transition-colors">
+                                        <button onClick={() => setIsEditing(false)} className="px-5 min-h-[44px] text-sm uppercase tracking-wider text-white/70 hover:text-white hover:bg-white/10 border border-white/20 rounded-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                                             Cancel
                                         </button>
                                         <button onClick={handleSave} disabled={isLoading}
-                                            className="px-5 py-2.5 text-sm font-semibold bg-white text-black rounded-lg hover:bg-white/90 transition-colors flex items-center gap-2">
+                                            className="px-5 min-h-[44px] text-sm font-bold uppercase tracking-wider bg-[#FF0000] text-white rounded-none hover:bg-[#8B0000] transition-colors flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                                             {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                                             {isLoading ? "Saving..." : "Save Changes"}
                                         </button>

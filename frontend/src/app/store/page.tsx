@@ -223,11 +223,11 @@ export default function StorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pb-20">
+    <div className="min-h-screen bg-black text-white pb-20">
       <div className="max-w-7xl mx-auto px-5">
         {/* Hero */}
         <div className="relative pt-28 pb-8 md:pt-32 md:pb-10">
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-white/10" />
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-10">
             <motion.div
@@ -237,17 +237,9 @@ export default function StorePage() {
             >
               <h1 className="font-black tracking-tighter uppercase mb-2" style={{ fontSize: 'clamp(2rem, 6vw, 4rem)' }}>
                 <span className="text-white">KKFI </span>
-                <span
-                  className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
-                  style={{
-                    background: 'linear-gradient(180deg, #ef4444, #991b1b)',
-                    WebkitBackgroundClip: 'text',
-                    backgroundClip: 'text',
-                    color: 'transparent',
-                  }}
-                >STORE</span>
+                <span className="text-[#FF0000]">STORE</span>
               </h1>
-              <p className="text-zinc-500 text-sm">
+              <p className="text-gray-400 text-sm">
                 Official Kyokushin Karate Federation merchandise
               </p>
             </motion.div>
@@ -258,12 +250,12 @@ export default function StorePage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
               onClick={() => setCartOpen(true)}
-              className="relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black font-bold text-xs uppercase tracking-wider hover:bg-zinc-200 transition-colors active:scale-[0.97]"
+              className="relative flex items-center gap-2 px-5 min-h-[44px] rounded-none bg-white text-black font-bold text-xs uppercase tracking-wider hover:bg-zinc-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               <ShoppingCart className="w-4 h-4" />
               Cart
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#FF0000] text-white text-[10px] font-black flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
@@ -274,13 +266,13 @@ export default function StorePage() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-8 pt-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <input
               type="text"
               placeholder="Search products..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white placeholder-zinc-600 focus:border-red-500/30 focus:outline-none transition-colors text-xs"
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:border-[#FF0000] focus:outline-none transition-colors text-xs"
             />
           </div>
           <div className="flex p-1 bg-white/[0.02] border border-white/[0.04] rounded-xl overflow-x-auto scrollbar-hide">
@@ -290,8 +282,8 @@ export default function StorePage() {
                 onClick={() => setCategory(cat.key)}
                 className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all ${
                   category === cat.key
-                    ? "bg-red-600 text-white shadow-lg shadow-red-600/20"
-                    : "text-zinc-500 hover:text-white"
+                    ? "bg-[#FF0000] text-white"
+                    : "text-gray-400 hover:text-white"
                 }`}
               >
                 {cat.label}
@@ -342,7 +334,7 @@ export default function StorePage() {
                       <div className="w-16 h-16 rounded-full bg-red-600/10 border border-red-600/20 flex items-center justify-center">
                         <ShoppingBag className="w-7 h-7 text-red-500/40" />
                       </div>
-                      <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">{product.category}</span>
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{product.category}</span>
                     </div>
                   )}
                   {/* Badges */}
@@ -368,20 +360,20 @@ export default function StorePage() {
                 <div className="p-4 bg-[#0a0a0a]">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[9px] text-zinc-600 uppercase tracking-[2px] font-bold mb-1">{product.category}</p>
-                      <h3 className="font-bold text-white text-sm group-hover:text-red-400 transition-colors line-clamp-1">{product.name}</h3>
+                      <p className="text-[9px] text-gray-400 uppercase tracking-[2px] font-bold mb-1">{product.category}</p>
+                      <h3 className="font-bold text-white text-sm group-hover:text-[#FF4D4D] transition-colors line-clamp-1">{product.name}</h3>
                     </div>
                     <div className="text-right shrink-0">
                       <span className="text-lg font-black text-white">₹{product.price.toLocaleString()}</span>
                       {product.comparePrice && (
-                        <span className="block text-[10px] text-zinc-600 line-through">₹{product.comparePrice.toLocaleString()}</span>
+                        <span className="block text-[10px] text-gray-400 line-through">₹{product.comparePrice.toLocaleString()}</span>
                       )}
                     </div>
                   </div>
                   {product.sizes.length > 0 && (
                     <div className="flex gap-1.5 mt-3">
                       {product.sizes.slice(0, 5).map(s => (
-                        <span key={s} className="px-2 py-0.5 rounded text-[9px] font-bold text-zinc-500 bg-white/[0.03] border border-white/[0.06]">{s}</span>
+                        <span key={s} className="px-2 py-0.5 rounded text-[9px] font-bold text-gray-300 bg-white/5 border border-white/10">{s}</span>
                       ))}
                     </div>
                   )}
@@ -430,7 +422,7 @@ export default function StorePage() {
                 </div>
 
                 <div className="p-6">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-1">
                     {selectedProduct.category}
                   </p>
                   <h2 className="text-2xl font-black text-white mb-2">
@@ -447,7 +439,7 @@ export default function StorePage() {
                       ₹{selectedProduct.price.toLocaleString()}
                     </span>
                     {selectedProduct.comparePrice && (
-                      <span className="text-lg text-gray-500 line-through">
+                      <span className="text-lg text-gray-400 line-through">
                         ₹{selectedProduct.comparePrice.toLocaleString()}
                       </span>
                     )}
@@ -464,10 +456,10 @@ export default function StorePage() {
                           <button
                             key={size}
                             onClick={() => setSelectedSize(size)}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                            className={`px-4 min-h-[44px] rounded-none text-sm font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
                               selectedSize === size
-                                ? "bg-red-600 text-white"
-                                : "bg-zinc-800 text-gray-400 border border-white/10 hover:text-white"
+                                ? "bg-[#FF0000] text-white"
+                                : "bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 hover:text-white"
                             }`}
                           >
                             {size}
@@ -482,7 +474,7 @@ export default function StorePage() {
                       addToCart(selectedProduct, selectedSize || "One Size")
                     }
                     disabled={!selectedProduct.inStock}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-6 rounded-xl text-lg"
+                    className="w-full bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold py-6 rounded-none text-lg focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                   >
                     {selectedProduct.inStock ? (
                       <>
@@ -535,15 +527,15 @@ export default function StorePage() {
                   {cart.length === 0 ? (
                     <div className="text-center py-12">
                       <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-zinc-700" />
-                      <p className="text-gray-500">Your cart is empty</p>
+                      <p className="text-gray-400">Your cart is empty</p>
                     </div>
                   ) : (
                     cart.map((item) => (
                       <div
                         key={`${item.product.id}-${item.size}`}
-                        className="flex gap-4 p-4 rounded-xl bg-zinc-800 border border-white/5"
+                        className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/10"
                       >
-                        <div className="w-16 h-16 rounded-lg bg-zinc-700 flex-shrink-0 overflow-hidden">
+                        <div className="w-16 h-16 rounded-lg bg-white/5 flex-shrink-0 overflow-hidden">
                           {item.product.images[0] ? (
                             <img
                               src={item.product.images[0]}
@@ -560,7 +552,7 @@ export default function StorePage() {
                           <h4 className="font-bold text-white text-sm truncate">
                             {item.product.name}
                           </h4>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-gray-400">
                             Size: {item.size}
                           </p>
                           <div className="flex items-center justify-between mt-2">
@@ -573,7 +565,7 @@ export default function StorePage() {
                                     -1
                                   )
                                 }
-                                className="w-9 h-9 rounded-lg bg-zinc-700 flex items-center justify-center text-white hover:bg-zinc-600 active:scale-90 transition-transform min-w-[36px] min-h-[36px]"
+                                className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-transform min-w-[36px] min-h-[36px]"
                               >
                                 <Minus className="w-3.5 h-3.5" />
                               </button>
@@ -588,7 +580,7 @@ export default function StorePage() {
                                     1
                                   )
                                 }
-                                className="w-9 h-9 rounded-lg bg-zinc-700 flex items-center justify-center text-white hover:bg-zinc-600 active:scale-90 transition-transform min-w-[36px] min-h-[36px]"
+                                className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-transform min-w-[36px] min-h-[36px]"
                               >
                                 <Plus className="w-3.5 h-3.5" />
                               </button>
@@ -605,7 +597,7 @@ export default function StorePage() {
                           onClick={() =>
                             removeFromCart(item.product.id, item.size)
                           }
-                          className="text-gray-600 hover:text-red-500 self-start p-2 -mr-2 rounded-lg hover:bg-white/5 min-w-[40px] min-h-[40px] flex items-center justify-center active:scale-90 transition-all"
+                          className="text-gray-400 hover:text-[#FF0000] self-start p-2 -mr-2 rounded-lg hover:bg-white/5 min-w-[40px] min-h-[40px] flex items-center justify-center active:scale-90 transition-all"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -633,7 +625,7 @@ export default function StorePage() {
                           }
                           setShowShipping(true);
                         }}
-                        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-6 rounded-xl text-lg"
+                        className="w-full bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold py-6 rounded-none text-lg focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                       >
                         Proceed to Checkout
                       </Button>
@@ -641,9 +633,9 @@ export default function StorePage() {
                       <div className="space-y-3">
                         <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Shipping Details</p>
                         <div>
-                          <label htmlFor="ship-name" className="text-xs text-gray-500 mb-1 block">Full Name</label>
+                          <label htmlFor="ship-name" className="text-xs text-gray-400 mb-1 block">Full Name</label>
                           <div className="relative">
-                            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                               id="ship-name"
                               type="text"
@@ -655,9 +647,9 @@ export default function StorePage() {
                           </div>
                         </div>
                         <div>
-                          <label htmlFor="ship-phone" className="text-xs text-gray-500 mb-1 block">Phone</label>
+                          <label htmlFor="ship-phone" className="text-xs text-gray-400 mb-1 block">Phone</label>
                           <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                               id="ship-phone"
                               type="tel"
@@ -669,7 +661,7 @@ export default function StorePage() {
                           </div>
                         </div>
                         <div>
-                          <label htmlFor="ship-address" className="text-xs text-gray-500 mb-1 block">Full Address</label>
+                          <label htmlFor="ship-address" className="text-xs text-gray-400 mb-1 block">Full Address</label>
                           <textarea
                             id="ship-address"
                             placeholder="Full Address"
@@ -681,7 +673,7 @@ export default function StorePage() {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           <div>
-                            <label htmlFor="ship-city" className="text-xs text-gray-500 mb-1 block">City</label>
+                            <label htmlFor="ship-city" className="text-xs text-gray-400 mb-1 block">City</label>
                             <input
                               id="ship-city"
                               type="text"
@@ -692,7 +684,7 @@ export default function StorePage() {
                             />
                           </div>
                           <div>
-                            <label htmlFor="ship-state" className="text-xs text-gray-500 mb-1 block">State</label>
+                            <label htmlFor="ship-state" className="text-xs text-gray-400 mb-1 block">State</label>
                             <input
                               id="ship-state"
                               type="text"
@@ -703,7 +695,7 @@ export default function StorePage() {
                             />
                           </div>
                           <div>
-                            <label htmlFor="ship-pincode" className="text-xs text-gray-500 mb-1 block">PIN Code</label>
+                            <label htmlFor="ship-pincode" className="text-xs text-gray-400 mb-1 block">PIN Code</label>
                             <input
                               id="ship-pincode"
                               type="text"
@@ -717,7 +709,7 @@ export default function StorePage() {
                         <Button
                           onClick={handleCheckout}
                           disabled={checkingOut}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 rounded-xl text-lg"
+                          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 rounded-none text-lg focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                         >
                           {checkingOut ? (
                             <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Placing Order...</>
@@ -727,7 +719,7 @@ export default function StorePage() {
                         </Button>
                         <button
                           onClick={() => setShowShipping(false)}
-                          className="w-full text-center text-sm text-gray-500 hover:text-white transition-colors"
+                          className="w-full text-center text-sm text-gray-400 hover:text-white transition-colors"
                         >
                           Back to Cart
                         </button>

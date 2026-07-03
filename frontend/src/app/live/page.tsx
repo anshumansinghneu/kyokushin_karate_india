@@ -168,7 +168,7 @@ export default function LivePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white">
+    <div className="min-h-screen bg-black text-white">
       {/* Top accent */}
       <div className="h-px bg-gradient-to-r from-transparent via-red-600/50 to-transparent" />
 
@@ -180,14 +180,14 @@ export default function LivePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-600 text-xs font-bold text-white tracking-wide mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FF0000] text-xs font-bold text-white tracking-wide mb-4">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               LIVE NOW
             </div>
             <h1 className="text-4xl md:text-5xl font-black tracking-tight">
-              Live <span className="text-red-500">Scoring</span>
+              Live <span className="text-[#FF0000]">Scoring</span>
             </h1>
-            <p className="text-gray-500 mt-2 text-sm">
+            <p className="text-gray-400 mt-2 text-sm">
               Real-time tournament matches &bull; Auto-updating scores
             </p>
           </motion.div>
@@ -206,25 +206,25 @@ export default function LivePage() {
         {/* Stats Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
           <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 text-center">
-            <Radio className="w-4 h-4 text-red-500 mx-auto mb-1.5" />
+            <Radio className="w-4 h-4 text-[#FF0000] mx-auto mb-1.5" />
             <p className="text-2xl font-black">{liveMatches.length}</p>
-            <p className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-bold">
+            <p className="text-[10px] text-gray-400 uppercase tracking-[0.15em] font-bold">
               Live Matches
             </p>
           </div>
           <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 text-center">
-            <Users className="w-4 h-4 text-blue-400 mx-auto mb-1.5" />
+            <Users className="w-4 h-4 text-white mx-auto mb-1.5" />
             <p className="text-2xl font-black">{liveMatches.length * 2}</p>
-            <p className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-bold">
+            <p className="text-[10px] text-gray-400 uppercase tracking-[0.15em] font-bold">
               Fighters
             </p>
           </div>
           <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 text-center">
-            <Zap className="w-4 h-4 text-yellow-500 mx-auto mb-1.5" />
+            <Zap className="w-4 h-4 text-white mx-auto mb-1.5" />
             <p className="text-lg font-black font-mono">
               {lastUpdate.toLocaleTimeString()}
             </p>
-            <p className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-bold">
+            <p className="text-[10px] text-gray-400 uppercase tracking-[0.15em] font-bold">
               Last Update
             </p>
           </div>
@@ -247,11 +247,11 @@ export default function LivePage() {
               <div>
                 <div className="text-center mb-8">
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/[0.08] border border-yellow-500/[0.15] mb-4">
-                    <Trophy className="w-3.5 h-3.5 text-yellow-500" />
-                    <span className="text-xs font-bold text-yellow-500 uppercase tracking-[0.15em]">Tournament Champions</span>
+                    <Trophy className="w-3.5 h-3.5 text-[#FFD700]" />
+                    <span className="text-xs font-bold text-[#FFD700] uppercase tracking-[0.15em]">Tournament Champions</span>
                   </div>
                   <h3 className="text-2xl md:text-3xl font-black text-white mb-2">{tournamentName}</h3>
-                  <p className="text-gray-500 text-sm">No live matches right now. Here are the champions from the last tournament.</p>
+                  <p className="text-gray-400 text-sm">No live matches right now. Here are the champions from the last tournament.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -264,13 +264,13 @@ export default function LivePage() {
                       className="bg-white/[0.02] border border-yellow-500/[0.12] rounded-xl p-6 text-center relative overflow-hidden group hover:border-yellow-500/25 transition-colors"
                     >
                       <div className="relative">
-                        <Trophy className="w-7 h-7 text-yellow-500 mx-auto mb-3" />
+                        <Trophy className="w-7 h-7 text-[#FFD700] mx-auto mb-3" />
                         <h4 className="text-lg font-black text-white mb-1">{champ.winner.name}</h4>
-                        <p className="text-sm text-gray-500 mb-3">{champ.winner.dojo || "Independent"}</p>
-                        <span className="inline-block text-xs font-bold px-3 py-1 rounded bg-white/[0.04] border border-white/[0.06] text-gray-300 mb-3">
+                        <p className="text-sm text-gray-400 mb-3">{champ.winner.dojo || "Independent"}</p>
+                        <span className="inline-block text-xs font-bold px-3 py-1 rounded bg-white/5 border border-white/10 text-gray-300 mb-3">
                           {champ.category}
                         </span>
-                        <div className="text-xs text-gray-600 font-mono">
+                        <div className="text-xs text-gray-400 font-mono">
                           Final Score: {champ.score}
                         </div>
                       </div>
@@ -284,12 +284,12 @@ export default function LivePage() {
                   <Trophy className="w-7 h-7 text-gray-600" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">No Live Matches</h3>
-                <p className="text-gray-500 text-sm mb-6">
+                <p className="text-gray-400 text-sm mb-6">
                   Check back during tournament events for real-time scoring
                 </p>
                 <Link
                   href="/events"
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-white text-black font-bold text-sm hover:bg-gray-200 transition-colors active:scale-[0.97]"
+                  className="inline-flex items-center gap-2 px-5 min-h-[44px] rounded-none bg-white text-black font-bold text-sm uppercase tracking-wider hover:bg-gray-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >
                   View Upcoming Events
                 </Link>
@@ -300,9 +300,9 @@ export default function LivePage() {
             {recentResults.length > 0 && (
               <div>
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-8 h-px bg-yellow-500/40" />
+                  <div className="w-8 h-px bg-[#FFD700]/40" />
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                    <Award className="w-4 h-4 text-yellow-500" />
+                    <Award className="w-4 h-4 text-[#FFD700]" />
                     Recent Results
                   </h3>
                   <div className="flex-1 h-px bg-white/[0.04]" />
@@ -321,11 +321,11 @@ export default function LivePage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 flex items-center gap-4"
                       >
-                        <div className="w-9 h-9 rounded-lg bg-yellow-500/[0.08] border border-yellow-500/[0.12] flex items-center justify-center flex-shrink-0">
-                          <Trophy className="w-4 h-4 text-yellow-500" />
+                        <div className="w-9 h-9 rounded-lg bg-[#FFD700]/10 border border-[#FFD700]/20 flex items-center justify-center flex-shrink-0">
+                          <Trophy className="w-4 h-4 text-[#FFD700]" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-600 mb-1 font-mono">
+                          <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-400 mb-1 font-mono">
                             <span>{result.bracket?.event?.name}</span>
                             <span>&bull;</span>
                             <span>{result.bracket?.categoryName}</span>
@@ -335,13 +335,13 @@ export default function LivePage() {
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="text-white font-bold text-sm">{winnerName}</span>
                             <span className="text-green-400 font-mono font-bold text-sm">{winnerScore}</span>
-                            <span className="text-gray-700">-</span>
+                            <span className="text-gray-500">-</span>
                             <span className="text-red-400/70 font-mono font-bold text-sm">{loserScore}</span>
-                            <span className="text-gray-500 text-sm">{loserName}</span>
+                            <span className="text-gray-400 text-sm">{loserName}</span>
                           </div>
                         </div>
                         {result.completedAt && (
-                          <span className="text-[10px] text-gray-600 font-mono flex-shrink-0">
+                          <span className="text-[10px] text-gray-400 font-mono flex-shrink-0">
                             {new Date(result.completedAt).toLocaleDateString()}
                           </span>
                         )}
@@ -361,10 +361,10 @@ export default function LivePage() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-white/[0.02] border border-red-500/20 rounded-xl overflow-hidden"
+                  className="bg-white/5 border border-[#FF0000]/20 rounded-xl overflow-hidden"
                 >
                   {/* Live Header */}
-                  <div className="bg-red-500 px-4 py-2 flex justify-between items-center">
+                  <div className="bg-[#FF0000] px-4 py-2 flex justify-between items-center">
                     <span className="text-xs font-bold text-white uppercase tracking-[0.15em] flex items-center gap-2">
                       <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                       LIVE
@@ -376,8 +376,8 @@ export default function LivePage() {
 
                   {/* Event Info */}
                   {match.eventName && (
-                    <div className="px-4 py-2 border-b border-white/[0.04] bg-white/[0.01]">
-                      <p className="text-[10px] text-gray-500 truncate font-mono">
+                    <div className="px-4 py-2 border-b border-white/10 bg-white/[0.02]">
+                      <p className="text-[10px] text-gray-400 truncate font-mono">
                         {match.eventName} &bull; {match.roundName}
                       </p>
                     </div>
@@ -389,19 +389,19 @@ export default function LivePage() {
                       <div className="text-center flex-1">
                         <motion.div
                           key={`a-${match.fighterAScore}`}
-                          initial={{ scale: 1.3, color: "#ef4444" }}
+                          initial={{ scale: 1.3, color: "#FF0000" }}
                           animate={{ scale: 1, color: "#ffffff" }}
                           className="text-4xl font-mono font-black mb-2"
                         >
                           {match.fighterAScore}
                         </motion.div>
-                        <div className="text-sm text-zinc-400 truncate px-1">
+                        <div className="text-sm text-gray-300 truncate px-1">
                           {match.fighterAName}
                         </div>
                       </div>
 
                       <div className="flex flex-col items-center px-4">
-                        <div className="text-zinc-600 font-black text-xl">
+                        <div className="text-gray-400 font-black text-xl">
                           VS
                         </div>
                       </div>
@@ -409,13 +409,13 @@ export default function LivePage() {
                       <div className="text-center flex-1">
                         <motion.div
                           key={`b-${match.fighterBScore}`}
-                          initial={{ scale: 1.3, color: "#ef4444" }}
+                          initial={{ scale: 1.3, color: "#FF0000" }}
                           animate={{ scale: 1, color: "#ffffff" }}
                           className="text-4xl font-mono font-black mb-2"
                         >
                           {match.fighterBScore}
                         </motion.div>
-                        <div className="text-sm text-zinc-400 truncate px-1">
+                        <div className="text-sm text-gray-300 truncate px-1">
                           {match.fighterBName}
                         </div>
                       </div>

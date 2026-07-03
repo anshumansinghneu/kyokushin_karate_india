@@ -169,46 +169,46 @@ export default function InstructorFeesPage() {
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-2xl font-bold mb-2">Monthly Fees</h1>
-        <p className="text-gray-400 mb-4">
+        <p className="text-gray-300 mb-4">
           {monthlyFee != null ? `Monthly fee: ₹${monthlyFee}` : "No monthly fee set for this dojo yet."}
         </p>
 
-        <details className="mb-6 rounded-lg border border-gray-800 bg-gray-900 p-4">
-          <summary className="cursor-pointer font-semibold">Dojo fee settings</summary>
+        <details className="mb-6 rounded-xl border border-white/10 bg-white/5 p-4">
+          <summary className="cursor-pointer font-semibold uppercase tracking-wider text-sm">Dojo fee settings</summary>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="text-sm">Monthly fee (₹)
               <input type="number" min={0} value={feeInput} onChange={(e) => setFeeInput(e.target.value)}
-                className="mt-1 w-full bg-black border border-gray-700 rounded px-2 py-1" />
+                className="mt-1 w-full bg-black border border-white/20 rounded-none px-2 py-1 focus-visible:outline-none focus-visible:border-[#FF0000]" />
             </label>
             <label className="text-sm">Fee due day (1-28)
               <input type="number" min={1} max={28} value={dueDayInput} onChange={(e) => setDueDayInput(e.target.value)}
-                className="mt-1 w-full bg-black border border-gray-700 rounded px-2 py-1" />
+                className="mt-1 w-full bg-black border border-white/20 rounded-none px-2 py-1 focus-visible:outline-none focus-visible:border-[#FF0000]" />
             </label>
           </div>
           <label className="mt-3 block text-sm">Reminder template
             <textarea value={templateInput} onChange={(e) => setTemplateInput(e.target.value)} rows={3}
-              className="mt-1 w-full bg-black border border-gray-700 rounded px-2 py-1" />
+              className="mt-1 w-full bg-black border border-white/20 rounded-none px-2 py-1 focus-visible:outline-none focus-visible:border-[#FF0000]" />
           </label>
-          <p className="mt-1 text-xs text-gray-500">Merge fields: {"{name} {amount} {month} {year} {dojoName} {dueDate}"}</p>
-          <div className="mt-2 rounded bg-black border border-gray-800 p-3 text-sm text-gray-300">
-            <div className="text-xs text-gray-500 mb-1">Preview</div>
+          <p className="mt-1 text-xs text-gray-400">Merge fields: {"{name} {amount} {month} {year} {dojoName} {dueDate}"}</p>
+          <div className="mt-2 rounded-lg bg-white/5 border border-white/10 p-3 text-sm text-gray-300">
+            <div className="text-xs text-gray-400 mb-1 uppercase tracking-wider">Preview</div>
             {renderFeePreview(templateInput, {
               name: "Riku", amount: feeInput || "800", month: MONTHS[month - 1], year,
               dojoName: user?.dojo?.name || "your dojo", dueDate: `${dueDayInput} ${MONTHS[month - 1]} ${year}`,
             })}
           </div>
           <button onClick={saveSettings} disabled={savingSettings}
-            className="mt-3 bg-red-600 hover:bg-red-700 rounded px-4 py-2 disabled:opacity-50">
+            className="mt-3 min-h-[44px] rounded-none uppercase tracking-wider font-bold bg-[#FF0000] hover:bg-[#8B0000] text-white px-6 py-2 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
             {savingSettings ? "Saving…" : "Save settings"}
           </button>
         </details>
 
         <div className="flex flex-wrap items-center gap-3 mb-4">
-          <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="bg-gray-900 border border-gray-700 rounded px-3 py-2">
+          <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="min-h-[44px] bg-black border border-white/20 rounded-none px-3 py-2 focus-visible:outline-none focus-visible:border-[#FF0000]">
             {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>
-          <input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} className="bg-gray-900 border border-gray-700 rounded px-3 py-2 w-28" />
-          <button onClick={sendReminders} disabled={reminding} className="ml-auto bg-red-600 hover:bg-red-700 rounded px-4 py-2 disabled:opacity-50">
+          <input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} className="min-h-[44px] bg-black border border-white/20 rounded-none px-3 py-2 w-28 focus-visible:outline-none focus-visible:border-[#FF0000]" />
+          <button onClick={sendReminders} disabled={reminding} className="ml-auto min-h-[44px] rounded-none uppercase tracking-wider font-bold bg-[#FF0000] hover:bg-[#8B0000] text-white px-6 py-2 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
             {reminding ? "Sending…" : "Send reminders to all unpaid"}
           </button>
         </div>
@@ -217,16 +217,16 @@ export default function InstructorFeesPage() {
 
         {summary && (
           <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-              <div className="text-xs text-gray-500">Expected ({year})</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="text-xs uppercase tracking-wider text-gray-400">Expected ({year})</div>
               <div className="text-xl font-bold">₹{summary.totals.expected}</div>
             </div>
             <div className="rounded-xl border border-green-500/20 bg-green-500/[0.05] p-4">
-              <div className="text-xs text-gray-500">Collected</div>
+              <div className="text-xs uppercase tracking-wider text-gray-300">Collected</div>
               <div className="text-xl font-bold text-green-400">₹{summary.totals.collected}</div>
             </div>
             <div className="rounded-xl border border-red-500/20 bg-red-500/[0.05] p-4">
-              <div className="text-xs text-gray-500">Outstanding</div>
+              <div className="text-xs uppercase tracking-wider text-gray-300">Outstanding</div>
               <div className="text-xl font-bold text-red-400">₹{summary.totals.outstanding}</div>
             </div>
           </div>
@@ -235,11 +235,11 @@ export default function InstructorFeesPage() {
         {loading ? (
           <div className="flex items-center gap-2 text-gray-400"><Loader2 className="animate-spin" size={18} /> Loading…</div>
         ) : rows.length === 0 ? (
-          <p className="text-gray-500">No students found for this dojo.</p>
+          <p className="text-gray-400">No students found for this dojo.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-gray-400 text-left">
+              <thead className="text-gray-300 text-left uppercase tracking-wider text-xs">
                 <tr>
                   <th className="py-2 pr-3">Student</th>
                   <th className="py-2 pr-3">Fee status</th>
@@ -255,16 +255,16 @@ export default function InstructorFeesPage() {
                   const led = ledgerByUser[r.userId];
                   return (
                     <Fragment key={r.userId}>
-                      <tr className="border-t border-gray-800">
+                      <tr className="border-t border-white/10">
                         <td className="py-2 pr-3">
-                          <button onClick={() => toggleExpand(r.userId)} className="text-left hover:text-red-400">
+                          <button onClick={() => toggleExpand(r.userId)} className="text-left hover:text-[#FF4D4D]">
                             <div>{r.name}</div>
-                            <div className="text-xs text-gray-500">{r.membershipNumber || r.currentBeltRank || ""}</div>
+                            <div className="text-xs text-gray-400">{r.membershipNumber || r.currentBeltRank || ""}</div>
                           </button>
                         </td>
                         <td className="py-2 pr-3">
                           <select value={r.status} onChange={(e) => update(r.userId, { status: e.target.value as FeeStatus })}
-                            className="bg-gray-900 border border-gray-700 rounded px-2 py-1">
+                            className="bg-black border border-white/20 rounded-none px-2 py-1 focus-visible:outline-none focus-visible:border-[#FF0000]">
                             <option value="UNPAID">Unpaid</option>
                             <option value="PARTIAL">Partial</option>
                             <option value="PAID">Paid</option>
@@ -274,37 +274,37 @@ export default function InstructorFeesPage() {
                         <td className="py-2 pr-3">
                           <input type="number" min={0} value={r.amountPaid} disabled={r.status !== "PARTIAL"}
                             onChange={(e) => update(r.userId, { amountPaid: Number(e.target.value) })}
-                            className="w-24 bg-gray-900 border border-gray-700 rounded px-2 py-1 disabled:opacity-40" />
+                            className="w-24 bg-black border border-white/20 rounded-none px-2 py-1 disabled:opacity-40 focus-visible:outline-none focus-visible:border-[#FF0000]" />
                         </td>
                         <td className="py-2 pr-3">
                           <input value={r.method} placeholder="CASH / UPI"
                             onChange={(e) => update(r.userId, { method: e.target.value })}
-                            className="w-24 bg-gray-900 border border-gray-700 rounded px-2 py-1" />
+                            className="w-24 bg-black border border-white/20 rounded-none px-2 py-1 focus-visible:outline-none focus-visible:border-[#FF0000]" />
                         </td>
                         <td className="py-2 pr-3 text-red-400 font-medium">
                           {summaryRow ? `₹${summaryRow.outstanding}` : "—"}
                         </td>
                         <td className="py-2 pr-3">
                           <button onClick={() => saveRow(r)} disabled={savingId === r.userId}
-                            className="bg-gray-700 hover:bg-gray-600 rounded px-3 py-1 disabled:opacity-50">
+                            className="min-h-[44px] rounded-none uppercase tracking-wider font-bold border border-white/20 hover:bg-white/10 text-white px-3 py-1 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                             {savingId === r.userId ? "…" : "Save"}
                           </button>
                         </td>
                       </tr>
                       {expandedId === r.userId && (
-                        <tr className="border-t border-gray-900 bg-white/[0.01]">
+                        <tr className="border-t border-white/10 bg-white/5">
                           <td colSpan={6} className="py-3 px-3">
                             {!led ? (
-                              <span className="text-xs text-gray-500">Loading ledger…</span>
+                              <span className="text-xs text-gray-400">Loading ledger…</span>
                             ) : (
                               <div className="grid grid-cols-6 gap-2">
                                 {led.months.map((m) => (
-                                  <div key={m.month} className="rounded border border-white/[0.06] p-2 text-center text-xs">
+                                  <div key={m.month} className="rounded-lg border border-white/10 p-2 text-center text-xs">
                                     <div className="font-semibold text-gray-300">{MONTHS_SHORT[m.month - 1]}</div>
                                     <div className="mt-1 text-gray-400">
                                       {m.status === "NOT_DUE" ? "—" : `₹${m.paid}/${m.expected}`}
                                     </div>
-                                    <div className="text-[10px] text-gray-500">{m.status === "NOT_DUE" ? "" : m.status}</div>
+                                    <div className="text-[10px] text-gray-400">{m.status === "NOT_DUE" ? "" : m.status}</div>
                                   </div>
                                 ))}
                               </div>

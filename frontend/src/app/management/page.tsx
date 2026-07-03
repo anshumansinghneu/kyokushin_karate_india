@@ -10,12 +10,12 @@ import { Shield, RefreshCw, AlertTriangle, BarChart, Users, Calendar, FileText }
 /* ---------- Skeleton Loader – mimics the real sidebar + content layout ---------- */
 function ManagementSkeleton({ message, showRetry, onRetry }: { message: string; showRetry?: boolean; onRetry?: () => void }) {
     return (
-        <div className="min-h-screen w-full bg-[#080808] flex overflow-hidden">
+        <div className="min-h-screen w-full bg-black flex overflow-hidden">
             {/* Fake sidebar */}
-            <div className="hidden lg:flex flex-col w-[260px] border-r border-white/[0.06] bg-[#0b0b0b] flex-shrink-0">
+            <div className="hidden lg:flex flex-col w-[260px] border-r border-white/[0.06] bg-white/[0.02] flex-shrink-0">
                 {/* Header */}
                 <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06]">
-                    <div className="w-9 h-9 rounded-xl bg-red-900/40 animate-pulse" />
+                    <div className="w-9 h-9 rounded-xl bg-[#FF0000]/20 animate-pulse" />
                     <div className="space-y-1.5 flex-1">
                         <div className="h-3 w-20 bg-white/[0.06] rounded animate-pulse" />
                         <div className="h-2 w-14 bg-white/[0.04] rounded animate-pulse" />
@@ -42,7 +42,7 @@ function ManagementSkeleton({ message, showRetry, onRetry }: { message: string; 
             {/* Fake main area */}
             <div className="flex-1 flex flex-col min-h-screen">
                 {/* Top bar skeleton */}
-                <div className="h-14 border-b border-white/[0.06] bg-[#080808]/80 flex items-center px-6 gap-3">
+                <div className="h-14 border-b border-white/[0.06] bg-black/80 flex items-center px-6 gap-3">
                     <div className="h-3 w-20 bg-white/[0.06] rounded animate-pulse" />
                     <div className="h-3 w-3 bg-white/[0.04] rounded animate-pulse" />
                     <div className="h-3 w-16 bg-white/[0.06] rounded animate-pulse" />
@@ -57,12 +57,12 @@ function ManagementSkeleton({ message, showRetry, onRetry }: { message: string; 
                                 <Shield className="w-6 h-6 text-red-500/60" />
                             </div>
                             {!showRetry && (
-                                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#080808] border border-white/[0.06] flex items-center justify-center">
+                                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-black border border-white/[0.06] flex items-center justify-center">
                                     <div className="w-2.5 h-2.5 border-2 border-red-500/60 border-t-transparent rounded-full animate-spin" />
                                 </div>
                             )}
                             {showRetry && (
-                                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#080808] border border-amber-500/20 flex items-center justify-center">
+                                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-black border border-amber-500/20 flex items-center justify-center">
                                     <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
                                 </div>
                             )}
@@ -71,14 +71,14 @@ function ManagementSkeleton({ message, showRetry, onRetry }: { message: string; 
                         <div>
                             <p className="text-[13px] font-medium text-gray-400">{message}</p>
                             {!showRetry && (
-                                <p className="text-[11px] text-gray-600 mt-1 font-mono">Authenticating session...</p>
+                                <p className="text-[11px] text-gray-400 mt-1 font-mono">Authenticating session...</p>
                             )}
                         </div>
 
                         {showRetry && onRetry && (
                             <button
                                 onClick={onRetry}
-                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-semibold hover:bg-gray-100 transition-colors"
+                                className="flex items-center gap-2 px-4 min-h-[44px] rounded-none bg-[#FF0000] text-white text-sm font-bold uppercase tracking-wider hover:bg-[#8B0000] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 <RefreshCw className="w-3.5 h-3.5" />
                                 Try Again
@@ -156,10 +156,10 @@ function ManagementContent() {
     if (!user) return null;
 
     return (
-        <div className="min-h-screen w-full bg-[#080808] text-white relative overflow-hidden">
+        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden">
             {/* Subtle ambient background */}
             <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-red-950/[0.08] rounded-full blur-[150px]" />
+                <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#FF0000]/[0.05] rounded-full blur-[150px]" />
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:64px_64px]" />
             </div>
 

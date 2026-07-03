@@ -90,21 +90,21 @@ export default function AttendancePage() {
       ? "text-green-400 hover:bg-green-500/10"
       : status === "ABSENT"
       ? "text-red-400 hover:bg-red-500/10"
-      : "text-gray-700 hover:bg-white/5";
+      : "text-gray-500 hover:bg-white/5";
 
   if (!user) return null;
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-full">
-        <h1 className="text-2xl font-bold mb-2">Attendance</h1>
+        <h1 className="text-2xl font-bold tracking-tight mb-2">Attendance</h1>
         <p className="text-gray-400 mb-4">Click a cell to cycle Present → Absent → clear. Changes save automatically.</p>
 
         <div className="flex flex-wrap items-center gap-3 mb-4">
-          <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="bg-gray-900 border border-gray-700 rounded px-3 py-2">
-            {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+          <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="bg-white/5 border border-white/20 rounded-none px-3 min-h-[44px] focus-visible:outline-none focus-visible:border-[#FF0000]">
+            {MONTHS.map((m, i) => <option key={i} value={i + 1} className="bg-black">{m}</option>)}
           </select>
-          <input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} className="bg-gray-900 border border-gray-700 rounded px-3 py-2 w-28" />
+          <input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} className="bg-white/5 border border-white/20 rounded-none px-3 min-h-[44px] w-28 focus-visible:outline-none focus-visible:border-[#FF0000]" />
         </div>
 
         {message && <p className="mb-3 text-sm text-amber-400">{message}</p>}
@@ -112,7 +112,7 @@ export default function AttendancePage() {
         {loading ? (
           <div className="flex items-center gap-2 text-gray-400"><Loader2 className="animate-spin" size={18} /> Loading…</div>
         ) : rows.length === 0 ? (
-          <p className="text-gray-500">No students found for this dojo.</p>
+          <p className="text-gray-400">No students found for this dojo.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="text-sm border-collapse">
@@ -128,7 +128,7 @@ export default function AttendancePage() {
                   <tr key={r.userId} className="border-t border-gray-800">
                     <td className="sticky left-0 bg-black py-2 pr-3 whitespace-nowrap">
                       <div>{r.name}</div>
-                      <div className="text-xs text-gray-500">{r.membershipNumber || ""}</div>
+                      <div className="text-xs text-gray-400">{r.membershipNumber || ""}</div>
                     </td>
                     {dayList.map((d) => {
                       const status = r.days[String(d)];
