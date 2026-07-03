@@ -193,10 +193,10 @@ export default function PublicTournamentViewer() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-black to-red-950/20 flex items-center justify-center">
+            <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-white/60">Loading tournament...</p>
+                    <p className="text-gray-300">Loading tournament...</p>
                 </div>
             </div>
         );
@@ -204,18 +204,18 @@ export default function PublicTournamentViewer() {
 
     if (!tournament) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-black to-red-950/20 flex items-center justify-center">
+            <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center text-white">
                     <Trophy className="w-16 h-16 mx-auto mb-4 text-red-500" />
                     <h1 className="text-2xl font-bold mb-2">Tournament Not Found</h1>
-                    <p className="text-white/60">The tournament you&apos;re looking for doesn&apos;t exist.</p>
+                    <p className="text-gray-300">The tournament you&apos;re looking for doesn&apos;t exist.</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-black to-red-950/20 text-white">
+        <div className="min-h-screen bg-black text-white">
             {/* Header */}
             <div className="border-b border-white/10 bg-black/40 backdrop-blur-md sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 py-4">
@@ -309,10 +309,10 @@ export default function PublicTournamentViewer() {
                                         <button
                                             key={bracket.id}
                                             onClick={() => setSelectedBracket(bracket)}
-                                            className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                                            className={`px-4 py-2 min-h-[44px] rounded-none uppercase tracking-wider font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
                                                 selectedBracket?.id === bracket.id
-                                                    ? 'bg-red-600 text-white'
-                                                    : 'bg-white/5 text-white/60 hover:bg-white/10'
+                                                    ? 'bg-[#FF0000] hover:bg-[#8B0000] text-white'
+                                                    : 'border border-white/20 text-gray-300 hover:bg-white/10'
                                             }`}
                                         >
                                             {bracket.categoryName}
@@ -324,7 +324,7 @@ export default function PublicTournamentViewer() {
 
                         {/* Bracket Display */}
                         {selectedBracket && (
-                            <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-2xl font-bold">{selectedBracket.categoryName}</h2>
                                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
@@ -409,7 +409,7 @@ export default function PublicTournamentViewer() {
                                                                                 )}
                                                                             </>
                                                                         ) : (
-                                                                            <span className="text-gray-500 italic">TBD</span>
+                                                                            <span className="text-gray-400 italic">TBD</span>
                                                                         )}
                                                                     </div>
                                                                     {match.fighterAScore !== null && (
@@ -445,7 +445,7 @@ export default function PublicTournamentViewer() {
                                                                                 )}
                                                                             </>
                                                                         ) : (
-                                                                            <span className="text-gray-500 italic">TBD</span>
+                                                                            <span className="text-gray-400 italic">TBD</span>
                                                                         )}
                                                                     </div>
                                                                     {match.fighterBScore !== null && (

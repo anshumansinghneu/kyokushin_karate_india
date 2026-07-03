@@ -184,10 +184,10 @@ export default function TournamentResultsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-black to-yellow-950/20 flex items-center justify-center">
+            <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-white/60">Loading results...</p>
+                    <p className="text-gray-300">Loading results...</p>
                 </div>
             </div>
         );
@@ -195,11 +195,11 @@ export default function TournamentResultsPage() {
 
     if (!statistics) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-black to-yellow-950/20 flex items-center justify-center">
+            <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center text-white">
                     <Trophy className="w-16 h-16 mx-auto mb-4 text-yellow-500" />
                     <h1 className="text-2xl font-bold mb-2">Results Not Available</h1>
-                    <p className="text-white/60">Tournament results will be published after completion.</p>
+                    <p className="text-gray-300">Tournament results will be published after completion.</p>
                 </div>
             </div>
         );
@@ -208,7 +208,7 @@ export default function TournamentResultsPage() {
     const topThreeDojos = statistics.dojoLeaderboard.slice(0, 3);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-black to-yellow-950/20 text-white">
+        <div className="min-h-screen bg-black text-white">
             {/* Header */}
             <div className="border-b border-white/10 bg-black/40 backdrop-blur-md sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 py-4">
@@ -255,7 +255,7 @@ export default function TournamentResultsPage() {
                             <Button
                                 onClick={handleDownloadAllCertificates}
                                 size="sm"
-                                className="hidden md:flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700"
+                                className="hidden md:flex items-center gap-2 rounded-none uppercase tracking-wider font-bold bg-[#FF0000] hover:bg-[#8B0000] text-white focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 <Download className="w-4 h-4" />
                                 Download All Certificates
@@ -275,7 +275,7 @@ export default function TournamentResultsPage() {
                     >
                         <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
                         <div className="text-2xl font-bold">{statistics.tournament.totalCategories}</div>
-                        <div className="text-sm text-white/60">Categories</div>
+                        <div className="text-sm text-gray-300">Categories</div>
                     </motion.div>
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -283,9 +283,9 @@ export default function TournamentResultsPage() {
                         transition={{ delay: 0.1 }}
                         className="bg-black/40 border border-white/10 rounded-xl p-4 text-center"
                     >
-                        <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                        <Users className="w-8 h-8 text-white/70 mx-auto mb-2" />
                         <div className="text-2xl font-bold">{statistics.tournament.totalParticipants}</div>
-                        <div className="text-sm text-white/60">Participants</div>
+                        <div className="text-sm text-gray-300">Participants</div>
                     </motion.div>
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -293,9 +293,9 @@ export default function TournamentResultsPage() {
                         transition={{ delay: 0.2 }}
                         className="bg-black/40 border border-white/10 rounded-xl p-4 text-center"
                     >
-                        <Target className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                        <Target className="w-8 h-8 text-white/70 mx-auto mb-2" />
                         <div className="text-2xl font-bold">{statistics.tournament.completedMatches}</div>
-                        <div className="text-sm text-white/60">Matches Completed</div>
+                        <div className="text-sm text-gray-300">Matches Completed</div>
                     </motion.div>
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -303,9 +303,9 @@ export default function TournamentResultsPage() {
                         transition={{ delay: 0.3 }}
                         className="bg-black/40 border border-white/10 rounded-xl p-4 text-center"
                     >
-                        <Award className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+                        <Award className="w-8 h-8 text-white/70 mx-auto mb-2" />
                         <div className="text-2xl font-bold">{statistics.dojoLeaderboard.length}</div>
-                        <div className="text-sm text-white/60">Dojos</div>
+                        <div className="text-sm text-gray-300">Dojos</div>
                     </motion.div>
                 </div>
 
@@ -395,17 +395,17 @@ export default function TournamentResultsPage() {
                             <motion.div
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className="bg-black/40 border border-blue-500/30 rounded-xl p-6"
+                                className="bg-white/5 border border-white/10 rounded-xl p-6"
                             >
                                 <div className="flex items-center gap-3 mb-4">
-                                    <Zap className="w-8 h-8 text-blue-500" />
+                                    <Zap className="w-8 h-8 text-white/70" />
                                     <h3 className="font-bold">Fastest Win</h3>
                                 </div>
-                                <div className="text-3xl font-black text-blue-500 mb-2">
+                                <div className="text-3xl font-black text-white mb-2">
                                     {statistics.performanceStats.fastestWin.duration} min
                                 </div>
                                 <div className="text-white/80">{statistics.performanceStats.fastestWin.winner.name}</div>
-                                <div className="text-sm text-white/50">{statistics.performanceStats.fastestWin.winner.dojoName}</div>
+                                <div className="text-sm text-gray-300">{statistics.performanceStats.fastestWin.winner.dojoName}</div>
                             </motion.div>
                         )}
 
@@ -414,17 +414,17 @@ export default function TournamentResultsPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
-                                className="bg-black/40 border border-green-500/30 rounded-xl p-6"
+                                className="bg-white/5 border border-white/10 rounded-xl p-6"
                             >
                                 <div className="flex items-center gap-3 mb-4">
-                                    <TrendingUp className="w-8 h-8 text-green-500" />
+                                    <TrendingUp className="w-8 h-8 text-white/70" />
                                     <h3 className="font-bold">Highest Score</h3>
                                 </div>
-                                <div className="text-3xl font-black text-green-500 mb-2">
+                                <div className="text-3xl font-black text-white mb-2">
                                     {statistics.performanceStats.highestScore.score} points
                                 </div>
                                 <div className="text-white/80">{statistics.performanceStats.highestScore.winner.name}</div>
-                                <div className="text-sm text-white/50">{statistics.performanceStats.highestScore.winner.dojoName}</div>
+                                <div className="text-sm text-gray-300">{statistics.performanceStats.highestScore.winner.dojoName}</div>
                             </motion.div>
                         )}
 
@@ -433,24 +433,24 @@ export default function TournamentResultsPage() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.2 }}
-                                className="bg-black/40 border border-red-500/30 rounded-xl p-6"
+                                className="bg-white/5 border border-[#FF0000]/30 rounded-xl p-6"
                             >
                                 <div className="flex items-center gap-3 mb-4">
-                                    <Target className="w-8 h-8 text-red-500" />
+                                    <Target className="w-8 h-8 text-[#FF0000]" />
                                     <h3 className="font-bold">Most Dominant</h3>
                                 </div>
-                                <div className="text-3xl font-black text-red-500 mb-2">
+                                <div className="text-3xl font-black text-[#FF4D4D] mb-2">
                                     {statistics.performanceStats.mostDominant.finalScore}
                                 </div>
                                 <div className="text-white/80">{statistics.performanceStats.mostDominant.winner.name}</div>
-                                <div className="text-sm text-white/50">{statistics.performanceStats.mostDominant.winner.dojoName}</div>
+                                <div className="text-sm text-gray-300">{statistics.performanceStats.mostDominant.winner.dojoName}</div>
                             </motion.div>
                         )}
                     </div>
                 )}
 
                 {/* Category Winners */}
-                <div className="bg-black/40 border border-white/10 rounded-2xl p-6">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                     <h2 className="text-2xl font-black uppercase tracking-tight mb-6 flex items-center gap-2">
                         <Trophy className="w-6 h-6 text-yellow-500" />
                         Category Champions
@@ -531,9 +531,9 @@ export default function TournamentResultsPage() {
                 </div>
 
                 {/* Full Dojo Leaderboard */}
-                <div className="bg-black/40 border border-white/10 rounded-2xl p-6">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                     <h2 className="text-2xl font-black uppercase tracking-tight mb-6 flex items-center gap-2">
-                        <Award className="w-6 h-6 text-purple-500" />
+                        <Award className="w-6 h-6 text-yellow-500" />
                         Dojo Medal Standings
                     </h2>
 
@@ -541,12 +541,12 @@ export default function TournamentResultsPage() {
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-white/10">
-                                    <th className="text-left py-3 px-4 text-white/60 font-semibold">Rank</th>
-                                    <th className="text-left py-3 px-4 text-white/60 font-semibold">Dojo</th>
-                                    <th className="text-center py-3 px-4 text-white/60 font-semibold">🥇</th>
-                                    <th className="text-center py-3 px-4 text-white/60 font-semibold">🥈</th>
-                                    <th className="text-center py-3 px-4 text-white/60 font-semibold">🥉</th>
-                                    <th className="text-center py-3 px-4 text-white/60 font-semibold">Total</th>
+                                    <th className="text-left py-3 px-4 text-gray-300 font-semibold">Rank</th>
+                                    <th className="text-left py-3 px-4 text-gray-300 font-semibold">Dojo</th>
+                                    <th className="text-center py-3 px-4 text-gray-300 font-semibold">🥇</th>
+                                    <th className="text-center py-3 px-4 text-gray-300 font-semibold">🥈</th>
+                                    <th className="text-center py-3 px-4 text-gray-300 font-semibold">🥉</th>
+                                    <th className="text-center py-3 px-4 text-gray-300 font-semibold">Total</th>
                                 </tr>
                             </thead>
                             <tbody>

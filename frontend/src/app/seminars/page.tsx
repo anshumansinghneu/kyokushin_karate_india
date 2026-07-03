@@ -510,7 +510,7 @@ function SeminarSection({
                                     <span className={`text-xs font-bold px-3 py-1 rounded-full ${accentClasses.badge} border uppercase tracking-wider`}>
                                         {seminar.highlight}
                                     </span>
-                                    <span className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
+                                    <span className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
                                         <Camera size={12} />
                                         {seminar.images.length} Photos
                                     </span>
@@ -607,7 +607,7 @@ function DBSeminarSection({ seminar, index }: { seminar: any; index: number }) {
                                     <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-400 uppercase tracking-wider">
                                         Seminar
                                     </span>
-                                    <span className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
+                                    <span className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
                                         <Camera size={12} />
                                         {images.length} Photos
                                     </span>
@@ -711,9 +711,8 @@ export default function SeminarsPage() {
             <section className="relative pt-28 pb-20 overflow-hidden">
                 {/* Background */}
                 <div className="absolute inset-0">
-                    <div className="absolute inset-0 bg-gradient-to-b from-red-950/20 via-black to-black" />
+                    <div className="absolute inset-0 bg-black" />
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-red-600/5 rounded-full blur-[120px]" />
-                    <div className="absolute top-40 right-0 w-[400px] h-[400px] bg-blue-600/5 rounded-full blur-[100px]" />
                 </div>
 
                 <div className="container-responsive relative z-10">
@@ -740,7 +739,7 @@ export default function SeminarsPage() {
                                 }}
                             >SEMINARS</span>
                         </h1>
-                        <p className="text-zinc-500 text-sm max-w-lg mx-auto leading-relaxed">
+                        <p className="text-gray-400 text-sm max-w-lg mx-auto leading-relaxed">
                             Practical self-defense training for schools, corporates, and communities across India.
                         </p>
                     </motion.div>
@@ -791,7 +790,7 @@ export default function SeminarsPage() {
                                     <div className="text-3xl md:text-4xl font-black text-white">
                                         {stat.value}
                                     </div>
-                                    <div className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wider">
+                                    <div className="text-xs text-gray-400 mt-1 font-medium uppercase tracking-wider">
                                         {stat.label}
                                     </div>
                                 </div>
@@ -872,7 +871,7 @@ export default function SeminarsPage() {
                         </div>
                     ) : (
                         <div className="text-center py-10">
-                            <p className="text-sm text-zinc-600">No upcoming seminars scheduled</p>
+                            <p className="text-sm text-gray-400">No upcoming seminars scheduled</p>
                         </div>
                     )}
                 </div>
@@ -888,26 +887,21 @@ export default function SeminarsPage() {
                         <img src="/kkfi-logo.png" alt="KKFI" className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.15)] mx-auto mb-5 opacity-60" />
 
                         <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-3 leading-tight">
-                            Want a seminar at your <span style={{
-                                background: 'linear-gradient(180deg, #ef4444, #991b1b)',
-                                WebkitBackgroundClip: 'text',
-                                backgroundClip: 'text',
-                                color: 'transparent',
-                            }}>organization?</span>
+                            Want a seminar at your <span className="text-[#FF0000]">organization?</span>
                         </h2>
-                        <p className="text-sm text-zinc-500 max-w-md mx-auto leading-relaxed mb-8">
+                        <p className="text-sm text-gray-400 max-w-md mx-auto leading-relaxed mb-8">
                             KKFI conducts self-defense workshops for schools, colleges, corporates, and community groups.
                         </p>
                         <div className="flex flex-wrap gap-3 justify-center">
                             <a
                                 href="mailto:info@kyokushinfoundation.com"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors"
+                                className="inline-flex items-center gap-2 px-6 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none text-xs font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 <Mail size={14} /> Get In Touch
                             </a>
                             <a
                                 href="tel:+919956745114"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-white/[0.04] border border-white/[0.08] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/[0.08] transition-colors"
+                                className="inline-flex items-center gap-2 px-6 min-h-[44px] bg-transparent border border-white/20 text-white rounded-none text-xs font-bold uppercase tracking-wider hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 <Phone size={14} /> +91-9956745114
                             </a>

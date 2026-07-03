@@ -59,7 +59,7 @@ export default function ResultDetailPage({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <main className="flex min-h-dvh items-center justify-center bg-[#080808]">
+      <main className="flex min-h-dvh items-center justify-center bg-black">
         <Loader2 className="h-7 w-7 animate-spin text-red-500" />
       </main>
     );
@@ -67,7 +67,7 @@ export default function ResultDetailPage({ params }: { params: Promise<{ id: str
 
   if (notFound || !result) {
     return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-[#080808] px-6 text-center text-white">
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-black px-6 text-center text-white">
         <KkfiCrest size={84} />
         <div>
           <p className="text-lg font-semibold">Result not found</p>
@@ -86,10 +86,9 @@ export default function ResultDetailPage({ params }: { params: Promise<{ id: str
   const pdfHref = getImageUrl(result.pdfUrl) || result.pdfUrl;
 
   return (
-    <main className="relative min-h-dvh overflow-hidden bg-[#080808] text-white">
+    <main className="relative min-h-dvh overflow-hidden bg-black text-white">
       {/* Ambient lighting */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[380px] bg-[radial-gradient(55%_100%_at_50%_0%,rgba(220,38,38,0.15),transparent_72%)]" />
-      <div className="pointer-events-none absolute inset-0 -z-20 bg-[linear-gradient(to_bottom,#0c0c0c,#080808_35%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[380px] bg-[radial-gradient(55%_100%_at_50%_0%,rgba(255,0,0,0.12),transparent_72%)]" />
 
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-8">
         <Link
@@ -129,7 +128,7 @@ export default function ResultDetailPage({ params }: { params: Promise<{ id: str
             href={pdfHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="group mt-7 inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-red-500 to-red-600 px-6 py-2.5 text-sm font-semibold text-white shadow-[0_10px_30px_-10px_rgba(220,38,38,0.7)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_-12px_rgba(220,38,38,0.8)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+            className="group mt-7 inline-flex min-h-[44px] items-center gap-2 rounded-none bg-[#FF0000] px-6 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition-colors duration-300 hover:bg-[#8B0000] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
             <Download className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
             Download PDF
@@ -141,17 +140,17 @@ export default function ResultDetailPage({ params }: { params: Promise<{ id: str
           initial={reduce ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.1, ease: "easeOut" }}
-          className="relative mt-10 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-xl sm:p-5"
+          className="relative mt-10 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-xl sm:p-5"
         >
           <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-500/70 to-transparent" />
-          <div className="mb-3 flex items-center gap-2 px-1 text-xs text-gray-500">
+          <div className="mb-3 flex items-center gap-2 px-1 text-xs text-gray-400">
             <ScrollText className="h-3.5 w-3.5 text-red-400/70" />
             Certified result sheet
           </div>
           <ResultPdfViewer url={pdfHref} />
         </motion.div>
 
-        <p className="mt-8 text-center text-xs text-gray-600">
+        <p className="mt-8 text-center text-xs text-gray-400">
           Kyokushin Karate Foundation of India · Osu no Seishin
         </p>
       </div>

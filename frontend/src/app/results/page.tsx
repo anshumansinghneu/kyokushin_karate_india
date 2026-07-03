@@ -36,10 +36,9 @@ export default function ResultsPage() {
   }, []);
 
   return (
-    <main className="relative min-h-dvh overflow-hidden bg-[#080808] text-white">
+    <main className="relative min-h-dvh overflow-hidden bg-black text-white">
       {/* Ambient lighting */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[460px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(220,38,38,0.16),transparent_72%)]" />
-      <div className="pointer-events-none absolute inset-0 -z-20 bg-[linear-gradient(to_bottom,#0c0c0c,#080808_40%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[460px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(255,0,0,0.12),transparent_72%)]" />
 
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8 sm:py-24">
         {/* Hero */}
@@ -80,14 +79,14 @@ export default function ResultsPage() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-44 animate-pulse rounded-3xl border border-white/[0.06] bg-white/[0.02]"
+                  className="h-44 animate-pulse rounded-xl border border-white/10 bg-white/5"
                   style={{ animationDelay: `${i * 90}ms` }}
                 />
               ))}
             </div>
           ) : results.length === 0 ? (
-            <div className="mx-auto flex max-w-md flex-col items-center rounded-3xl border border-white/10 bg-white/[0.02] px-8 py-16 text-center backdrop-blur-xl">
-              <div className="rounded-2xl border border-red-500/20 bg-red-950/30 p-4">
+            <div className="mx-auto flex max-w-md flex-col items-center rounded-xl border border-white/10 bg-white/5 px-8 py-16 text-center">
+              <div className="rounded-xl border border-red-500/20 bg-red-950/30 p-4">
                 <ScrollText className="h-7 w-7 text-red-400" />
               </div>
               <p className="mt-5 text-lg font-semibold text-white">No results published yet</p>
@@ -107,7 +106,7 @@ export default function ResultsPage() {
                 >
                   <Link
                     href={`/results/${r.id}`}
-                    className="group relative flex h-full min-h-[176px] flex-col gap-4 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-red-500/40 hover:bg-white/[0.05] hover:shadow-[0_20px_50px_-20px_rgba(220,38,38,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
+                    className="group relative flex h-full min-h-[176px] flex-col gap-4 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-red-500/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                   >
                     {/* top accent */}
                     <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-500/70 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -122,10 +121,10 @@ export default function ResultsPage() {
                     />
 
                     <div className="flex items-start justify-between gap-3">
-                      <div className="rounded-2xl border border-red-500/20 bg-red-950/30 p-3">
+                      <div className="rounded-xl border border-red-500/20 bg-red-950/30 p-3">
                         <Award className="h-5 w-5 text-red-400" />
                       </div>
-                      <ArrowUpRight className="h-5 w-5 text-gray-600 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-red-400" />
+                      <ArrowUpRight className="h-5 w-5 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-red-400" />
                     </div>
 
                     <h2 className="text-lg font-bold leading-snug text-white transition-colors group-hover:text-red-50">

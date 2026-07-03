@@ -133,7 +133,7 @@ export default function CalendarPage() {
     }, [firstDay, daysInMonth]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white">
+        <div className="min-h-screen bg-black text-white">
             <div className="max-w-6xl mx-auto px-4 pt-28 pb-16">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                     {/* Header */}
@@ -150,16 +150,16 @@ export default function CalendarPage() {
 
                         <div className="flex items-center gap-2">
                             {/* View toggle */}
-                            <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
+                            <div className="flex bg-white/5 rounded-none p-1 border border-white/10">
                                 <button
                                     onClick={() => setViewMode('calendar')}
-                                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'calendar' ? 'bg-red-500 text-white' : 'text-gray-400'}`}
+                                    className={`px-3 min-h-[44px] text-xs font-bold uppercase tracking-wider rounded-none transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${viewMode === 'calendar' ? 'bg-[#FF0000] hover:bg-[#8B0000] text-white' : 'text-gray-400 hover:bg-white/10'}`}
                                 >
                                     Calendar
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'list' ? 'bg-red-500 text-white' : 'text-gray-400'}`}
+                                    className={`px-3 min-h-[44px] text-xs font-bold uppercase tracking-wider rounded-none transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${viewMode === 'list' ? 'bg-[#FF0000] hover:bg-[#8B0000] text-white' : 'text-gray-400 hover:bg-white/10'}`}
                                 >
                                     List
                                 </button>
@@ -184,7 +184,7 @@ export default function CalendarPage() {
                         <div className="text-center py-20">
                             <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
                             <p className="text-gray-400 text-lg mb-4">Failed to load events</p>
-                            <button onClick={fetchEvents} className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-all">
+                            <button onClick={fetchEvents} className="inline-flex items-center gap-2 px-5 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none text-sm font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                                 <RefreshCw className="w-4 h-4" /> Try Again
                             </button>
                         </div>
@@ -211,7 +211,7 @@ export default function CalendarPage() {
                                 {/* Day Headers */}
                                 <div className="grid grid-cols-7 gap-1 mb-2">
                                     {DAYS.map(day => (
-                                        <div key={day} className="text-center text-xs font-bold text-gray-500 py-2">
+                                        <div key={day} className="text-center text-xs font-bold text-gray-400 py-2">
                                             {day}
                                         </div>
                                     ))}
@@ -250,7 +250,7 @@ export default function CalendarPage() {
                                                             />
                                                         ))}
                                                         {dayEvents.length > 3 && (
-                                                            <span className="text-[8px] text-gray-500">+{dayEvents.length - 3}</span>
+                                                            <span className="text-[8px] text-gray-400">+{dayEvents.length - 3}</span>
                                                         )}
                                                     </div>
                                                 )}
@@ -294,7 +294,7 @@ export default function CalendarPage() {
                                                                     <MapPin className="w-3 h-3" /> {event.location}
                                                                 </p>
                                                             )}
-                                                            <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                                            <p className="text-xs text-gray-300 flex items-center gap-1 mt-1">
                                                                 <Clock className="w-3 h-3" />
                                                                 {new Date(event.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                                                 {event.startDate !== event.endDate && ` - ${new Date(event.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`}
@@ -308,12 +308,12 @@ export default function CalendarPage() {
                                         <motion.p
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
-                                            className="text-gray-500 text-sm text-center py-8"
+                                            className="text-gray-400 text-sm text-center py-8"
                                         >
                                             No events on this day
                                         </motion.p>
                                     ) : (
-                                        <p className="text-gray-500 text-sm text-center py-8">
+                                        <p className="text-gray-400 text-sm text-center py-8">
                                             Click a date to see events
                                         </p>
                                     )}
@@ -325,8 +325,8 @@ export default function CalendarPage() {
                         <div className="space-y-4">
                             {upcomingEvents.length === 0 ? (
                                 <div className="text-center py-20">
-                                    <CalendarIcon className="w-12 h-12 mx-auto text-gray-600 mb-4" />
-                                    <p className="text-gray-500 text-lg">No upcoming events</p>
+                                    <CalendarIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                                    <p className="text-gray-300 text-lg">No upcoming events</p>
                                 </div>
                             ) : (
                                 upcomingEvents.map((event, i) => {
@@ -372,7 +372,7 @@ export default function CalendarPage() {
 
                                                     <div className="text-right flex-shrink-0">
                                                         <p className="text-sm font-bold text-white">₹{event.memberFee}</p>
-                                                        <p className="text-xs text-gray-500">Member Fee</p>
+                                                        <p className="text-xs text-gray-400">Member Fee</p>
                                                     </div>
                                                 </div>
                                             </Link>

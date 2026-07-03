@@ -175,7 +175,7 @@ export default function EventDetailPage() {
     const categories = Array.isArray(event.categories) ? event.categories : [];
 
     return (
-        <div className="min-h-screen w-full bg-[#050505] text-white relative">
+        <div className="min-h-screen w-full bg-black text-white relative">
             {/* Hero */}
             <div className="relative min-h-[380px] w-full">
                 <div className="absolute inset-0">
@@ -189,7 +189,7 @@ export default function EventDetailPage() {
                             }}
                         />
                     ) : null}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-black/40" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/40" />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
                 </div>
 
@@ -201,7 +201,7 @@ export default function EventDetailPage() {
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                         {/* Badges */}
                         <div className="flex flex-wrap items-center gap-2 mb-4">
-                            <span className="px-2.5 py-1 rounded bg-red-600 text-white text-[8px] font-extrabold uppercase tracking-[2px]">
+                            <span className="px-2.5 py-1 rounded bg-primary text-white text-[8px] font-extrabold uppercase tracking-[2px]">
                                 {event.type.replace('_', ' ')}
                             </span>
                             {event.status && (
@@ -221,16 +221,16 @@ export default function EventDetailPage() {
                         {/* Meta row */}
                         <div className="flex flex-wrap items-center gap-4 text-[12px] text-zinc-400">
                             <span className="flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5 text-red-500" />
+                                <Calendar className="w-3.5 h-3.5 text-primary" />
                                 {new Date(event.startDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
                             </span>
                             <span className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-red-500" />
+                                <Clock className="w-3.5 h-3.5 text-primary" />
                                 {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                             {(event.location || event.dojo?.city) && (
                                 <span className="flex items-center gap-1.5">
-                                    <MapPin className="w-3.5 h-3.5 text-red-500" />
+                                    <MapPin className="w-3.5 h-3.5 text-primary" />
                                     {event.location || event.dojo?.city}
                                 </span>
                             )}
@@ -249,7 +249,7 @@ export default function EventDetailPage() {
                         viewport={{ once: true }}
                     >
                         <h2 className="text-lg font-black uppercase tracking-tight mb-5 flex items-center gap-3">
-                            <div className="w-[3px] h-5 rounded-full bg-red-600" />
+                            <div className="w-[3px] h-5 rounded-full bg-primary" />
                             Event Overview
                         </h2>
                         <p className="text-gray-400 text-lg leading-relaxed">
@@ -264,7 +264,7 @@ export default function EventDetailPage() {
                         viewport={{ once: true }}
                     >
                         <h2 className="text-lg font-black uppercase tracking-tight mb-5 flex items-center gap-3">
-                            <div className="w-[3px] h-5 rounded-full bg-red-600" />
+                            <div className="w-[3px] h-5 rounded-full bg-primary" />
                             Categories
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -289,7 +289,7 @@ export default function EventDetailPage() {
                         viewport={{ once: true }}
                     >
                         <h2 className="text-lg font-black uppercase tracking-tight mb-5 flex items-center gap-3">
-                            <div className="w-[3px] h-5 rounded-full bg-red-600" />
+                            <div className="w-[3px] h-5 rounded-full bg-primary" />
                             Event Schedule
                         </h2>
                         <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-white/10">
@@ -343,7 +343,7 @@ export default function EventDetailPage() {
                                         </div>
                                         <button
                                             onClick={() => { setFeedbackText(myFeedback.feedback); setIsEditingFeedback(true); setShowFeedbackForm(true); }}
-                                            className="text-xs text-gray-500 hover:text-white transition-colors"
+                                            className="text-xs text-gray-400 hover:text-white transition-colors"
                                         >
                                             Edit
                                         </button>
@@ -358,12 +358,12 @@ export default function EventDetailPage() {
                                         value={feedbackText}
                                         onChange={(e) => setFeedbackText(e.target.value)}
                                         placeholder="Share your experience... (min 10 characters)"
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-gray-500 focus:border-primary focus:outline-none resize-none"
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-gray-400 focus:border-primary focus:outline-none resize-none"
                                         rows={4}
                                         maxLength={2000}
                                     />
                                     <div className="flex justify-between items-center mt-2">
-                                        <span className="text-xs text-gray-500">{feedbackText.length}/2000</span>
+                                        <span className="text-xs text-gray-400">{feedbackText.length}/2000</span>
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => { setShowFeedbackForm(false); setIsEditingFeedback(false); setFeedbackText(''); }}
@@ -404,7 +404,7 @@ export default function EventDetailPage() {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-medium text-white">{fb.user?.name}</p>
-                                                    <p className="text-xs text-gray-500">{fb.user?.currentBeltRank?.replace('_', ' ')} &bull; {new Date(fb.createdAt).toLocaleDateString()}</p>
+                                                    <p className="text-xs text-gray-400">{fb.user?.currentBeltRank?.replace('_', ' ')} &bull; {new Date(fb.createdAt).toLocaleDateString()}</p>
                                                 </div>
                                             </div>
                                             <p className="text-gray-300 text-sm">{fb.feedback}</p>
@@ -413,7 +413,7 @@ export default function EventDetailPage() {
                                 </div>
                             ) : (
                                 !showFeedbackForm && (
-                                    <p className="text-zinc-600 text-sm">No feedback yet.</p>
+                                    <p className="text-gray-400 text-sm">No feedback yet.</p>
                                 )
                             )}
                         </motion.section>
@@ -426,12 +426,12 @@ export default function EventDetailPage() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6 sticky top-24"
+                        className="rounded-xl border border-white/10 bg-white/5 p-5 sm:p-6 sticky top-24"
                     >
                         {!isRegistering ? (
                             <>
                                 <div className="mb-5">
-                                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1">Registration Fee</p>
+                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Registration Fee</p>
                                     <p className="text-3xl font-black text-white">₹{event.memberFee}</p>
                                 </div>
 
@@ -446,10 +446,10 @@ export default function EventDetailPage() {
                                     </div>
                                 </div>
 
-                                <Button onClick={handleRegister} className="w-full h-12 text-xs font-bold uppercase tracking-wider bg-white text-black hover:bg-zinc-200 rounded-xl">
+                                <Button onClick={handleRegister} className="w-full h-12 text-xs font-bold uppercase tracking-wider bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                                     Register Now
                                 </Button>
-                                <p className="text-center text-xs text-gray-500 mt-4">
+                                <p className="text-center text-xs text-gray-400 mt-4">
                                     Registration closes on {new Date(event.registrationDeadline).toLocaleDateString()}
                                 </p>
                             </>
@@ -492,7 +492,7 @@ export default function EventDetailPage() {
                                                             }`}
                                                         >
                                                             <span className="font-bold text-sm">{cat.name}</span>
-                                                            <div className="flex gap-3 mt-1 text-xs text-gray-500">
+                                                            <div className="flex gap-3 mt-1 text-xs text-gray-400">
                                                                 {cat.age && <span>Age: {cat.age}</span>}
                                                                 {cat.weight && <span>Weight: {cat.weight}</span>}
                                                             </div>
@@ -545,7 +545,7 @@ export default function EventDetailPage() {
                                         {event.memberFee > 0 ? (
                                             <div className="mb-6 space-y-3">
                                                 <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Cash Voucher Code *</label>
-                                                <p className="text-xs text-zinc-500">Enter the voucher code provided by your instructor</p>
+                                                <p className="text-xs text-gray-400">Enter the voucher code provided by your instructor</p>
                                                 <div className="flex gap-2">
                                                     <input
                                                         placeholder="e.g. KKFI-XXXX-XXXX"
@@ -556,7 +556,7 @@ export default function EventDetailPage() {
                                                             setVoucherValid(null);
                                                         }}
                                                         disabled={!!voucherValid}
-                                                        className="flex-1 bg-zinc-950/50 border border-white/10 focus:border-green-500 h-10 rounded-lg text-white placeholder:text-zinc-600 font-mono tracking-wider px-3 text-sm outline-none"
+                                                        className="flex-1 bg-white/5 border border-white/10 focus:border-green-500 h-10 rounded-lg text-white placeholder:text-gray-400 font-mono tracking-wider px-3 text-sm outline-none"
                                                     />
                                                     {voucherValid ? (
                                                         <button

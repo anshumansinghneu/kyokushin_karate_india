@@ -73,17 +73,17 @@ export default function TournamentBracketPage() {
                     </div>
 
                     {/* Tabs */}
-                    <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+                    <div className="flex bg-zinc-900 p-1 rounded-none border border-zinc-800">
                         <button
                             onClick={() => setActiveTab('brackets')}
-                            className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'brackets' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                            className={`px-4 py-2 rounded-none uppercase tracking-wider text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${activeTab === 'brackets' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'
                                 }`}
                         >
                             Brackets
                         </button>
                         <button
                             onClick={() => setActiveTab('live')}
-                            className={`px-4 py-2 rounded-md text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'live' ? 'bg-red-900/20 text-red-500 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                            className={`px-4 py-2 rounded-none uppercase tracking-wider text-sm font-bold transition-all flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${activeTab === 'live' ? 'bg-red-900/20 text-red-500' : 'text-zinc-500 hover:text-zinc-300'
                                 }`}
                         >
                             <Activity className="w-3 h-3" />
@@ -92,7 +92,7 @@ export default function TournamentBracketPage() {
                         {isAdmin && (
                             <button
                                 onClick={() => setActiveTab('admin')}
-                                className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'admin' ? 'bg-yellow-500/20 text-yellow-500 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                                className={`px-4 py-2 rounded-none uppercase tracking-wider text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${activeTab === 'admin' ? 'bg-yellow-500/20 text-yellow-500' : 'text-zinc-500 hover:text-zinc-300'
                                     }`}
                             >
                                 Admin Controls
@@ -115,7 +115,7 @@ export default function TournamentBracketPage() {
                                     {selectedMatchId ? (
                                         <LiveMatchControl matchId={selectedMatchId} onMatchUpdated={fetchData} />
                                     ) : (
-                                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-12 text-center text-zinc-500">
+                                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-12 text-center text-gray-400">
                                             <Trophy className="w-12 h-12 mx-auto mb-4 opacity-20" />
                                             <p>Select a match from the bracket to manage it.</p>
                                         </div>
@@ -128,9 +128,9 @@ export default function TournamentBracketPage() {
                     {activeTab === 'brackets' && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                             {!hasBrackets ? (
-                                <div className="text-center py-24 text-zinc-500">
+                                <div className="text-center py-24 text-gray-400">
                                     <Trophy className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                                    <h3 className="text-xl font-bold text-zinc-400 mb-2">Brackets Not Generated</h3>
+                                    <h3 className="text-xl font-bold text-gray-300 mb-2">Brackets Not Generated</h3>
                                     <p>The tournament brackets have not been finalized yet.</p>
                                 </div>
                             ) : (
@@ -156,7 +156,7 @@ export default function TournamentBracketPage() {
                                             {/* Admin Match Selector (Temporary for MVP) */}
                                             {isAdmin && (
                                                 <div className="mt-6 pt-6 border-t border-zinc-900">
-                                                    <p className="text-xs text-zinc-500 mb-2 uppercase tracking-wider">Admin Quick Select</p>
+                                                    <p className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Admin Quick Select</p>
                                                     <div className="flex flex-wrap gap-2">
                                                         {bracket.matches.map((m: any) => (
                                                             <button
