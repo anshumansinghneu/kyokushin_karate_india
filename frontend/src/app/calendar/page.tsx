@@ -117,9 +117,9 @@ export default function CalendarPage() {
     // Upcoming events (for list view)
     const upcomingEvents = useMemo(() => {
         return events
-            .filter(e => new Date(e.startDate) >= new Date(today.toISOString().slice(0, 10)))
+            .filter(e => getEventStatus(e) !== 'COMPLETED')
             .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-    }, [events, today]);
+    }, [events]);
 
     // Calendar grid
     const daysInMonth = getDaysInMonth(currentYear, currentMonth);

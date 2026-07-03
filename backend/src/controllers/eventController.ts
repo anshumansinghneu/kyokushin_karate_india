@@ -3,6 +3,7 @@ import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { sendEventRegistrationEmail } from '../services/emailService';
+import { resolveEventStatus, isEventFinished } from '../utils/eventStatus';
 
 export const getAllEvents = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const page = parseInt(req.query.page as string) || 1;
@@ -45,14 +46,17 @@ export const getAllEvents = catchAsync(async (req: Request, res: Response, next:
         prisma.event.count(),
     ]);
 
+    // Expose a status derived from the dates so the stored value can't go stale.
+    const eventsWithStatus = events.map((e) => ({ ...e, status: resolveEventStatus(e) }));
+
     res.status(200).json({
         status: 'success',
-        results: events.length,
+        results: eventsWithStatus.length,
         total,
         page,
         pages: Math.ceil(total / limit),
         data: {
-            events,
+            events: eventsWithStatus,
         },
     });
 });
@@ -81,6 +85,7 @@ export const getEvent = catchAsync(async (req: Request, res: Response, next: Nex
         data: {
             event: {
                 ...eventData,
+                status: resolveEventStatus(eventData),
                 registrationCount: registrations.length,
             },
         },
@@ -376,7 +381,7 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
     if (!event) return next(new AppError('Event not found', 404));
 
     if (event.status === 'CANCELLED') return next(new AppError('This event has been cancelled', 400));
-    if (event.status === 'COMPLETED') return next(new AppError('This event has already been completed', 400));
+    if (isEventFinished(event)) return next(new AppError('This event has already been completed', 400));
     if (new Date() > event.registrationDeadline) {
         return next(new AppError('Registration deadline has passed', 400));
     }

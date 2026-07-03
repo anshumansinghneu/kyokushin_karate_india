@@ -33,3 +33,13 @@ export function getEventStatus(event: EventDates, now: Date = new Date()): Deriv
 // True once the event has fully ended (does not account for CANCELLED).
 export const isEventFinished = (event: EventDates, now: Date = new Date()): boolean =>
     getEventStatus(event, now) === 'COMPLETED';
+
+// The status to expose to clients: an explicit CANCELLED is always preserved,
+// otherwise it is derived from the dates (so the stored value can never go stale).
+export function resolveEventStatus(
+    event: EventDates & { status?: string | null },
+    now: Date = new Date()
+): string {
+    if (event.status === 'CANCELLED') return 'CANCELLED';
+    return getEventStatus(event, now);
+}

@@ -3,6 +3,7 @@ import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { sendBeltPromotionEmail } from '../services/emailService';
+import { resolveEventStatus } from '../utils/eventStatus';
 
 // Belt rank order (same as beltController)
 const BELT_ORDER = [
@@ -63,7 +64,7 @@ export const getBeltExamParticipants = catchAsync(async (req: Request, res: Resp
     res.status(200).json({
         status: 'success',
         data: {
-            event: { id: event.id, name: event.name, startDate: event.startDate, status: event.status },
+            event: { id: event.id, name: event.name, startDate: event.startDate, status: resolveEventStatus(event) },
             participants,
             summary: {
                 total: participants.length,

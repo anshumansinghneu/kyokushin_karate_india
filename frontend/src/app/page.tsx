@@ -7,6 +7,7 @@ import { ArrowRight, MapPin, Calendar, ChevronRight, X, Clock, Users, Building2,
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
+import { getEventStatus } from "@/lib/eventStatus";
 import { useAuthStore } from "@/store/authStore";
 import HeroSectionV2 from "@/components/HeroSectionV2";
 import LeadershipSection from "@/components/LeadershipSection";
@@ -363,7 +364,7 @@ export default function Home() {
           )}
 
           {/* NEXT EVENT COUNTDOWN */}
-          {featuredEvents.length > 0 && new Date(featuredEvents[0].startDate) > new Date() && (
+          {featuredEvents.length > 0 && getEventStatus(featuredEvents[0]) === 'UPCOMING' && (
             <NextEventCountdown event={featuredEvents[0]} />
           )}
 

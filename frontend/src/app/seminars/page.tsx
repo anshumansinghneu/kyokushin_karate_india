@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/api";
+import { getEventStatus } from "@/lib/eventStatus";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -672,8 +673,8 @@ export default function SeminarsPage() {
             );
 
             const now = new Date();
-            const upcoming = seminars.filter((s: any) => s.status === "UPCOMING" || s.status === "ONGOING" || new Date(s.startDate) > now);
-            const completed = seminars.filter((s: any) => s.status === "COMPLETED" || (new Date(s.endDate) < now && s.status !== "UPCOMING"));
+            const upcoming = seminars.filter((s: any) => getEventStatus(s, now) !== "COMPLETED");
+            const completed = seminars.filter((s: any) => getEventStatus(s, now) === "COMPLETED");
 
             // Fetch gallery images for completed seminars
             const completedWithGallery = await Promise.all(

@@ -11,6 +11,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import api from "@/lib/api";
+import { getEventStatus } from "@/lib/eventStatus";
 import KarateLoader from "@/components/KarateLoader";
 import 'leaflet/dist/leaflet.css';
 
@@ -391,11 +392,21 @@ export default function DojoDetailPage() {
                         </h2>
                         {dojo.events && dojo.events.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {dojo.events.map((event) => (
+                                {[...dojo.events]
+                                    // Active (upcoming/ongoing) first, completed last; each group chronological.
+                                    .sort((a, b) => {
+                                        const ca = getEventStatus(a) === 'COMPLETED' ? 1 : 0;
+                                        const cb = getEventStatus(b) === 'COMPLETED' ? 1 : 0;
+                                        if (ca !== cb) return ca - cb;
+                                        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+                                    })
+                                    .map((event) => {
+                                        const done = getEventStatus(event) === 'COMPLETED';
+                                        return (
                                     <Link key={event.id} href={`/events/${event.id}`}>
-                                        <div className="bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors p-5 rounded-xl flex items-center gap-5 group">
+                                        <div className={`bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors p-5 rounded-xl flex items-center gap-5 group ${done ? 'opacity-60' : ''}`}>
                                             <div className="w-14 h-14 rounded-lg border border-white/10 bg-white/[0.02] flex flex-col items-center justify-center text-center shrink-0">
-                                                <span className="text-[10px] uppercase font-bold text-red-500 mb-0.5 leading-none">
+                                                <span className={`text-[10px] uppercase font-bold mb-0.5 leading-none ${done ? 'text-gray-400' : 'text-red-500'}`}>
                                                     {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short' })}
                                                 </span>
                                                 <span className="text-lg font-black text-white leading-none">
@@ -403,14 +414,17 @@ export default function DojoDetailPage() {
                                                 </span>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold mb-1">{event.type}</p>
+                                                <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold mb-1">
+                                                    {event.type}{done && <span className="text-gray-500"> · Completed</span>}
+                                                </p>
                                                 <h3 className="font-bold text-white group-hover:text-[#FF4D4D] transition-colors tracking-tight line-clamp-1">
                                                     {event.name}
                                                 </h3>
                                             </div>
                                         </div>
                                     </Link>
-                                ))}
+                                        );
+                                    })}
                             </div>
                         ) : (
                             <div className="bg-white/5 border border-white/10 p-8 rounded-xl text-center flex flex-col items-center">

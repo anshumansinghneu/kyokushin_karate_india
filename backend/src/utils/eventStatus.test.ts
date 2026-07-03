@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getEventStatus, isEventFinished } from './eventStatus';
+import { getEventStatus, isEventFinished, resolveEventStatus } from './eventStatus';
 
 const now = new Date('2026-07-03T12:00:00Z'); // 3 July 2026, midday UTC
 
@@ -34,5 +34,21 @@ describe('isEventFinished', () => {
         expect(isEventFinished({ startDate: '2026-05-03' }, now)).toBe(true);
         expect(isEventFinished({ startDate: '2026-07-03' }, now)).toBe(false);
         expect(isEventFinished({ startDate: '2026-08-01' }, now)).toBe(false);
+    });
+});
+
+describe('resolveEventStatus', () => {
+    it('derives from dates when not cancelled (fixes stale stored status)', () => {
+        // The exact production bug: stored UPCOMING, but the date is a month past.
+        expect(resolveEventStatus({ status: 'UPCOMING', startDate: '2026-06-01' }, now)).toBe('COMPLETED');
+    });
+
+    it('always preserves an explicit CANCELLED regardless of dates', () => {
+        expect(resolveEventStatus({ status: 'CANCELLED', startDate: '2026-05-03' }, now)).toBe('CANCELLED');
+        expect(resolveEventStatus({ status: 'CANCELLED', startDate: '2026-08-01' }, now)).toBe('CANCELLED');
+    });
+
+    it('reports a genuinely future event as UPCOMING', () => {
+        expect(resolveEventStatus({ status: 'UPCOMING', startDate: '2026-08-01' }, now)).toBe('UPCOMING');
     });
 });

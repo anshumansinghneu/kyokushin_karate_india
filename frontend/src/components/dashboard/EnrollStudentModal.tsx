@@ -7,6 +7,7 @@ import {
     Search, ChevronRight, ChevronLeft, MapPin, Trophy, Shield, Tent, GraduationCap
 } from "lucide-react";
 import api from "@/lib/api";
+import { getEventStatus } from "@/lib/eventStatus";
 import { useToast } from "@/contexts/ToastContext";
 
 interface EnrollStudentModalProps {
@@ -106,7 +107,7 @@ export default function EnrollStudentModal({ isOpen, onClose, onSuccess }: Enrol
             const res = await api.get("/events");
             const now = new Date();
             const available = (res.data.data.events || []).filter((e: EventItem) =>
-                (e.status === "UPCOMING" || e.status === "ONGOING") &&
+                getEventStatus(e, now) !== "COMPLETED" &&
                 new Date(e.registrationDeadline) > now
             );
             setEvents(available);
