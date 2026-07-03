@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -80,6 +80,21 @@ const retryHref = (p: Payment): string | null => {
     return null;
 };
 
+function FilterButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            aria-pressed={active}
+            className={`inline-flex items-center justify-center min-h-[40px] px-3 text-xs font-bold uppercase tracking-wider border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${active
+                ? 'bg-[#FF0000] text-white border-[#FF0000]'
+                : 'bg-transparent text-gray-300 border-white/20 hover:bg-white/10'}`}
+        >
+            {children}
+        </button>
+    );
+}
+
 export default function PaymentHistoryPage() {
     const router = useRouter();
     const reduceMotion = useReducedMotion();
@@ -87,6 +102,9 @@ export default function PaymentHistoryPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [downloadingId, setDownloadingId] = useState<string | null>(null);
+    const [downloadErrorId, setDownloadErrorId] = useState<string | null>(null);
+    const [yearFilter, setYearFilter] = useState<number | null>(null);
+    const [statusFilter, setStatusFilter] = useState<'ALL' | StatusKey>('ALL');
     const { showToast } = useToast();
 
     const fetchPayments = useCallback(() => {
@@ -109,21 +127,46 @@ export default function PaymentHistoryPage() {
         fetchPayments();
     }, [fetchPayments]);
 
-    // ── Derived summary: the answer users open this page to get ──
+    // ── Filters: the list only grows, so let users narrow by year and status ──
+    const currentYear = new Date().getFullYear();
+    const years = useMemo(() => {
+        const s = new Set<number>();
+        for (const p of payments) s.add(new Date(p.paidAt || p.createdAt).getFullYear());
+        return [...s].sort((a, b) => b - a);
+    }, [payments]);
+    const activeYear = yearFilter ?? (years.includes(currentYear) ? currentYear : (years[0] ?? currentYear));
+
+    const statusesInYear = useMemo(() => {
+        const present = new Set<string>();
+        for (const p of payments) {
+            if (new Date(p.paidAt || p.createdAt).getFullYear() === activeYear) present.add(p.status);
+        }
+        return (['PAID', 'PENDING', 'FAILED', 'REFUNDED'] as StatusKey[]).filter(k => present.has(k));
+    }, [payments, activeYear]);
+
+    const filtered = useMemo(() => payments.filter(p => {
+        if (new Date(p.paidAt || p.createdAt).getFullYear() !== activeYear) return false;
+        if (statusFilter !== 'ALL' && p.status !== statusFilter) return false;
+        return true;
+    }), [payments, activeYear, statusFilter]);
+
+    const selectYear = useCallback((y: number) => { setYearFilter(y); setStatusFilter('ALL'); }, []);
+
+    // ── Derived summary for the selected year: the answer users open this page to get ──
     const summary = useMemo(() => {
-        const year = new Date().getFullYear();
         let paidThisYear = 0;
+        let receipts = 0;
         let attention = 0;
         for (const p of payments) {
-            if (p.status === 'PAID') {
-                const when = p.paidAt || p.createdAt;
-                if (new Date(when).getFullYear() === year) paidThisYear += Number(p.totalAmount) || 0;
-            } else if (p.status === 'PENDING' || p.status === 'FAILED') {
-                attention += 1;
+            const y = new Date(p.paidAt || p.createdAt).getFullYear();
+            if (p.status === 'PENDING' || p.status === 'FAILED') attention += 1; // all-time: needs action regardless of year
+            if (y === activeYear) {
+                receipts += 1;
+                if (p.status === 'PAID') paidThisYear += Number(p.totalAmount) || 0;
             }
         }
-        return { year, paidThisYear, attention, count: payments.length };
-    }, [payments]);
+        return { paidThisYear, receipts, attention };
+    }, [payments, activeYear]);
 
     // Warm the jsPDF chunk before the user commits, so the first download isn't a cold stall.
     const prefetchPdf = useCallback(() => { import('jspdf').catch(() => {}); }, []);
@@ -131,6 +174,7 @@ export default function PaymentHistoryPage() {
     // ─── Generate & Download Invoice PDF ─────────────────────────
     const downloadInvoice = useCallback(async (paymentId: string) => {
         setDownloadingId(paymentId);
+        setDownloadErrorId(null); // clear any prior failure for a fresh attempt
         try {
             const res = await api.get(`/payments/invoice/${paymentId}`);
             const invoice: Invoice = res.data.data.invoice;
@@ -249,6 +293,7 @@ export default function PaymentHistoryPage() {
             doc.save(`KKFI-Receipt-${invoice.invoiceNumber}.pdf`);
         } catch (err) {
             console.error('Invoice download failed:', err);
+            setDownloadErrorId(paymentId); // persist inline on the row, not just a transient toast
             showToast('Failed to download invoice. Please try again.', 'error');
         } finally {
             setDownloadingId(null);
@@ -278,14 +323,14 @@ export default function PaymentHistoryPage() {
                     {!loading && !error && payments.length > 0 && (
                         <div className="mb-8 border-b-2 border-white/10 pb-6">
                             <p className="text-xs font-bold uppercase tracking-[0.1em] text-gray-400">
-                                Paid in {summary.year}
+                                Paid in {activeYear}
                             </p>
                             <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-2">
                                 <span className="text-4xl font-black text-white tabular-nums">
                                     {formatINR(summary.paidThisYear)}
                                 </span>
                                 <span className="text-sm text-gray-300">
-                                    {summary.count} {summary.count === 1 ? 'receipt' : 'receipts'} on record
+                                    {summary.receipts} {summary.receipts === 1 ? 'receipt' : 'receipts'} in {activeYear}
                                 </span>
                                 {summary.attention > 0 && (
                                     <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#FF4D4D]">
@@ -300,6 +345,31 @@ export default function PaymentHistoryPage() {
                             >
                                 View monthly dues <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                             </Link>
+                        </div>
+                    )}
+
+                    {/* Filters */}
+                    {!loading && !error && payments.length > 0 && (years.length > 1 || statusesInYear.length > 1) && (
+                        <div className="mb-6 flex flex-col gap-3">
+                            {years.length > 1 && (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-xs font-bold uppercase tracking-[0.1em] text-gray-400 mr-1">Year</span>
+                                    {years.map(y => (
+                                        <FilterButton key={y} active={y === activeYear} onClick={() => selectYear(y)}>{y}</FilterButton>
+                                    ))}
+                                </div>
+                            )}
+                            {statusesInYear.length > 1 && (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-xs font-bold uppercase tracking-[0.1em] text-gray-400 mr-1">Status</span>
+                                    <FilterButton active={statusFilter === 'ALL'} onClick={() => setStatusFilter('ALL')}>All</FilterButton>
+                                    {statusesInYear.map(s => (
+                                        <FilterButton key={s} active={statusFilter === s} onClick={() => setStatusFilter(s)}>
+                                            {statusConfig[s]?.label ?? s}
+                                        </FilterButton>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -332,11 +402,25 @@ export default function PaymentHistoryPage() {
                                 Pay membership <ArrowRight className="w-4 h-4" aria-hidden="true" />
                             </Link>
                         </div>
+                    ) : filtered.length === 0 ? (
+                        <div className="text-center py-16">
+                            <p className="text-gray-300">
+                                No {statusFilter !== 'ALL' ? `${(statusConfig[statusFilter]?.label ?? statusFilter).toLowerCase()} ` : ''}payments in {activeYear}.
+                            </p>
+                            {statusFilter !== 'ALL' && (
+                                <button
+                                    onClick={() => setStatusFilter('ALL')}
+                                    className="mt-4 inline-flex items-center justify-center min-h-[44px] px-6 bg-transparent border border-white/20 hover:bg-white/10 text-white text-xs font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                >
+                                    Show all
+                                </button>
+                            )}
+                        </div>
                     ) : (
                         <>
                             <p className="text-xs font-bold uppercase tracking-[0.1em] text-gray-400 mb-4">Receipts</p>
                             <ul className="space-y-4">
-                                {payments.map((payment, i) => {
+                                {filtered.map((payment, i) => {
                                     const cfg = statusConfig[(payment.status as StatusKey)] ?? statusConfig.PENDING;
                                     const StatusIcon = cfg.icon;
                                     const when = payment.paidAt || payment.createdAt;
@@ -419,6 +503,19 @@ export default function PaymentHistoryPage() {
                                                     <Link href="/contact" className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-white transition-colors">
                                                         <LifeBuoy className="w-3.5 h-3.5" aria-hidden="true" /> Get help
                                                     </Link>
+                                                </div>
+                                            )}
+
+                                            {/* Persistent download failure — survives the toast */}
+                                            {downloadErrorId === payment.id && downloadingId !== payment.id && (
+                                                <div className="mt-3 pt-3 border-t border-white/10 flex flex-wrap items-center gap-x-4 gap-y-2" role="alert">
+                                                    <p className="text-xs text-[#FF4D4D]">Couldn&apos;t generate the invoice.</p>
+                                                    <button
+                                                        onClick={() => downloadInvoice(payment.id)}
+                                                        className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-white hover:text-[#FF4D4D] transition-colors"
+                                                    >
+                                                        <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" /> Try again
+                                                    </button>
                                                 </div>
                                             )}
                                         </motion.li>
