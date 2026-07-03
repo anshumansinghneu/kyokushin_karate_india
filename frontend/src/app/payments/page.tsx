@@ -142,7 +142,7 @@ export default function PaymentHistoryPage() {
             let y = 15;
 
             // ─── Header ───
-            doc.setFillColor(220, 38, 38); // red-600
+            doc.setFillColor(255, 0, 0); // brand Kyokushin red #FF0000
             doc.rect(0, 0, W, 40, 'F');
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
@@ -228,10 +228,11 @@ export default function PaymentHistoryPage() {
 
             // ─── Payment Status ───
             y += 12;
-            doc.setFillColor(34, 197, 94);
+            doc.setFillColor(255, 215, 0); // brand gold #FFD700 — paid reads as earned rank
             doc.roundedRect(W / 2 - 25, y, 50, 8, 2, 2, 'F');
-            doc.setTextColor(255, 255, 255);
+            doc.setTextColor(0, 0, 0); // black on gold (white-on-gold fails contrast)
             doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
             doc.text('PAID', W / 2, y + 5.5, { align: 'center' });
 
             // ─── Footer ───
