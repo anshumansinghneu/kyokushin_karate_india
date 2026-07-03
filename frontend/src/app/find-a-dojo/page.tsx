@@ -302,8 +302,8 @@ function DojoListCard({
         <p className="text-[11px] font-semibold text-white leading-tight mb-1">
           {dojo.name}
         </p>
-        <div className="flex items-center gap-1.5 text-[9px] text-zinc-500">
-          <MapPin className="w-2.5 h-2.5 text-zinc-600" />
+        <div className="flex items-center gap-1.5 text-[9px] text-zinc-400">
+          <MapPin className="w-2.5 h-2.5 text-zinc-400" />
           <span>{dojo.city}{dojo.state ? `, ${dojo.state}` : ''}</span>
           {dojo.chiefInstructor && (
             <>
@@ -359,20 +359,20 @@ function FloatingDojoList({
       {/* Search section */}
       <div className="p-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search city, state, or instructor..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full h-9 pl-9 pr-3 bg-white/[0.04] border border-white/[0.06] rounded-lg text-[11px] text-white placeholder:text-zinc-600 focus:border-red-500/30 focus:outline-none transition-colors"
+            className="w-full h-9 pl-9 pr-3 bg-white/[0.04] border border-white/[0.06] rounded-lg text-[11px] text-white placeholder:text-zinc-400 focus:border-red-500/30 focus:outline-none transition-colors"
           />
         </div>
       </div>
 
       {/* Header row */}
       <div className="px-4 py-2 flex items-center justify-between border-b border-white/[0.04]">
-        <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">
+        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">
           Dojos
         </span>
         <span className="text-[10px] font-bold text-red-500">
@@ -499,18 +499,18 @@ function DojoDetailPanel({
           {/* Info rows — tight */}
           <div className="space-y-1.5 mb-4">
             <div className="px-2.5 py-2 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center justify-between">
-              <span className="text-[10px] text-zinc-500">Status</span>
+              <span className="text-[10px] text-zinc-400">Status</span>
               <span className="text-[10px] font-semibold text-emerald-400">Verified & Active</span>
             </div>
             {dojo.address && (
               <div className="px-2.5 py-2 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center gap-2">
-                <MapPin className="w-2.5 h-2.5 text-zinc-500 shrink-0" />
+                <MapPin className="w-2.5 h-2.5 text-zinc-400 shrink-0" />
                 <span className="text-[10px] text-zinc-300">{dojo.address}</span>
               </div>
             )}
             {dojo.contactEmail && (
               <div className="px-2.5 py-2 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center justify-between">
-                <span className="text-[10px] text-zinc-500">Contact</span>
+                <span className="text-[10px] text-zinc-400">Contact</span>
                 <span className="text-[10px] text-zinc-300 truncate ml-2">{dojo.contactEmail}</span>
               </div>
             )}
@@ -856,13 +856,7 @@ export default function FindADojoPage() {
             <span className="text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">FIND</span><br />
             <span className="text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">YOUR</span><br />
             <span
-              className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.5)]"
-              style={{
-                background: 'linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                color: 'transparent',
-              }}
+              className="text-[#FF0000] drop-shadow-[0_4px_25px_rgba(220,38,38,0.5)]"
             >DOJO</span>
           </h1>
 
@@ -882,7 +876,7 @@ export default function FindADojoPage() {
           </div>
 
           {/* Tagline */}
-          <p className="mt-3 text-[11px] sm:text-xs text-zinc-500 font-medium tracking-wide">
+          <p className="mt-3 text-[11px] sm:text-xs text-zinc-400 font-medium tracking-wide">
             Locate a Kyokushin dojo across India
           </p>
 
@@ -925,13 +919,13 @@ export default function FindADojoPage() {
           {/* Search */}
           <div className="px-4 pb-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
               <input
                 type="text"
                 placeholder="Search dojos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 bg-red-600/[0.05] border border-red-600/10 rounded-lg text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-red-500/30 transition-colors"
+                className="w-full h-9 pl-9 pr-3 bg-white/[0.04] border border-white/[0.06] rounded-lg text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-red-500/30 transition-colors"
               />
             </div>
           </div>
@@ -942,12 +936,12 @@ export default function FindADojoPage() {
               <div
                 key={dojo.id}
                 onClick={() => setSelectedDojo(dojo)}
-                className="flex-shrink-0 w-[200px] p-3 bg-red-600/[0.04] border border-red-600/[0.08] border-l-[3px] border-l-red-600 rounded-lg cursor-pointer active:scale-95 transition-transform"
+                className="flex-shrink-0 w-[200px] p-3 bg-white/[0.04] border border-white/[0.08] rounded-lg cursor-pointer active:scale-95 transition-transform"
               >
                 <h4 className="text-[11px] font-bold uppercase tracking-wide text-white mb-1 leading-tight line-clamp-2">
                   {dojo.name}
                 </h4>
-                <span className="text-[9px] text-zinc-500">
+                <span className="text-[9px] text-zinc-400">
                   {dojo.city}{dojo.state ? `, ${dojo.state}` : ''}
                 </span>
               </div>

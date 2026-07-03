@@ -38,7 +38,7 @@ function FloatingParticles() {
             {Array.from({ length: 20 }).map((_, i) => (
                 <motion.div
                     key={i}
-                    className="absolute w-1 h-1 bg-green-400/20 rounded-full"
+                    className="absolute w-1 h-1 bg-white/20 rounded-full"
                     style={{
                         left: `${Math.random() * 100}%`,
                         top: `${Math.random() * 100}%`,
@@ -86,11 +86,11 @@ function ProgramCard({ program, index }: { program: typeof csrPrograms[0]; index
             style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
             onMouseMove={onMouseMove}
             onMouseLeave={() => { x.set(0); y.set(0); }}
-            className={`group relative bg-gradient-to-br from-white/[0.06] to-white/[0.01] border ${program.borderColor} rounded-[1.5rem] p-7 hover:border-opacity-60 transition-all duration-500 overflow-hidden cursor-default`}
+            className={`group relative bg-white/5 border ${program.borderColor} rounded-xl p-7 hover:bg-white/10 transition-all duration-500 overflow-hidden cursor-default`}
         >
             {/* Hover glow */}
             <div
-                className={`absolute -inset-1 rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-xl -z-10`}
+                className={`absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-xl -z-10`}
                 style={{ background: `radial-gradient(400px circle, ${program.glowColor}, transparent 70%)` }}
             />
 
@@ -127,66 +127,66 @@ const csrPrograms = [
         title: "School Outreach Program",
         description: "Free self-defense & discipline workshops in government schools, teaching confidence and resilience to every child across India.",
         impact: "500+ Students Reached",
-        color: "text-blue-400",
-        bgColor: "bg-blue-500/10",
-        borderColor: "border-blue-500/20",
-        glowColor: "rgba(59,130,246,0.15)",
-        dotColor: "bg-blue-400",
+        color: "text-white",
+        bgColor: "bg-white/10",
+        borderColor: "border-white/10",
+        glowColor: "rgba(255,0,0,0.12)",
+        dotColor: "bg-[#FF0000]",
     },
     {
         icon: Heart,
         title: "Free Training for Underprivileged",
         description: "Full scholarships — training, gi, and gear — for underprivileged youth who show the fire of a true karateka.",
         impact: "50+ Scholarships Given",
-        color: "text-red-400",
-        bgColor: "bg-red-500/10",
-        borderColor: "border-red-500/20",
-        glowColor: "rgba(239,68,68,0.15)",
-        dotColor: "bg-red-400",
+        color: "text-white",
+        bgColor: "bg-white/10",
+        borderColor: "border-white/10",
+        glowColor: "rgba(255,0,0,0.12)",
+        dotColor: "bg-[#FF0000]",
     },
     {
         icon: Users,
         title: "Women's Self-Defense Initiative",
         description: "Dedicated camps for women and girls in rural and semi-urban areas — building unshakable confidence one punch at a time.",
         impact: "30+ Camps Conducted",
-        color: "text-purple-400",
-        bgColor: "bg-purple-500/10",
-        borderColor: "border-purple-500/20",
-        glowColor: "rgba(168,85,247,0.15)",
-        dotColor: "bg-purple-400",
+        color: "text-white",
+        bgColor: "bg-white/10",
+        borderColor: "border-white/10",
+        glowColor: "rgba(255,0,0,0.12)",
+        dotColor: "bg-[#FF0000]",
     },
     {
         icon: Dumbbell,
         title: "Community Health & Fitness",
         description: "Free fitness sessions and health awareness camps promoting physical and mental well-being through martial arts discipline.",
         impact: "1000+ Participants",
-        color: "text-green-400",
-        bgColor: "bg-green-500/10",
-        borderColor: "border-green-500/20",
-        glowColor: "rgba(34,197,94,0.15)",
-        dotColor: "bg-green-400",
+        color: "text-white",
+        bgColor: "bg-white/10",
+        borderColor: "border-white/10",
+        glowColor: "rgba(255,0,0,0.12)",
+        dotColor: "bg-[#FF0000]",
     },
     {
         icon: GraduationCap,
         title: "Youth Empowerment Program",
         description: "Anti-bullying workshops and character development through Kyokushin philosophy — respect, perseverance, integrity.",
         impact: "20+ Schools Covered",
-        color: "text-yellow-400",
-        bgColor: "bg-yellow-500/10",
-        borderColor: "border-yellow-500/20",
-        glowColor: "rgba(234,179,8,0.15)",
-        dotColor: "bg-yellow-400",
+        color: "text-white",
+        bgColor: "bg-white/10",
+        borderColor: "border-white/10",
+        glowColor: "rgba(255,0,0,0.12)",
+        dotColor: "bg-[#FF0000]",
     },
     {
         icon: Globe,
         title: "Rural Karate Development",
         description: "Building karate training centers where none exist — nurturing champions from India's grassroots.",
         impact: "10+ Rural Centers",
-        color: "text-cyan-400",
-        bgColor: "bg-cyan-500/10",
-        borderColor: "border-cyan-500/20",
-        glowColor: "rgba(6,182,212,0.15)",
-        dotColor: "bg-cyan-400",
+        color: "text-white",
+        bgColor: "bg-white/10",
+        borderColor: "border-white/10",
+        glowColor: "rgba(255,0,0,0.12)",
+        dotColor: "bg-[#FF0000]",
     },
 ];
 
@@ -241,12 +241,10 @@ export default function CSRPage() {
     const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
     return (
-        <div className="min-h-screen bg-black text-white relative overflow-hidden selection:bg-green-500/30">
+        <div className="min-h-screen bg-black text-white relative overflow-hidden selection:bg-red-500/30">
             {/* Background layers */}
             <div className="fixed inset-0 z-0">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,_rgba(34,197,94,0.08),_transparent_50%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_100%,_rgba(220,38,38,0.06),_transparent_50%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(168,85,247,0.04),_transparent_60%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_rgba(139,0,0,0.10),_transparent_60%)]" />
                 <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-[0.03]" />
                 {/* Grid pattern */}
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px]" />
@@ -262,7 +260,7 @@ export default function CSRPage() {
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.3, duration: 0.8 }}
-                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-bold uppercase tracking-[0.2em] mb-8 backdrop-blur-md"
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#FF0000]/10 border border-[#FF0000]/20 text-[#FF4D4D] text-sm font-bold uppercase tracking-[0.2em] mb-8 backdrop-blur-md"
                     >
                         <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}>
                             <HandHeart className="w-4 h-4" />
@@ -301,7 +299,7 @@ export default function CSRPage() {
                     >
                         At <span className="text-white font-semibold">KKFI</span>, we channel the warrior spirit
                         into community upliftment — empowering youth, defending the vulnerable,
-                        and building a <span className="text-green-400 font-semibold">stronger India</span>, one dojo at a time.
+                        and building a <span className="text-[#FF4D4D] font-semibold">stronger India</span>, one dojo at a time.
                     </motion.p>
 
                     {/* Scroll indicator */}
@@ -309,15 +307,15 @@ export default function CSRPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 1.5 }}
-                        className="flex flex-col items-center gap-2 text-gray-600"
+                        className="flex flex-col items-center gap-2 text-gray-400"
                     >
                         <span className="text-xs uppercase tracking-[0.3em] font-bold">Scroll to explore</span>
                         <motion.div
                             animate={{ y: [0, 8, 0] }}
                             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                            className="w-5 h-8 rounded-full border-2 border-gray-600 flex items-start justify-center pt-1.5"
+                            className="w-5 h-8 rounded-full border-2 border-gray-400 flex items-start justify-center pt-1.5"
                         >
-                            <div className="w-1 h-1.5 bg-green-400 rounded-full" />
+                            <div className="w-1 h-1.5 bg-[#FF4D4D] rounded-full" />
                         </motion.div>
                     </motion.div>
                 </motion.div>
@@ -339,14 +337,14 @@ export default function CSRPage() {
                                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
                                     viewport={{ once: true }}
                                     transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
-                                    className="group relative bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-8 text-center overflow-hidden hover:border-green-500/30 transition-all duration-500"
+                                    className="group relative bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-8 text-center overflow-hidden hover:border-[#FF0000]/30 transition-all duration-500"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-b from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <Icon className="w-5 h-5 text-green-500/40 mx-auto mb-3 group-hover:text-green-400 transition-colors" />
-                                    <p className="text-3xl md:text-4xl lg:text-5xl font-black text-green-400 mb-1 tabular-nums">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-[#FF0000]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <Icon className="w-5 h-5 text-[#FF0000]/40 mx-auto mb-3 group-hover:text-[#FF4D4D] transition-colors" />
+                                    <p className="text-3xl md:text-4xl lg:text-5xl font-black text-[#FF4D4D] mb-1 tabular-nums">
                                         <AnimatedCounter target={stat.value} suffix={stat.suffix} />
                                     </p>
-                                    <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider font-bold">{stat.label}</p>
+                                    <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider font-bold">{stat.label}</p>
                                 </motion.div>
                             );
                         })}
@@ -361,10 +359,10 @@ export default function CSRPage() {
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="relative bg-gradient-to-br from-white/[0.06] to-white/[0.01] border border-white/10 rounded-[2.5rem] p-8 md:p-14 overflow-hidden"
+                        className="relative bg-white/5 border border-white/10 rounded-xl p-8 md:p-14 overflow-hidden"
                     >
                         {/* Decorative rings */}
-                        <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/3" />
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF0000]/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/3" />
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/5 blur-[100px] rounded-full translate-y-1/3 -translate-x-1/4" />
 
                         <div className="relative z-10">
@@ -372,21 +370,21 @@ export default function CSRPage() {
                                 <motion.div
                                     whileHover={{ rotate: 360 }}
                                     transition={{ duration: 0.5 }}
-                                    className="p-4 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/20"
+                                    className="p-4 rounded-2xl bg-gradient-to-br from-[#FF0000]/20 to-[#FF0000]/5 border border-[#FF0000]/20"
                                 >
-                                    <Target className="w-7 h-7 text-green-400" />
+                                    <Target className="w-7 h-7 text-[#FF4D4D]" />
                                 </motion.div>
                                 <div>
                                     <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">Our Mission</h2>
-                                    <p className="text-sm text-green-400/70 font-bold uppercase tracking-wider">Why we fight beyond the ring</p>
+                                    <p className="text-sm text-[#FF4D4D]/70 font-bold uppercase tracking-wider">Why we fight beyond the ring</p>
                                 </div>
                             </div>
 
                             <p className="text-gray-400 leading-relaxed text-base md:text-lg mb-8 max-w-3xl">
                                 Kyokushin means <span className="text-white font-bold italic">&quot;the ultimate truth&quot;</span>.
                                 Our truth? That martial arts is the most powerful tool for social change.
-                                Every punch teaches <span className="text-green-400 font-semibold">discipline</span>,
-                                every kata builds <span className="text-green-400 font-semibold">character</span>,
+                                Every punch teaches <span className="text-[#FF4D4D] font-semibold">discipline</span>,
+                                every kata builds <span className="text-[#FF4D4D] font-semibold">character</span>,
                                 and every belt earned proves that <span className="text-white font-semibold">anyone can rise</span>.
                             </p>
 
@@ -402,14 +400,14 @@ export default function CSRPage() {
                                         whileInView={{ opacity: 1, x: 0 }}
                                         viewport={{ once: true }}
                                         transition={{ delay: 0.2 + i * 0.1 }}
-                                        className="flex items-center gap-4 bg-white/5 rounded-2xl p-5 border border-white/5 hover:border-green-500/20 transition-colors group"
+                                        className="flex items-center gap-4 bg-white/5 rounded-2xl p-5 border border-white/5 hover:border-[#FF0000]/20 transition-colors group"
                                     >
-                                        <div className="p-2.5 rounded-xl bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
-                                            <item.icon className="w-5 h-5 text-green-400" />
+                                        <div className="p-2.5 rounded-xl bg-[#FF0000]/10 group-hover:bg-[#FF0000]/20 transition-colors">
+                                            <item.icon className="w-5 h-5 text-[#FF4D4D]" />
                                         </div>
                                         <div>
                                             <span className="text-sm text-gray-300 font-semibold block">{item.text}</span>
-                                            <span className="text-xs text-green-400/60 font-bold">{item.stat} impacted</span>
+                                            <span className="text-xs text-[#FF4D4D]/60 font-bold">{item.stat} impacted</span>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -427,14 +425,14 @@ export default function CSRPage() {
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <span className="text-xs font-bold text-green-500/60 uppercase tracking-[0.3em] block mb-4">What we do</span>
+                    <span className="text-xs font-bold text-[#FF0000]/60 uppercase tracking-[0.3em] block mb-4">What we do</span>
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-4">
                         OUR{" "}
                         <span className="text-white">
                             PROGRAMS
                         </span>
                     </h2>
-                    <p className="text-gray-500 max-w-xl mx-auto text-sm md:text-base">
+                    <p className="text-gray-400 max-w-xl mx-auto text-sm md:text-base">
                         Six initiatives that prove the strongest punch is the one that lifts someone up.
                     </p>
                 </motion.div>
@@ -454,7 +452,7 @@ export default function CSRPage() {
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <span className="text-xs font-bold text-green-500/60 uppercase tracking-[0.3em] block mb-4">Our journey</span>
+                    <span className="text-xs font-bold text-[#FF0000]/60 uppercase tracking-[0.3em] block mb-4">Our journey</span>
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter">
                         THE{" "}
                         <span className="text-white">
@@ -465,7 +463,7 @@ export default function CSRPage() {
 
                 <div className="max-w-3xl mx-auto relative">
                     {/* Vertical line */}
-                    <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-green-500/30 to-transparent md:-translate-x-px" />
+                    <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-[#FF0000]/30 to-transparent md:-translate-x-px" />
 
                     {timeline.map((item, i) => {
                         const Icon = item.icon;
@@ -482,18 +480,18 @@ export default function CSRPage() {
                                 } flex-row`}
                             >
                                 {/* Dot on line */}
-                                <div className="absolute left-6 md:left-1/2 -translate-x-1/2 w-3 h-3 bg-green-500 rounded-full border-4 border-black z-10 mt-2">
-                                    <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-30" />
+                                <div className="absolute left-6 md:left-1/2 -translate-x-1/2 w-3 h-3 bg-[#FF0000] rounded-full border-4 border-black z-10 mt-2">
+                                    <div className="absolute inset-0 bg-[#FF4D4D] rounded-full animate-ping opacity-30" />
                                 </div>
 
                                 {/* Content */}
                                 <div className={`ml-14 md:ml-0 md:w-[calc(50%-2rem)] ${isLeft ? "md:text-right md:pr-8" : "md:text-left md:pl-8"}`}>
-                                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 mb-3 ${isLeft ? "md:flex-row-reverse" : ""}`}>
-                                        <Icon className="w-3.5 h-3.5 text-green-400" />
-                                        <span className="text-green-400 text-xs font-black tracking-wider">{item.year}</span>
+                                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF0000]/10 border border-[#FF0000]/20 mb-3 ${isLeft ? "md:flex-row-reverse" : ""}`}>
+                                        <Icon className="w-3.5 h-3.5 text-[#FF4D4D]" />
+                                        <span className="text-[#FF4D4D] text-xs font-black tracking-wider">{item.year}</span>
                                     </div>
                                     <h3 className="text-xl font-black text-white mb-2">{item.title}</h3>
-                                    <p className="text-sm text-gray-500 leading-relaxed">{item.description}</p>
+                                    <p className="text-sm text-gray-400 leading-relaxed">{item.description}</p>
                                 </div>
                             </motion.div>
                         );
@@ -509,7 +507,7 @@ export default function CSRPage() {
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <span className="text-xs font-bold text-green-500/60 uppercase tracking-[0.3em] block mb-4">Real voices</span>
+                    <span className="text-xs font-bold text-[#FF0000]/60 uppercase tracking-[0.3em] block mb-4">Real voices</span>
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter">
                         STORIES OF{" "}
                         <span className="text-white">
@@ -526,19 +524,19 @@ export default function CSRPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: i * 0.15, duration: 0.5 }}
-                            className="group relative bg-gradient-to-br from-white/[0.05] to-white/[0.01] border border-white/10 rounded-[2rem] p-7 hover:border-green-500/20 transition-colors duration-500"
+                            className="group relative bg-white/5 border border-white/10 rounded-xl p-7 hover:border-[#FF0000]/20 transition-colors duration-500"
                         >
-                            <Quote className="w-8 h-8 text-green-500/20 mb-4 group-hover:text-green-500/40 transition-colors" />
+                            <Quote className="w-8 h-8 text-[#FF0000]/20 mb-4 group-hover:text-[#FF0000]/40 transition-colors" />
                             <p className="text-gray-300 leading-relaxed text-sm md:text-base mb-6 italic">
                                 &ldquo;{t.quote}&rdquo;
                             </p>
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500/30 to-green-500/10 flex items-center justify-center border border-green-500/30 text-green-400 font-black text-sm">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF0000]/30 to-[#FF0000]/10 flex items-center justify-center border border-[#FF0000]/30 text-[#FF4D4D] font-black text-sm">
                                     {t.name[0]}
                                 </div>
                                 <div>
                                     <p className="text-sm font-bold text-white">{t.name}</p>
-                                    <p className="text-xs text-gray-500">{t.role} · {t.location}</p>
+                                    <p className="text-xs text-gray-400">{t.role} · {t.location}</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -554,7 +552,7 @@ export default function CSRPage() {
                     viewport={{ once: true }}
                     className="text-center mb-12"
                 >
-                    <span className="text-xs font-bold text-green-500/60 uppercase tracking-[0.3em] block mb-4">Proudly supported by</span>
+                    <span className="text-xs font-bold text-[#FF0000]/60 uppercase tracking-[0.3em] block mb-4">Proudly supported by</span>
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter">
                         OUR{" "}
                         <span className="text-white">
@@ -571,10 +569,9 @@ export default function CSRPage() {
                             description: "One of India's largest producers of quality spices and food products — powering our community health and nutrition programs.",
                             logo: "https://goldiee.com/wp-content/uploads/2018/10/Logo_.png",
                             website: "https://goldiee.com/",
-                            borderColor: "border-yellow-500/20",
-                            hoverBorder: "hover:border-yellow-500/40",
-                            accentColor: "text-yellow-400",
-                            glowColor: "group-hover:shadow-yellow-500/10",
+                            borderColor: "border-white/10",
+                            hoverBorder: "hover:border-white/20",
+                            accentColor: "text-white",
                             location: "Kanpur, UP",
                         },
                         {
@@ -583,10 +580,9 @@ export default function CSRPage() {
                             description: "Leading manufacturer serving Indian Railways for 38+ years — supporting our youth empowerment and school outreach programs.",
                             logo: "https://static.wixstatic.com/media/2a0662_67b739277d564fc79ac52eee67e02837~mv2.png",
                             website: "https://www.frontieralloy.com/",
-                            borderColor: "border-blue-500/20",
-                            hoverBorder: "hover:border-blue-500/40",
-                            accentColor: "text-blue-400",
-                            glowColor: "group-hover:shadow-blue-500/10",
+                            borderColor: "border-white/10",
+                            hoverBorder: "hover:border-white/20",
+                            accentColor: "text-white",
                             location: "Kanpur, UP",
                         },
                         {
@@ -595,10 +591,9 @@ export default function CSRPage() {
                             description: "A committed CSR partner fueling our scholarship and rural karate development programs across northern India.",
                             logo: "https://www.shrigangindustries.com/assets/img/logo.png",
                             website: "https://www.shrigangindustries.com/",
-                            borderColor: "border-green-500/20",
-                            hoverBorder: "hover:border-green-500/40",
-                            accentColor: "text-green-400",
-                            glowColor: "group-hover:shadow-green-500/10",
+                            borderColor: "border-white/10",
+                            hoverBorder: "hover:border-white/20",
+                            accentColor: "text-white",
                             location: "Sikandrabad, UP",
                         },
                     ].map((partner, i) => (
@@ -609,9 +604,9 @@ export default function CSRPage() {
                             viewport={{ once: true }}
                             transition={{ delay: i * 0.12, duration: 0.5 }}
                             whileHover={{ scale: 1.02 }}
-                            className={`group relative bg-gradient-to-br from-white/[0.06] to-white/[0.01] border ${partner.borderColor} ${partner.hoverBorder} rounded-[2rem] p-7 md:p-8 transition-all duration-500 flex flex-col items-center text-center shadow-lg ${partner.glowColor}`}
+                            className={`group relative bg-white/5 border ${partner.borderColor} ${partner.hoverBorder} rounded-xl p-7 md:p-8 transition-all duration-500 flex flex-col items-center text-center`}
                         >
-                            <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center p-4 mb-5 shadow-lg group-hover:scale-105 transition-transform duration-500">
+                            <div className="w-24 h-24 bg-white rounded-xl flex items-center justify-center p-4 mb-5 group-hover:scale-105 transition-transform duration-500">
                                 <img
                                     src={partner.logo}
                                     alt={partner.name}
@@ -621,7 +616,7 @@ export default function CSRPage() {
                             <h3 className="text-xl font-black text-white mb-1">{partner.name}</h3>
                             <p className={`text-xs font-bold ${partner.accentColor} mb-3`}>{partner.tagline}</p>
                             <p className="text-sm text-gray-400 leading-relaxed mb-4">{partner.description}</p>
-                            <p className="text-xs text-gray-600 mb-5">{partner.location}</p>
+                            <p className="text-xs text-gray-400 mb-5">{partner.location}</p>
                             <a
                                 href={partner.website}
                                 target="_blank"
@@ -644,7 +639,7 @@ export default function CSRPage() {
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <span className="text-xs font-bold text-green-500/60 uppercase tracking-[0.3em] block mb-4">Simple & transparent</span>
+                    <span className="text-xs font-bold text-[#FF0000]/60 uppercase tracking-[0.3em] block mb-4">Simple & transparent</span>
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter">
                         HOW CSR{" "}
                         <span className="text-white">
@@ -668,17 +663,17 @@ export default function CSRPage() {
                                 >
                                     {/* Connector line */}
                                     {i < processSteps.length - 1 && (
-                                        <div className="hidden lg:block absolute top-10 left-[calc(100%+0.5rem)] w-[calc(100%-1rem)] h-px bg-gradient-to-r from-green-500/30 to-transparent" />
+                                        <div className="hidden lg:block absolute top-10 left-[calc(100%+0.5rem)] w-[calc(100%-1rem)] h-px bg-gradient-to-r from-[#FF0000]/30 to-transparent" />
                                     )}
-                                    <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 text-center group-hover:border-green-500/30 transition-all duration-300">
-                                        <div className="text-[2.5rem] font-black text-green-500/10 group-hover:text-green-500/20 transition-colors leading-none mb-2">
+                                    <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 text-center group-hover:border-[#FF0000]/30 transition-all duration-300">
+                                        <div className="text-[2.5rem] font-black text-[#FF0000]/10 group-hover:text-[#FF0000]/20 transition-colors leading-none mb-2">
                                             {step.step}
                                         </div>
-                                        <div className="inline-flex p-3 rounded-xl bg-green-500/10 mb-4 group-hover:scale-110 transition-transform">
-                                            <Icon className="w-6 h-6 text-green-400" />
+                                        <div className="inline-flex p-3 rounded-xl bg-[#FF0000]/10 mb-4 group-hover:scale-110 transition-transform">
+                                            <Icon className="w-6 h-6 text-[#FF4D4D]" />
                                         </div>
                                         <h3 className="text-lg font-black text-white mb-1">{step.title}</h3>
-                                        <p className="text-xs text-gray-500">{step.description}</p>
+                                        <p className="text-xs text-gray-400">{step.description}</p>
                                     </div>
                                 </motion.div>
                             );
@@ -695,27 +690,22 @@ export default function CSRPage() {
                     viewport={{ once: true }}
                     className="max-w-4xl mx-auto"
                 >
-                    <div className="group relative rounded-[2.5rem] overflow-hidden">
-                        {/* Animated border gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-emerald-500 to-green-400 rounded-[2.5rem] p-[1px]">
-                            <div className="w-full h-full bg-black rounded-[2.5rem]" />
-                        </div>
-
+                    <div className="group relative rounded-xl overflow-hidden bg-white/5 border border-white/10">
                         <div className="relative p-10 md:p-16 text-center">
                             {/* Glow */}
-                            <div className="absolute inset-0 bg-gradient-to-b from-green-500/10 via-transparent to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[2.5rem]" />
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(255,0,0,0.10),_transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-xl" />
 
                             <div className="relative z-10">
                                 <motion.div
                                     animate={{ scale: [1, 1.05, 1] }}
                                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                    className="inline-flex p-5 rounded-full bg-green-500/10 mb-6"
+                                    className="inline-flex p-5 rounded-full bg-[#FF0000]/10 mb-6"
                                 >
-                                    <Building2 className="w-10 h-10 text-green-400 drop-shadow-[0_0_20px_rgba(34,197,94,0.5)]" />
+                                    <Building2 className="w-10 h-10 text-[#FF0000] drop-shadow-[0_0_20px_rgba(255,0,0,0.4)]" />
                                 </motion.div>
 
-                                <div className="inline-block px-5 py-2 mb-6 bg-green-500/10 border border-green-500/30 rounded-full">
-                                    <span className="text-green-400 text-sm font-black uppercase tracking-wider">We Accept CSR Contributions</span>
+                                <div className="inline-block px-5 py-2 mb-6 bg-[#FF0000]/10 border border-[#FF0000]/30 rounded-full">
+                                    <span className="text-[#FF4D4D] text-sm font-black uppercase tracking-wider">We Accept CSR Contributions</span>
                                 </div>
 
                                 <h2 className="text-4xl md:text-6xl font-black text-white mb-5 tracking-tighter">
@@ -734,7 +724,7 @@ export default function CSRPage() {
                                         { text: "Impact Reports Provided", icon: BookOpen },
                                     ].map((item, i) => (
                                         <div key={i} className="flex items-center justify-center gap-2 bg-white/5 rounded-xl px-4 py-3 border border-white/5">
-                                            <item.icon className="w-4 h-4 text-green-400 shrink-0" />
+                                            <item.icon className="w-4 h-4 text-[#FF4D4D] shrink-0" />
                                             <span className="text-xs text-gray-300 font-bold">{item.text}</span>
                                         </div>
                                     ))}
@@ -742,12 +732,12 @@ export default function CSRPage() {
 
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                     <a href="mailto:kyokushinkarateindia@gmail.com?subject=CSR%20Partnership%20Inquiry">
-                                        <Button className="bg-green-600 hover:bg-green-500 text-white font-black px-10 py-7 text-lg rounded-2xl shadow-[0_10px_40px_-10px_rgba(34,197,94,0.5)] hover:shadow-[0_20px_50px_-10px_rgba(34,197,94,0.6)] transition-all hover:-translate-y-1">
+                                        <Button className="bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold px-10 text-lg rounded-none focus-visible:ring-[#FF0000] focus-visible:ring-offset-black">
                                             <Mail className="w-5 h-5 mr-2" /> Enquire for CSR
                                         </Button>
                                     </a>
                                     <a href="tel:+919876543210">
-                                        <Button variant="ghost" className="text-white border border-white/10 hover:bg-white/5 font-bold px-10 py-7 text-lg rounded-2xl">
+                                        <Button variant="outline" className="text-white border border-white/20 hover:bg-white/10 font-bold px-10 text-lg rounded-none focus-visible:ring-[#FF0000] focus-visible:ring-offset-black">
                                             <Phone className="w-5 h-5 mr-2" /> Call Us
                                         </Button>
                                     </a>
@@ -763,7 +753,7 @@ export default function CSRPage() {
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                className="relative z-10 text-center text-xs text-gray-600 max-w-2xl mx-auto pb-12 px-4"
+                className="relative z-10 text-center text-xs text-gray-400 max-w-2xl mx-auto pb-12 px-4"
             >
                 Kyokushin Karate Federation of India is committed to full transparency.
                 All CSR contributions are documented and detailed impact reports are shared with contributing organizations.

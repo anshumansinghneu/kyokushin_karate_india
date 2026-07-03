@@ -57,9 +57,9 @@ export default function InstructorsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white font-sans">
-            {/* Subtle top vignette */}
-            <div className="absolute top-0 inset-x-0 h-[300px] bg-gradient-to-b from-zinc-900/10 to-transparent pointer-events-none" />
+        <div className="min-h-screen bg-black text-white font-sans">
+            {/* Subtle top red glow */}
+            <div className="absolute top-0 inset-x-0 h-[300px] bg-[radial-gradient(ellipse_at_top,rgba(255,0,0,0.06),transparent_70%)] pointer-events-none" />
 
             {/* ── Hero ── */}
             <div className="relative pt-28 pb-10 md:pt-32 md:pb-12 overflow-hidden">
@@ -75,16 +75,8 @@ export default function InstructorsPage() {
                         <h1 className="font-black uppercase leading-[0.9] tracking-tighter mb-4" style={{ fontSize: 'clamp(2.5rem, 7vw, 4.5rem)' }}>
                             <span className="inline-flex items-center gap-3 md:gap-4">
                                 <span className="text-white">OUR</span>
-                                <img src="/kkfi-logo.png" alt="KKFI" className="w-10 h-10 md:w-14 md:h-14 inline-block rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.2)]" />
-                                <span
-                                    className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
-                                    style={{
-                                        background: 'linear-gradient(180deg, #ef4444, #991b1b)',
-                                        WebkitBackgroundClip: 'text',
-                                        backgroundClip: 'text',
-                                        color: 'transparent',
-                                    }}
-                                >SENSEIS</span>
+                                <img src="/kkfi-logo.png" alt="KKFI" className="w-10 h-10 md:w-14 md:h-14 inline-block rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(255,0,0,0.2)]" />
+                                <span className="text-[#FF0000] drop-shadow-[0_4px_25px_rgba(255,0,0,0.4)]">SENSEIS</span>
                             </span>
                         </h1>
 
@@ -95,14 +87,14 @@ export default function InstructorsPage() {
                                 <>
                                     <div className="flex items-baseline gap-1.5">
                                         <span className="text-lg font-extrabold text-white">{instructors.length}</span>
-                                        <span className="text-[8px] font-semibold text-zinc-600 uppercase tracking-widest">Instructors</span>
+                                        <span className="text-[8px] font-semibold text-gray-400 uppercase tracking-widest">Instructors</span>
                                     </div>
                                 </>
                             )}
                             <div className="flex-1 h-px bg-gradient-to-l from-transparent to-white/[0.06]" />
                         </div>
 
-                        <p className="text-xs md:text-sm text-zinc-600 max-w-md leading-relaxed">
+                        <p className="text-xs md:text-sm text-gray-400 max-w-md leading-relaxed">
                             Certified Kyokushin Karate instructors across India.
                         </p>
                     </motion.div>
@@ -133,9 +125,9 @@ export default function InstructorsPage() {
                                     transition={{ delay: (i % 4) * 0.08, duration: 0.6 }}
                                     className="group w-full sm:w-[calc(50%-10px)] lg:w-[calc(33.333%-14px)]"
                                 >
-                                    <div className="relative flex flex-col h-[360px] rounded-2xl bg-white/[0.02] border border-white/[0.04] overflow-hidden transition-all duration-500 hover:border-red-600/15 hover:-translate-y-1 hover:shadow-[0_0_40px_-12px_rgba(220,38,38,0.15)]">
+                                    <div className="relative flex flex-col h-[360px] rounded-xl bg-white/5 border border-white/10 overflow-hidden transition-all duration-500 hover:border-[#FF0000]/20 hover:-translate-y-1 hover:shadow-[0_0_40px_-12px_rgba(255,0,0,0.15)]">
                                         {/* Sweep light */}
-                                        <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden rounded-2xl">
+                                        <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden rounded-xl">
                                             <div className="absolute top-0 left-[-100%] h-full w-1/2 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent skew-x-[-25deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out" />
                                         </div>
 
@@ -149,8 +141,8 @@ export default function InstructorsPage() {
                                                 />
                                             ) : (
                                                 <div className="w-full h-full bg-[#080808] flex items-center justify-center">
-                                                    <div className="w-20 h-20 rounded-full bg-red-600/10 border border-red-600/20 flex items-center justify-center">
-                                                        <span className="text-2xl font-black text-red-500/60">{initials}</span>
+                                                    <div className="w-20 h-20 rounded-full bg-[#FF0000]/10 border border-[#FF0000]/20 flex items-center justify-center">
+                                                        <span className="text-2xl font-black text-[#FF4D4D]">{initials}</span>
                                                     </div>
                                                 </div>
                                             )}
@@ -167,15 +159,15 @@ export default function InstructorsPage() {
                                         {/* Info */}
                                         <div className="relative -mt-6 px-5 pb-5 flex flex-col flex-1 z-10">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <div className="w-[2px] h-3.5 rounded-full bg-red-600" />
-                                                <span className="text-[9px] font-extrabold text-red-500 uppercase tracking-[2px]">Sensei</span>
+                                                <div className="w-[2px] h-3.5 rounded-full bg-[#FF0000]" />
+                                                <span className="text-[9px] font-extrabold text-[#FF4D4D] uppercase tracking-[2px]">Sensei</span>
                                             </div>
 
                                             <h3 className="text-lg font-extrabold text-white tracking-tight leading-snug mb-2">
                                                 {instructor.name}
                                             </h3>
 
-                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-auto text-[11px] text-zinc-500">
+                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-auto text-[11px] text-gray-400">
                                                 {instructor.dojo && (
                                                     <span className="flex items-center gap-1.5">
                                                         <MapPin className="w-3 h-3 opacity-40" />
@@ -187,7 +179,7 @@ export default function InstructorsPage() {
                                                         {instructor.dojo && <span className="w-1 h-1 rounded-full bg-zinc-700" />}
                                                         <Link
                                                             href={`/verify/${instructor.membershipNumber}`}
-                                                            className="flex items-center gap-1 text-red-500/70 hover:text-red-400 transition-colors"
+                                                            className="flex items-center gap-1 text-[#FF4D4D] hover:text-[#FF0000] transition-colors"
                                                         >
                                                             Verify <ChevronRight className="w-3 h-3" />
                                                         </Link>

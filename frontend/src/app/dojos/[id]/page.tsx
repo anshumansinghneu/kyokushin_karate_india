@@ -173,7 +173,7 @@ export default function DojoDetailPage() {
                     <Shield className="w-8 h-8 text-red-500" />
                 </div>
                 <h2 className="text-2xl font-bold mb-3">{error || "Dojo not found"}</h2>
-                <p className="text-zinc-500 mb-8 text-center max-w-md text-sm">
+                <p className="text-zinc-400 mb-8 text-center max-w-md text-sm">
                     The requested Dojo record could not be loaded. Please try again.
                 </p>
                 <Link href="/find-a-dojo">
@@ -186,14 +186,14 @@ export default function DojoDetailPage() {
     }
 
     return (
-        <div className="min-h-screen w-full bg-[#050505] text-white font-sans selection:bg-red-600 selection:text-white">
-            
+        <div className="min-h-screen w-full bg-black text-white font-sans selection:bg-red-600 selection:text-white">
+
             {/* ── HERO ── */}
             <div className="relative min-h-[380px] w-full">
                 {/* Background */}
                 <div className="absolute inset-0">
                     <Image src="/dojo-bg.png" alt="Dojo" fill className="object-cover" priority />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-black/40" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/40" />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
                 </div>
 
@@ -262,7 +262,7 @@ export default function DojoDetailPage() {
                                     href={`https://www.google.com/maps/dir/?api=1&destination=${dojo.latitude},${dojo.longitude}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black text-[11px] font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors"
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-none bg-white text-black text-[11px] font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 >
                                     <Navigation className="w-3.5 h-3.5" /> Get Directions
                                 </a>
@@ -270,7 +270,7 @@ export default function DojoDetailPage() {
                             {dojo.contactPhone && (
                                 <a
                                     href={`tel:${dojo.contactPhone}`}
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white text-[11px] font-bold uppercase tracking-wider hover:bg-white/[0.1] transition-colors"
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-none bg-transparent border border-white/20 text-white text-[11px] font-bold uppercase tracking-wider hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 >
                                     <Phone className="w-3.5 h-3.5" /> Call
                                 </a>
@@ -278,7 +278,7 @@ export default function DojoDetailPage() {
                             {dojo.contactEmail && (
                                 <a
                                     href={`mailto:${dojo.contactEmail}`}
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white text-[11px] font-bold uppercase tracking-wider hover:bg-white/[0.1] transition-colors"
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-none bg-transparent border border-white/20 text-white text-[11px] font-bold uppercase tracking-wider hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 >
                                     <Mail className="w-3.5 h-3.5" /> Email
                                 </a>
@@ -300,12 +300,12 @@ export default function DojoDetailPage() {
                             <div className="w-[3px] h-5 rounded-full bg-red-600" />
                             Dojo Overview
                         </h2>
-                        <div className="bg-[#0a0a0a] border border-white/5 rounded-3xl p-8 shadow-xl">
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-8">
                             <div className="text-zinc-400 leading-relaxed text-sm space-y-2">
                                 <p>Official KKFI registered branch in {dojo.city}, {dojo.state}.</p>
-                                {dojo.address && <p className="flex items-start gap-2"><MapPin className="w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0" /> {dojo.address}</p>}
-                                {dojo.contactPhone && <p className="flex items-center gap-2"><Phone className="w-3.5 h-3.5 text-zinc-600 shrink-0" /> {dojo.contactPhone}</p>}
-                                {dojo.contactEmail && <p className="flex items-center gap-2"><Mail className="w-3.5 h-3.5 text-zinc-600 shrink-0" /> {dojo.contactEmail}</p>}
+                                {dojo.address && <p className="flex items-start gap-2"><MapPin className="w-3.5 h-3.5 text-zinc-400 mt-0.5 shrink-0" /> {dojo.address}</p>}
+                                {dojo.contactPhone && <p className="flex items-center gap-2"><Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" /> {dojo.contactPhone}</p>}
+                                {dojo.contactEmail && <p className="flex items-center gap-2"><Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" /> {dojo.contactEmail}</p>}
                             </div>
                         </div>
                     </motion.div>
@@ -319,8 +319,8 @@ export default function DojoDetailPage() {
                         {dojo.instructors && dojo.instructors.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {dojo.instructors.map((inst, idx) => (
-                                    <div key={idx} className="bg-[#0a0a0a] border border-white/5 p-5 rounded-3xl flex items-center gap-5 hover:border-white/10 transition-colors shadow-lg">
-                                        <div className="w-16 h-16 rounded-2xl bg-zinc-800 shrink-0 overflow-hidden border border-white/5">
+                                    <div key={idx} className="bg-white/5 border border-white/10 p-5 rounded-xl flex items-center gap-5 hover:bg-white/[0.07] transition-colors">
+                                        <div className="w-16 h-16 rounded-lg bg-zinc-800 shrink-0 overflow-hidden border border-white/10">
                                             {inst.profilePhotoUrl ? (
                                                 <Image src={inst.profilePhotoUrl} alt={inst.name} width={64} height={64} className="w-full h-full object-cover" />
                                             ) : (
@@ -332,7 +332,7 @@ export default function DojoDetailPage() {
                                         <div>
                                             <p className="font-bold text-white tracking-tight">{inst.name}</p>
                                             <div className="flex items-center gap-2 mt-1.5">
-                                                <span className="text-xs text-zinc-500 font-medium">{inst.role}</span>
+                                                <span className="text-xs text-zinc-400 font-medium">{inst.role}</span>
                                                 <span className="w-1 h-1 rounded-full bg-white/20" />
                                                 <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${BELT_COLORS[inst.currentBeltRank] || "bg-zinc-700 text-white/70"}`}>
                                                     {inst.currentBeltRank?.replace(/_/g, " ")}
@@ -343,8 +343,8 @@ export default function DojoDetailPage() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="bg-[#0a0a0a] border border-white/5 p-10 rounded-3xl text-center flex flex-col items-center">
-                                <Users className="w-8 h-8 text-white/10 mb-3" />
+                            <div className="bg-white/5 border border-white/10 p-10 rounded-xl text-center flex flex-col items-center">
+                                <Users className="w-8 h-8 text-white/20 mb-3" />
                                 <h3 className="font-bold text-white/80 text-sm">No Instructors Listed</h3>
                             </div>
                         )}
@@ -361,7 +361,7 @@ export default function DojoDetailPage() {
                                 {dojo.gallery.slice(0, 6).map((photo: any, i: number) => (
                                     <div
                                         key={i}
-                                        className="aspect-square rounded-3xl overflow-hidden bg-zinc-900 relative cursor-pointer group border border-white/5 shadow-lg"
+                                        className="aspect-square rounded-xl overflow-hidden bg-zinc-900 relative cursor-pointer group border border-white/10"
                                         onClick={() => setLightboxIdx(i)}
                                     >
                                         <img
@@ -376,8 +376,8 @@ export default function DojoDetailPage() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="bg-[#0a0a0a] border border-white/5 p-10 rounded-3xl text-center flex flex-col items-center">
-                                <Camera className="w-8 h-8 text-white/10 mb-3" />
+                            <div className="bg-white/5 border border-white/10 p-10 rounded-xl text-center flex flex-col items-center">
+                                <Camera className="w-8 h-8 text-white/20 mb-3" />
                                 <h3 className="font-bold text-white/80 text-sm">No Photos Available</h3>
                             </div>
                         )}
@@ -393,8 +393,8 @@ export default function DojoDetailPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {dojo.events.map((event) => (
                                     <Link key={event.id} href={`/events/${event.id}`}>
-                                        <div className="bg-[#0a0a0a] border border-white/5 hover:border-white/10 shadow-lg transition-colors p-5 rounded-3xl flex items-center gap-5 group">
-                                            <div className="w-14 h-14 rounded-2xl border border-white/5 bg-white/[0.02] flex flex-col items-center justify-center text-center shrink-0">
+                                        <div className="bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors p-5 rounded-xl flex items-center gap-5 group">
+                                            <div className="w-14 h-14 rounded-lg border border-white/10 bg-white/[0.02] flex flex-col items-center justify-center text-center shrink-0">
                                                 <span className="text-[10px] uppercase font-bold text-red-500 mb-0.5 leading-none">
                                                     {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short' })}
                                                 </span>
@@ -403,8 +403,8 @@ export default function DojoDetailPage() {
                                                 </span>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1">{event.type}</p>
-                                                <h3 className="font-bold text-white group-hover:text-[#FF9933] transition-colors tracking-tight line-clamp-1">
+                                                <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold mb-1">{event.type}</p>
+                                                <h3 className="font-bold text-white group-hover:text-[#FF4D4D] transition-colors tracking-tight line-clamp-1">
                                                     {event.name}
                                                 </h3>
                                             </div>
@@ -413,8 +413,8 @@ export default function DojoDetailPage() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="bg-[#0a0a0a] border border-white/5 p-8 rounded-3xl text-center flex flex-col items-center shadow-lg">
-                                <Calendar className="w-8 h-8 text-white/10 mb-3" />
+                            <div className="bg-white/5 border border-white/10 p-8 rounded-xl text-center flex flex-col items-center">
+                                <Calendar className="w-8 h-8 text-white/20 mb-3" />
                                 <h3 className="font-bold text-white/80 text-sm">No Upcoming Events</h3>
                             </div>
                         )}
@@ -424,8 +424,8 @@ export default function DojoDetailPage() {
                 {/* RIGHT SIDEBAR (Contact & Map) */}
                 <div className="lg:col-span-1 space-y-6">
                     
-                    <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-[#0a0a0a] border border-white/5 rounded-3xl p-6 shadow-xl sticky top-24">
-                        <div className="bg-gradient-to-r from-[#FF9933]/10 via-white/5 to-[#138808]/10 p-4 rounded-2xl mb-6 border border-white/5">
+                    <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white/5 border border-white/10 rounded-xl p-6 sticky top-24">
+                        <div className="bg-white/5 p-4 rounded-lg mb-6 border border-white/10">
                             <h3 className="font-black uppercase tracking-widest text-[11px] text-zinc-400 mb-2">Connect</h3>
                             
                             {dojo.contactPhone && (
@@ -444,13 +444,13 @@ export default function DojoDetailPage() {
                         </div>
 
                         {/* Embedded Map */}
-                        <div className="w-full h-48 bg-[#050505] border border-white/5 rounded-2xl overflow-hidden relative shadow-inner mb-4">
+                        <div className="w-full h-48 bg-black border border-white/10 rounded-lg overflow-hidden relative mb-4">
                             <div ref={mapRef} className="w-full h-full z-0" />
                         </div>
-                        
+
                         {(dojo.latitude && dojo.longitude) && (
                             <a href={`https://www.google.com/maps/dir/?api=1&destination=${dojo.latitude},${dojo.longitude}`} target="_blank" rel="noreferrer">
-                                <Button className="w-full bg-white text-black hover:bg-zinc-200 font-bold rounded-xl h-12 shadow-lg">
+                                <Button className="w-full bg-white text-black hover:bg-zinc-200 font-bold rounded-xl h-12">
                                     <Navigation className="w-4 h-4 mr-2" /> Get Directions
                                 </Button>
                             </a>

@@ -126,7 +126,7 @@ export default function DojoListPage() {
     return (
         <div className="min-h-screen w-full bg-black text-white relative overflow-hidden selection:bg-red-600 selection:text-white">
             {/* Background Elements */}
-            <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black pointer-events-none" />
+            <div className="fixed inset-0 bg-black pointer-events-none" />
             <div className="fixed top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-[0.03] pointer-events-none" />
 
             <div className="container-responsive py-8 sm:py-12 md:py-24 relative z-10">
@@ -163,7 +163,7 @@ export default function DojoListPage() {
                             <Search className="absolute left-6 w-5 h-5 text-gray-400 group-focus-within:text-red-500 transition-colors" />
                             <Input
                                 placeholder="Search by city or dojo name..."
-                                className="w-full h-16 pl-16 pr-6 rounded-full bg-transparent border-none text-lg text-white placeholder:text-gray-500 focus:ring-0 focus:bg-transparent"
+                                className="w-full h-16 pl-16 pr-6 rounded-full bg-transparent border-none text-lg text-white placeholder:text-gray-400 focus:ring-0 focus:bg-transparent"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -175,13 +175,13 @@ export default function DojoListPage() {
                 <div className="flex justify-center gap-2 mb-12">
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all min-h-[44px] active:scale-95 ${viewMode === 'grid' ? 'bg-red-600 text-white' : 'bg-zinc-900 text-gray-400 border border-white/10 hover:text-white'}`}
+                        className={`flex items-center gap-2 px-5 py-3 rounded-none text-xs font-bold uppercase tracking-wider transition-all min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${viewMode === 'grid' ? 'bg-[#FF0000] hover:bg-[#8B0000] text-white' : 'bg-zinc-900 text-gray-400 border border-white/20 hover:bg-white/10 hover:text-white'}`}
                     >
                         <LayoutGrid className="w-4 h-4" /> Grid
                     </button>
                     <button
                         onClick={() => setViewMode('map')}
-                        className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all min-h-[44px] active:scale-95 ${viewMode === 'map' ? 'bg-red-600 text-white' : 'bg-zinc-900 text-gray-400 border border-white/10 hover:text-white'}`}
+                        className={`flex items-center gap-2 px-5 py-3 rounded-none text-xs font-bold uppercase tracking-wider transition-all min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${viewMode === 'map' ? 'bg-[#FF0000] hover:bg-[#8B0000] text-white' : 'bg-zinc-900 text-gray-400 border border-white/20 hover:bg-white/10 hover:text-white'}`}
                     >
                         <Map className="w-4 h-4" /> Map View
                     </button>
@@ -196,7 +196,7 @@ export default function DojoListPage() {
                     <div className="text-center py-20">
                         <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
                         <p className="text-gray-400 text-lg mb-4">Failed to load dojos</p>
-                        <button onClick={fetchDojos} className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-all">
+                        <button onClick={fetchDojos} className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none text-xs font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                             <RefreshCw className="w-4 h-4" /> Try Again
                         </button>
                     </div>
@@ -211,10 +211,10 @@ export default function DojoListPage() {
                         >
                             <div
                                 ref={mapRef}
-                                className="w-full h-[500px] md:h-[600px] rounded-2xl border border-white/10 overflow-hidden"
+                                className="w-full h-[500px] md:h-[600px] rounded-xl border border-white/10 overflow-hidden"
                                 style={{ background: '#1a1a1a' }}
                             />
-                            <p className="text-center text-xs text-gray-500 mt-3">
+                            <p className="text-center text-xs text-gray-400 mt-3">
                                 Click markers to see dojo details • Dojos without coordinates shown in grid only
                             </p>
                         </motion.div>
@@ -231,7 +231,7 @@ export default function DojoListPage() {
                                         viewport={{ once: true, amount: 0.15 }}
                                         exit={{ opacity: 0, scale: 0.9 }}
                                         transition={{ delay: index * 0.08, duration: 0.5 }}
-                                        className="group relative h-[320px] sm:h-[380px] md:h-[500px] rounded-3xl overflow-hidden cursor-pointer bg-zinc-900 border border-white/5 hover:border-red-600/50 transition-all duration-500 hover:shadow-2xl hover:shadow-red-900/20 active:scale-[0.98]"
+                                        className="group relative h-[320px] sm:h-[380px] md:h-[500px] rounded-xl overflow-hidden cursor-pointer bg-zinc-900 border border-white/10 hover:border-red-600/50 transition-all duration-500 hover:shadow-2xl hover:shadow-red-900/20 active:scale-[0.98]"
                                     >
                                         {/* Background Image */}
                                         <div className="absolute inset-0">

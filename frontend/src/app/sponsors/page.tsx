@@ -13,11 +13,11 @@ const sponsors = [
         description: "One of India's largest producers of quality spices and food products. Founded in 1980, Goldiee Group has grown into a household name with 4000+ employees, 1500+ distributors, and 500,000+ retailers across India. Winner of The Economic Times Best Brands 2020.",
         website: "https://goldiee.com/",
         logo: "https://goldiee.com/wp-content/uploads/2018/10/Logo_.png",
-        color: "from-yellow-600 to-orange-700",
-        borderColor: "border-yellow-500/30",
-        glowColor: "rgba(234,179,8,0.3)",
-        accentColor: "text-yellow-400",
-        bgAccent: "bg-yellow-500/10",
+        color: "bg-[#FF0000]",
+        borderColor: "border-white/10",
+        glowColor: "rgba(255,0,0,0.25)",
+        accentColor: "text-white",
+        bgAccent: "bg-white/10",
         icon: ChefHat,
         stats: [
             { label: "Founded", value: "1980" },
@@ -34,11 +34,11 @@ const sponsors = [
         description: "Leading manufacturer of railway rolling stock components including couplers, buffers, bogies, wheels, and draft gears. With 38+ years of service to Indian Railways and state-of-the-art facilities in Kanpur and Paonta Sahib. ISO 9001 & IRIS certified.",
         website: "https://www.frontieralloy.com/",
         logo: "https://static.wixstatic.com/media/2a0662_67b739277d564fc79ac52eee67e02837~mv2.png",
-        color: "from-blue-600 to-cyan-700",
-        borderColor: "border-blue-500/30",
-        glowColor: "rgba(59,130,246,0.3)",
-        accentColor: "text-blue-400",
-        bgAccent: "bg-blue-500/10",
+        color: "bg-[#FF0000]",
+        borderColor: "border-white/10",
+        glowColor: "rgba(255,0,0,0.25)",
+        accentColor: "text-white",
+        bgAccent: "bg-white/10",
         icon: Train,
         stats: [
             { label: "Years of Service", value: "38+" },
@@ -55,11 +55,11 @@ const sponsors = [
         description: "Shri Gang Industries & Allied Products Limited (earlier Suraj Vanaspati Ltd) is a leading manufacturer of Vanaspati, Refined Oils, and operates modern Distillery & Bottling facilities. With ISO certification and a commitment to green initiatives, they deliver quality products with powerful management and timely delivery.",
         website: "https://www.shrigangindustries.com/",
         logo: "https://www.shrigangindustries.com/assets/img/logo.png",
-        color: "from-green-600 to-emerald-700",
-        borderColor: "border-green-500/30",
-        glowColor: "rgba(34,197,94,0.3)",
-        accentColor: "text-green-400",
-        bgAccent: "bg-green-500/10",
+        color: "bg-[#FF0000]",
+        borderColor: "border-white/10",
+        glowColor: "rgba(255,0,0,0.25)",
+        accentColor: "text-white",
+        bgAccent: "bg-white/10",
         icon: Factory,
         stats: [
             { label: "Founded", value: "1990" },
@@ -97,22 +97,22 @@ function SponsorCard({ sponsor, index }: { sponsor: typeof sponsors[0]; index: n
             style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
             onMouseMove={onMouseMove}
             onMouseLeave={() => { x.set(0); y.set(0); }}
-            className={`group relative rounded-[2rem] overflow-hidden border ${sponsor.borderColor} bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl shadow-2xl`}
+            className={`group relative rounded-xl overflow-hidden border ${sponsor.borderColor} bg-white/5`}
         >
             {/* Glow effect */}
             <div
-                className="absolute -inset-1 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-xl -z-10"
+                className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-xl -z-10"
                 style={{ background: `radial-gradient(600px circle, ${sponsor.glowColor}, transparent 70%)` }}
             />
 
             {/* Top accent bar */}
-            <div className={`h-1.5 bg-gradient-to-r ${sponsor.color}`} />
+            <div className={`h-1.5 ${sponsor.color}`} />
 
             <div className="p-8 md:p-10">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row items-start gap-6 mb-8">
                     {/* Logo */}
-                    <div className="w-24 h-24 md:w-28 md:h-28 bg-white rounded-2xl flex items-center justify-center p-3 shadow-xl group-hover:scale-105 transition-transform duration-500 shrink-0">
+                    <div className="w-24 h-24 md:w-28 md:h-28 bg-white rounded-xl flex items-center justify-center p-3 group-hover:scale-105 transition-transform duration-500 shrink-0">
                         <img
                             src={sponsor.logo}
                             alt={sponsor.name}
@@ -150,7 +150,7 @@ function SponsorCard({ sponsor, index }: { sponsor: typeof sponsors[0]; index: n
                             className="bg-white/5 rounded-xl p-4 text-center border border-white/5 hover:border-white/10 transition-colors"
                         >
                             <p className={`text-2xl font-black ${sponsor.accentColor}`}>{stat.value}</p>
-                            <p className="text-xs text-gray-500 uppercase tracking-wider font-bold mt-1">{stat.label}</p>
+                            <p className="text-xs text-gray-400 uppercase tracking-wider font-bold mt-1">{stat.label}</p>
                         </motion.div>
                     ))}
                 </div>
@@ -169,7 +169,7 @@ function SponsorCard({ sponsor, index }: { sponsor: typeof sponsors[0]; index: n
 
                 {/* Footer */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-6 border-t border-white/10">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 text-sm text-gray-400">
                         <Globe className="w-4 h-4" />
                         <span>{sponsor.location}</span>
                     </div>
@@ -177,7 +177,7 @@ function SponsorCard({ sponsor, index }: { sponsor: typeof sponsors[0]; index: n
                         href={sponsor.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r ${sponsor.color} text-white font-bold text-sm hover:shadow-lg hover:scale-105 transition-all duration-300`}
+                        className="inline-flex items-center gap-2 px-6 min-h-[44px] rounded-none bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold text-sm uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                     >
                         Visit Website <ExternalLink className="w-4 h-4" />
                     </a>
@@ -192,11 +192,8 @@ export default function SponsorsPage() {
         <div className="min-h-screen bg-black text-white relative overflow-hidden selection:bg-red-500/30">
             {/* Dynamic Background */}
             <div className="fixed inset-0 z-0">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(100,0,0,0.08),_transparent_70%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(139,0,0,0.10),_transparent_70%)]" />
                 <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-[0.03]" />
-                <div className="absolute -top-[30%] -left-[10%] w-[60%] h-[60%] bg-yellow-600/5 blur-[150px] rounded-full" />
-                <div className="absolute top-[40%] -right-[10%] w-[50%] h-[50%] bg-blue-600/5 blur-[150px] rounded-full" />
-                <div className="absolute bottom-[10%] left-[20%] w-[40%] h-[40%] bg-green-600/5 blur-[150px] rounded-full" />
             </div>
 
             <div className="container-responsive py-24 relative z-10">
@@ -241,29 +238,29 @@ export default function SponsorsPage() {
                     viewport={{ once: true }}
                     className="max-w-4xl mx-auto"
                 >
-                    <div className="group relative bg-gradient-to-br from-red-900/30 to-black border border-red-500/20 rounded-[2.5rem] p-10 md:p-14 text-center overflow-hidden">
+                    <div className="group relative bg-white/5 border border-white/10 rounded-xl p-10 md:p-14 text-center overflow-hidden">
                         <div className="absolute inset-0 bg-[url('/dojo-bg.png')] opacity-5 bg-cover bg-center mix-blend-overlay" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-red-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(255,0,0,0.10),_transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                         <div className="relative z-10">
-                            <div className="inline-flex p-4 rounded-full bg-red-500/10 mb-8">
-                                <Heart className="w-10 h-10 text-red-500 fill-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
+                            <div className="inline-flex p-4 rounded-full bg-[#FF0000]/10 mb-8">
+                                <Heart className="w-10 h-10 text-[#FF0000] fill-[#FF0000]" />
                             </div>
                             <h2 className="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight">
                                 Become a Sponsor
                             </h2>
-                            <p className="text-gray-400 mb-10 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                            <p className="text-gray-300 mb-10 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
                                 Support the growth of Kyokushin Karate in India and connect with our dedicated community
                                 of martial artists, families, and fans across the nation.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <a href="mailto:kyokushinkarateindia@gmail.com">
-                                    <Button className="bg-red-600 hover:bg-red-500 text-white font-bold px-8 py-6 text-lg rounded-2xl shadow-[0_10px_30px_-10px_rgba(220,38,38,0.5)] hover:shadow-[0_20px_40px_-10px_rgba(220,38,38,0.6)] transition-all hover:-translate-y-1">
+                                    <Button className="bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold px-8 text-lg rounded-none focus-visible:ring-[#FF0000] focus-visible:ring-offset-black">
                                         <Mail className="w-5 h-5 mr-2" /> Contact Us
                                     </Button>
                                 </a>
                                 <Link href="/contact">
-                                    <Button variant="ghost" className="text-white border border-white/10 hover:bg-white/5 font-bold px-8 py-6 text-lg rounded-2xl">
+                                    <Button variant="outline" className="text-white border border-white/20 hover:bg-white/10 font-bold px-8 text-lg rounded-none focus-visible:ring-[#FF0000] focus-visible:ring-offset-black">
                                         Learn More <ArrowRight className="w-5 h-5 ml-2" />
                                     </Button>
                                 </Link>
