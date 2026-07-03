@@ -952,7 +952,7 @@ export default function GalleryPage() {
                             )}
 
                             {user?.role === "STUDENT" && (
-                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-4 bg-yellow-500/5 border border-yellow-500/10 rounded-lg px-3 py-2">
+                                <div className="flex items-center gap-2 text-xs text-gray-300 mb-4 bg-yellow-500/5 border border-yellow-500/10 rounded-lg px-3 py-2">
                                     <Info className="w-3.5 h-3.5 text-yellow-500" />
                                     Your photos will be reviewed before appearing in the gallery.
                                 </div>
