@@ -53,9 +53,10 @@ export default function EventDetailPage() {
         if (id) fetchEvent();
     }, [id]);
 
-    // Fetch feedback for completed events
+    // Fetch feedback once the event has finished (derived from dates; the backend
+    // gate matches). CANCELLED events never accept feedback.
     useEffect(() => {
-        if (!event || event.status !== 'COMPLETED') return;
+        if (!event || event.status === 'CANCELLED' || getEventStatus(event) !== 'COMPLETED') return;
         const fetchFeedback = async () => {
             try {
                 const res = await api.get(`/feedback/${event.id}`);
@@ -69,7 +70,7 @@ export default function EventDetailPage() {
             }
         };
         fetchFeedback();
-    }, [event?.id, event?.status, user]);
+    }, [event, user]);
 
     const handleFeedbackSubmit = async () => {
         if (feedbackText.trim().length < 10) {
@@ -320,7 +321,7 @@ export default function EventDetailPage() {
                     </motion.section>
 
                     {/* Feedback Section — only for completed events */}
-                    {event.status === 'COMPLETED' && (
+                    {event.status !== 'CANCELLED' && getEventStatus(event) === 'COMPLETED' && (
                         <motion.section
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../prisma';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/errorHandler';
+import { isEventFinished } from '../utils/eventStatus';
 
 // POST /api/feedback/:eventId — Submit feedback (registered participants only, completed events only)
 export const submitFeedback = catchAsync(async (req: Request, res: Response) => {
@@ -18,8 +19,13 @@ export const submitFeedback = catchAsync(async (req: Request, res: Response) => 
 
     const event = await prisma.event.findUnique({ where: { id: eventId } });
     if (!event) throw new AppError('Event not found', 404);
-    if (event.status !== 'COMPLETED') {
-        throw new AppError('Feedback can only be submitted for completed events', 400);
+    // Derive "finished" from the event dates rather than the stored status, which
+    // never transitions after creation. CANCELLED is an explicit, non-date state.
+    if (event.status === 'CANCELLED') {
+        throw new AppError('Feedback cannot be submitted for a cancelled event', 400);
+    }
+    if (!isEventFinished(event)) {
+        throw new AppError('Feedback can only be submitted after the event has finished', 400);
     }
 
     const registration = await prisma.eventRegistration.findFirst({
