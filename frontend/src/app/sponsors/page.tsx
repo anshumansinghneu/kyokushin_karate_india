@@ -122,7 +122,7 @@ function SponsorCard({ sponsor, index }: { sponsor: typeof sponsors[0]; index: n
 
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-3xl md:text-4xl font-black text-white tracking-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 transition-all">
+                            <h3 className="text-3xl md:text-4xl font-black text-white tracking-tight transition-all">
                                 {sponsor.name}
                             </h3>
                             <div className={`p-2 rounded-xl ${sponsor.bgAccent}`}>
@@ -217,7 +217,7 @@ export default function SponsorsPage() {
                     </motion.div>
                     <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-6">
                         OUR{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-400 to-red-600">
+                        <span className="text-[#FF0000]">
                             SPONSORS
                         </span>
                     </h1>

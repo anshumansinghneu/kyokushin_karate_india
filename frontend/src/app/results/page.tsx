@@ -57,7 +57,7 @@ export default function ResultsPage() {
             initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.2 }}
-            className="mt-3 bg-gradient-to-b from-white via-white to-white/55 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent sm:text-6xl"
+            className="mt-3 text-4xl font-extrabold tracking-tight text-white sm:text-6xl"
           >
             Belt Test Results
           </motion.h1>

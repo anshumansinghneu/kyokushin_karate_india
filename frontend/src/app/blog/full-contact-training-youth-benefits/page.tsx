@@ -136,7 +136,7 @@ export default function YouthBenefits() {
             report that parents notice improvements in school performance within the first 3 months.
           </p>
 
-          <blockquote className="border-l-4 border-red-600 pl-6 my-8 italic text-gray-400">
+          <blockquote className="border border-red-600/20 rounded-xl p-6 my-8 italic text-gray-400">
             &quot;One thousand days of training to forge, ten thousand days of training to polish. The path of
             true martial arts is one that requires patience.&quot;
             <br />— Sosai Masutatsu Oyama

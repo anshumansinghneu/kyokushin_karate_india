@@ -100,7 +100,7 @@ export default function WhatIsKyokushinPage() {
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 leading-[0.9]">
               WHAT IS{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700">
+              <span className="text-[#FF0000]">
                 KYOKUSHIN
               </span>{' '}
               KARATE?

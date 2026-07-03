@@ -122,7 +122,7 @@ export default function KyokushinVsShotokan() {
           encapsulates patience, determination, and the willingness to push beyond your limits. Training is
           intentionally difficult because the goal is not just to learn techniques, but to forge an unbreakable spirit.
         </p>
-        <blockquote className="border-l-4 border-red-600 pl-6 my-8 italic text-gray-400">
+        <blockquote className="border border-red-600/20 rounded-xl p-6 my-8 italic text-gray-400">
           &quot;One becomes a beginner after one thousand days of training and an expert after ten thousand days of practice.&quot;
           <br />— Sosai Masutatsu Oyama
         </blockquote>

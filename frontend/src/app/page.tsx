@@ -325,7 +325,7 @@ export default function Home() {
                       &ldquo;The heart of our karate is real fighting. There can be no proof without real fighting.
                       Without proof there is no trust. Without trust there is no respect. This is a definition in the world of Martial Arts.&rdquo;
                     </p>
-                    <p className="font-serif italic text-xl sm:text-2xl text-white border-l-4 border-red-600 pl-4 sm:pl-6 py-2">
+                    <p className="font-serif italic text-xl sm:text-2xl text-white border border-red-600/20 bg-red-600/5 rounded-xl px-4 sm:px-6 py-3">
                       — Masutatsu Oyama
                     </p>
                   </div>

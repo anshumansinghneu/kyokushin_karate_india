@@ -388,7 +388,7 @@ export default function PublicTournamentViewer() {
                                                                 {/* Fighter A */}
                                                                 <div className={`p-4 flex items-center gap-3 ${
                                                                     match.winnerId === match.fighterAId
-                                                                        ? 'bg-yellow-500/20 border-l-4 border-yellow-500'
+                                                                        ? 'bg-yellow-500/20 border border-yellow-500/30'
                                                                         : ''
                                                                 }`}>
                                                                     <div className="flex-1">
@@ -424,7 +424,7 @@ export default function PublicTournamentViewer() {
                                                                 {/* Fighter B */}
                                                                 <div className={`p-4 flex items-center gap-3 ${
                                                                     match.winnerId === match.fighterBId
-                                                                        ? 'bg-yellow-500/20 border-l-4 border-yellow-500'
+                                                                        ? 'bg-yellow-500/20 border border-yellow-500/30'
                                                                         : ''
                                                                 }`}>
                                                                     <div className="flex-1">

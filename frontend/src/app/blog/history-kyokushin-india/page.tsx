@@ -144,7 +144,7 @@ export default function HistoryKyokushinIndia() {
             <li><strong>Digital infrastructure</strong> for membership management, belt tracking, and tournament organization</li>
           </ul>
 
-          <blockquote className="border-l-4 border-red-600 pl-6 my-8 italic text-gray-400">
+          <blockquote className="border border-red-600/20 rounded-xl p-6 my-8 italic text-gray-400">
             &quot;Kyokushin is not just a fighting style. It is a way of life. Our mission is to bring this
             path of strength and character to every corner of India.&quot;
             <br />— Shihan Vasant Kumar Singh, KKFI

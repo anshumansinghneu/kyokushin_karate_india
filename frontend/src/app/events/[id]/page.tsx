@@ -328,7 +328,7 @@ export default function EventDetailPage() {
 
                             {/* My feedback status */}
                             {user && myFeedback && !showFeedbackForm && (
-                                <div className="glass-card p-4 mb-6 border-l-4 border-yellow-500/50">
+                                <div className="glass-card p-4 mb-6 border border-yellow-500/30 bg-yellow-500/5">
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="text-sm text-gray-400 mb-1">Your feedback</p>

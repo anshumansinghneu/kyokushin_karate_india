@@ -282,8 +282,8 @@ export default function CSRPage() {
                                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                                     transition={{ delay: 0.4 + i * 0.12, duration: 0.7 }}
                                     className={`inline-block mr-4 md:mr-6 ${
-                                        i === 0 ? "text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-300 to-green-500" :
-                                        i === 3 ? "text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-400" :
+                                        i === 0 ? "text-white" :
+                                        i === 3 ? "text-[#FF0000]" :
                                         "text-white"
                                     }`}
                                 >
@@ -430,7 +430,7 @@ export default function CSRPage() {
                     <span className="text-xs font-bold text-green-500/60 uppercase tracking-[0.3em] block mb-4">What we do</span>
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-4">
                         OUR{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+                        <span className="text-white">
                             PROGRAMS
                         </span>
                     </h2>
@@ -457,7 +457,7 @@ export default function CSRPage() {
                     <span className="text-xs font-bold text-green-500/60 uppercase tracking-[0.3em] block mb-4">Our journey</span>
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter">
                         THE{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+                        <span className="text-white">
                             TIMELINE
                         </span>
                     </h2>
@@ -512,7 +512,7 @@ export default function CSRPage() {
                     <span className="text-xs font-bold text-green-500/60 uppercase tracking-[0.3em] block mb-4">Real voices</span>
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter">
                         STORIES OF{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+                        <span className="text-white">
                             IMPACT
                         </span>
                     </h2>
@@ -557,7 +557,7 @@ export default function CSRPage() {
                     <span className="text-xs font-bold text-green-500/60 uppercase tracking-[0.3em] block mb-4">Proudly supported by</span>
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter">
                         OUR{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+                        <span className="text-white">
                             PARTNERS
                         </span>
                     </h2>
@@ -647,7 +647,7 @@ export default function CSRPage() {
                     <span className="text-xs font-bold text-green-500/60 uppercase tracking-[0.3em] block mb-4">Simple & transparent</span>
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter">
                         HOW CSR{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+                        <span className="text-white">
                             WORKS
                         </span>
                     </h2>

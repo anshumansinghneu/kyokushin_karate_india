@@ -110,7 +110,7 @@ export default function BlogPost() {
         <div ref={containerRef} className="min-h-screen bg-black text-white selection:bg-red-900 selection:text-white">
             {isLoading ? (
                 <div className="min-h-screen flex items-center justify-center bg-black">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-2 border-red-500/20 border-t-red-500"></div>
                 </div>
             ) : !post ? (
                 <div className="min-h-screen flex flex-col items-center justify-center bg-black">

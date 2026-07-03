@@ -239,7 +239,7 @@ export default function GradingSyllabus2026() {
             <li><strong>Godan+ (5th Dan+):</strong> Recognized for lifetime contributions to Kyokushin. The legendary 100-man kumite is associated with this level.</li>
           </ul>
 
-          <blockquote className="border-l-4 border-red-600 pl-6 my-8 italic text-gray-400">
+          <blockquote className="border border-red-600/20 rounded-xl p-6 my-8 italic text-gray-400">
             &quot;A black belt is a white belt who never quit.&quot;
             <br />— Common Kyokushin saying
           </blockquote>

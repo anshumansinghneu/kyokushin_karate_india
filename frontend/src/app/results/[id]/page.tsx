@@ -110,7 +110,7 @@ export default function ResultDetailPage({ params }: { params: Promise<{ id: str
           <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.35em] text-red-400/80">
             Official Grading Result
           </p>
-          <h1 className="mt-3 bg-gradient-to-b from-white to-white/60 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:text-4xl">
+          <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-white sm:text-4xl">
             {result.title}
           </h1>
 

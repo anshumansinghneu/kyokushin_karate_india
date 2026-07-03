@@ -111,7 +111,7 @@ const MARKER_STYLES = `
   width: 22px;
   height: 22px;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Outer circle — red with white border */
@@ -239,7 +239,7 @@ const MARKER_STYLES = `
   padding: 8px; background: #dc2626; color: #fff;
   text-align: center; font-size: 10px; font-weight: 800;
   text-transform: uppercase; letter-spacing: 2px;
-  border-radius: 6px; border: none; cursor: pointer;
+  border-radius: 8px; border: none; cursor: pointer;
   transition: background 0.2s;
 }
 .kyoku-popup-cta:hover { background: #b91c1c; }
@@ -247,7 +247,7 @@ const MARKER_STYLES = `
 /* Zoom controls */
 .leaflet-control-zoom {
   border: 1px solid rgba(220,38,38,0.15) !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
 }

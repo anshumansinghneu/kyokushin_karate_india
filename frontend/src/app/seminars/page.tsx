@@ -807,7 +807,7 @@ export default function SeminarsPage() {
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-5xl font-black mb-4">
                             UPCOMING{" "}
-                            <span className="bg-gradient-to-r from-red-500 to-red-700 bg-clip-text text-transparent">
+                            <span className="text-[#FF0000]">
                                 SEMINARS
                             </span>
                         </h2>

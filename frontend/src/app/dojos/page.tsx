@@ -138,7 +138,7 @@ export default function DojoListPage() {
                         transition={{ duration: 0.8, ease: "easeOut" }}
                         className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter mb-6"
                     >
-                        FIND YOUR <span className="text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-900">DOJO</span>
+                        FIND YOUR <span className="text-[#FF0000]">DOJO</span>
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}

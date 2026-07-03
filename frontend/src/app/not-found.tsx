@@ -24,7 +24,7 @@ export default function NotFound() {
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                         transition={{ duration: 0.5 }}
-                        className="text-[120px] sm:text-[200px] md:text-[300px] font-black leading-none mb-4 sm:mb-8 text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-900"
+                        className="text-[120px] sm:text-[200px] md:text-[300px] font-black leading-none mb-4 sm:mb-8 text-[#FF0000]"
                     >
                         404
                     </motion.h1>

@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="mb-6 p-4 bg-red-500/10 border-l-4 border-red-500 text-red-400 rounded-r-lg text-sm font-medium flex items-center gap-3"
+                                className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium flex items-center gap-3"
                             >
                                 <div className="w-2 h-2 rounded-full bg-red-500" />
                                 {error}

@@ -106,7 +106,7 @@ export default function IntroPage() {
                             initial={{ y: 100 }}
                             animate={{ y: phase >= 4 ? 0 : 100 }}
                             transition={{ duration: 0.8, delay: 0.1, ease: "circOut" }}
-                            className="text-4xl md:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-white to-green-500 leading-none"
+                            className="text-4xl md:text-7xl font-black tracking-tighter text-white leading-none"
                         >
                             INDIA
                         </motion.h2>

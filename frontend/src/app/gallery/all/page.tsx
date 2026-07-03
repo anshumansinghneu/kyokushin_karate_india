@@ -539,7 +539,7 @@ export default function GalleryPage() {
                         className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-center mb-4"
                     >
                         <span className="text-white drop-shadow-2xl">PHOTO </span>
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-400 to-orange-500">
+                        <span className="text-[#FF0000]">
                             GALLERY
                         </span>
                     </motion.h1>

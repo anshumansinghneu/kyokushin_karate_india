@@ -159,7 +159,7 @@ export default function BeltSystemPage() {
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 leading-[0.9]">
               THE{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700">BELT</span>{' '}
+              <span className="text-[#FF0000]">BELT</span>{' '}
               SYSTEM
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
