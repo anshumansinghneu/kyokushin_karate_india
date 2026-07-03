@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
+import { getEventStatus, type EventLike } from "@/lib/eventStatus";
 import { useToast } from "@/contexts/ToastContext";
 
 import MembershipCard from "./MembershipCard";
@@ -52,10 +53,15 @@ export default function StudentDashboard({ user }: { user: any }) {
             try {
                 const response = await api.get('/events');
                 const events = response.data.data.events;
-                setUpcomingEvents(events.slice(0, 3));
+                const now = new Date();
 
-                // Find next event
-                const futureEvents = events.filter((e: any) => new Date(e.startDate) > new Date());
+                // Only events that haven't finished yet (UPCOMING or ONGOING) — the
+                // API returns them ascending by startDate, so this stays in order.
+                const active = events.filter((e: EventLike) => getEventStatus(e, now) !== 'COMPLETED');
+                setUpcomingEvents(active.slice(0, 3));
+
+                // Countdown targets the soonest event that hasn't started yet.
+                const futureEvents = active.filter((e: EventLike) => getEventStatus(e, now) === 'UPCOMING');
                 if (futureEvents.length > 0) {
                     setNextEvent(futureEvents[0]);
                 }

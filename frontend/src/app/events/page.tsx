@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { MapPin, ArrowRight, Calendar, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
+import { getEventStatus, type EventStatus } from "@/lib/eventStatus";
 
 const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -15,8 +16,10 @@ const formatDate = (dateString: string) => {
     };
 };
 
-function EventCard({ event, index, isPast = false }: { event: any; index: number, isPast?: boolean }) {
+function EventCard({ event, index, status = 'UPCOMING' }: { event: any; index: number, status?: EventStatus }) {
     const dateObj = formatDate(event.startDate);
+    const isPast = status === 'COMPLETED';
+    const statusLabel = status === 'COMPLETED' ? 'COMPLETED' : status === 'ONGOING' ? 'ONGOING' : 'UPCOMING';
     
     const getPillStyle = (type: string) => {
         switch(type) {
@@ -81,7 +84,7 @@ function EventCard({ event, index, isPast = false }: { event: any; index: number
                     {/* Bottom: Status & Details Link */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-white/10 gap-4">
                         <span className={`text-[10px] font-black uppercase tracking-widest ${isPast ? 'text-gray-400' : 'text-[#FF0000]'}`}>
-                            {isPast ? 'COMPLETED' : 'UPCOMING'}
+                            {statusLabel}
                         </span>
 
                         <span className="px-5 py-2.5 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-white flex items-center justify-center gap-2 group-hover:bg-white/20 transition-colors w-full sm:w-auto">
@@ -121,8 +124,8 @@ export default function EventsPage() {
     const filteredEvents = events.filter(event => filter === "ALL" || event.type === filter);
 
     const now = new Date();
-    const upcomingEvents = filteredEvents.filter(e => new Date(e.startDate) >= now);
-    const pastEvents = filteredEvents.filter(e => new Date(e.startDate) < now);
+    const upcomingEvents = filteredEvents.filter(e => getEventStatus(e, now) !== 'COMPLETED');
+    const pastEvents = filteredEvents.filter(e => getEventStatus(e, now) === 'COMPLETED');
 
     return (
         <div className="min-h-screen w-full bg-black text-white relative">
@@ -210,7 +213,7 @@ export default function EventsPage() {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
                                     {upcomingEvents.map((event, index) => (
-                                        <EventCard key={event.id} event={event} index={index} />
+                                        <EventCard key={event.id} event={event} index={index} status={getEventStatus(event, now)} />
                                     ))}
                                 </div>
                             </div>
@@ -225,7 +228,7 @@ export default function EventsPage() {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
                                     {pastEvents.map((event, index) => (
-                                        <EventCard key={event.id} event={event} index={index} isPast={true} />
+                                        <EventCard key={event.id} event={event} index={index} status="COMPLETED" />
                                     ))}
                                 </div>
                             </div>

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import api from "@/lib/api";
+import { getEventStatus } from "@/lib/eventStatus";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -204,14 +205,18 @@ export default function EventDetailPage() {
                             <span className="px-2.5 py-1 rounded bg-primary text-white text-[8px] font-extrabold uppercase tracking-[2px]">
                                 {event.type.replace('_', ' ')}
                             </span>
-                            {event.status && (
-                                <span className={`px-2.5 py-1 rounded text-[8px] font-bold uppercase tracking-[2px] ${
-                                    event.status === 'COMPLETED' ? 'bg-zinc-700 text-zinc-300' :
-                                    'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
-                                }`}>
-                                    {event.status}
-                                </span>
-                            )}
+                            {(() => {
+                                // Display status is derived from dates (the DB status field goes stale).
+                                const st = getEventStatus(event);
+                                return (
+                                    <span className={`px-2.5 py-1 rounded text-[8px] font-bold uppercase tracking-[2px] ${
+                                        st === 'COMPLETED' ? 'bg-zinc-700 text-zinc-300' :
+                                        'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                                    }`}>
+                                        {st}
+                                    </span>
+                                );
+                            })()}
                         </div>
 
                         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight mb-4 leading-snug max-w-3xl">

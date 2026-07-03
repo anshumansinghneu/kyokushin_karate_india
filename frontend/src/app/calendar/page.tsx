@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Clock, Users, AlertCircle, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { getEventStatus } from '@/lib/eventStatus';
 
 interface Event {
     id: string;
@@ -358,9 +359,14 @@ export default function CalendarPage() {
                                                             <span className={`text-xs font-bold uppercase tracking-wider ${colors.text}`}>
                                                                 {event.type}
                                                             </span>
-                                                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${event.status === 'UPCOMING' ? 'bg-green-500/10 text-green-400' : event.status === 'ONGOING' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-gray-500/10 text-gray-400'}`}>
-                                                                {event.status}
-                                                            </span>
+                                                            {(() => {
+                                                                const st = getEventStatus(event);
+                                                                return (
+                                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${st === 'UPCOMING' ? 'bg-green-500/10 text-green-400' : st === 'ONGOING' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-gray-500/10 text-gray-400'}`}>
+                                                                        {st}
+                                                                    </span>
+                                                                );
+                                                            })()}
                                                         </div>
                                                         <h3 className="font-bold text-white truncate">{event.name}</h3>
                                                         {event.location && (
