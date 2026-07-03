@@ -148,16 +148,16 @@ export default function GradingSyllabus2026() {
   return (
     <article className="min-h-screen bg-black text-white">
       {/* Hero */}
-      <div className="relative bg-gradient-to-b from-red-950/40 to-black py-20 px-4">
+      <div className="relative bg-black py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <span className="inline-block px-4 py-1.5 bg-red-600/20 border border-red-600/30 rounded-full text-red-400 text-xs font-bold uppercase tracking-widest mb-6">
+          <span className="inline-block px-4 py-1.5 bg-white/5 border border-white/10 rounded-none text-[#FF4D4D] text-xs font-bold uppercase tracking-widest mb-6">
             Official Syllabus
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6">
             Kyokushin <span className="text-red-500">Grading Syllabus</span> 2026
           </h1>
           <p className="text-xl text-gray-400 mb-2">Complete Belt Rank Guide & Requirements</p>
-          <p className="text-gray-500 text-lg">
+          <p className="text-gray-400 text-lg">
             Published February 13, 2026 · By Kyokushin Karate Foundation of India
           </p>
         </div>
@@ -172,8 +172,8 @@ export default function GradingSyllabus2026() {
           2026 KKFI grading syllabus from white belt (Mukyu) to black belt (Shodan).
         </p>
 
-        <div className="bg-zinc-900/50 rounded-xl p-6 border border-yellow-600/20 mb-12">
-          <p className="text-yellow-400 font-bold text-sm mb-2">⚡ IMPORTANT NOTE</p>
+        <div className="bg-white/5 rounded-xl p-6 border border-[#FFD700]/20 mb-12">
+          <p className="text-[#FFD700] font-bold text-sm mb-2">⚡ IMPORTANT NOTE</p>
           <p className="text-gray-300 text-sm">
             Kyokushin promotions are earned — never purchased. Every grading includes demonstrated
             kata, kumite (sparring), and conditioning. There are no &quot;fast-track&quot; belts.
@@ -185,26 +185,26 @@ export default function GradingSyllabus2026() {
         {/* Belt Cards */}
         <div className="space-y-8">
           {beltRanks.map((belt, i) => (
-            <div key={i} className="bg-zinc-900/50 rounded-2xl overflow-hidden border border-white/10 hover:border-red-600/20 transition-all">
+            <div key={i} className="bg-white/5 rounded-xl overflow-hidden border border-white/10 hover:bg-white/10 transition-colors">
               {/* Belt Header */}
-              <div className={`flex items-center gap-4 p-6 ${i === beltRanks.length - 1 ? 'bg-gradient-to-r from-red-950/40 to-zinc-900/60' : ''}`}>
+              <div className={`flex items-center gap-4 p-6 ${i === beltRanks.length - 1 ? 'bg-white/10' : ''}`}>
                 <div className={`w-10 h-10 rounded-full ${belt.color} flex-shrink-0`} />
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-white">{belt.belt}</h2>
                   <p className="text-red-400 text-sm font-medium">{belt.rank}</p>
                 </div>
-                <span className="text-xs text-gray-500 font-mono">{belt.minTraining}</span>
+                <span className="text-xs text-gray-400 font-mono">{belt.minTraining}</span>
               </div>
 
               <div className="px-6 pb-6">
                 {/* Meta row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div className="bg-black/30 rounded-lg p-3">
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Kata Required</span>
+                    <span className="text-xs text-gray-400 uppercase tracking-wider">Kata Required</span>
                     <p className="text-white font-medium text-sm mt-1">{belt.kataRequired}</p>
                   </div>
                   <div className="bg-black/30 rounded-lg p-3">
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Kumite</span>
+                    <span className="text-xs text-gray-400 uppercase tracking-wider">Kumite</span>
                     <p className="text-white font-medium text-sm mt-1">{belt.kumite}</p>
                   </div>
                 </div>
@@ -246,7 +246,7 @@ export default function GradingSyllabus2026() {
         </div>
 
         {/* Grading Schedule CTA */}
-        <div className="mt-12 p-8 bg-gradient-to-r from-red-950/30 to-zinc-900/50 rounded-2xl border border-red-600/20 text-center">
+        <div className="mt-12 p-8 bg-white/5 rounded-xl border border-white/10 text-center">
           <h3 className="text-2xl font-bold text-white mb-3">Ready for Your Next Grading?</h3>
           <p className="text-gray-400 mb-6">
             KKFI conducts official belt gradings quarterly. Register as a member to be eligible
@@ -255,13 +255,13 @@ export default function GradingSyllabus2026() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/syllabus"
-              className="inline-block px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-full transition-all border border-white/10"
+              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-transparent hover:bg-white/10 text-white font-bold uppercase tracking-wider rounded-none transition-colors border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               Full Training Syllabus
             </Link>
             <Link
               href="/register"
-              className="inline-block px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-full transition-all"
+              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold uppercase tracking-wider rounded-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               Become a KKFI Member
             </Link>

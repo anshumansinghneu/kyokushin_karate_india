@@ -64,9 +64,9 @@ export default function YouthBenefits() {
   return (
     <article className="min-h-screen bg-black text-white">
       {/* Hero */}
-      <div className="relative bg-gradient-to-b from-red-950/40 to-black py-20 px-4">
+      <div className="relative bg-black py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <span className="inline-block px-4 py-1.5 bg-red-600/20 border border-red-600/30 rounded-full text-red-400 text-xs font-bold uppercase tracking-widest mb-6">
+          <span className="inline-block px-4 py-1.5 bg-white/5 border border-white/10 rounded-none text-[#FF4D4D] text-xs font-bold uppercase tracking-widest mb-6">
             Youth Development
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6">
@@ -91,7 +91,7 @@ export default function YouthBenefits() {
         {/* Benefits Grid */}
         <div className="space-y-8 mb-16">
           {benefits.map((benefit, i) => (
-            <div key={i} className="bg-zinc-900/50 rounded-2xl p-8 border border-white/10 hover:border-red-600/30 transition-all">
+            <div key={i} className="bg-white/5 rounded-xl p-8 border border-white/10 hover:bg-white/10 transition-colors">
               <div className="flex items-start gap-4">
                 <span className="text-4xl flex-shrink-0">{benefit.icon}</span>
                 <div>
@@ -151,14 +151,14 @@ export default function YouthBenefits() {
             { stat: '93%', label: 'Parent Satisfaction' },
             { stat: '5+', label: 'Age to Start' },
           ].map((item, i) => (
-            <div key={i} className="bg-zinc-900/50 rounded-xl p-6 text-center border border-white/10">
+            <div key={i} className="bg-white/5 rounded-xl p-6 text-center border border-white/10">
               <div className="text-3xl font-black text-red-500">{item.stat}</div>
               <div className="text-xs text-gray-400 mt-1 font-medium uppercase tracking-wider">{item.label}</div>
             </div>
           ))}
         </div>
 
-        <div className="mt-12 p-8 bg-gradient-to-r from-red-950/30 to-zinc-900/50 rounded-2xl border border-red-600/20 text-center">
+        <div className="mt-12 p-8 bg-white/5 rounded-xl border border-white/10 text-center">
           <h3 className="text-2xl font-bold text-white mb-3">Enroll Your Child in Kyokushin Today</h3>
           <p className="text-gray-400 mb-6">
             Give your child the gift of discipline, confidence, and real self-defense skills.
@@ -167,13 +167,13 @@ export default function YouthBenefits() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/dojos"
-              className="inline-block px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-full transition-all border border-white/10"
+              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-transparent hover:bg-white/10 text-white font-bold uppercase tracking-wider rounded-none transition-colors border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               Find a Dojo Near You
             </Link>
             <Link
               href="/register"
-              className="inline-block px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-full transition-all"
+              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold uppercase tracking-wider rounded-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               Register Now — ₹295 Only
             </Link>

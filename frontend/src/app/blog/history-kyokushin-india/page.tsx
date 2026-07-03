@@ -69,16 +69,16 @@ export default function HistoryKyokushinIndia() {
   return (
     <article className="min-h-screen bg-black text-white">
       {/* Hero */}
-      <div className="relative bg-gradient-to-b from-red-950/40 to-black py-20 px-4">
+      <div className="relative bg-black py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <span className="inline-block px-4 py-1.5 bg-red-600/20 border border-red-600/30 rounded-full text-red-400 text-xs font-bold uppercase tracking-widest mb-6">
+          <span className="inline-block px-4 py-1.5 bg-white/5 border border-white/10 rounded-none text-[#FF4D4D] text-xs font-bold uppercase tracking-widest mb-6">
             Our Heritage
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6">
             History of <span className="text-red-500">Kyokushin</span> in India
           </h1>
           <p className="text-xl text-gray-400 mb-2">From Sosai Oyama to Today</p>
-          <p className="text-gray-500 text-lg">
+          <p className="text-gray-400 text-lg">
             Published February 13, 2026 · By Kyokushin Karate Foundation of India
           </p>
         </div>
@@ -114,7 +114,7 @@ export default function HistoryKyokushinIndia() {
             {timeline.map((event, i) => (
               <div key={i} className="relative pl-12 md:pl-20">
                 <div className="absolute left-2 md:left-6 top-1 w-5 h-5 rounded-full bg-red-600 border-4 border-black" />
-                <div className="bg-zinc-900/50 rounded-2xl p-6 border border-white/10">
+                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                   <span className="text-red-500 font-black text-sm tracking-widest">{event.year}</span>
                   <h3 className="text-xl font-bold text-white mt-1 mb-3">{event.title}</h3>
                   <p className="text-gray-300 leading-relaxed">{event.description}</p>
@@ -151,7 +151,7 @@ export default function HistoryKyokushinIndia() {
           </blockquote>
         </div>
 
-        <div className="mt-12 p-8 bg-gradient-to-r from-red-950/30 to-zinc-900/50 rounded-2xl border border-red-600/20 text-center">
+        <div className="mt-12 p-8 bg-white/5 rounded-xl border border-white/10 text-center">
           <h3 className="text-2xl font-bold text-white mb-3">Be Part of the Legacy</h3>
           <p className="text-gray-400 mb-6">
             Join thousands of practitioners continuing Sosai Oyama&apos;s legacy in India.
@@ -160,13 +160,13 @@ export default function HistoryKyokushinIndia() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/intro"
-              className="inline-block px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-full transition-all border border-white/10"
+              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-transparent hover:bg-white/10 text-white font-bold uppercase tracking-wider rounded-none transition-colors border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               About KKFI
             </Link>
             <Link
               href="/register"
-              className="inline-block px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-full transition-all"
+              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold uppercase tracking-wider rounded-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               Register Now
             </Link>

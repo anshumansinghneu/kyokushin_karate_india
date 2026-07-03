@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import api from "@/lib/api";
 import { Calendar, User, AlertCircle, RefreshCw, BookOpen, Award, History, Swords, ArrowRight } from "lucide-react";
 
@@ -55,6 +55,7 @@ export default function BlogList() {
     const [posts, setPosts] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(false);
+    const reduceMotion = useReducedMotion();
 
     const fetchPosts = async () => {
         setIsLoading(true);
@@ -75,29 +76,28 @@ export default function BlogList() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#080808] text-white">
+        <div className="min-h-screen bg-black text-white">
             {/* Top accent */}
             <div className="h-px bg-gradient-to-r from-transparent via-red-600/50 to-transparent" />
 
             {/* Hero */}
             <div className="relative pt-28 pb-16 overflow-hidden">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808006_1px,transparent_1px),linear-gradient(to_bottom,#80808006_1px,transparent_1px)] bg-[size:32px_32px]" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-red-600/[0.04] rounded-full blur-[100px]" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#FF0000]/[0.06] rounded-full blur-[100px]" />
 
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={reduceMotion ? false : { opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                     className="relative z-10 text-center max-w-3xl mx-auto px-5"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-gray-400 tracking-wide mb-6">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold uppercase text-gray-300 tracking-[0.1em] mb-6">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#FF0000]" />
                         DOJO CHRONICLES
                     </div>
                     <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 leading-[1.05]">
-                        Stories from the <span className="text-red-500">Dojo Floor</span>
+                        Stories from the <span className="text-[#FF0000]">Dojo Floor</span>
                     </h1>
-                    <p className="text-gray-500 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+                    <p className="text-gray-300 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
                         Expert articles on Kyokushin training, philosophy, youth development, and the martial arts journey in India.
                     </p>
                 </motion.div>
@@ -107,13 +107,13 @@ export default function BlogList() {
                 {/* Featured Pillar Articles */}
                 <motion.section
                     variants={stagger}
-                    initial="hidden"
+                    initial={reduceMotion ? "show" : "hidden"}
                     animate="show"
                     className="mb-20"
                 >
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-8 h-px bg-red-600" />
-                        <h2 className="text-xs font-bold text-red-500 uppercase tracking-[0.2em]">Featured Guides</h2>
+                        <div className="w-8 h-px bg-[#FF0000]" />
+                        <h2 className="text-xs font-bold text-[#FF0000] uppercase tracking-[0.2em]">Featured Guides</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {PILLAR_ARTICLES.map((article) => {
@@ -121,24 +121,23 @@ export default function BlogList() {
                             return (
                                 <motion.div key={article.slug} variants={fadeUp}>
                                     <Link href={`/blog/${article.slug}`} className="group block">
-                                        <article className="relative bg-white/[0.02] rounded-xl p-6 border border-white/[0.06] hover:border-red-500/25 transition-all duration-300 h-full flex flex-col overflow-hidden">
-                                            <div className="absolute inset-0 bg-gradient-to-br from-red-600/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                        <article className="relative bg-white/5 rounded-xl p-6 border border-white/10 hover:bg-white/10 hover:border-[#FF0000]/25 transition-all duration-300 h-full flex flex-col overflow-hidden">
                                             <div className="relative z-10 flex flex-col h-full">
                                                 <div className="flex items-center gap-3 mb-4">
-                                                    <div className="w-9 h-9 rounded-lg bg-red-500/[0.08] border border-red-500/[0.12] flex items-center justify-center">
-                                                        <Icon className="w-4 h-4 text-red-500" />
+                                                    <div className="w-9 h-9 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center">
+                                                        <Icon className="w-4 h-4 text-[#FF0000]" />
                                                     </div>
-                                                    <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-[0.15em]">{article.category}</span>
+                                                    <span className="text-[10px] font-bold text-[#FF4D4D] uppercase tracking-[0.15em]">{article.category}</span>
                                                 </div>
                                                 <h3 className="text-lg font-bold text-white/90 mb-2 group-hover:text-white transition-colors leading-snug">
                                                     {article.title}
                                                 </h3>
-                                                <p className="text-gray-500 text-sm flex-1 leading-relaxed mb-5">
+                                                <p className="text-gray-300 text-sm flex-1 leading-relaxed mb-5">
                                                     {article.excerpt}
                                                 </p>
-                                                <div className="flex items-center justify-between pt-4 border-t border-white/[0.04]">
-                                                    <span className="text-xs text-gray-600 font-mono">{article.date}</span>
-                                                    <span className="flex items-center gap-1.5 text-red-500/80 text-xs font-semibold group-hover:text-red-400 group-hover:gap-2.5 transition-all">
+                                                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                                                    <span className="text-xs text-gray-400 font-mono">{article.date}</span>
+                                                    <span className="flex items-center gap-1.5 text-[#FF0000] text-xs font-semibold group-hover:text-[#FF4D4D] group-hover:gap-2.5 transition-all">
                                                         Read <ArrowRight className="w-3 h-3" />
                                                     </span>
                                                 </div>
@@ -155,8 +154,8 @@ export default function BlogList() {
                 {posts.length > 0 && (
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-8 h-px bg-white/20" />
-                        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em]">Latest Posts</h2>
-                        <div className="flex-1 h-px bg-white/[0.04]" />
+                        <h2 className="text-xs font-bold text-gray-300 uppercase tracking-[0.2em]">Latest Posts</h2>
+                        <div className="flex-1 h-px bg-white/10" />
                     </div>
                 )}
 
@@ -168,25 +167,25 @@ export default function BlogList() {
                     </div>
                 ) : error ? (
                     <div className="text-center py-24">
-                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-500/[0.08] border border-red-500/[0.12] mb-5">
-                            <AlertCircle className="w-6 h-6 text-red-500" />
+                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] mb-5">
+                            <AlertCircle className="w-6 h-6 text-[#FF0000]" />
                         </div>
-                        <p className="text-gray-400 text-lg mb-5">Failed to load chronicles</p>
-                        <button onClick={fetchPosts} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black rounded-lg text-sm font-bold hover:bg-gray-200 transition-colors active:scale-[0.97]">
+                        <p className="text-gray-300 text-lg mb-5">Failed to load chronicles</p>
+                        <button onClick={fetchPosts} className="inline-flex items-center gap-2 px-6 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none text-sm font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                             <RefreshCw className="w-3.5 h-3.5" /> Try Again
                         </button>
                     </div>
                 ) : posts.length === 0 ? null : (
                     <motion.div
                         variants={stagger}
-                        initial="hidden"
+                        initial={reduceMotion ? "show" : "hidden"}
                         animate="show"
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
                     >
                         {posts.map((post) => (
                             <motion.div key={post.id} variants={fadeUp}>
                                 <Link href={`/blog/${post.slug}`} className="group block h-full">
-                                    <article className="bg-white/[0.02] rounded-xl overflow-hidden border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300 h-full flex flex-col">
+                                    <article className="bg-white/5 rounded-xl overflow-hidden border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 h-full flex flex-col">
                                         <div className="aspect-video bg-white/[0.03] relative overflow-hidden">
                                             {post.imageUrl ? (
                                                 <img
@@ -203,14 +202,14 @@ export default function BlogList() {
                                             )}
                                         </div>
                                         <div className="p-5 flex-1 flex flex-col">
-                                            <div className="flex items-center gap-4 text-[11px] text-gray-500 mb-3 font-medium">
+                                            <div className="flex items-center gap-4 text-[11px] text-gray-400 mb-3 font-medium">
                                                 <span className="flex items-center gap-1.5">
-                                                    <Calendar size={11} className="text-red-500/60" />
+                                                    <Calendar size={11} className="text-[#FF0000]/80" />
                                                     {new Date(post.publishedAt).toLocaleDateString()}
                                                 </span>
                                                 {post.author?.name && (
                                                     <span className="flex items-center gap-1.5">
-                                                        <User size={11} className="text-red-500/60" />
+                                                        <User size={11} className="text-[#FF0000]/80" />
                                                         {post.author.name}
                                                     </span>
                                                 )}
@@ -218,10 +217,10 @@ export default function BlogList() {
                                             <h2 className="text-base font-bold mb-3 text-white/90 group-hover:text-white transition-colors line-clamp-2 leading-snug">
                                                 {post.title}
                                             </h2>
-                                            <p className="text-gray-500 text-sm line-clamp-3 mb-5 flex-1 leading-relaxed">
+                                            <p className="text-gray-300 text-sm line-clamp-3 mb-5 flex-1 leading-relaxed">
                                                 {post.excerpt}
                                             </p>
-                                            <span className="flex items-center gap-1.5 text-red-500/70 text-xs font-semibold group-hover:text-red-400 group-hover:gap-2.5 transition-all">
+                                            <span className="flex items-center gap-1.5 text-[#FF0000] text-xs font-semibold group-hover:text-[#FF4D4D] group-hover:gap-2.5 transition-all">
                                                 Read More <ArrowRight className="w-3 h-3" />
                                             </span>
                                         </div>

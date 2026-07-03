@@ -30,9 +30,9 @@ export default function KyokushinVsShotokan() {
   return (
     <article className="min-h-screen bg-black text-white">
       {/* Hero */}
-      <div className="relative bg-gradient-to-b from-red-950/40 to-black py-20 px-4">
+      <div className="relative bg-black py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <span className="inline-block px-4 py-1.5 bg-red-600/20 border border-red-600/30 rounded-full text-red-400 text-xs font-bold uppercase tracking-widest mb-6">
+          <span className="inline-block px-4 py-1.5 bg-white/5 border border-white/10 rounded-none text-[#FF4D4D] text-xs font-bold uppercase tracking-widest mb-6">
             Karate Knowledge
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6">
@@ -90,7 +90,7 @@ export default function KyokushinVsShotokan() {
         </p>
 
         <h2 className="text-3xl font-bold text-white mt-12 mb-6">4. Tournament Rules</h2>
-        <div className="bg-zinc-900/50 rounded-2xl p-6 border border-white/10 my-8">
+        <div className="bg-white/5 rounded-xl p-6 border border-white/10 my-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-red-500 font-bold text-lg mb-3">Kyokushin Rules</h3>
@@ -135,7 +135,7 @@ export default function KyokushinVsShotokan() {
           gives you something that point-sparring simply cannot — the ability to take and deliver real strikes under pressure.
         </p>
 
-        <div className="mt-12 p-8 bg-gradient-to-r from-red-950/30 to-zinc-900/50 rounded-2xl border border-red-600/20 text-center">
+        <div className="mt-12 p-8 bg-white/5 rounded-xl border border-white/10 text-center">
           <h3 className="text-2xl font-bold text-white mb-3">Ready to Train Full-Contact?</h3>
           <p className="text-gray-400 mb-6">
             Join the Kyokushin Karate Foundation of India and experience authentic full-contact karate training
@@ -143,7 +143,7 @@ export default function KyokushinVsShotokan() {
           </p>
           <Link
             href="/register"
-            className="inline-block px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-full transition-all"
+            className="inline-flex items-center justify-center px-8 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold uppercase tracking-wider rounded-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
             Register Now — ₹295 Only
           </Link>
