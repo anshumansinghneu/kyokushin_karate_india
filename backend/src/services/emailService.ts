@@ -790,3 +790,72 @@ ${btn('View My Orders', SITE_URL + '/dashboard')}
     const text = `Order Confirmed!\n\nOrder: ${orderRef}\nPayment: ${paymentId}\nTotal: ₹${totalAmount}\n\nItems:\n${items.map(i => `- ${i.name} (${i.size}) x${i.quantity} = ₹${i.price * i.quantity}`).join('\n')}\n\nOsu!`;
     await send(email, subject, html, text);
 };
+
+/**
+ * Operational alert: the nightly database backup landed nowhere, or silently
+ * skipped tables.
+ *
+ * Backups previously failed for an extended period with no signal beyond a
+ * console line nobody was reading. This mails a human instead. Uses sendStrict
+ * so backupService can log a delivery failure rather than swallowing it.
+ *
+ * Recipient: BACKUP_ALERT_EMAIL, else SMTP_USER.
+ */
+export const sendBackupFailureAlert = async (outcome: {
+    ok: boolean;
+    label: string;
+    totalRows: number;
+    tableCount: number;
+    destinations: string[];
+    errors: string[];
+    failedTables: string[];
+    elapsedSeconds: number;
+}) => {
+    const to = process.env.BACKUP_ALERT_EMAIL || process.env.SMTP_USER;
+    if (!to) {
+        console.warn('[BACKUP-ALERT] No BACKUP_ALERT_EMAIL or SMTP_USER set — cannot alert');
+        return;
+    }
+
+    const headline = outcome.ok
+        ? `Backup incomplete — ${outcome.failedTables.length} table(s) unreadable`
+        : 'Backup FAILED — stored nowhere';
+
+    const row = (k: string, v: string) =>
+        `<tr><td style="padding:6px 10px;color:#888;font-size:12px;">${k}</td>` +
+        `<td style="padding:6px 10px;color:#fff;font-size:12px;font-family:monospace;">${v}</td></tr>`;
+
+    const subject = `[KKFI] ${headline}`;
+    const html = wrapHtml(subject, `
+<h2 style="color:#fff;margin:0 0 8px;font-size:20px;font-weight:800;">${headline}</h2>
+<p style="color:${outcome.ok ? '#fbbf24' : '#dc2626'};font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:2px;margin:0 0 20px;">
+  Database backup alert
+</p>
+
+<p>The nightly PostgreSQL backup ran at ${new Date().toISOString()} and needs attention.</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:#151515;border:1px solid #333;border-radius:12px;">
+${row('Label', outcome.label)}
+${row('Rows dumped', String(outcome.totalRows))}
+${row('Tables', String(outcome.tableCount))}
+${row('Stored to', outcome.destinations.length ? outcome.destinations.join(', ') : 'NOTHING')}
+${row('Duration', `${outcome.elapsedSeconds}s`)}
+${outcome.failedTables.length ? row('Unreadable tables', outcome.failedTables.join(', ')) : ''}
+</table>
+
+${outcome.errors.length ? `
+<p style="color:#fff;font-weight:700;margin:16px 0 6px;">Errors</p>
+<pre style="background:#0d0d0d;border:1px solid #333;border-radius:8px;padding:12px;color:#f87171;font-size:12px;white-space:pre-wrap;">${outcome.errors.join('\n')}</pre>` : ''}
+
+<p style="color:#888;font-size:13px;">${outcome.ok
+    ? 'A backup object was written, but it is not a complete snapshot.'
+    : 'There is no backup for this run. Fix the destination and re-run before relying on point-in-time recovery.'}</p>
+`);
+
+    const text = `${headline}\n\nLabel: ${outcome.label}\nRows: ${outcome.totalRows}\nTables: ${outcome.tableCount}\n`
+        + `Stored to: ${outcome.destinations.join(', ') || 'NOTHING'}\nDuration: ${outcome.elapsedSeconds}s\n`
+        + (outcome.failedTables.length ? `Unreadable tables: ${outcome.failedTables.join(', ')}\n` : '')
+        + (outcome.errors.length ? `\nErrors:\n${outcome.errors.join('\n')}\n` : '');
+
+    await sendStrict(to, subject, html, text);
+};
