@@ -10,6 +10,8 @@ import {
   User,
   Navigation,
   ChevronRight,
+  AlertTriangle,
+  RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -502,6 +504,8 @@ interface FloatingDojoListProps {
   unmappedCount: number;
   onLocateMe: () => void;
   locateState: 'idle' | 'locating' | 'done' | 'denied';
+  loadError: boolean;
+  onRetry: () => void;
 }
 
 /** Groups dojos by state so 22 rows read as a handful of regions. */
@@ -535,6 +539,8 @@ function FloatingDojoList({
   unmappedCount,
   onLocateMe,
   locateState,
+  loadError,
+  onRetry,
 }: FloatingDojoListProps) {
   return (
     <motion.div
@@ -604,6 +610,24 @@ function FloatingDojoList({
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-8 h-8 border-2 border-white/10 border-t-red-500 rounded-full animate-spin" />
+          </div>
+        ) : loadError ? (
+          // Distinct from the empty-search state below: nothing was loaded, so
+          // telling the visitor to change their search would be misleading.
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <AlertTriangle className="w-8 h-8 mb-3 text-amber-400" aria-hidden="true" />
+            <p className="text-[13px] font-semibold text-zinc-100">Couldn&apos;t load the dojo list</p>
+            <p className="mt-1 text-[11px] text-zinc-400">
+              The server didn&apos;t respond. It may be waking up — this usually takes a few seconds.
+            </p>
+            <button
+              type="button"
+              onClick={onRetry}
+              className="mt-4 h-9 px-4 inline-flex items-center gap-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[12px] font-bold uppercase tracking-wider focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+              Try again
+            </button>
           </div>
         ) : dojos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
@@ -798,6 +822,8 @@ export default function FindADojoPage() {
   /* ---- State (all existing state preserved) ---- */
   const [dojos, setDojos] = useState<Dojo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  /** True when the dojo fetch failed outright, as distinct from "no matches". */
+  const [loadError, setLoadError] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredDojoId, setHoveredDojoId] = useState<string | null>(null);
@@ -928,20 +954,31 @@ export default function FindADojoPage() {
     };
   }, []);
 
-  /* ---- Fetch dojos (preserved) ---- */
-  useEffect(() => {
-    const fetchDojos = async () => {
-      try {
-        const response = await api.get('/dojos');
-        setDojos(response.data.data.dojos);
-      } catch (err) {
-        console.error('Failed to fetch dojos', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchDojos();
+  /* ---- Fetch dojos ---- */
+  //
+  // The failure used to be swallowed: a console.error, an empty list, and a
+  // panel reading "No dojos match that search" — which blames the visitor's
+  // search for what is actually the API not responding (the backend sleeps when
+  // idle and a cold start can outlast the client retries). Track the failure so
+  // the UI can say what really happened and offer a retry.
+  const fetchDojos = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(false);
+    try {
+      const response = await api.get('/dojos');
+      setDojos(response.data.data.dojos);
+      setLoadError(false);
+    } catch (err) {
+      console.error('Failed to fetch dojos', err);
+      setLoadError(true);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchDojos();
+  }, [fetchDojos]);
 
   /* ---- Leaflet map init (dynamic import to avoid SSR window error) ---- */
   useEffect(() => {
@@ -1314,6 +1351,10 @@ export default function FindADojoPage() {
           <p className="mt-3 max-w-[22ch] text-[13px] text-zinc-200 font-medium leading-relaxed">
             {isLoading ? (
               'Locating dojos across India…'
+            ) : loadError ? (
+              // Never state a branch count we could not load — "0 official
+              // branches across India" is a false claim about the organisation.
+              'We could not load the dojo list just now.'
             ) : (
               <>
                 {dojos.length} official {dojos.length === 1 ? 'branch' : 'branches'} across India.
@@ -1346,6 +1387,8 @@ export default function FindADojoPage() {
         unmappedCount={unmappedCount}
         onLocateMe={handleLocateMe}
         locateState={locateState}
+        loadError={loadError}
+        onRetry={fetchDojos}
       />
 
       {/* ============================================================ */}
@@ -1404,7 +1447,20 @@ export default function FindADojoPage() {
               ~230px sliver of map on a 844px phone. Capped so the map stays
               the dominant element it is meant to be. */}
           <div className="max-h-[24vh] overflow-y-auto px-4 pb-3 space-y-1.5">
-            {listedDojos.length === 0 ? (
+            {loadError ? (
+              <div className="py-5 text-center">
+                <p className="text-[12px] font-semibold text-zinc-100">Couldn&apos;t load the dojo list</p>
+                <p className="mt-1 text-[11px] text-zinc-400">The server didn&apos;t respond.</p>
+                <button
+                  type="button"
+                  onClick={fetchDojos}
+                  className="mt-3 h-9 px-4 inline-flex items-center gap-2 rounded-lg bg-red-600 text-white text-[12px] font-bold uppercase tracking-wider active:scale-[0.98] transition-transform"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                  Try again
+                </button>
+              </div>
+            ) : listedDojos.length === 0 ? (
               <p className="py-6 text-center text-[12px] text-zinc-400">
                 No dojos match that search.
               </p>
