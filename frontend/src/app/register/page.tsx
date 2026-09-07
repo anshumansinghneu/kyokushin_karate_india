@@ -17,7 +17,7 @@ export default function RegisterPage() {
     const [role, setRole] = useState<"STUDENT" | "INSTRUCTOR">("STUDENT");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [paymentStep, setPaymentStep] = useState<"form" | "verifying" | "done">("form");
+    const [submitState, setSubmitState] = useState<"form" | "verifying" | "done">("form");
     const [step, setStep] = useState(1);
     const TOTAL_STEPS = 6;
     const [formData, setFormData] = useState({
@@ -287,13 +287,13 @@ export default function RegisterPage() {
                 delete payload.yearsOfExperience;
             }
 
-            setPaymentStep("verifying");
+            setSubmitState("verifying");
             await register(payload);
-            setPaymentStep("done");
+            setSubmitState("done");
             setTimeout(() => router.push("/dashboard"), 1500);
 
         } catch {
-            setPaymentStep("form");
+            setSubmitState("form");
         }
     };
 
@@ -922,7 +922,8 @@ export default function RegisterPage() {
                                 </motion.div>
                                 )}
 
-                                {/* STEP 6: Security & Payment */}
+                                {/* STEP 6: Account security. No payment is taken here — the
+                                    "Payment" in the old label was left over from a removed step. */}
                                 {step === 6 && (
                                 <motion.div key="step6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
                                 {/* Security Section */}
@@ -992,14 +993,14 @@ export default function RegisterPage() {
                                         <Button
                                             type="submit"
                                             className="flex-1 h-12 text-base font-bold uppercase tracking-wider transition-all duration-200 rounded-none btn-shine bg-[#FF0000] hover:bg-[#8B0000] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                                            disabled={isLoading || paymentStep !== "form"}
+                                            disabled={isLoading || submitState !== "form"}
                                         >
-                                            {paymentStep === "verifying" ? (
+                                            {submitState === "verifying" ? (
                                                 <>
                                                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                                     Creating Account...
                                                 </>
-                                            ) : paymentStep === "done" ? (
+                                            ) : submitState === "done" ? (
                                                 <>
                                                     <CheckCircle2 className="w-4 h-4 mr-2" />
                                                     Registration Complete!
@@ -1017,8 +1018,15 @@ export default function RegisterPage() {
                                             )}
                                         </Button>
                                     </div>
+                                    {/* Public signup takes no payment and creates the account with
+                                        membershipStatus PENDING — the 1-year window and membership
+                                        number are issued by approveUser, on instructor approval. The
+                                        previous copy promised "valid for 1 year from the date of
+                                        registration", which was never true on this path. */}
                                     <p className="text-center text-xs text-gray-400 mt-4">
-                                        By registering, you agree to our Terms of Service. Your membership is valid for 1 year from the date of registration.
+                                        By registering, you agree to our Terms of Service. Your account is created
+                                        straight away — your membership becomes active once your instructor approves
+                                        it, and then runs for one year.
                                     </p>
                                 </div>
 
@@ -1031,14 +1039,14 @@ export default function RegisterPage() {
                                         <Button
                                             type="submit"
                                             className="flex-1 h-14 text-base font-bold uppercase tracking-wider transition-all duration-200 rounded-none btn-shine bg-[#FF0000] hover:bg-[#8B0000] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                                            disabled={isLoading || paymentStep !== "form"}
+                                            disabled={isLoading || submitState !== "form"}
                                         >
-                                            {paymentStep === "verifying" ? (
+                                            {submitState === "verifying" ? (
                                                 <>
                                                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                                     Creating...
                                                 </>
-                                            ) : paymentStep === "done" ? (
+                                            ) : submitState === "done" ? (
                                                 <>
                                                     <CheckCircle2 className="w-4 h-4 mr-2" />
                                                     Done!

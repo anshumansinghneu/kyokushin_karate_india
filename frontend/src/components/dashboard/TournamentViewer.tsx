@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import api from "@/lib/api";
 import Link from "next/link";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface Tournament {
     id: string;
     name: string;
@@ -190,7 +191,7 @@ export default function TournamentViewer() {
                                             <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-gray-400">
                                                 <span className="flex items-center gap-1">
                                                     <Calendar className="w-3.5 h-3.5" />
-                                                    {new Date(t.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    {formatDateOnly(t.startDate, { day: 'numeric', month: 'short', year: 'numeric' }, 'en-IN')}
                                                 </span>
                                                 {t.location && (
                                                     <span className="flex items-center gap-1">

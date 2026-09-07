@@ -8,6 +8,7 @@ import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 import { getImageUrl } from "@/lib/imageUtils";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface BeltVerificationRequest {
     id: string;
     currentBelt: string;
@@ -198,7 +199,7 @@ export default function BeltApprovalsView() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                             <div className="flex items-center gap-2 text-gray-400">
                                                 <Calendar className="w-4 h-4 text-primary" />
-                                                <span>Exam Date: {new Date(request.examDate).toLocaleDateString()}</span>
+                                                <span>Exam Date: {formatDateOnly(request.examDate)}</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-gray-400">
                                                 <Clock className="w-4 h-4 text-blue-400" />

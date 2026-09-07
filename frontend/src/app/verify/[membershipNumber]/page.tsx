@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import api from '@/lib/api';
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface VerifiedMember {
     name: string;
     membershipNumber: string;
@@ -246,7 +247,7 @@ export default function VerifyPage() {
                                     </div>
                                     {member.membershipEndDate && (
                                         <span className="text-[10px] text-gray-400 font-mono">
-                                            exp {new Date(member.membershipEndDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                                            exp {formatDateOnly(member.membershipEndDate, { month: 'short', year: 'numeric' }, 'en-IN')}
                                         </span>
                                     )}
                                 </div>
@@ -321,7 +322,7 @@ export default function VerifyPage() {
                                         <div className="flex items-center justify-between px-5 py-4">
                                             <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Member Since</span>
                                             <span className="text-sm font-semibold text-white">
-                                                {new Date(member.membershipStartDate).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+                                                {formatDateOnly(member.membershipStartDate, { month: 'long', year: 'numeric' }, 'en-IN')}
                                             </span>
                                         </div>
                                     )}
@@ -352,7 +353,7 @@ export default function VerifyPage() {
                                             <div className="text-right">
                                                 <span className="text-sm font-semibold text-white">{member.lastPromotion.newBelt} Belt</span>
                                                 <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-                                                    {new Date(member.lastPromotion.promotionDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    {formatDateOnly(member.lastPromotion.promotionDate, { day: 'numeric', month: 'short', year: 'numeric' }, 'en-IN')}
                                                 </p>
                                             </div>
                                         </div>

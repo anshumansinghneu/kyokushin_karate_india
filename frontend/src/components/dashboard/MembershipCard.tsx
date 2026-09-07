@@ -6,6 +6,7 @@ import { useState, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface MembershipCardProps {
     user: {
         name: string;
@@ -104,7 +105,7 @@ export default function MembershipCard({ user, showDownload = true }: Membership
         : '';
 
     const validThru = user?.membershipEndDate
-        ? new Date(user.membershipEndDate).toLocaleDateString('en-IN', { month: '2-digit', year: '2-digit' })
+        ? formatDateOnly(user.membershipEndDate, { month: '2-digit', year: '2-digit' }, 'en-IN')
         : '--/--';
 
     const _beltSince = beltSinceDate(user);
@@ -130,7 +131,7 @@ export default function MembershipCard({ user, showDownload = true }: Membership
             const pdfRoleTitle = ROLE_TITLES[user?.role || 'STUDENT'] || 'KARATEKA';
             const pdfExperience = calculateExperience(user);
             const pdfValidThru = user?.membershipEndDate
-                ? new Date(user.membershipEndDate).toLocaleDateString('en-IN', { month: '2-digit', year: '2-digit' })
+                ? formatDateOnly(user.membershipEndDate, { month: '2-digit', year: '2-digit' }, 'en-IN')
                 : user?.membershipStatus === 'ACTIVE' ? 'Active' : user?.membershipStatus || '--';
             const _pdfBeltSince = beltSinceDate(user);
             const pdfMemberSince = _pdfBeltSince

@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface Seminar {
     id: string;
     name: string;
@@ -416,7 +417,7 @@ export default function SeminarManager() {
                                     <div className="flex items-center gap-4 text-sm text-gray-400">
                                         <span className="flex items-center gap-1.5">
                                             <Calendar className="w-3.5 h-3.5 text-blue-400" />
-                                            {new Date(seminar.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                                            {formatDateOnly(seminar.startDate, { day: "numeric", month: "short", year: "numeric" }, "en-IN")}
                                         </span>
                                         {seminar.location && (
                                             <span className="flex items-center gap-1.5">

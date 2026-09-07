@@ -20,6 +20,7 @@ import MyOrders from "./MyOrders";
 import BeltTimeline from "./BeltTimeline";
 import AnonymousFeedbackModal from "@/components/AnonymousFeedbackModal";
 
+import { dateOnlyParts, formatDateOnly } from '@/lib/dateOnly';
 const TABS = [
     { key: 'overview', label: 'Overview', icon: Activity },
     { key: 'blogs', label: 'My Blogs', icon: FileText },
@@ -284,7 +285,7 @@ export default function StudentDashboard({ user }: { user: any }) {
                                                 <div className="flex flex-wrap items-center gap-3 text-[11px] text-zinc-500">
                                                     <span className="flex items-center gap-1">
                                                         <Calendar className="w-3 h-3 text-red-500/60" />
-                                                        {new Date(nextEvent.startDate).toLocaleDateString(undefined, { weekday: 'short', month: 'long', day: 'numeric' })}
+                                                        {formatDateOnly(nextEvent.startDate, { weekday: 'short', month: 'long', day: 'numeric' }, undefined)}
                                                     </span>
                                                     {nextEvent.location && (
                                                         <span className="flex items-center gap-1">
@@ -332,8 +333,8 @@ export default function StudentDashboard({ user }: { user: any }) {
                                             <Link href={`/events/${event.id}`} key={i} className="block group">
                                                 <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/[0.03] transition-colors">
                                                     <div className="w-10 h-10 rounded-lg bg-white/[0.03] border border-white/[0.06] flex flex-col items-center justify-center shrink-0">
-                                                        <span className="text-[8px] font-bold text-red-500 uppercase leading-none">{new Date(event.startDate).toLocaleString('default', { month: 'short' })}</span>
-                                                        <span className="text-sm font-black text-white leading-none">{new Date(event.startDate).getDate()}</span>
+                                                        <span className="text-[8px] font-bold text-red-500 uppercase leading-none">{dateOnlyParts(event.startDate).month}</span>
+                                                        <span className="text-sm font-black text-white leading-none">{dateOnlyParts(event.startDate).day}</span>
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <h4 className="text-xs font-bold text-white truncate group-hover:text-red-400 transition-colors">{event.name}</h4>

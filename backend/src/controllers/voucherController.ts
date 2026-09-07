@@ -16,8 +16,16 @@ export const createVoucher = catchAsync(async (req: Request, res: Response, next
     const adminUser = req.user;
     const { applicableTo, specificEventId, expiryDays } = req.body;
 
+    const VOUCHER_APPLICABILITY = ['MEMBERSHIP', 'TOURNAMENT', 'CAMP', 'ALL'];
     if (!applicableTo) {
         return next(new AppError('Please specify what the voucher is for (MEMBERSHIP, TOURNAMENT, CAMP, or ALL)', 400));
+    }
+    // Without this an unrecognised value reached Prisma as an invalid enum and
+    // surfaced as an opaque 500.
+    if (!VOUCHER_APPLICABILITY.includes(applicableTo)) {
+        return next(new AppError(
+            `Invalid voucher type "${applicableTo}". Must be one of: ${VOUCHER_APPLICABILITY.join(', ')}.`, 400
+        ));
     }
 
     // Calculate amount based on voucher type
@@ -52,14 +60,17 @@ export const createVoucher = catchAsync(async (req: Request, res: Response, next
         description = `Cash voucher - ₹${amount}`;
     }
 
-    // Generate unique code
-    let code = generateVoucherCode();
-    let attempts = 0;
-    while (attempts < 5) {
-        const existing = await prisma.cashVoucher.findUnique({ where: { code } });
-        if (!existing) break;
+    // Generate a unique code. The loop must confirm success rather than simply
+    // running out of attempts and inserting a code known to collide.
+    let code = '';
+    let unique = false;
+    for (let attempt = 0; attempt < 5 && !unique; attempt++) {
         code = generateVoucherCode();
-        attempts++;
+        const existing = await prisma.cashVoucher.findUnique({ where: { code } });
+        unique = !existing;
+    }
+    if (!unique) {
+        return next(new AppError('Could not allocate a unique voucher code. Please try again.', 500));
     }
 
     // Default expiry: 30 days
@@ -121,19 +132,39 @@ export const validateVoucher = catchAsync(async (req: Request, res: Response, ne
         return next(new AppError('This voucher has expired', 400));
     }
 
-    // Check applicability
-    if (type === 'MEMBERSHIP' && voucher.applicableTo !== 'MEMBERSHIP' && voucher.applicableTo !== 'ALL') {
-        return next(new AppError('This voucher is not applicable for membership registration', 400));
+    // Check applicability.
+    //
+    // This must agree with the redeem paths, or the UI shows "Voucher Valid!"
+    // and then submission fails. VoucherApplicability only has MEMBERSHIP,
+    // TOURNAMENT, CAMP and ALL, while EventType also has SEMINAR and BELT_EXAM
+    // — so for those two event types only an ALL voucher can ever be redeemed.
+    // Previously this block simply ignored any type it did not recognise and
+    // returned success.
+    if (type) {
+        const EXPRESSIBLE = ['MEMBERSHIP', 'TOURNAMENT', 'CAMP'];
+        if (EXPRESSIBLE.includes(type)) {
+            if (voucher.applicableTo !== type && voucher.applicableTo !== 'ALL') {
+                return next(new AppError(`This voucher is not applicable for ${type.toLowerCase()} registration`, 400));
+            }
+        } else if (voucher.applicableTo !== 'ALL') {
+            // SEMINAR / BELT_EXAM (or anything new): only a blanket voucher works.
+            return next(new AppError(
+                `This voucher is not applicable for ${String(type).toLowerCase().replace('_', ' ')} registration`, 400
+            ));
+        }
     }
 
-    if (type === 'TOURNAMENT' || type === 'CAMP') {
-        if (voucher.applicableTo !== type && voucher.applicableTo !== 'ALL') {
-            return next(new AppError(`This voucher is not applicable for ${type.toLowerCase()} registration`, 400));
-        }
-        // If voucher is for a specific event, verify it matches
-        if (voucher.specificEventId && eventId && voucher.specificEventId !== eventId) {
-            return next(new AppError('This voucher is for a different event', 400));
-        }
+    // If the voucher is tied to one event, it must be that event.
+    if (voucher.specificEventId && eventId && voucher.specificEventId !== eventId) {
+        return next(new AppError('This voucher is for a different event', 400));
+    }
+
+    // Surface the fee gap at validation time rather than letting the user submit
+    // and hit a rejection from the redeem endpoint.
+    if (voucher.specificEvent?.memberFee && voucher.amount < voucher.specificEvent.memberFee) {
+        return next(new AppError(
+            `Voucher covers ₹${voucher.amount} but this event costs ₹${voucher.specificEvent.memberFee}`, 400
+        ));
     }
 
     res.status(200).json({
@@ -557,6 +588,31 @@ export const redeemVoucherForEvent = catchAsync(async (req: Request, res: Respon
     }
     if (voucher.specificEventId && voucher.specificEventId !== eventId) {
         return next(new AppError('This voucher is for a different event', 400));
+    }
+
+    // The voucher must actually cover the fee. Without this a ₹1 voucher paid
+    // for a ₹5,000 tournament in full, because the rows below unconditionally
+    // write discountAmount = memberFee and finalAmount = 0.
+    // (redeemVoucherForRenewal has always performed this check; this path did not.)
+    const eventFee = event.memberFee || 0;
+    if (voucher.amount < eventFee) {
+        return next(new AppError(
+            `Voucher covers ₹${voucher.amount} but this event costs ₹${eventFee}`, 400
+        ));
+    }
+
+    // Redemption must not become a way around the registration deadline that
+    // the normal registerForEvent path enforces.
+    if (event.registrationDeadline && new Date() > event.registrationDeadline) {
+        return next(new AppError('The registration deadline for this event has passed', 400));
+    }
+
+    // Respect capacity, likewise enforced on the normal registration path.
+    if (event.maxParticipants) {
+        const registered = await prisma.eventRegistration.count({ where: { eventId } });
+        if (registered >= event.maxParticipants) {
+            return next(new AppError('This event is full', 400));
+        }
     }
 
     // Create event registration + mark voucher

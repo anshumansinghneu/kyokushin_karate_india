@@ -7,14 +7,10 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { getEventStatus, type EventStatus } from "@/lib/eventStatus";
 
-const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return {
-        day: date.getDate(),
-        month: date.toLocaleString('default', { month: 'short' }).toUpperCase(),
-        full: date.toLocaleDateString()
-    };
-};
+import { dateOnlyParts } from '@/lib/dateOnly';
+// Event dates are date-only values stored as UTC midnight; dateOnlyParts reads
+// them in UTC so the badge shows the stored day for every viewer.
+const formatDate = (dateString: string) => dateOnlyParts(dateString);
 
 function EventCard({ event, index, status = 'UPCOMING' }: { event: any; index: number, status?: EventStatus }) {
     const dateObj = formatDate(event.startDate);
@@ -139,8 +135,10 @@ export default function EventsPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                     >
+                        {/* Don't promise "UPCOMING" when the calendar only holds
+                            past events — the page then reads as a false claim. */}
                         <h1 className="font-black tracking-tighter uppercase mb-2" style={{ fontSize: 'clamp(2rem, 6vw, 4rem)' }}>
-                            <span className="text-white">UPCOMING </span>
+                            <span className="text-white">{upcomingEvents.length > 0 ? 'UPCOMING ' : 'KKFI '}</span>
                             <span className="text-[#FF0000]">EVENTS</span>
                         </h1>
                         <p className="text-gray-400 text-sm">Compete. Train. Evolve.</p>
@@ -216,6 +214,18 @@ export default function EventsPage() {
                                         <EventCard key={event.id} event={event} index={index} status={getEventStatus(event, now)} />
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Nothing scheduled: say so, rather than dropping the
+                            visitor straight into "Past Events" with no context. */}
+                        {upcomingEvents.length === 0 && pastEvents.length > 0 && (
+                            <div className="glass-card p-8 text-center">
+                                <Calendar className="w-8 h-8 text-zinc-600 mx-auto mb-3" />
+                                <h2 className="text-lg font-bold text-white mb-1">No upcoming events right now</h2>
+                                <p className="text-sm text-gray-400">
+                                    The next camp, seminar and grading dates are being finalised — check back soon.
+                                </p>
                             </div>
                         )}
 

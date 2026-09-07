@@ -11,6 +11,7 @@ import { getEventStatus } from "@/lib/eventStatus";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 export default function EventDetailPage() {
     const { id } = useParams();
     const { user } = useAuthStore();
@@ -228,12 +229,14 @@ export default function EventDetailPage() {
                         <div className="flex flex-wrap items-center gap-4 text-[12px] text-zinc-400">
                             <span className="flex items-center gap-1.5">
                                 <Calendar className="w-3.5 h-3.5 text-primary" />
-                                {new Date(event.startDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
+                                {formatDateOnly(event.startDate, { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }, 'en-IN')}
                             </span>
-                            <span className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-primary" />
-                                {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+                            {event.endDate && event.endDate !== event.startDate && (
+                                <span className="flex items-center gap-1.5">
+                                    <Clock className="w-3.5 h-3.5 text-primary" />
+                                    Ends {formatDateOnly(event.endDate, { day: 'numeric', month: 'long', year: 'numeric' }, 'en-IN')}
+                                </span>
+                            )}
                             {(event.location || event.dojo?.city) && (
                                 <span className="flex items-center gap-1.5">
                                     <MapPin className="w-3.5 h-3.5 text-primary" />
@@ -304,8 +307,8 @@ export default function EventDetailPage() {
                                     <Clock className="w-4 h-4 text-primary" />
                                 </div>
                                 <div className="glass-card p-4 flex-1 flex justify-between items-center">
-                                    <span className="font-bold text-white">Start Time</span>
-                                    <span className="text-sm font-mono text-gray-400">{new Date(event.startDate).toLocaleTimeString()}</span>
+                                    <span className="font-bold text-white">Starts</span>
+                                    <span className="text-sm font-mono text-gray-400">{formatDateOnly(event.startDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }, 'en-IN')}</span>
                                 </div>
                             </div>
                             <div className="flex items-center gap-6 relative">
@@ -313,8 +316,8 @@ export default function EventDetailPage() {
                                     <Clock className="w-4 h-4 text-primary" />
                                 </div>
                                 <div className="glass-card p-4 flex-1 flex justify-between items-center">
-                                    <span className="font-bold text-white">End Time</span>
-                                    <span className="text-sm font-mono text-gray-400">{new Date(event.endDate).toLocaleTimeString()}</span>
+                                    <span className="font-bold text-white">Ends</span>
+                                    <span className="text-sm font-mono text-gray-400">{formatDateOnly(event.endDate || event.startDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }, 'en-IN')}</span>
                                 </div>
                             </div>
                         </div>
@@ -456,7 +459,7 @@ export default function EventDetailPage() {
                                     Register Now
                                 </Button>
                                 <p className="text-center text-xs text-gray-400 mt-4">
-                                    Registration closes on {new Date(event.registrationDeadline).toLocaleDateString()}
+                                    Registration closes on {formatDateOnly(event.registrationDeadline)}
                                 </p>
                             </>
                         ) : (

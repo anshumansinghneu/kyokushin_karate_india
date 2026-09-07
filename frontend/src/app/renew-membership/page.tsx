@@ -51,7 +51,7 @@ export default function RenewMembershipPage() {
         setVoucherValid(null);
         try {
             const res = await api.post("/vouchers/validate", { code: voucherCode.trim().toUpperCase() });
-            const v = res.data.data;
+            const v = res.data.data.voucher;
             if (v.applicableTo !== "MEMBERSHIP" && v.applicableTo !== "ALL") {
                 setVoucherError("This voucher is not valid for membership renewal");
                 return;
@@ -81,7 +81,7 @@ export default function RenewMembershipPage() {
         setPaymentStep("redeeming");
 
         try {
-            await api.post("/vouchers/redeem/renewal", { code: voucherValid.code });
+            await api.post("/vouchers/redeem/renewal", { voucherCode: voucherValid.code });
             setPaymentStep("done");
             await fetchUser();
             setTimeout(() => router.push("/dashboard"), 2000);

@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import Portal from "@/components/ui/portal";
+import { formatDateOnly } from '@/lib/dateOnly';
 import {
     MapPin,
     Calendar,
@@ -581,7 +582,7 @@ function DBSeminarSection({ seminar, index }: { seminar: any; index: number }) {
                         images={images}
                         index={lightbox}
                         title={seminar.name}
-                        date={new Date(seminar.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+                        date={formatDateOnly(seminar.startDate, { day: "numeric", month: "long", year: "numeric" }, "en-IN")}
                         location={seminar.location}
                         onClose={() => setLightbox(null)}
                     />
@@ -624,7 +625,7 @@ function DBSeminarSection({ seminar, index }: { seminar: any; index: number }) {
                                 <div className="flex flex-wrap gap-4 text-sm pt-1">
                                     <div className="flex items-center gap-2 text-gray-300 bg-white/5 rounded-full px-3 py-1.5">
                                         <Calendar size={14} className="text-red-500" />
-                                        {new Date(seminar.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+                                        {formatDateOnly(seminar.startDate, { day: "numeric", month: "long", year: "numeric" }, "en-IN")}
                                     </div>
                                     {seminar.location && (
                                         <div className="flex items-center gap-2 text-gray-300 bg-white/5 rounded-full px-3 py-1.5">
@@ -848,11 +849,11 @@ export default function SeminarsPage() {
                                         <div className="p-6 flex-1 flex flex-col">
                                             <div className="flex items-center gap-2 text-red-500 font-bold text-sm mb-2">
                                                 <Calendar size={14} />
-                                                {new Date(event.startDate).toLocaleDateString("en-IN", {
+                                                {formatDateOnly(event.startDate, {
                                                     day: "numeric",
                                                     month: "long",
                                                     year: "numeric",
-                                                })}
+                                                }, "en-IN")}
                                             </div>
                                             <h2 className="text-xl font-bold mb-2 group-hover:text-red-500 transition-colors">
                                                 {event.name}

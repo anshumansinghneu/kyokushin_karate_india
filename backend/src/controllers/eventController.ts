@@ -4,6 +4,7 @@ import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { sendEventRegistrationEmail } from '../services/emailService';
 import { resolveEventStatus, isEventFinished } from '../utils/eventStatus';
+import { parseEventDates, parseOptionalDateField } from '../utils/parseDateField';
 
 export const getAllEvents = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const page = parseInt(req.query.page as string) || 1;
@@ -101,17 +102,21 @@ export const createEvent = catchAsync(async (req: Request, res: Response, next: 
         isPreEvent, assignedInstructorId
     } = req.body;
 
+    // Validate before persisting: an unchecked `new Date()` previously let a
+    // mistyped year through and stored an event deadline as year 0002.
+    const dates = parseEventDates({ startDate, endDate, registrationDeadline });
+
     const newEvent = await prisma.event.create({
         data: {
             type,
             name,
             description,
             imageUrl: imageUrl || null,
-            startDate: new Date(startDate),
-            endDate: endDate ? new Date(endDate) : new Date(startDate),
+            startDate: dates.startDate,
+            endDate: dates.endDate,
             location,
             dojoId: dojoId || null,
-            registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : new Date(startDate),
+            registrationDeadline: dates.registrationDeadline,
             maxParticipants,
             memberFee,
             nonMemberFee,
@@ -137,7 +142,7 @@ export const createEvent = catchAsync(async (req: Request, res: Response, next: 
                 type: (albumTypeMap[type] || 'GENERAL') as any,
                 eventId: newEvent.id,
                 createdBy: currentUser.id,
-                date: new Date(startDate),
+                date: dates.startDate,
             },
         });
     } catch (e) {
@@ -284,11 +289,11 @@ export const updateEvent = catchAsync(async (req: Request, res: Response, next: 
     if (type !== undefined) updateData.type = type;
     if (description !== undefined) updateData.description = description;
     if (imageUrl !== undefined) updateData.imageUrl = imageUrl || null;
-    if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : undefined;
-    if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : undefined;
+    if (startDate !== undefined) updateData.startDate = parseOptionalDateField(startDate, 'startDate');
+    if (endDate !== undefined) updateData.endDate = parseOptionalDateField(endDate, 'endDate');
     if (location !== undefined) updateData.location = location;
     if (dojoId !== undefined) updateData.dojoId = dojoId || null;
-    if (registrationDeadline !== undefined) updateData.registrationDeadline = registrationDeadline ? new Date(registrationDeadline) : undefined;
+    if (registrationDeadline !== undefined) updateData.registrationDeadline = parseOptionalDateField(registrationDeadline, 'registrationDeadline');
     if (maxParticipants !== undefined) updateData.maxParticipants = maxParticipants;
     if (memberFee !== undefined) updateData.memberFee = memberFee;
     if (nonMemberFee !== undefined) updateData.nonMemberFee = nonMemberFee;
@@ -445,6 +450,14 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
         }
         if (voucher.specificEventId && voucher.specificEventId !== eventId) {
             return next(new AppError('This voucher is for a different event', 400));
+        }
+
+        // Mirror of the check in redeemVoucherForEvent: the voucher has to cover
+        // the fee, otherwise the rows below zero out the balance regardless.
+        if (voucher.amount < fee) {
+            return next(new AppError(
+                `Voucher covers ₹${voucher.amount} but this event costs ₹${fee}`, 400
+            ));
         }
 
         const result = await prisma.$transaction(async (tx: any) => {

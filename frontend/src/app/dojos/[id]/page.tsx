@@ -15,6 +15,7 @@ import { getEventStatus } from "@/lib/eventStatus";
 import KarateLoader from "@/components/KarateLoader";
 import 'leaflet/dist/leaflet.css';
 
+import { dateOnlyParts, formatDateOnly } from '@/lib/dateOnly';
 /* ── Interfaces ── */
 interface Instructor {
     id: string;
@@ -128,13 +129,13 @@ export default function DojoDetailPage() {
                 center: coords!,
                 zoom: 14,
                 zoomControl: false,
-                attributionControl: false,
                 scrollWheelZoom: false,
                 dragging: false,
             });
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             }).addTo(map);
 
             const pinHTML = `<div style="width:20px;height:20px;border-radius:50%;background:#dc2626;border:2.5px solid #fff;box-shadow:0 0 12px rgba(220,38,38,0.4);"></div>`;
@@ -407,10 +408,10 @@ export default function DojoDetailPage() {
                                         <div className={`bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors p-5 rounded-xl flex items-center gap-5 group ${done ? 'opacity-60' : ''}`}>
                                             <div className="w-14 h-14 rounded-lg border border-white/10 bg-white/[0.02] flex flex-col items-center justify-center text-center shrink-0">
                                                 <span className={`text-[10px] uppercase font-bold mb-0.5 leading-none ${done ? 'text-gray-400' : 'text-red-500'}`}>
-                                                    {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short' })}
+                                                    {formatDateOnly(event.startDate, { month: 'short' }, 'en-US')}
                                                 </span>
                                                 <span className="text-lg font-black text-white leading-none">
-                                                    {new Date(event.startDate).getDate()}
+                                                    {dateOnlyParts(event.startDate).day}
                                                 </span>
                                             </div>
                                             <div>
@@ -459,7 +460,7 @@ export default function DojoDetailPage() {
 
                         {/* Embedded Map */}
                         <div className="w-full h-48 bg-black border border-white/10 rounded-lg overflow-hidden relative mb-4">
-                            <div ref={mapRef} className="w-full h-full z-0" />
+                            <div ref={mapRef} className="kkfi-dark-map w-full h-full z-0" />
                         </div>
 
                         {(dojo.latitude && dojo.longitude) && (

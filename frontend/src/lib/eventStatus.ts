@@ -21,8 +21,13 @@ export function getEventStatus(event: EventLike, now: Date = new Date()): EventS
     const end = event.endDate ? new Date(event.endDate) : start;
 
     // Inclusive of the whole final day.
+    //
+    // Uses setUTCHours, NOT setHours: these dates are date-only values stored as
+    // UTC midnight. Using the local-time setter shifts the boundary by the
+    // viewer's UTC offset, which flipped same-day events to COMPLETED early for
+    // anyone west of UTC (and late for anyone east of it).
     const endOfEndDay = new Date(end);
-    endOfEndDay.setHours(23, 59, 59, 999);
+    endOfEndDay.setUTCHours(23, 59, 59, 999);
 
     if (now < start) return 'UPCOMING';
     if (now <= endOfEndDay) return 'ONGOING';

@@ -290,3 +290,27 @@ body {
         overflow-x: auto;
     }
 }
+
+/* ---------------------------------------------------------------------------
+   Leaflet dark maps.
+
+   CARTO's dark_all basemap now watermarks every tile with "API KEY REQUIRED"
+   unless you hold a key, so the maps render OpenStreetMap tiles instead. OSM
+   only ships a light style, so invert + hue-rotate it back into a dark map that
+   matches the Black Belt system. Markers and popups live in sibling panes, so
+   filtering only .leaflet-tile-pane leaves them untouched.
+   --------------------------------------------------------------------------- */
+.kkfi-dark-map .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.55);
+}
+
+/* OSM's tile usage policy requires visible attribution. Keep it legible but quiet. */
+.kkfi-dark-map .leaflet-control-attribution {
+    background: rgba(0, 0, 0, 0.55) !important;
+    color: rgba(255, 255, 255, 0.45) !important;
+    font-size: 10px !important;
+    border-radius: 4px 0 0 0;
+}
+.kkfi-dark-map .leaflet-control-attribution a {
+    color: rgba(255, 255, 255, 0.65) !important;
+}

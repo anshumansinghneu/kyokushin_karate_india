@@ -10,6 +10,7 @@ import api from "@/lib/api";
 import { getEventStatus } from "@/lib/eventStatus";
 import { useToast } from "@/contexts/ToastContext";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface EnrollStudentModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -434,7 +435,7 @@ export default function EnrollStudentModal({ isOpen, onClose, onSuccess }: Enrol
                                                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
                                                                     <span className="flex items-center gap-1">
                                                                         <Calendar className="w-3 h-3" />
-                                                                        {new Date(event.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                        {formatDateOnly(event.startDate, { day: '2-digit', month: 'short', year: 'numeric' }, 'en-IN')}
                                                                     </span>
                                                                     {event.location && (
                                                                         <span className="flex items-center gap-1">
@@ -476,7 +477,7 @@ export default function EnrollStudentModal({ isOpen, onClose, onSuccess }: Enrol
                                             <span className="text-gray-400">Type</span>
                                             <span className="text-white text-right">{selectedEvent?.type}</span>
                                             <span className="text-gray-400">Date</span>
-                                            <span className="text-white text-right">{selectedEvent && new Date(selectedEvent.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                            <span className="text-white text-right">{selectedEvent && formatDateOnly(selectedEvent.startDate, { day: '2-digit', month: 'short', year: 'numeric' }, 'en-IN')}</span>
                                             <span className="text-gray-400">Fee</span>
                                             <span className="text-white font-semibold text-right">₹{selectedEvent?.memberFee}</span>
                                         </div>

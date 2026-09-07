@@ -8,6 +8,7 @@ import { Calendar, MapPin, ArrowUpRight, Award, ScrollText } from "lucide-react"
 import api from "@/lib/api";
 import KkfiCrest from "@/components/results/KkfiCrest";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface ExamResult {
   id: string;
   title: string;
@@ -19,7 +20,7 @@ interface ExamResult {
 
 function formatDate(d: string | null): string | null {
   if (!d) return null;
-  return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  return formatDateOnly(d, { day: "2-digit", month: "short", year: "numeric" }, "en-IN");
 }
 
 export default function ResultsPage() {

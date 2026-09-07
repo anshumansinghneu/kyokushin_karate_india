@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import { getImageUrl } from "@/lib/imageUtils";
 import KkfiCrest from "@/components/results/KkfiCrest";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 const ResultPdfViewer = dynamic(() => import("@/components/results/ResultPdfViewer"), {
   ssr: false,
   loading: () => (
@@ -29,7 +30,7 @@ interface ExamResult {
 
 function fmt(d: string | null): string | null {
   if (!d) return null;
-  return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  return formatDateOnly(d, { day: "2-digit", month: "short", year: "numeric" }, "en-IN");
 }
 
 function MetaPill({ icon: Icon, label, value }: { icon: typeof Calendar; label: string; value: string }) {

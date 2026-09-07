@@ -640,7 +640,6 @@ export default function FindADojoPage() {
         minZoom: 4,
         maxZoom: 17,
         zoomControl: false,
-        attributionControl: false,
         scrollWheelZoom: false,
         doubleClickZoom: false,
         touchZoom: false,
@@ -653,8 +652,9 @@ export default function FindADojoPage() {
 
       map.fitBounds(indiaBounds, { padding: [20, 20] });
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 17,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
 
       mapInstanceRef.current = map;
@@ -803,7 +803,7 @@ export default function FindADojoPage() {
       {/* ============================================================ */}
       {/*  FULL-VIEWPORT MAP                                           */}
       {/* ============================================================ */}
-      <div ref={mapRef} className="absolute inset-0 z-0 w-full h-full" />
+      <div ref={mapRef} className="kkfi-dark-map absolute inset-0 z-0 w-full h-full" />
 
       {/* Map edge vignettes for depth */}
       <div className="absolute inset-0 z-[1] pointer-events-none">

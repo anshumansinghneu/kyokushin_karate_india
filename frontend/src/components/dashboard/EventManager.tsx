@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface Event {
     id: string;
     name: string;
@@ -429,8 +430,8 @@ export default function EventManager() {
                                 {/* Title & date */}
                                 <h3 className="text-lg font-bold text-white mb-1 line-clamp-2">{event.name}</h3>
                                 <p className="text-xs text-gray-500 mb-4">
-                                    {new Date(event.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                                    {event.startDate !== event.endDate && ` — ${new Date(event.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                                    {formatDateOnly(event.startDate, { day: 'numeric', month: 'short' }, 'en-IN')}
+                                    {event.startDate !== event.endDate && ` — ${formatDateOnly(event.endDate, { day: 'numeric', month: 'short', year: 'numeric' }, 'en-IN')}`}
                                 </p>
 
                                 {/* Details */}
@@ -660,7 +661,7 @@ export default function EventManager() {
                                                     <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Auto-Generated</p>
                                                     <p className="text-sm text-white font-semibold">{formData.name}</p>
                                                     <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-400">
-                                                        {formData.startDate && <span>📅 {new Date(formData.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
+                                                        {formData.startDate && <span>📅 {formatDateOnly(formData.startDate, { day: 'numeric', month: 'short', year: 'numeric' }, 'en-IN')}</span>}
                                                         <span>📍 {formData.location}</span>
                                                         <span>💰 ₹{formData.memberFee}</span>
                                                         {formData.assignedInstructorId && <span>👤 {instructors.find(i => i.id === formData.assignedInstructorId)?.name}</span>}
@@ -1008,8 +1009,8 @@ export default function EventManager() {
                                                 {formData.location && <span className="text-gray-500">· {formData.location}</span>}
                                                 {formData.startDate && (
                                                     <span className="text-gray-500">
-                                                        · {new Date(formData.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                                                        {formData.endDate && formData.endDate !== formData.startDate && ` – ${new Date(formData.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`}
+                                                        · {formatDateOnly(formData.startDate, { day: 'numeric', month: 'short' }, 'en-IN')}
+                                                        {formData.endDate && formData.endDate !== formData.startDate && ` – ${formatDateOnly(formData.endDate, { day: 'numeric', month: 'short' }, 'en-IN')}`}
                                                     </span>
                                                 )}
                                                 {formData.memberFee > 0 && <span className="text-gray-500">· ₹{formData.memberFee}</span>}

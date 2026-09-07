@@ -18,6 +18,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { getImageUrl } from "@/lib/imageUtils";
 import { getToken } from "@/lib/tokenStorage";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface Tournament {
     id: string;
     name: string;
@@ -1012,9 +1013,9 @@ export default function TournamentManager() {
                                             <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-gray-500">
                                                 <span className="flex items-center gap-1.5">
                                                     <Calendar className="w-3.5 h-3.5 text-gray-600" />
-                                                    {startDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    {formatDateOnly(startDate, { day: 'numeric', month: 'short', year: 'numeric' }, 'en-IN')}
                                                     {startDate.toDateString() !== endDate.toDateString() && (
-                                                        <> – {endDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</>
+                                                        <> – {formatDateOnly(endDate, { day: 'numeric', month: 'short' }, 'en-IN')}</>
                                                     )}
                                                 </span>
                                                 {tournament.location && (
@@ -1291,7 +1292,7 @@ export default function TournamentManager() {
                                         <div className="min-w-0">
                                             <h2 className="text-xl sm:text-2xl font-bold text-white truncate">{viewingTournament.name}</h2>
                                             <p className="text-gray-400 text-sm mt-0.5">
-                                                {new Date(viewingTournament.startDate).toLocaleDateString()} &bull; {viewingTournament.location}
+                                                {formatDateOnly(viewingTournament.startDate)} &bull; {viewingTournament.location}
                                             </p>
                                         </div>
                                         <button onClick={() => { setViewingTournament(null); setParticipants([]); setBrackets([]); }}

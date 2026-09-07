@@ -11,6 +11,7 @@ import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 import { io, Socket } from "socket.io-client";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface Match {
     id: string;
     matchNumber: number;
@@ -260,7 +261,7 @@ export default function LiveMatchManager() {
                                     }`}
                             >
                                 <p className="font-bold truncate">{t.name}</p>
-                                <p className="text-xs text-gray-400 mt-1">{new Date(t.startDate).toLocaleDateString()}</p>
+                                <p className="text-xs text-gray-400 mt-1">{formatDateOnly(t.startDate)}</p>
                             </button>
                         ))}
                     </div>

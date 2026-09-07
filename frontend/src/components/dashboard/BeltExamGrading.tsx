@@ -8,6 +8,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { useAuthStore } from "@/store/authStore";
 import { downloadBeltCertificate, downloadAllBeltCertificates } from "@/lib/beltCertificateGenerator";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface BeltExamEvent {
     id: string;
     name: string;
@@ -215,7 +216,7 @@ export default function BeltExamGrading() {
                             <option value="" className="bg-zinc-900">Choose an event...</option>
                             {beltExamEvents.map((evt) => (
                                 <option key={evt.id} value={evt.id} className="bg-zinc-900">
-                                    {evt.name} — {new Date(evt.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                                    {evt.name} — {formatDateOnly(evt.startDate, { day: "numeric", month: "short", year: "numeric" }, "en-IN")}
                                     {evt.isPreEvent ? " (Pre-Event)" : ""}
                                 </option>
                             ))}

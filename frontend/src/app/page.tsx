@@ -15,6 +15,7 @@ import MonthlyChampions from "@/components/MonthlyChampions";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import SectionDivider from "@/components/SectionDivider";
 
+import { formatDateOnly } from '@/lib/dateOnly';
 interface Event {
   id: string;
   name: string;
@@ -176,7 +177,7 @@ function NextEventCountdown({ event }: { event: Event }) {
         </div>
         <h3 className="text-2xl md:text-4xl font-black mb-2 text-white">{event.name}</h3>
         <p className="text-gray-400 text-sm mb-8 flex items-center justify-center gap-2">
-          <MapPin className="w-3.5 h-3.5" /> {event.location || "Location TBA"} &bull; {new Date(event.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+          <MapPin className="w-3.5 h-3.5" /> {event.location || "Location TBA"} &bull; {formatDateOnly(event.startDate, { day: "numeric", month: "long", year: "numeric" }, "en-IN")}
         </p>
 
         <div className="flex justify-center gap-3 sm:gap-5 mb-10">
@@ -392,7 +393,7 @@ export default function Home() {
                       <p className="text-white/70 text-xs font-bold uppercase tracking-widest">New Event</p>
                       <p className="text-white font-black text-lg truncate">{newEventFlash.name}</p>
                       <p className="text-white/60 text-xs flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3" /> {newEventFlash.location || "Location TBA"} • {new Date(newEventFlash.startDate).toLocaleDateString()}
+                        <MapPin className="w-3 h-3" /> {newEventFlash.location || "Location TBA"} • {formatDateOnly(newEventFlash.startDate)}
                       </p>
                     </div>
                     <button

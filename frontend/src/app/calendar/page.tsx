@@ -7,6 +7,7 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { getEventStatus } from '@/lib/eventStatus';
 
+import { dateOnlyParts, formatDateOnly } from '@/lib/dateOnly';
 interface Event {
     id: string;
     type: string;
@@ -297,8 +298,8 @@ export default function CalendarPage() {
                                                             )}
                                                             <p className="text-xs text-gray-300 flex items-center gap-1 mt-1">
                                                                 <Clock className="w-3 h-3" />
-                                                                {new Date(event.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                                                                {event.startDate !== event.endDate && ` - ${new Date(event.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`}
+                                                                {formatDateOnly(event.startDate, { day: 'numeric', month: 'short' }, 'en-IN')}
+                                                                {event.startDate !== event.endDate && ` - ${formatDateOnly(event.endDate, { day: 'numeric', month: 'short' }, 'en-IN')}`}
                                                             </p>
                                                         </div>
                                                     </Link>
@@ -346,10 +347,10 @@ export default function CalendarPage() {
                                                     {/* Date Badge */}
                                                     <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center">
                                                         <span className="text-xs text-gray-400 font-bold uppercase">
-                                                            {startDate.toLocaleDateString('en-IN', { month: 'short' })}
+                                                            {formatDateOnly(startDate, { month: 'short' }, 'en-IN')}
                                                         </span>
                                                         <span className="text-2xl font-black text-white">
-                                                            {startDate.getDate()}
+                                                            {dateOnlyParts(startDate).day}
                                                         </span>
                                                     </div>
 
