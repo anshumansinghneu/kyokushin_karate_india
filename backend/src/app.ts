@@ -40,6 +40,11 @@ import { globalErrorHandler } from './utils/errorHandler';
 
 const app = express();
 
+// Render (and Vercel's rewrite path) terminate TLS at a proxy. Without this the
+// rate limiters below would see every request as coming from one address and
+// throttle all users collectively.
+app.set('trust proxy', 1);
+
 // CORS configuration
 const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:3000',

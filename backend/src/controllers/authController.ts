@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
+import { resolveSelfAssignableRole, resolveDojoId } from '../utils/registrationInput';
 import { sendRegistrationEmail, sendNewApplicantEmail, sendPasswordResetEmail } from '../services/emailService';
 import {
     signAccessToken,
@@ -58,12 +59,21 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
         return next(new AppError('Email already exists', 400));
     }
 
+    // SECURITY: this endpoint is public and unauthenticated, so the role can
+    // never be taken from the request as-is — sending {"role":"ADMIN"} used to
+    // mint a full administrator (who could then issue unlimited vouchers).
+    // See resolveSelfAssignableRole, which is unit-tested as a security
+    // boundary; ADMIN is granted only by an existing admin through the
+    // user-management endpoints.
+    const role = resolveSelfAssignableRole(req.body.role);
+    const resolvedDojoId = resolveDojoId(dojoId);
+
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Use transaction to create user and handle belt logic
     const userId = await prisma.$transaction(async (tx) => {
-        const isStudent = req.body.role === 'STUDENT';
-        const isInstructor = req.body.role === 'INSTRUCTOR';
+        const isStudent = role === 'STUDENT';
+        const isInstructor = role === 'INSTRUCTOR';
         const requestedBelt = currentBeltRank || 'White';
         const isClaimingHigherBelt = isStudent && requestedBelt !== 'White';
 
@@ -106,15 +116,22 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
                 city,
                 state,
                 country: country || 'India',
-                dojoId: dojoId || undefined,
+                dojoId: resolvedDojoId,
                 primaryInstructorId: resolvedInstructorId || undefined,
-                role: req.body.role || 'STUDENT',
+                role,
                 membershipStatus: 'PENDING',
                 currentBeltRank: initialBelt,
                 verificationStatus,
                 fatherName: isStudent ? fatherName : undefined,
                 fatherPhone: isStudent ? fatherPhone : undefined,
-                experienceYears: experienceYears ? parseInt(experienceYears) : 0,
+                // The instructor form asks for experience twice: `experienceYears`
+                // on the training step and `yearsOfExperience` on the instructor
+                // step. The latter was accepted and then silently dropped (there
+                // is no such column), losing the answer the form marked required.
+                // Prefer it for instructors, since it is the role-specific field.
+                experienceYears: isInstructor && yearsOfExperience !== undefined && yearsOfExperience !== ''
+                    ? parseInt(yearsOfExperience)
+                    : (experienceYears ? parseInt(experienceYears) : 0),
                 experienceMonths: experienceMonths ? parseInt(experienceMonths) : 0,
             },
         });

@@ -9,11 +9,12 @@ import {
     deactivateVoucher,
 } from '../controllers/voucherController';
 import { protect, restrictTo } from '../middleware/authMiddleware';
+import { voucherValidateLimiter } from '../middleware/rateLimiters';
 
 const router = express.Router();
 
 // ── Public Routes (no auth needed) ──
-router.post('/validate', validateVoucher);                           // Validate a voucher code
+router.post('/validate', voucherValidateLimiter, validateVoucher);   // Validate a voucher code (throttled: anonymous brute-force surface)
 
 // ── Protected Routes (login required) ──
 router.use(protect);
