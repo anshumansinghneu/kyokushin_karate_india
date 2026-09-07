@@ -133,10 +133,16 @@ export default function DojoDetailPage() {
                 dragging: false,
             });
 
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            }).addTo(map);
+            // Esri Dark Gray Canvas — keyless, genuinely dark, English labels.
+            // Replaces CARTO's dark_all, which now watermarks every tile with
+            // "API KEY REQUIRED". Kept in sync with /find-a-dojo.
+            L.tileLayer(
+                'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+                {
+                    maxZoom: 16,
+                    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+                },
+            ).addTo(map);
 
             const pinHTML = `<div style="width:20px;height:20px;border-radius:50%;background:#dc2626;border:2.5px solid #fff;box-shadow:0 0 12px rgba(220,38,38,0.4);"></div>`;
             const icon = L.divIcon({

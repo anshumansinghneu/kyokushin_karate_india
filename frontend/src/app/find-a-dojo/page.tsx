@@ -97,7 +97,52 @@ const CITY_COORDS: Record<string, [number, number]> = {
   shillong: [25.5788, 91.8933],
   dibrugarh: [27.4728, 94.9120],
   tezpur: [26.6528, 92.7926],
+  // Cities that had registered dojos but no coordinates, so their pins never
+  // rendered at all: Durg, Nainital (4 dojos) and Aurangabad.
+  durg: [21.1904, 81.2849],
+  nainital: [29.3803, 79.4636],
+  haldwani: [29.2183, 79.5130],
+  bhimtal: [29.3475, 79.5629],
+  aurangabad: [19.8762, 75.3433],
 };
+
+/**
+ * City names arrive with inconsistent spacing and punctuation ("Alipur Duar"
+ * vs the `alipurduar` key), and a plain lowercase lookup missed them — the dojo
+ * then silently rendered no pin. Collapse to alphanumerics on both sides.
+ */
+const normalizeCity = (city?: string): string =>
+  (city ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const CITY_INDEX: Record<string, [number, number]> = Object.fromEntries(
+  Object.entries(CITY_COORDS).map(([k, v]) => [normalizeCity(k), v]),
+);
+
+/**
+ * Popups are built as HTML strings for Leaflet, so every interpolated value has
+ * to be escaped. Dojo names are admin-entered free text and previously went
+ * into an inline `onclick` attribute unescaped.
+ */
+const escapeHtml = (value: string): string =>
+  value.replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string
+  ));
+
+/**
+ * Most dojos are named "Mas Oyama Karate Academy, <place>" or
+ * "Mas Oyama Karate Academy - <place>, <city>". In a list of 22 where 15 share
+ * that prefix, repeating it on every row costs two lines of height and tells
+ * the reader nothing — the place is the only part that distinguishes them.
+ * Returns the distinguishing tail, falling back to the full name.
+ */
+const stripAcademyPrefix = (name: string): string => {
+  const tail = name.replace(/^mas oyama karate academy\s*[-–,]\s*/i, '').trim();
+  return tail && tail.toLowerCase() !== name.toLowerCase() ? tail : name;
+};
+
+/** True when the name carried the shared academy prefix. */
+const hasAcademyPrefix = (name: string): boolean =>
+  /^mas oyama karate academy\s*[-–,]\s*/i.test(name);
 
 /* ------------------------------------------------------------------ */
 /*  Custom pin marker CSS (injected once on mount)                     */
@@ -173,10 +218,48 @@ const MARKER_STYLES = `
   animation-duration: 1.5s;
 }
 
+/* Grouped pin: several dojos at one location. Larger, and it states the count
+   instead of silently hiding the others underneath. */
+.dojo-pin--cluster,
+.dojo-pin--cluster .dojo-pin__core {
+  width: 30px;
+  height: 30px;
+}
+.dojo-pin--cluster .dojo-pin__pulse {
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  margin-left: -15px;
+}
+.dojo-pin--cluster .dojo-pin__core::after { content: none; }
+.dojo-pin__count {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
 /* Remove leaflet default icon background */
 .dojo-marker-icon {
   background: transparent !important;
   border: none !important;
+}
+/* Keyboard focus for map pins — they are real controls. */
+.dojo-marker-icon:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dojo-pin, .dojo-pin__core { transition: none; }
+  .dojo-pin__pulse { animation: none; opacity: 0; }
 }
 
 /* Ctrl+scroll hint overlay */
@@ -220,7 +303,47 @@ const MARKER_STYLES = `
   border-right: 1px solid rgba(220,38,38,0.25);
   border-bottom: 1px solid rgba(220,38,38,0.25);
 }
-.kyoku-popup .leaflet-popup-close-button { display: none; }
+/* Single-dojo popups follow the cursor and need no close affordance; grouped
+   popups stay open so their list can be clicked, so they keep one. */
+.kyoku-popup .leaflet-popup-close-button {
+  color: #a1a1aa !important;
+  padding: 10px 12px 0 0 !important;
+  font-size: 18px !important;
+}
+.kyoku-popup .leaflet-popup-close-button:hover { color: #fff !important; }
+
+/* Grouped-pin dojo list */
+.kyoku-popup-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 190px;
+  overflow-y: auto;
+}
+.kyoku-popup-list li + li { margin-top: 4px; }
+.kyoku-popup-listitem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.kyoku-popup-listitem:hover {
+  background: rgba(220,38,38,0.16);
+  border-color: rgba(220,38,38,0.45);
+}
+.kyoku-popup-listitem:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 1px;
+}
 .kyoku-popup-inner { padding: 14px; }
 .kyoku-popup-badge {
   font-size: 8px; font-weight: 800;
@@ -252,18 +375,45 @@ const MARKER_STYLES = `
   box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
 }
 .leaflet-control-zoom a {
+  position: relative;
   background: rgba(0,0,0,0.8) !important;
   color: #fff !important;
-  border-color: rgba(220,38,38,0.1) !important;
+  border-color: rgba(255,255,255,0.08) !important;
   backdrop-filter: blur(10px);
   width: 36px !important;
   height: 36px !important;
-  line-height: 36px !important;
-  font-size: 16px !important;
+  border-radius: 0 !important;
+  /* Leaflet labels zoom-out with U+2212 MINUS SIGN. Font coverage for it is not
+     guaranteed (the Montserrat stack misses it, and it renders as a tofu box),
+     so the glyphs are drawn as CSS bars instead — identical on every platform.
+     The accessible name still comes from the title/aria-label Leaflet sets. */
+  font-size: 0 !important;
 }
+.leaflet-control-zoom a::before,
+.leaflet-control-zoom a::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+/* Horizontal bar: present on both buttons. */
+.leaflet-control-zoom a::before { width: 13px; height: 2px; }
+/* Vertical bar: turns the zoom-in button into a plus. */
+.leaflet-control-zoom-in::after { width: 2px; height: 13px; }
 .leaflet-control-zoom a:hover {
   background: rgba(220,38,38,0.15) !important;
-  color: #dc2626 !important;
+  color: #ff4d4d !important;
+}
+.leaflet-control-zoom a:focus-visible {
+  outline: 2px solid #ff4d4d;
+  outline-offset: -2px;
+}
+/* Leaflet marks a disabled control at min/max zoom; show that honestly. */
+.leaflet-control-zoom a.leaflet-disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 `;
 
@@ -284,39 +434,53 @@ function DojoListCard({
   onHoverEnd: () => void;
   onClick: () => void;
 }) {
+  // 15 of the 22 dojos are named "Mas Oyama Karate Academy, <place>". Leading
+  // every row with that shared prefix pushed the only distinguishing word onto
+  // a second line and made the list unscannable, so the place leads instead and
+  // the affiliation is stated once in the panel header.
+  const place = stripAcademyPrefix(dojo.name);
+  const affiliated = hasAcademyPrefix(dojo.name);
+
   return (
-    <div
-      className={`group relative p-3 rounded-xl cursor-pointer transition-all duration-200 border ${
+    <button
+      type="button"
+      // A full border, not a coloured side-stripe: the active state is carried
+      // by border colour and a background lift.
+      className={`group relative w-full text-left px-3 py-2.5 rounded-xl cursor-pointer transition-colors duration-150 border focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ${
         isActive
-          ? 'bg-white/[0.06] border-red-600/30 shadow-[0_0_15px_rgba(220,38,38,0.1)]'
-          : 'bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.05] hover:border-white/[0.08]'
+          ? 'bg-white/[0.07] border-red-600/40'
+          : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.12]'
       }`}
       onMouseEnter={onHoverStart}
       onMouseLeave={onHoverEnd}
+      onFocus={onHoverStart}
+      onBlur={onHoverEnd}
       onClick={onClick}
+      aria-label={`${dojo.name}, ${dojo.city}${dojo.state ? `, ${dojo.state}` : ''}`}
     >
-      {/* Red accent line */}
-      <div className={`absolute left-0 top-3 bottom-3 w-[2px] rounded-full transition-colors ${isActive ? 'bg-red-500' : 'bg-red-600/30 group-hover:bg-red-500/50'}`} />
-
-      <div className="pl-2.5">
-        <p className="text-[11px] font-semibold text-white leading-tight mb-1">
-          {dojo.name}
+      <div className="pr-5">
+        <p className="text-[13px] font-bold text-white leading-snug">
+          {place}
         </p>
-        <div className="flex items-center gap-1.5 text-[9px] text-zinc-400">
-          <MapPin className="w-2.5 h-2.5 text-zinc-400" />
-          <span>{dojo.city}{dojo.state ? `, ${dojo.state}` : ''}</span>
-          {dojo.chiefInstructor && (
+        <div className="mt-1 flex items-center gap-1.5 text-[11px] text-zinc-400">
+          <MapPin className="w-3 h-3 shrink-0" aria-hidden="true" />
+          <span className="truncate">{dojo.city}</span>
+          {affiliated && (
             <>
-              <span className="text-zinc-700">&middot;</span>
-              <span className="text-red-500/60">{dojo.chiefInstructor.split(' ')[0]}</span>
+              <span className="text-zinc-600" aria-hidden="true">&middot;</span>
+              <span className="truncate text-zinc-500">Mas Oyama</span>
             </>
           )}
         </div>
       </div>
 
-      {/* Arrow */}
-      <ChevronRight className={`absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 transition-all ${isActive ? 'text-red-500 translate-x-0' : 'text-zinc-700 -translate-x-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-0'}`} />
-    </div>
+      <ChevronRight
+        aria-hidden="true"
+        className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${
+          isActive ? 'text-red-500' : 'text-zinc-600 group-hover:text-zinc-300'
+        }`}
+      />
+    </button>
   );
 }
 
@@ -335,6 +499,26 @@ interface FloatingDojoListProps {
   onSelect: (dojo: Dojo) => void;
   isLoading: boolean;
   isDetailOpen: boolean;
+  unmappedCount: number;
+  onLocateMe: () => void;
+  locateState: 'idle' | 'locating' | 'done' | 'denied';
+}
+
+/** Groups dojos by state so 22 rows read as a handful of regions. */
+function groupByState(dojos: Dojo[]): { state: string; dojos: Dojo[] }[] {
+  const map = new Map<string, Dojo[]>();
+  for (const d of dojos) {
+    const key = d.state?.trim() || 'Other';
+    const list = map.get(key);
+    if (list) list.push(d);
+    else map.set(key, [d]);
+  }
+  return [...map.entries()]
+    .map(([state, list]) => ({
+      state,
+      dojos: [...list].sort((a, b) => a.city.localeCompare(b.city)),
+    }))
+    .sort((a, b) => b.dojos.length - a.dojos.length || a.state.localeCompare(b.state));
 }
 
 function FloatingDojoList({
@@ -348,59 +532,123 @@ function FloatingDojoList({
   onSelect,
   isLoading,
   isDetailOpen,
+  unmappedCount,
+  onLocateMe,
+  locateState,
 }: FloatingDojoListProps) {
   return (
     <motion.div
       initial={{ x: 40, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-      className={`absolute top-20 sm:top-24 right-4 sm:right-6 lg:right-8 bottom-6 w-[280px] lg:w-[300px] z-20 hidden md:flex flex-col bg-black/70 backdrop-blur-2xl border border-white/[0.06] rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)] transition-opacity duration-300 ${isDetailOpen ? 'opacity-0 pointer-events-none' : ''}`}
+      // Widened from 280px: at readable type sizes the old width forced dojo
+      // names onto three lines.
+      className={`absolute top-20 sm:top-24 right-4 sm:right-6 lg:right-8 bottom-6 w-[310px] lg:w-[330px] z-20 hidden md:flex flex-col bg-black/80 backdrop-blur-2xl border border-white/[0.08] rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)] transition-opacity duration-300 ${isDetailOpen ? 'opacity-0 pointer-events-none' : ''}`}
     >
-      {/* Search section */}
-      <div className="p-3">
+      {/* Search + locate */}
+      <div className="p-3 space-y-2">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+          <Search
+            aria-hidden="true"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none"
+          />
           <input
-            type="text"
-            placeholder="Search city, state, or instructor..."
+            type="search"
+            aria-label="Search dojos by city, state or instructor"
+            placeholder="Search city, state, or instructor"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full h-9 pl-9 pr-3 bg-white/[0.04] border border-white/[0.06] rounded-lg text-[11px] text-white placeholder:text-zinc-400 focus:border-red-500/30 focus:outline-none transition-colors"
+            className="w-full h-10 pl-9 pr-3 bg-white/[0.05] border border-white/[0.08] rounded-lg text-[13px] text-white placeholder:text-zinc-400 focus:border-red-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 transition-colors"
           />
         </div>
+
+        {/* The page asks "find your dojo" — offer the obvious answer. */}
+        <button
+          type="button"
+          onClick={onLocateMe}
+          disabled={locateState === 'locating'}
+          className="w-full h-9 inline-flex items-center justify-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] text-[12px] font-semibold text-zinc-200 hover:bg-white/[0.07] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 disabled:opacity-60 transition-colors"
+        >
+          <Navigation
+            aria-hidden="true"
+            className={`w-3.5 h-3.5 ${locateState === 'locating' ? 'animate-pulse' : ''}`}
+          />
+          {locateState === 'locating'
+            ? 'Finding you…'
+            : locateState === 'done'
+              ? 'Sorted by distance'
+              : locateState === 'denied'
+                ? 'Location unavailable'
+                : 'Find dojos near me'}
+        </button>
       </div>
 
       {/* Header row */}
-      <div className="px-4 py-2 flex items-center justify-between border-b border-white/[0.04]">
-        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">
-          Dojos
+      <div className="px-4 py-2 flex items-center justify-between border-b border-white/[0.06]">
+        <span className="text-[11px] font-semibold text-zinc-300">
+          {dojos.length} {dojos.length === 1 ? 'dojo' : 'dojos'}
+          {locateState === 'done' ? ' · nearest first' : ''}
         </span>
-        <span className="text-[10px] font-bold text-red-500">
-          {dojos.length} found
-        </span>
+        {unmappedCount > 0 && (
+          <span
+            className="text-[11px] text-amber-400"
+            title={`${unmappedCount} dojo(s) have no coordinates yet and do not appear as pins`}
+          >
+            {unmappedCount} unmapped
+          </span>
+        )}
       </div>
 
       {/* Scrollable list */}
-      <div className="flex-1 overflow-y-auto px-2.5 py-2.5 space-y-1.5">
+      <div className="flex-1 overflow-y-auto px-2.5 py-2.5">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-8 h-8 border-2 border-white/10 border-t-red-500 rounded-full animate-spin" />
           </div>
         ) : dojos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-zinc-500">
-            <Shield className="w-8 h-8 mb-2 opacity-40" />
-            <span className="text-xs">No dojos found</span>
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <Shield className="w-8 h-8 mb-3 text-zinc-600" aria-hidden="true" />
+            <p className="text-[13px] font-semibold text-zinc-200">No dojos match that search</p>
+            <p className="mt-1 text-[11px] text-zinc-400">
+              Try a city or state name, or clear the search to see all branches.
+            </p>
+          </div>
+        ) : locateState === 'done' ? (
+          // Distance order is the point of this mode; don't re-group it by state.
+          <div className="space-y-1.5">
+            {dojos.map((dojo) => (
+              <DojoListCard
+                key={dojo.id}
+                dojo={dojo}
+                isActive={dojo.id === hoveredDojoId || dojo.id === selectedDojoId}
+                onHoverStart={() => onHoverStart(dojo.id)}
+                onHoverEnd={onHoverEnd}
+                onClick={() => onSelect(dojo)}
+              />
+            ))}
           </div>
         ) : (
-          dojos.map((dojo) => (
-            <DojoListCard
-              key={dojo.id}
-              dojo={dojo}
-              isActive={dojo.id === hoveredDojoId || dojo.id === selectedDojoId}
-              onHoverStart={() => onHoverStart(dojo.id)}
-              onHoverEnd={onHoverEnd}
-              onClick={() => onSelect(dojo)}
-            />
+          groupByState(dojos).map(({ state, dojos: stateDojos }) => (
+            <section key={state} className="mb-3 last:mb-0">
+              <h3 className="sticky top-0 z-[1] -mx-2.5 px-4 py-1.5 bg-black/85 backdrop-blur-sm flex items-center justify-between">
+                <span className="text-[11px] font-bold text-zinc-300 truncate">{state}</span>
+                <span className="text-[11px] font-semibold text-zinc-500 tabular-nums">
+                  {stateDojos.length}
+                </span>
+              </h3>
+              <div className="mt-1.5 space-y-1.5">
+                {stateDojos.map((dojo) => (
+                  <DojoListCard
+                    key={dojo.id}
+                    dojo={dojo}
+                    isActive={dojo.id === hoveredDojoId || dojo.id === selectedDojoId}
+                    onHoverStart={() => onHoverStart(dojo.id)}
+                    onHoverEnd={onHoverEnd}
+                    onClick={() => onSelect(dojo)}
+                  />
+                ))}
+              </div>
+            </section>
           ))
         )}
       </div>
@@ -461,7 +709,7 @@ function DojoDetailPanel({
         <button
           onClick={onClose}
           aria-label="Close detail panel"
-          className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/[0.08] border border-white/10 flex items-center justify-center text-zinc-400 hover:bg-red-600 hover:text-white transition-colors"
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/[0.08] border border-white/10 flex items-center justify-center text-zinc-200 hover:bg-red-600 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 transition-colors"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -571,16 +819,92 @@ export default function FindADojoPage() {
   /* ---- Refs ---- */
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletType>(null);
+  /** Keyed by location group ("lat,lng"), since one pin can hold many dojos. */
   const markersRef = useRef<Record<string, LeafletType>>({});
+  /** dojoId -> the group marker that represents it, for hover/fly-to sync. */
+  const markerByDojoRef = useRef<Record<string, LeafletType>>({});
   const prevViewRef = useRef<{ center: LeafletType; zoom: number } | null>(null);
   const leafletRef = useRef<LeafletType>(null);
 
-  /* ---- Coord helper (CITY_COORDS fallback preserved) ---- */
+  /* ---- Coord helper (city fallback, whitespace-tolerant) ---- */
   const getDojoCoords = useCallback((dojo: Dojo): [number, number] | null => {
     if (dojo.latitude && dojo.longitude) return [dojo.latitude, dojo.longitude];
-    const fallback = CITY_COORDS[dojo.city?.toLowerCase()];
-    return fallback || null;
+    return CITY_INDEX[normalizeCity(dojo.city)] ?? null;
   }, []);
+
+  /**
+   * One pin per distinct location, not per dojo.
+   *
+   * Seven of the registered dojos share Kanpur, three share Guwahati and two
+   * share Bengaluru, so per-dojo markers stacked on identical coordinates: the
+   * map showed 8 pins for 22 dojos and a click could only ever reach whichever
+   * marker happened to be on top. Grouping makes the count visible and lets the
+   * popup list every dojo at that point.
+   */
+  const locationGroups = useMemo(() => {
+    const groups = new Map<string, { coords: [number, number]; dojos: Dojo[] }>();
+    for (const dojo of filteredDojos) {
+      const coords = getDojoCoords(dojo);
+      if (!coords) continue;
+      const key = `${coords[0].toFixed(4)},${coords[1].toFixed(4)}`;
+      const existing = groups.get(key);
+      if (existing) existing.dojos.push(dojo);
+      else groups.set(key, { coords, dojos: [dojo] });
+    }
+    return [...groups.entries()].map(([key, v]) => ({ key, ...v }));
+  }, [filteredDojos, getDojoCoords]);
+
+  /** Dojos we cannot place. Surfaced rather than silently dropped. */
+  const unmappedCount = useMemo(
+    () => filteredDojos.filter((d) => !getDojoCoords(d)).length,
+    [filteredDojos, getDojoCoords],
+  );
+
+  /* ---- "Near me": the obvious answer to "find your dojo" ---- */
+  const [userPos, setUserPos] = useState<[number, number] | null>(null);
+  const [locateState, setLocateState] = useState<'idle' | 'locating' | 'done' | 'denied'>('idle');
+
+  const handleLocateMe = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocateState('denied');
+      return;
+    }
+    setLocateState('locating');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPos([pos.coords.latitude, pos.coords.longitude]);
+        setLocateState('done');
+      },
+      () => setLocateState('denied'),
+      { timeout: 10000, maximumAge: 300000 },
+    );
+  }, []);
+
+  /** Great-circle distance in km. */
+  const haversineKm = useCallback((a: [number, number], b: [number, number]): number => {
+    const toRad = (d: number) => (d * Math.PI) / 180;
+    const [lat1, lon1] = a;
+    const [lat2, lon2] = b;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const h =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return 2 * 6371 * Math.asin(Math.sqrt(h));
+  }, []);
+
+  /** Nearest-first when we have a fix; otherwise the fetch order. */
+  const listedDojos = useMemo(() => {
+    if (!userPos || locateState !== 'done') return filteredDojos;
+    return [...filteredDojos].sort((a, b) => {
+      const ca = getDojoCoords(a);
+      const cb = getDojoCoords(b);
+      if (!ca && !cb) return 0;
+      if (!ca) return 1;
+      if (!cb) return -1;
+      return haversineKm(userPos, ca) - haversineKm(userPos, cb);
+    });
+  }, [filteredDojos, userPos, locateState, getDojoCoords, haversineKm]);
 
   /* ---- Inject marker styles once ---- */
   useEffect(() => {
@@ -634,28 +958,56 @@ export default function FindADojoPage() {
         [37.0, 97.5],
       );
 
+      // Zoom was previously disabled on every axis (wheel, double-click, touch,
+      // box, keyboard) with no zoom control either, so a visitor could pan but
+      // never actually get closer to a city — on a page whose whole job is
+      // "find the dojo near me", and with several cities holding multiple
+      // dojos, that made the map unusable. All of it is restored, and keyboard
+      // is on because this is the page's primary control (WCAG 2.1.1).
       const map = L.map(mapRef.current, {
         center: [22.5, 82.0],
         zoom: 5,
         minZoom: 4,
         maxZoom: 17,
         zoomControl: false,
-        scrollWheelZoom: false,
-        doubleClickZoom: false,
-        touchZoom: false,
-        boxZoom: false,
-        keyboard: false,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        touchZoom: true,
+        boxZoom: true,
+        keyboard: true,
         dragging: true,
         maxBounds: indiaBounds,
         maxBoundsViscosity: 1.0,
+        // Leaflet's default zoomSnap of 1 floors the value fitBounds computes.
+        // For this pin spread that meant 5.75 became 5, so India sat small in
+        // the middle of the frame with Oman and Thailand in view. Quarter steps
+        // let the fit actually fill the canvas.
+        zoomSnap: 0.25,
+        zoomDelta: 0.5,
       });
 
-      map.fitBounds(indiaBounds, { padding: [20, 20] });
+      // Both go bottom-left: the dojo panel is an opaque layer above the map
+      // on the right, so Leaflet's default bottom-right attribution was
+      // rendered behind it — and the tile provider requires it be visible.
+      L.control.zoom({ position: 'bottomleft' }).addTo(map);
+      map.attributionControl.setPosition('bottomleft');
 
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 17,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
+      // Esri's Dark Gray Canvas: a genuinely dark, neutral basemap with English
+      // labels, served without an API key.
+      //
+      // CARTO's dark_all now watermarks every tile with "API KEY REQUIRED"
+      // (as HTTP 200, so no status check catches it). Plain OpenStreetMap was
+      // the first replacement, but it only ships a light style — inverting it
+      // in CSS produced muddy olive terrain and surfaced Chinese, Arabic and
+      // Cyrillic place names on a page about dojos in India. This layer needs
+      // no filtering and suits the Black Belt palette directly.
+      L.tileLayer(
+        'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        {
+          maxZoom: 16,
+          attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+        },
+      ).addTo(map);
 
       mapInstanceRef.current = map;
       setMapReady(true);
@@ -681,87 +1033,167 @@ export default function FindADojoPage() {
     // Clear old markers
     Object.values(markersRef.current).forEach((m: LeafletType) => m.remove());
     markersRef.current = {};
+    markerByDojoRef.current = {};
 
     const bounds = L.latLngBounds([]);
 
-    filteredDojos.forEach((dojo) => {
-      const coords = getDojoCoords(dojo);
-      if (!coords) return;
-
+    locationGroups.forEach((group) => {
+      const { coords, dojos: groupDojos } = group;
+      const count = groupDojos.length;
       bounds.extend(coords);
 
+      // A grouped pin states its own count, so seven Kanpur dojos read as
+      // seven rather than as one arbitrary winner.
       const pinHTML = `
-        <div class="dojo-pin">
+        <div class="dojo-pin${count > 1 ? ' dojo-pin--cluster' : ''}">
           <span class="dojo-pin__pulse"></span>
-          <div class="dojo-pin__core"></div>
+          <div class="dojo-pin__core">${count > 1 ? `<span class="dojo-pin__count">${count}</span>` : ''}</div>
         </div>
       `;
 
+      const size = count > 1 ? 30 : 22;
       const icon = L.divIcon({
         html: pinHTML,
-        iconSize: [22, 22],
-        iconAnchor: [11, 11],
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
         className: 'dojo-marker-icon',
       });
 
-      const marker = L.marker(coords, { icon }).addTo(map);
+      const marker = L.marker(coords, {
+        icon,
+        keyboard: true,
+        title: count > 1
+          ? `${count} dojos in ${groupDojos[0].city}`
+          : groupDojos[0].name,
+      }).addTo(map);
 
-      const popupContent = `
+      const place = `${groupDojos[0].city}${groupDojos[0].state ? `, ${groupDojos[0].state}` : ''}`;
+      const popupContent = count === 1
+        ? `
         <div class="kyoku-popup-inner">
-          <div class="kyoku-popup-badge">Branch ${dojo.dojoCode || 'N/A'}</div>
-          <div class="kyoku-popup-name">${dojo.name}</div>
-          <div class="kyoku-popup-loc">${dojo.city}${dojo.state ? `, ${dojo.state}` : ''}</div>
-          <button class="kyoku-popup-cta" onclick="document.dispatchEvent(new CustomEvent('dojo-select', { detail: '${dojo.id}' }))">
-            View Dojo →
+          <div class="kyoku-popup-badge">Branch ${escapeHtml(groupDojos[0].dojoCode || 'N/A')}</div>
+          <div class="kyoku-popup-name">${escapeHtml(groupDojos[0].name)}</div>
+          <div class="kyoku-popup-loc">${escapeHtml(place)}</div>
+          <button class="kyoku-popup-cta" data-dojo-id="${escapeHtml(groupDojos[0].id)}">
+            View Dojo &rarr;
           </button>
+        </div>
+      `
+        : `
+        <div class="kyoku-popup-inner">
+          <div class="kyoku-popup-badge">${count} Dojos</div>
+          <div class="kyoku-popup-name">${escapeHtml(place)}</div>
+          <ul class="kyoku-popup-list">
+            ${groupDojos.map((d) => `
+              <li>
+                <button class="kyoku-popup-listitem" data-dojo-id="${escapeHtml(d.id)}">
+                  ${escapeHtml(stripAcademyPrefix(d.name))}
+                </button>
+              </li>`).join('')}
+          </ul>
         </div>
       `;
 
       marker.bindPopup(popupContent, {
         className: 'kyoku-popup',
-        closeButton: false,
-        offset: [0, -20],
-        autoPan: false,
+        closeButton: count > 1,
+        offset: [0, -(size / 2) - 8],
+        autoPan: count > 1,
+        maxHeight: 260,
       });
 
-      marker.on('mouseover', () => {
-        setHoveredDojoId(dojo.id);
-        marker.openPopup();
-      });
-      marker.on('mouseout', () => {
-        setHoveredDojoId(null);
-        marker.closePopup();
-      });
-      marker.on('click', () => setSelectedDojo(dojo));
+      if (count === 1) {
+        const only = groupDojos[0];
+        marker.on('mouseover', () => {
+          setHoveredDojoId(only.id);
+          marker.openPopup();
+        });
+        marker.on('mouseout', () => {
+          setHoveredDojoId(null);
+          marker.closePopup();
+        });
+        marker.on('click', () => setSelectedDojo(only));
+      } else {
+        // Clusters open on click and stay open, so the list is clickable.
+        marker.on('click', () => marker.openPopup());
+      }
 
-      markersRef.current[dojo.id] = marker;
+      markersRef.current[group.key] = marker;
+      groupDojos.forEach((d) => {
+        markerByDojoRef.current[d.id] = marker;
+      });
     });
 
-    // Fit map to markers
-    if (Object.keys(markersRef.current).length > 0 && !selectedDojo) {
-      if (Object.keys(markersRef.current).length === 1) {
-        const onlyCoords = getDojoCoords(filteredDojos[0]);
-        if (onlyCoords) map.setView(onlyCoords, 12, { animate: true, duration: 1 });
-      } else if (searchQuery) {
-        map.fitBounds(bounds, { padding: [80, 80], maxZoom: 14, animate: true, duration: 1 });
+    // Frame the pins, not the subcontinent.
+    //
+    // The old code fit a fixed India bounding box into the full container. On a
+    // wide viewport the latitude constraint dominates, so longitude overshot
+    // and the frame filled with Turkmenistan, western China and Arabia while
+    // India sat small in the middle. Fitting the actual pins — and padding for
+    // the title on the left and the dojo panel on the right so nothing lands
+    // underneath them — makes India the subject of its own map.
+    if (locationGroups.length > 0 && !selectedDojo) {
+      const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+      // Just enough to clear the panel and headline. Larger insets shrink the
+      // usable canvas so much that the fit zooms out past India again.
+      const panelInset = isDesktop ? 300 : 16;
+      const titleInset = isDesktop ? 120 : 16;
+      // On mobile the headline block sits over the top of the map and the
+      // sheet over the bottom, so reserve for both or pins land underneath.
+      const topInset = isDesktop ? 110 : 210;
+      const bottomInset = isDesktop ? 110 : 300;
+
+      if (locationGroups.length === 1) {
+        map.setView(locationGroups[0].coords, 11, { animate: true, duration: 0.9 });
       } else {
-        map.fitBounds(L.latLngBounds([6.5, 68.0], [37.0, 97.5]), { padding: [20, 20], animate: true, duration: 1 });
+        // Vertical padding is kept symmetric: an asymmetric pair shifts the
+        // projected centre and pushed the southernmost pin below the fold.
+        map.fitBounds(bounds, {
+          paddingTopLeft: [titleInset, topInset],
+          paddingBottomRight: [panelInset, bottomInset],
+          maxZoom: searchQuery ? 13 : 9,
+          animate: true,
+          duration: 0.9,
+        });
       }
     }
-  }, [filteredDojos, searchQuery, getDojoCoords, selectedDojo, mapReady]);
+  }, [locationGroups, filteredDojos, searchQuery, getDojoCoords, selectedDojo, mapReady]);
 
   /* ---- Hover sync: add/remove .active class on pin ---- */
   useEffect(() => {
-    Object.entries(markersRef.current).forEach(([id, marker]) => {
+    // Markers are keyed by location now, so resolve the active dojo to its
+    // group marker rather than comparing marker keys to dojo ids (which would
+    // never match and left hover highlighting dead).
+    const activeMarkers = new Set(
+      [hoveredDojoId, selectedDojo?.id]
+        .filter(Boolean)
+        .map((id) => markerByDojoRef.current[id as string])
+        .filter(Boolean),
+    );
+
+    Object.values(markersRef.current).forEach((marker: LeafletType) => {
       const el = marker.getElement();
       if (!el) return;
       const pin = el.querySelector('.dojo-pin') as HTMLElement | null;
       if (!pin) return;
-
-      const isActive = id === hoveredDojoId || id === selectedDojo?.id;
-      pin.classList.toggle('active', isActive);
+      pin.classList.toggle('active', activeMarkers.has(marker));
     });
   }, [hoveredDojoId, selectedDojo]);
+
+  /* ---- Popup actions (delegated; no inline onclick) ---- */
+  useEffect(() => {
+    const container = mapRef.current;
+    if (!container) return;
+    const onClick = (e: MouseEvent) => {
+      const btn = (e.target as HTMLElement).closest('[data-dojo-id]');
+      if (!btn) return;
+      const id = btn.getAttribute('data-dojo-id');
+      const dojo = dojos.find((d) => d.id === id);
+      if (dojo) setSelectedDojo(dojo);
+    };
+    container.addEventListener('click', onClick);
+    return () => container.removeEventListener('click', onClick);
+  }, [dojos]);
 
   /* ---- Fly-to on selectedDojo change ---- */
   useEffect(() => {
@@ -786,33 +1218,34 @@ export default function FindADojoPage() {
     }
   }, [selectedDojo, getDojoCoords]);
 
-  /* ---- Listen for popup CTA custom event ---- */
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const id = (e as CustomEvent).detail;
-      const dojo = dojos.find((d) => d.id === id);
-      if (dojo) setSelectedDojo(dojo);
-    };
-    document.addEventListener('dojo-select', handler);
-    return () => document.removeEventListener('dojo-select', handler);
-  }, [dojos]);
+  // The old global 'dojo-select' listener is gone: popup buttons no longer
+  // carry inline onclick handlers, they are handled by the delegated
+  // [data-dojo-id] listener on the map container above.
 
   /* ---- Render ---- */
   return (
-    <div className="relative w-full h-screen overflow-hidden text-white font-sans selection:bg-red-600">
+    // The root layout wraps every page in <main class="pt-24 md:pt-32 pb-20
+    // md:pb-0">, so a plain h-screen here started 128px down the document and
+    // ran 128px past the fold: the map's zoom controls and the tile provider's
+    // required attribution sat below the viewport, and the page grew a
+    // scrollbar it should never have. Subtract the layout's own padding so the
+    // map fills exactly the space it is given.
+    <div className="relative w-full h-[calc(100svh-11rem)] md:h-[calc(100svh-8rem)] overflow-hidden text-white font-sans selection:bg-red-600">
       {/* ============================================================ */}
       {/*  FULL-VIEWPORT MAP                                           */}
       {/* ============================================================ */}
       <div ref={mapRef} className="kkfi-dark-map absolute inset-0 z-0 w-full h-full" />
 
-      {/* Map edge vignettes for depth */}
+      {/* Map edge scrims.
+          The title and tagline sit directly on the map, and the previous fades
+          (black/40 over 240px) were too weak — the tagline landed on country
+          labels and became unreadable. These are strong enough to guarantee
+          contrast for the overlaid type at any map position. */}
       <div className="absolute inset-0 z-[1] pointer-events-none">
-        {/* Top fade — helps title readability */}
-        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/50 to-transparent" />
-        {/* Left fade — helps title readability */}
-        <div className="absolute top-0 bottom-0 left-0 w-60 bg-gradient-to-r from-black/40 to-transparent" />
-        {/* Bottom subtle fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/30 to-transparent" />
+        {/* Corner wedge anchoring the headline */}
+        <div className="absolute top-0 left-0 w-[36rem] h-[34rem] max-w-[75vw] bg-[radial-gradient(ellipse_at_top_left,rgba(0,0,0,0.94)_0%,rgba(0,0,0,0.75)_38%,transparent_72%)]" />
+        <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black/80 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
       </div>
 
       {/* ============================================================ */}
@@ -875,9 +1308,20 @@ export default function FindADojoPage() {
             DOJO
           </div>
 
-          {/* Tagline */}
-          <p className="mt-3 text-[11px] sm:text-xs text-zinc-400 font-medium tracking-wide">
-            Locate a Kyokushin dojo across India
+          {/* Tagline — zinc-400 over live map tiles failed contrast; zinc-200
+              on the scrim above clears AA comfortably. Now also states the
+              scale of the network, which is the reassurance a parent wants. */}
+          <p className="mt-3 max-w-[22ch] text-[13px] text-zinc-200 font-medium leading-relaxed">
+            {isLoading ? (
+              'Locating dojos across India…'
+            ) : (
+              <>
+                {dojos.length} official {dojos.length === 1 ? 'branch' : 'branches'} across India.
+                {/* Kept to one line on phones, where the map area is short and a
+                    three-line tagline collided with the northern pins. */}
+                <span className="hidden sm:inline"> Search, or find the one nearest you.</span>
+              </>
+            )}
           </p>
 
           {/* Red accent line */}
@@ -889,7 +1333,7 @@ export default function FindADojoPage() {
       {/*  FLOATING DOJO LIST PANEL                                    */}
       {/* ============================================================ */}
       <FloatingDojoList
-        dojos={filteredDojos}
+        dojos={listedDojos}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         hoveredDojoId={hoveredDojoId}
@@ -899,6 +1343,9 @@ export default function FindADojoPage() {
         onSelect={setSelectedDojo}
         isLoading={isLoading}
         isDetailOpen={!!selectedDojo}
+        unmappedCount={unmappedCount}
+        onLocateMe={handleLocateMe}
+        locateState={locateState}
       />
 
       {/* ============================================================ */}
@@ -930,22 +1377,54 @@ export default function FindADojoPage() {
             </div>
           </div>
 
-          {/* Horizontal scrollable cards */}
-          <div className="flex gap-3 px-4 pb-4 overflow-x-auto scrollbar-none">
-            {filteredDojos.slice(0, 10).map((dojo) => (
-              <div
-                key={dojo.id}
-                onClick={() => setSelectedDojo(dojo)}
-                className="flex-shrink-0 w-[200px] p-3 bg-white/[0.04] border border-white/[0.08] rounded-lg cursor-pointer active:scale-95 transition-transform"
-              >
-                <h4 className="text-[11px] font-bold uppercase tracking-wide text-white mb-1 leading-tight line-clamp-2">
-                  {dojo.name}
-                </h4>
-                <span className="text-[9px] text-zinc-400">
-                  {dojo.city}{dojo.state ? `, ${dojo.state}` : ''}
-                </span>
-              </div>
-            ))}
+          {/* Locate control, mirroring the desktop panel */}
+          <div className="px-4 pb-3">
+            <button
+              type="button"
+              onClick={handleLocateMe}
+              disabled={locateState === 'locating'}
+              className="w-full h-9 inline-flex items-center justify-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] text-[12px] font-semibold text-zinc-200 active:scale-[0.98] disabled:opacity-60 transition-transform"
+            >
+              <Navigation aria-hidden="true" className={`w-3.5 h-3.5 ${locateState === 'locating' ? 'animate-pulse' : ''}`} />
+              {locateState === 'locating'
+                ? 'Finding you…'
+                : locateState === 'done'
+                  ? 'Sorted by distance'
+                  : locateState === 'denied'
+                    ? 'Location unavailable'
+                    : 'Find dojos near me'}
+            </button>
+          </div>
+
+          {/* Vertically scrollable list.
+              Was a horizontal strip capped at .slice(0, 10), which made 12 of
+              the 22 dojos unreachable on a phone — the device most prospective
+              students actually use. */}
+          {/* 38vh of list plus the search and locate controls left only a
+              ~230px sliver of map on a 844px phone. Capped so the map stays
+              the dominant element it is meant to be. */}
+          <div className="max-h-[24vh] overflow-y-auto px-4 pb-3 space-y-1.5">
+            {listedDojos.length === 0 ? (
+              <p className="py-6 text-center text-[12px] text-zinc-400">
+                No dojos match that search.
+              </p>
+            ) : (
+              listedDojos.map((dojo) => (
+                <button
+                  key={dojo.id}
+                  type="button"
+                  onClick={() => setSelectedDojo(dojo)}
+                  className="w-full text-left p-3 bg-white/[0.03] border border-white/[0.08] rounded-lg active:scale-[0.98] transition-transform"
+                >
+                  <span className="block text-[13px] font-bold text-white leading-snug">
+                    {stripAcademyPrefix(dojo.name)}
+                  </span>
+                  <span className="mt-0.5 block text-[11px] text-zinc-400">
+                    {dojo.city}{dojo.state ? `, ${dojo.state}` : ''}
+                  </span>
+                </button>
+              ))
+            )}
           </div>
         </motion.div>
       </div>
