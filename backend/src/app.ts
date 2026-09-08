@@ -33,6 +33,7 @@ import anonymousMessageRouter from './routes/anonymousMessageRoutes';
 import examResultRouter from './routes/examResultRoutes';
 import feeRouter from './routes/feeRoutes';
 import attendanceRouter from './routes/attendanceRoutes';
+import delegationRouter from './routes/delegationRoutes';
 import { sendRenewalReminders } from './services/renewalReminderService';
 import { sendFeeRemindersAllDojos } from './services/feeReminderService';
 import { verifySmtp, sendTestEmail } from './services/emailService';
@@ -146,6 +147,7 @@ app.use('/api/anonymous-messages', anonymousMessageRouter);  // Anonymous messag
 app.use('/api/exam-results', examResultRouter);  // Published belt-test results
 app.use('/api/fees', feeRouter);  // Monthly fee ledger
 app.use('/api/attendance', attendanceRouter);  // Monthly attendance
+app.use('/api/delegations', delegationRouter);  // "Team India" international squads
 app.use('/api', noteRouter);  // Notes and profile views
 
 // Serve static files (uploads)

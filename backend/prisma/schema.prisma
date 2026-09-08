@@ -207,6 +207,10 @@ model User {
   monthlyFees           MonthlyFee[]
   attendanceRecords     AttendanceRecord[]
 
+  // International delegations
+  createdDelegations    Delegation[]       @relation("DelegationCreator")
+  delegationMemberships DelegationMember[] @relation("DelegationMemberships")
+
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
 
@@ -911,4 +915,74 @@ model AttendanceRecord {
 
   @@unique([userId, date])
   @@index([dojoId, date])
+}
+
+// ─────────────────────────────────────────────────────────────
+// International delegations — "Team India"
+//
+// When a foreign federation invites KKFI to their tournament, the squad that
+// travels out is recorded here. Each invitation is its own Delegation, so the
+// record of who represented India, where and when is preserved rather than
+// overwritten by the next trip.
+//
+// NAMING: everything user-facing calls this "Team India" (navbar, /team-india,
+// the admin section). The models stay generic so the public branding can change
+// without a migration. Delegation == one Team India trip.
+// ─────────────────────────────────────────────────────────────
+
+enum SquadRole {
+  LEADER // Shihan / head of delegation
+  COACH
+  COMPETITOR
+}
+
+model Delegation {
+  id             String    @id @default(uuid())
+  tournamentName String
+  hostCountry    String
+  hostCity       String?
+  startDate      DateTime
+  endDate        DateTime?
+  summary        String? // A line or two about the invitation itself
+  coverImageUrl  String?
+
+  // Draft until published, so a half-built squad is never public.
+  isPublished Boolean @default(false)
+  // Drives the homepage strip. At most one delegation may be featured; the
+  // controller clears the others in the same transaction.
+  isFeatured  Boolean @default(false)
+
+  members DelegationMember[]
+
+  createdBy String
+  creator   User     @relation("DelegationCreator", fields: [createdBy], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isPublished, startDate])
+}
+
+model DelegationMember {
+  id           String     @id @default(uuid())
+  delegationId String
+  delegation   Delegation @relation(fields: [delegationId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation("DelegationMemberships", fields: [userId], references: [id])
+
+  // Frozen at selection time. Name, photo and dojo are read live from the user
+  // so later improvements flow through, but rank is the historical claim this
+  // page makes ("went as a 3rd Dan") and must not change on promotion.
+  rankAtSelection String
+
+  squadRole   SquadRole @default(COMPETITOR)
+  // Optional hand-written copy. Blank falls back to a line generated from the
+  // member's own record.
+  bioOverride String?
+  sortOrder   Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([delegationId, userId])
+  @@index([delegationId, sortOrder])
 }

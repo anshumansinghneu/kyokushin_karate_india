@@ -8,3 +8,15 @@ backend/dist
 *.cdr
 *.db
 backend/dev.db
+
+# Never upload local env files. `vercel deploy` from a developer machine would
+# otherwise ship frontend/.env.local — which points NEXT_PUBLIC_API_URL at
+# http://localhost:8000/api — into the production build, so the deployed site
+# calls the developer's own machine and loads no data for real visitors.
+# Production values must come from the Vercel project's environment variables.
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local

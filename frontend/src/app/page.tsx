@@ -14,6 +14,7 @@ import LeadershipSection from "@/components/LeadershipSection";
 import MonthlyChampions from "@/components/MonthlyChampions";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import SectionDivider from "@/components/SectionDivider";
+import TeamIndiaStrip from "@/components/TeamIndiaStrip";
 
 import { formatDateOnly } from '@/lib/dateOnly';
 interface Event {
@@ -500,6 +501,10 @@ export default function Home() {
               </div>
             </section>
           )}
+
+          {/* TEAM INDIA — renders only when a delegation is published and
+              featured, otherwise nothing at all. */}
+          <TeamIndiaStrip />
 
           {/* CTA SECTION */}
           <section className="py-16 sm:py-20 md:py-28 relative overflow-hidden">

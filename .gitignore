@@ -17,3 +17,4 @@ backups/
 sport logo.cdr
 .superpowers/
 images/
+.env*

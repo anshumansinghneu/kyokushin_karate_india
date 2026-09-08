@@ -302,6 +302,39 @@ body {
    This class remains as the styling hook for map attribution and controls.
    --------------------------------------------------------------------------- */
 
+/* ---------------------------------------------------------------------------
+   Team India homepage ticker.
+
+   The list is rendered twice and translated by exactly -50%, so the loop has no
+   visible seam. Transform-only, so it stays off the layout/paint path.
+   --------------------------------------------------------------------------- */
+@keyframes kkfi-marquee {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(-50%, 0, 0); }
+}
+
+.kkfi-marquee {
+    animation: kkfi-marquee 48s linear infinite;
+    will-change: transform;
+}
+
+/* Let people stop it to read a name. */
+.kkfi-marquee:hover,
+.kkfi-marquee:focus-within {
+    animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* No automatic movement; the row becomes an ordinary scrollable list so the
+       content is still fully reachable. */
+    .kkfi-marquee {
+        animation: none;
+        overflow-x: auto;
+        max-width: 100%;
+        scrollbar-width: thin;
+    }
+}
+
 /* Attribution is required by the tile provider. Keep it legible but quiet. */
 .kkfi-dark-map .leaflet-control-attribution {
     background: rgba(0, 0, 0, 0.55) !important;

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle, Receipt,
-    ShoppingBag, Calendar, MapPin, Users, Image as ImageIcon, Heart, HandHeart, ShieldCheck, Radio, Swords, Shield, BookOpen, Award, FileText
+    ShoppingBag, Calendar, MapPin, Users, Image as ImageIcon, Heart, HandHeart, ShieldCheck, Radio, Swords, Shield, BookOpen, Award, FileText, Plane
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
@@ -234,6 +234,9 @@ export default function Navbar() {
         { name: "Find a Dojo", href: "/find-a-dojo" },
         eventsDropdown,
         exploreDropdown,
+        // Top level rather than nested under Explore: the squad travelling
+        // abroad is a headline story, and it needs to be one click away.
+        { name: "Team India", href: "/team-india" },
         { name: "Store", href: "/store" },
         { name: "Verify", href: "/verify" },
     ];
@@ -268,6 +271,7 @@ export default function Navbar() {
         {
             label: null,
             items: [
+                { name: "Team India", href: "/team-india", icon: Plane },
                 { name: "Store", href: "/store", icon: ShoppingBag },
                 { name: "Verify Belt", href: "/verify", icon: ShieldCheck },
             ],
