@@ -3,6 +3,10 @@
 import { motion } from "framer-motion";
 import { Quote } from "lucide-react";
 import Image from "next/image";
+// Imported rather than referenced by path so Next can measure them and
+// generate a blur placeholder at build time.
+import ryukoTake from "../../public/ryuko-take.png";
+import shihanVasant from "../../public/shihan-vasant.png";
 
 export default function LeadershipSection() {
     return (
@@ -43,7 +47,7 @@ export default function LeadershipSection() {
                             <div className="relative pl-8 border-l-2 border-red-600/30 py-2 my-8">
                                 <Quote className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-red-600 bg-zinc-950 p-1" />
                                 <p className="italic text-gray-400">
-                                    "He currently serves as the President of the International Karate Organization World Kyokushin Kaikan and holds the rank of 8th Dan."
+                                    &ldquo;He currently serves as the President of the International Karate Organization World Kyokushin Kaikan and holds the rank of 8th Dan.&rdquo;
                                 </p>
                             </div>
                         </div>
@@ -61,9 +65,11 @@ export default function LeadershipSection() {
                             {/* Ryuko Take's Image with Blending */}
                             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent z-10" />
                             <Image
-                                src="/ryuko-take.png"
+                                src={ryukoTake}
                                 alt="Daihyo Ryuko Take - President of World Kyokushin Kaikan"
                                 fill
+                                sizes="(max-width: 1024px) 100vw, 50vw"
+                                placeholder="blur"
                                 className="object-cover object-top grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-110"
                             />
 
@@ -101,9 +107,11 @@ export default function LeadershipSection() {
                             {/* Shihan's Image with Blending */}
                             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent z-10" />
                             <Image
-                                src="/shihan-vasant.png"
+                                src={shihanVasant}
                                 alt="Shihan Vasant K. Singh - Chief Instructor Kyokushin Karate India"
                                 fill
+                                sizes="(max-width: 1024px) 100vw, 50vw"
+                                placeholder="blur"
                                 className="object-cover object-top grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-110"
                             />
 
@@ -148,7 +156,7 @@ export default function LeadershipSection() {
                             <div className="relative pl-8 border-l-2 border-red-600/30 py-2 my-8">
                                 <Quote className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-red-600 bg-zinc-950 p-1" />
                                 <p className="italic text-gray-400">
-                                    "Recognizing the potential and the need for Kyokushin Karate in India, he laid the cornerstone and started The Kyokushin Karate Foundation of India in 2013."
+                                    &ldquo;Recognizing the potential and the need for Kyokushin Karate in India, he laid the cornerstone and started The Kyokushin Karate Foundation of India in 2013.&rdquo;
                                 </p>
                             </div>
 
