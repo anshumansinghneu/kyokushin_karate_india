@@ -6,6 +6,7 @@ import { parseDateField, parseOptionalDateField } from '../utils/parseDateField'
 import { parseRank, rankTitle } from '../utils/rank';
 import { resolveBio } from '../utils/delegationBio';
 import { normaliseCountryCode } from '../utils/countryCodes';
+import { buildInternationalRecord } from '../utils/appearances';
 
 /**
  * "Team India" — the squad that travels when a foreign federation invites KKFI
@@ -102,6 +103,34 @@ function serializeDelegation(delegation: any) {
         members,
     };
 }
+
+/**
+ * The signed-in member's own record of representing India.
+ *
+ * Separate from the public profile endpoint because the dashboard knows who it
+ * is without a membership number — some members do not have one yet.
+ */
+export const getMyAppearances = catchAsync(async (req: Request, res: Response) => {
+    const rows = await prisma.delegationMember.findMany({
+        where: { userId: req.user.id, delegation: { isPublished: true } },
+        select: {
+            delegationId: true,
+            rankAtSelection: true,
+            squadRole: true,
+            delegation: {
+                select: {
+                    tournamentName: true,
+                    hostCountry: true,
+                    hostCountryCode: true,
+                    hostCity: true,
+                    startDate: true,
+                    isPublished: true,
+                },
+            },
+        },
+    });
+    res.status(200).json({ status: 'success', data: { international: buildInternationalRecord(rows) } });
+});
 
 // ─── Public ──────────────────────────────────────────────────
 

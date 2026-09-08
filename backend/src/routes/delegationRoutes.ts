@@ -5,6 +5,7 @@ import {
     getDelegationById,
     getAllDelegations,
     getEligibleMembers,
+    getMyAppearances,
     createDelegation,
     updateDelegation,
     setFeaturedDelegation,
@@ -20,6 +21,9 @@ const router = express.Router();
 // ── Public: the Team India page and the homepage strip ──
 router.get('/', getPublishedDelegations);
 router.get('/featured', getFeaturedDelegation);
+
+// ── The signed-in member's own international record ──
+router.get('/me/appearances', protect, getMyAppearances);
 
 // ── Admin ──
 // Declared before '/:id' so "admin" and "eligible-members" are not swallowed

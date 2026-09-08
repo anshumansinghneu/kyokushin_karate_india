@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import InternationalHonours from "@/components/InternationalHonours";
+import { EMPTY_INTERNATIONAL, readInternational, type InternationalRecord } from "@/lib/international";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Camera, Edit2, Save, Shield, Loader2, MapPin, X, Award, AlertCircle, User, Mail, Phone, Ruler, Weight, ChevronRight, Lock, Clock, Building } from "lucide-react";
@@ -128,6 +130,7 @@ export default function ProfilePage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [beltHistory, setBeltHistory] = useState<any[]>([]);
+    const [international, setInternational] = useState<InternationalRecord>(EMPTY_INTERNATIONAL);
     const [cityQuery, setCityQuery] = useState("");
     const [showCityDropdown, setShowCityDropdown] = useState(false);
     const [phoneError, setPhoneError] = useState("");
@@ -203,6 +206,23 @@ export default function ProfilePage() {
             }
         };
         fetchBeltHistory();
+    }, [user]);
+
+    // Representing India. A failure stays silent: this is a supplementary
+    // honour on the profile, not the reason the page exists, so an error box
+    // here would be noisier than showing nothing.
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            if (!user?.id) return;
+            try {
+                const res = await api.get("/delegations/me/appearances");
+                if (!cancelled) setInternational(readInternational(res.data?.data?.international));
+            } catch {
+                if (!cancelled) setInternational(EMPTY_INTERNATIONAL);
+            }
+        })();
+        return () => { cancelled = true; };
     }, [user]);
 
     const filteredCities = cityQuery.length >= 1
@@ -608,6 +628,13 @@ export default function ProfilePage() {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
+                        </motion.div>
+
+                        {/* Representing India — above the belt journey because
+                            it is the rarer honour. Renders nothing for a member
+                            who has never travelled. */}
+                        <motion.div variants={fadeUp}>
+                            <InternationalHonours record={international} />
                         </motion.div>
 
                         {/* Belt History — Timeline */}

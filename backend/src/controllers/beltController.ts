@@ -3,6 +3,7 @@ import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { sendBeltPromotionEmail } from '../services/emailService';
+import { buildInternationalRecord } from '../utils/appearances';
 
 // ─── Public Belt / Membership Verification ────────────────────────────
 export const publicVerify = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -30,6 +31,26 @@ export const publicVerify = catchAsync(async (req: Request, res: Response, next:
             beltHistory: {
                 orderBy: { promotionDate: 'desc' },
                 select: { newBelt: true, promotionDate: true },
+            },
+            // Representing India abroad. Filtered to published delegations
+            // here so a draft squad cannot leak through a public profile.
+            delegationMemberships: {
+                where: { delegation: { isPublished: true } },
+                select: {
+                    delegationId: true,
+                    rankAtSelection: true,
+                    squadRole: true,
+                    delegation: {
+                        select: {
+                            tournamentName: true,
+                            hostCountry: true,
+                            hostCountryCode: true,
+                            hostCity: true,
+                            startDate: true,
+                            isPublished: true,
+                        },
+                    },
+                },
             },
         },
     });
@@ -65,6 +86,7 @@ export const publicVerify = catchAsync(async (req: Request, res: Response, next:
                 lastPromotion: user.beltHistory[0] || null,
                 beltHistory: user.beltHistory,
                 totalPromotions: user.beltHistory.length,
+                international: buildInternationalRecord(user.delegationMemberships),
                 experience: {
                     years: experienceYears,
                     months: experienceMonths,

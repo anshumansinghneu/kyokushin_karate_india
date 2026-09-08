@@ -296,6 +296,35 @@ function LeaderCard({ member }: { member: SquadMember }) {
     );
 }
 
+/* ─── Profile link ───────────────────────────────────────────
+   Closes the loop with the public verification profile, which now carries the
+   member's international record. Members without a membership number are not
+   linkable, so they render as plain content rather than a dead link.
+   ---------------------------------------------------------- */
+
+function ProfileLink({
+    membershipNumber,
+    name,
+    className = "",
+    children,
+}: {
+    membershipNumber: string | null;
+    name: string;
+    className?: string;
+    children: React.ReactNode;
+}) {
+    if (!membershipNumber) return <div className={className}>{children}</div>;
+    return (
+        <Link
+            href={`/verify/${encodeURIComponent(membershipNumber)}`}
+            aria-label={`View ${name}'s profile`}
+            className={`${className} focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500`}
+        >
+            {children}
+        </Link>
+    );
+}
+
 /* ─── Member card ───────────────────────────────────────── */
 
 function MemberCard({ member, index }: { member: SquadMember; index: number }) {
@@ -311,7 +340,11 @@ function MemberCard({ member, index }: { member: SquadMember; index: number }) {
             transition={{ duration: 0.45, delay: Math.min(index * 0.05, 0.3), ease: [0.22, 1, 0.36, 1] }}
             className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] transition-colors hover:border-red-600/40"
         >
-            <div className="relative aspect-[4/5] overflow-hidden bg-zinc-900">
+            <ProfileLink
+                membershipNumber={member.membershipNumber}
+                name={member.name}
+                className="relative block aspect-[4/5] overflow-hidden bg-zinc-900"
+            >
                 {photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -346,7 +379,7 @@ function MemberCard({ member, index }: { member: SquadMember; index: number }) {
                         {member.rankLabel}
                     </span>
                 </div>
-            </div>
+            </ProfileLink>
 
             <div className="p-4">
                 <p className="line-clamp-2 text-[12px] leading-relaxed text-zinc-300">{member.bio}</p>

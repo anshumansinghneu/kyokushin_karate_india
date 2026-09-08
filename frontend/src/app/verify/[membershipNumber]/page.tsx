@@ -26,7 +26,11 @@ interface VerifiedMember {
     state?: string;
     createdAt?: string;
     beltHistory?: { newBelt: string; promotionDate: string }[];
+    international?: InternationalRecord;
 }
+
+import InternationalHonours, { InternationalChip } from "@/components/InternationalHonours";
+import { readInternational, type InternationalRecord } from "@/lib/international";
 
 const BELT_COLORS: Record<string, { bg: string; ring: string; text: string }> = {
     White: { bg: 'bg-white', ring: 'ring-white/20', text: 'text-white' },
@@ -275,7 +279,8 @@ export default function VerifyPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <h2 className="text-xl font-black text-white truncate tracking-tight">{member.name}</h2>
-                                            <div className="flex items-center gap-2 mt-1.5">
+                                            <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                                                <InternationalChip record={readInternational(member.international)} />
                                                 <span className="px-2 py-0.5 rounded bg-white/[0.06] text-[10px] text-gray-400 font-mono">{member.membershipNumber}</span>
                                                 <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
                                                     {member.role === 'INSTRUCTOR' ? 'Instructor' : member.role === 'ADMIN' ? 'Admin' : 'Student'}
@@ -359,6 +364,20 @@ export default function VerifyPage() {
                                         </div>
                                     )}
                                 </div>
+                            </motion.div>
+
+                            {/* Representing India. Renders nothing for a member
+                                who has never travelled, so an ordinary
+                                verification card is unchanged. */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.25 }}
+                            >
+                                <InternationalHonours
+                                    record={readInternational(member.international)}
+                                    className="mt-3"
+                                />
                             </motion.div>
 
                             {/* Footer */}
