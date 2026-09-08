@@ -1,88 +1,197 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { MapPin, Plane, Calendar, AlertTriangle, RefreshCw, Globe2, ChevronDown } from "lucide-react";
+import { MapPin, Plane, Calendar, AlertTriangle, RefreshCw, Globe2, ChevronDown, Users } from "lucide-react";
 import api from "@/lib/api";
 import KarateLoader from "@/components/KarateLoader";
 import { getImageUrl } from "@/lib/imageUtils";
-import { formatDateOnly } from "@/lib/dateOnly";
+import {
+    tripDates,
+    groupSquad,
+    squadStats,
+    heroPhotos,
+    type Delegation,
+    type SquadMember,
+} from "@/lib/teamIndia";
 
-/* ─── Types ──────────────────────────────────────────────── */
+/* ─── Hero backdrop ─────────────────────────────────────────
+   A cover image is the art-directed choice. Without one, the squad's own
+   portraits become the backdrop — the people are the story, and a montage of
+   the actual karateka beats an empty panel where a photograph belongs.
+   ---------------------------------------------------------- */
 
-export interface SquadMember {
-    id: string;
-    userId: string;
-    name: string;
-    profilePhotoUrl: string | null;
-    membershipNumber: string | null;
-    dojo: string | null;
-    city: string | null;
-    state: string | null;
-    squadRole: "LEADER" | "COACH" | "COMPETITOR";
-    rank: string;
-    rankLabel: string;
-    rankKind: "DAN" | "COLOUR" | "UNKNOWN";
-    rankSortKey: number;
-    title: string | null;
-    /** Resolved copy: the admin's override when set, otherwise auto-generated. */
-    bio: string;
-    /** The raw override, so the admin editor can show what was actually typed. */
-    bioOverride: string | null;
-}
-
-export interface Delegation {
-    id: string;
-    tournamentName: string;
-    hostCountry: string;
-    hostCity: string | null;
-    startDate: string;
-    endDate: string | null;
-    summary: string | null;
-    coverImageUrl: string | null;
-    isPublished: boolean;
-    isFeatured: boolean;
-    memberCount: number;
-    members: SquadMember[];
-}
-
-/* ─── Helpers ────────────────────────────────────────────── */
-
-/** "3–7 May 2026", or a single date when there is no end. */
-export function tripDates(start: string, end: string | null): string {
-    if (!end || end === start) return formatDateOnly(start);
-    const s = new Date(start);
-    const e = new Date(end);
-    const sameMonth =
-        s.getUTCFullYear() === e.getUTCFullYear() && s.getUTCMonth() === e.getUTCMonth();
-    return sameMonth
-        ? `${s.getUTCDate()}–${formatDateOnly(end)}`
-        : `${formatDateOnly(start)} – ${formatDateOnly(end)}`;
-}
-
-/**
- * Split the squad into the leader plus rank bands.
- *
- * The API already returns members sorted (leader first, then most senior), so
- * this only has to bucket them without re-sorting.
- */
-export function groupSquad(members: SquadMember[]) {
-    const leaders = members.filter((m) => m.squadRole === "LEADER");
-    const rest = members.filter((m) => m.squadRole !== "LEADER");
-
-    const bands: { label: string; members: SquadMember[] }[] = [];
-    for (const m of rest) {
-        const label = m.rankLabel || "Squad";
-        const last = bands[bands.length - 1];
-        if (last && last.label === label) last.members.push(m);
-        else bands.push({ label, members: [m] });
+function HeroBackdrop({ photos }: { photos: string[] }) {
+    if (photos.length === 0) {
+        // Nothing to show yet. A faint red bloom on black rather than a flat
+        // rectangle, so the fold still has depth.
+        return (
+            <div
+                aria-hidden="true"
+                className="absolute inset-0"
+                style={{
+                    background:
+                        "radial-gradient(75% 60% at 50% 0%, rgba(255,0,0,0.10), transparent 70%)",
+                }}
+            />
+        );
     }
-    return { leaders, bands };
+
+    const single = photos.length === 1;
+
+    return (
+        <div aria-hidden="true" className="absolute inset-0">
+            <div className="flex h-full w-full">
+                {photos.map((src) => (
+                    <div key={src} className="relative h-full flex-1 overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={getImageUrl(src) || ""}
+                            alt=""
+                            className={`h-full w-full object-cover ${
+                                single ? "object-center" : "object-top"
+                            } opacity-[0.45] grayscale`}
+                        />
+                    </div>
+                ))}
+            </div>
+            {/* Two scrims: one lifts the type off the image, one grounds the
+                fold into the black page below it. */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/85 to-black/50" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/55 to-transparent" />
+        </div>
+    );
 }
 
-/* ─── Member card ────────────────────────────────────────── */
+/* ─── Programme figures ─────────────────────────────────────
+   Deliberately an inline credibility line, not three metric cards: the numbers
+   support the story, they are not the headline.
+   ---------------------------------------------------------- */
 
-function MemberCard({ member, index, featured = false }: { member: SquadMember; index: number; featured?: boolean }) {
+function StatLine({ delegations }: { delegations: Delegation[] }) {
+    const { trips, athletes, countries } = useMemo(() => squadStats(delegations), [delegations]);
+
+    const figures: [number, string][] = [
+        [trips, trips === 1 ? "international trip" : "international trips"],
+        [athletes, athletes === 1 ? "karateka sent" : "karateka sent"],
+        [countries, countries === 1 ? "country" : "countries"],
+    ];
+
+    return (
+        <dl className="flex flex-wrap items-center gap-x-5 gap-y-2 sm:gap-x-7">
+            {figures.map(([value, label], i) => (
+                <div key={label} className="flex items-baseline gap-2">
+                    {i > 0 && (
+                        <span aria-hidden="true" className="mr-3 hidden h-3 w-px bg-white/20 sm:block" />
+                    )}
+                    <dd className="text-[17px] font-black tabular-nums leading-none text-white">
+                        {value}
+                    </dd>
+                    <dt className="text-[10px] font-bold uppercase tracking-[2px] text-zinc-400">
+                        {label}
+                    </dt>
+                </div>
+            ))}
+        </dl>
+    );
+}
+
+/* ─── Trip facts ────────────────────────────────────────── */
+
+function TripFacts({ delegation, className = "" }: { delegation: Delegation; className?: string }) {
+    return (
+        <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-zinc-300 ${className}`}>
+            <span className="inline-flex items-center gap-1.5">
+                <Plane className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
+                {delegation.hostCity ? `${delegation.hostCity}, ` : ""}
+                {delegation.hostCountry}
+            </span>
+            <span aria-hidden="true" className="h-3 w-px bg-white/15" />
+            <span className="inline-flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
+                {tripDates(delegation.startDate, delegation.endDate)}
+            </span>
+            <span aria-hidden="true" className="h-3 w-px bg-white/15" />
+            <span className="inline-flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
+                {delegation.memberCount} representing India
+            </span>
+        </div>
+    );
+}
+
+/* ─── Leader (feature card) ─────────────────────────────────
+   The head of delegation gets a different composition, not just a gold border:
+   a wide landscape card with the portrait beside the copy. Breaking the grid is
+   what communicates rank.
+   ---------------------------------------------------------- */
+
+function LeaderCard({ member }: { member: SquadMember }) {
+    const reduceMotion = useReducedMotion();
+    const photo = getImageUrl(member.profilePhotoUrl || null);
+    const place = [member.city, member.state].filter(Boolean).join(", ");
+
+    return (
+        <motion.article
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            // Capped rather than full-bleed: the auto-generated bio is a single
+            // line, so a 1150px-wide card left a dead zone to the right of it.
+            className="group relative max-w-3xl overflow-hidden rounded-2xl border border-[#FFD700]/25 bg-white/[0.03] transition-colors hover:border-[#FFD700]/50"
+        >
+            <div className="flex flex-col sm:flex-row">
+                <div className="relative aspect-[4/5] w-full overflow-hidden bg-zinc-900 sm:aspect-auto sm:w-[40%] sm:min-h-[280px]">
+                    {photo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={photo}
+                            alt={`${member.name}, ${member.rankLabel}`}
+                            loading="lazy"
+                            className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
+                        />
+                    ) : (
+                        <div className="flex h-full w-full items-center justify-center text-zinc-700">
+                            <Globe2 className="h-10 w-10" aria-hidden="true" />
+                        </div>
+                    )}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 to-transparent sm:bg-gradient-to-r" />
+                </div>
+
+                <div className="flex flex-1 flex-col justify-center gap-2 p-5 sm:p-6">
+                    <span className="inline-flex w-fit items-center rounded bg-[#FFD700] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[2px] text-black">
+                        Head of Delegation
+                    </span>
+                    {member.title && (
+                        <span className="text-[11px] font-extrabold uppercase tracking-[3px] text-red-500">
+                            {member.title}
+                        </span>
+                    )}
+                    <h3
+                        className="text-[22px] font-black leading-[1.1] text-white sm:text-[26px]"
+                        style={{ textWrap: "balance" }}
+                    >
+                        {member.name}
+                    </h3>
+                    <span className="text-[13px] font-semibold text-[#FFD700]">{member.rankLabel}</span>
+                    <p className="max-w-[60ch] text-[13px] leading-relaxed text-zinc-300">{member.bio}</p>
+                    {(member.dojo || place) && (
+                        <p className="mt-1 flex items-start gap-1.5 text-[11px] text-zinc-400">
+                            <MapPin className="mt-[2px] h-3 w-3 shrink-0" aria-hidden="true" />
+                            <span>{member.dojo || place}</span>
+                        </p>
+                    )}
+                </div>
+            </div>
+        </motion.article>
+    );
+}
+
+/* ─── Member card ───────────────────────────────────────── */
+
+function MemberCard({ member, index }: { member: SquadMember; index: number }) {
     const reduceMotion = useReducedMotion();
     const photo = getImageUrl(member.profilePhotoUrl || null);
     const place = [member.city, member.state].filter(Boolean).join(", ");
@@ -93,11 +202,7 @@ function MemberCard({ member, index, featured = false }: { member: SquadMember; 
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.45, delay: Math.min(index * 0.05, 0.3), ease: [0.22, 1, 0.36, 1] }}
-            className={`group relative overflow-hidden rounded-2xl border bg-white/[0.02] transition-colors ${
-                featured
-                    ? "border-[#FFD700]/30 hover:border-[#FFD700]/60"
-                    : "border-white/[0.07] hover:border-red-600/40"
-            }`}
+            className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] transition-colors hover:border-red-600/40"
         >
             <div className="relative aspect-[4/5] overflow-hidden bg-zinc-900">
                 {photo ? (
@@ -115,17 +220,11 @@ function MemberCard({ member, index, featured = false }: { member: SquadMember; 
                         <Globe2 className="h-10 w-10" aria-hidden="true" />
                     </div>
                 )}
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent" />
 
-                {member.squadRole !== "COMPETITOR" && (
-                    <span
-                        className={`absolute left-3 top-3 rounded px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[2px] ${
-                            member.squadRole === "LEADER"
-                                ? "bg-[#FFD700] text-black"
-                                : "bg-white/15 text-white backdrop-blur-sm"
-                        }`}
-                    >
-                        {member.squadRole === "LEADER" ? "Head of Delegation" : "Coach"}
+                {member.squadRole === "COACH" && (
+                    <span className="absolute left-3 top-3 rounded bg-white/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[2px] text-white backdrop-blur-sm">
+                        Coach
                     </span>
                 )}
 
@@ -135,19 +234,19 @@ function MemberCard({ member, index, featured = false }: { member: SquadMember; 
                             {member.title}
                         </span>
                     )}
-                    <h3 className="text-[15px] font-black leading-tight text-white">{member.name}</h3>
-                    <span className="mt-0.5 block text-[12px] font-semibold text-zinc-300">
+                    <h3 className="text-[16px] font-black leading-tight text-white">{member.name}</h3>
+                    <span className="mt-1 inline-flex items-center rounded border border-white/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[1.5px] text-zinc-200">
                         {member.rankLabel}
                     </span>
                 </div>
             </div>
 
             <div className="p-4">
-                <p className="text-[12px] leading-relaxed text-zinc-300">{member.bio}</p>
+                <p className="line-clamp-2 text-[12px] leading-relaxed text-zinc-300">{member.bio}</p>
                 {(member.dojo || place) && (
-                    <p className="mt-2 flex items-start gap-1.5 text-[11px] text-zinc-500">
+                    <p className="mt-2 flex items-start gap-1.5 text-[11px] text-zinc-400">
                         <MapPin className="mt-[2px] h-3 w-3 shrink-0" aria-hidden="true" />
-                        <span>{member.dojo || place}</span>
+                        <span className="line-clamp-1">{member.dojo || place}</span>
                     </p>
                 )}
             </div>
@@ -155,14 +254,17 @@ function MemberCard({ member, index, featured = false }: { member: SquadMember; 
     );
 }
 
-/* ─── Squad ──────────────────────────────────────────────── */
+/* ─── Squad ─────────────────────────────────────────────── */
 
 function Squad({ delegation }: { delegation: Delegation }) {
-    const { leaders, bands } = useMemo(() => groupSquad(delegation.members), [delegation.members]);
+    const { leaders, coaches, bands } = useMemo(
+        () => groupSquad(delegation.members),
+        [delegation.members],
+    );
 
     if (delegation.members.length === 0) {
         return (
-            <p className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-6 text-center text-sm text-zinc-400">
+            <p className="border-y border-white/[0.07] py-6 text-center text-sm text-zinc-400">
                 The squad for this trip has not been announced yet.
             </p>
         );
@@ -170,19 +272,28 @@ function Squad({ delegation }: { delegation: Delegation }) {
 
     return (
         <div className="space-y-12">
-            {leaders.length > 0 && (
+            {/* Full width rather than a cell in the grid: the leader's card is
+                landscape, and a 2-of-4 span left half a row empty. */}
+            {leaders.map((m) => (
+                <LeaderCard key={m.id} member={m} />
+            ))}
+
+            {coaches.length > 0 && (
                 <section>
-                    <BandHeading label="Leading the delegation" accent="gold" />
+                    <BandHeading
+                        label={coaches.length === 1 ? "Coach" : "Coaching staff"}
+                        count={coaches.length > 1 ? coaches.length : undefined}
+                    />
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                        {leaders.map((m, i) => (
-                            <MemberCard key={m.id} member={m} index={i} featured />
+                        {coaches.map((m, i) => (
+                            <MemberCard key={m.id} member={m} index={i} />
                         ))}
                     </div>
                 </section>
             )}
 
             {bands.map((band) => (
-                <section key={band.label}>
+                <section key={`${band.label}-${band.members[0]?.id}`}>
                     <BandHeading label={band.label} count={band.members.length} />
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                         {band.members.map((m, i) => (
@@ -195,60 +306,131 @@ function Squad({ delegation }: { delegation: Delegation }) {
     );
 }
 
-function BandHeading({ label, count, accent = "red" }: { label: string; count?: number; accent?: "red" | "gold" }) {
+function BandHeading({ label, count }: { label: string; count?: number }) {
     return (
         <div className="mb-5 flex items-center gap-3">
-            <div className={`h-5 w-[3px] rounded-full ${accent === "gold" ? "bg-[#FFD700]" : "bg-red-600"}`} />
+            <div className="h-5 w-[3px] rounded-full bg-red-600" />
             <h2 className="text-base font-black uppercase tracking-tight text-white">{label}</h2>
             {count !== undefined && (
-                <span className="text-[12px] font-semibold tabular-nums text-zinc-500">{count}</span>
+                <span className="text-[12px] font-semibold tabular-nums text-zinc-400">{count}</span>
             )}
         </div>
     );
 }
 
-/* ─── Trip header ────────────────────────────────────────── */
+/* ─── Archive ───────────────────────────────────────────────
+   A flat roster list, not accordions-of-card-grids: each past trip is one row
+   with a strip of the faces that travelled, expanding to the full squad.
+   ---------------------------------------------------------- */
 
-function TripHeader({ delegation }: { delegation: Delegation }) {
+function AvatarStrip({ members }: { members: SquadMember[] }) {
+    const shown = members.slice(0, 6);
+    const extra = members.length - shown.length;
+
     return (
-        <div className="mb-10">
-            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-zinc-400">
-                <span className="inline-flex items-center gap-1.5">
-                    <Plane className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
-                    {delegation.hostCity ? `${delegation.hostCity}, ` : ""}
-                    {delegation.hostCountry}
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
-                    {tripDates(delegation.startDate, delegation.endDate)}
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                    <Globe2 className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
-                    {delegation.memberCount} representing India
-                </span>
+        <div className="flex items-center">
+            <div className="flex -space-x-2">
+                {shown.map((m) => {
+                    const photo = getImageUrl(m.profilePhotoUrl || null);
+                    return (
+                        <span
+                            key={m.id}
+                            title={m.name}
+                            className="inline-block h-7 w-7 overflow-hidden rounded-full border border-black bg-zinc-800 ring-1 ring-white/10"
+                        >
+                            {photo ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={photo} alt="" loading="lazy" className="h-full w-full object-cover object-top" />
+                            ) : null}
+                        </span>
+                    );
+                })}
             </div>
-            <h2
-                className="font-black uppercase leading-[0.95] tracking-tight text-white"
-                style={{ fontSize: "clamp(1.5rem, 3.5vw, 2.5rem)", textWrap: "balance" }}
-            >
-                {delegation.tournamentName}
-            </h2>
-            {delegation.summary && (
-                <p className="mt-3 max-w-[65ch] text-[14px] leading-relaxed text-zinc-300">
-                    {delegation.summary}
-                </p>
+            {extra > 0 && (
+                <span className="ml-2 text-[11px] font-semibold tabular-nums text-zinc-400">+{extra}</span>
             )}
         </div>
     );
 }
 
-/* ─── Page ───────────────────────────────────────────────── */
+function ArchiveRow({ delegation }: { delegation: Delegation }) {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <li>
+            <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                aria-expanded={open}
+                className="flex w-full items-center justify-between gap-4 py-4 text-left transition-colors hover:bg-white/[0.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+            >
+                <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[14px] font-bold text-white">
+                        {delegation.tournamentName}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] text-zinc-400">
+                        {delegation.hostCountry} · {tripDates(delegation.startDate, delegation.endDate)} ·{" "}
+                        {delegation.memberCount} representing India
+                    </span>
+                </span>
+                <span className="hidden shrink-0 sm:block">
+                    <AvatarStrip members={delegation.members} />
+                </span>
+                <ChevronDown
+                    aria-hidden="true"
+                    className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform ${open ? "rotate-180" : ""}`}
+                />
+            </button>
+            {open && (
+                <div className="pb-8 pt-2">
+                    <Squad delegation={delegation} />
+                </div>
+            )}
+        </li>
+    );
+}
+
+/* ─── Empty state ───────────────────────────────────────────
+   The live state until the first trip is published, so it is designed rather
+   than apologised for, and it always offers somewhere to go next.
+   ---------------------------------------------------------- */
+
+function EmptyState() {
+    return (
+        <div className="border-y border-white/[0.07] py-20 text-center">
+            <Plane className="mx-auto mb-4 h-9 w-9 text-red-600/70" aria-hidden="true" />
+            <p className="text-[17px] font-black uppercase tracking-tight text-white">
+                No international trip announced yet
+            </p>
+            <p className="mx-auto mt-2 max-w-[46ch] text-[13px] leading-relaxed text-zinc-400">
+                When a federation abroad invites KKFI to compete, the travelling squad — and every
+                karateka in it — will be published here.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                    href="/events"
+                    className="inline-flex h-11 items-center px-6 text-[12px] font-bold uppercase tracking-[1.5px] text-white transition-colors bg-red-600 hover:bg-[#8B0000] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                >
+                    Upcoming events
+                </Link>
+                <Link
+                    href="/find-a-dojo"
+                    className="inline-flex h-11 items-center border border-white/20 px-6 text-[12px] font-bold uppercase tracking-[1.5px] text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                >
+                    Find a dojo
+                </Link>
+            </div>
+        </div>
+    );
+}
+
+/* ─── Page ──────────────────────────────────────────────── */
 
 export default function TeamIndiaPage() {
+    const reduceMotion = useReducedMotion();
     const [delegations, setDelegations] = useState<Delegation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState(false);
-    const [openArchive, setOpenArchive] = useState<string | null>(null);
 
     const fetchDelegations = useCallback(async () => {
         setIsLoading(true);
@@ -270,101 +452,138 @@ export default function TeamIndiaPage() {
 
     // Most recent trip leads; everything older becomes the archive.
     const [current, ...archive] = delegations;
+    const photos = useMemo(() => (current ? heroPhotos(current, 5) : []), [current]);
+
+    // `animate` is unconditional on purpose. useReducedMotion() reports false
+    // on the first render and can flip to true straight after; if the reduced
+    // branch dropped `animate` entirely, framer had already applied
+    // `opacity: 0` and nothing was left to bring the type back — the hero
+    // heading stayed invisible for exactly the users who need it most.
+    const rise = {
+        initial: reduceMotion ? false : ({ opacity: 0, y: 18 } as const),
+        animate: { opacity: 1, y: 0 },
+    };
 
     return (
         <div className="min-h-screen bg-black text-white">
-            <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-                {/* Masthead */}
-                <header className="mb-12">
-                    <span className="mb-2 block text-[11px] font-extrabold uppercase tracking-[4px] text-red-500">
-                        Kyokushin Karate Foundation of India
-                    </span>
-                    <h1
-                        className="font-black uppercase leading-[0.88] tracking-tighter"
-                        style={{ fontSize: "clamp(2.5rem, 8vw, 5rem)" }}
+            {/* ── Hero ──
+                Tall enough for the photography to carry the fold when there is
+                a squad to show; without imagery that height is just dead black,
+                so it collapses to the height of its own type. */}
+            <section
+                className={`relative isolate flex items-end overflow-hidden pb-12 pt-32 sm:pb-16 ${
+                    photos.length > 0 ? "min-h-[72vh] sm:min-h-[78vh]" : ""
+                }`}
+            >
+                <HeroBackdrop photos={photos} />
+
+                <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+                    <motion.span
+                        {...rise}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                        className="mb-3 block text-[11px] font-extrabold uppercase tracking-[4px] text-red-500"
                     >
-                        <span className="text-white">TEAM </span>
-                        <span className="text-[#FF0000]">INDIA</span>
-                    </h1>
-                    <p className="mt-4 max-w-[60ch] text-[14px] leading-relaxed text-zinc-300">
+                        Kyokushin Karate Foundation of India
+                    </motion.span>
+
+                    <motion.h1
+                        {...rise}
+                        transition={{ duration: 0.6, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+                        className="font-black uppercase leading-[0.9]"
+                        style={{
+                            fontSize: "clamp(2.5rem, 9vw, 5rem)",
+                            letterSpacing: "-0.03em",
+                            textWrap: "balance",
+                        }}
+                    >
+                        <span className="text-white">Team </span>
+                        <span className="text-[#FF0000]">India</span>
+                    </motion.h1>
+
+                    <motion.p
+                        {...rise}
+                        transition={{ duration: 0.6, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+                        className="mt-4 max-w-[58ch] text-[14px] leading-relaxed text-zinc-300 sm:text-[15px]"
+                    >
                         When a federation abroad invites us to their tournament, these are the karateka
                         who travel to represent India on the international floor.
-                    </p>
-                </header>
+                    </motion.p>
 
+                    {delegations.length > 0 && (
+                        <motion.div
+                            {...rise}
+                            transition={{ duration: 0.6, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                            className="mt-8 border-t border-white/[0.12] pt-5"
+                        >
+                            <StatLine delegations={delegations} />
+                        </motion.div>
+                    )}
+                </div>
+            </section>
+
+            {/* ── Body ── */}
+            <div className="mx-auto max-w-6xl px-4 pb-24 sm:px-6 lg:px-8">
                 {isLoading ? (
                     <div className="py-24">
                         <KarateLoader />
                     </div>
                 ) : loadError ? (
-                    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] px-6 py-16 text-center">
+                    <div className="border-y border-white/[0.07] py-20 text-center">
                         <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-amber-400" aria-hidden="true" />
-                        <p className="text-[15px] font-bold text-zinc-100">Couldn&apos;t load Team India</p>
-                        <p className="mx-auto mt-1 max-w-[40ch] text-[12px] text-zinc-400">
-                            The server didn&apos;t respond. It may be waking up — this usually takes a few seconds.
+                        <p className="text-[16px] font-bold text-zinc-100">Couldn&apos;t load Team India</p>
+                        <p className="mx-auto mt-1 max-w-[42ch] text-[13px] text-zinc-400">
+                            The server didn&apos;t respond. It may be waking up — this usually takes a few
+                            seconds.
                         </p>
                         <button
                             type="button"
                             onClick={fetchDelegations}
-                            className="mt-5 inline-flex h-10 items-center gap-2 rounded-lg bg-red-600 px-5 text-[12px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                            className="mt-6 inline-flex h-11 items-center gap-2 bg-red-600 px-6 text-[12px] font-bold uppercase tracking-[1.5px] text-white transition-colors hover:bg-[#8B0000] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                         >
                             <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                             Try again
                         </button>
                     </div>
                 ) : !current ? (
-                    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] px-6 py-16 text-center">
-                        <Plane className="mx-auto mb-3 h-8 w-8 text-zinc-600" aria-hidden="true" />
-                        <p className="text-[15px] font-bold text-zinc-100">No international trips announced yet</p>
-                        <p className="mx-auto mt-1 max-w-[44ch] text-[12px] text-zinc-400">
-                            When KKFI is invited to compete abroad, the travelling squad will appear here.
-                        </p>
-                    </div>
+                    <EmptyState />
                 ) : (
                     <>
-                        <TripHeader delegation={current} />
-                        <Squad delegation={current} />
+                        {/* Current trip */}
+                        <section className="pt-14">
+                            <TripFacts delegation={current} className="mb-3" />
+                            <h2
+                                className="font-black uppercase leading-[0.95] text-white"
+                                style={{
+                                    fontSize: "clamp(1.5rem, 3.5vw, 2.5rem)",
+                                    letterSpacing: "-0.02em",
+                                    textWrap: "balance",
+                                }}
+                            >
+                                {current.tournamentName}
+                            </h2>
+                            {current.summary && (
+                                <p
+                                    className="mt-3 max-w-[68ch] text-[14px] leading-relaxed text-zinc-300"
+                                    style={{ textWrap: "pretty" }}
+                                >
+                                    {current.summary}
+                                </p>
+                            )}
 
+                            <div className="mt-10">
+                                <Squad delegation={current} />
+                            </div>
+                        </section>
+
+                        {/* Archive */}
                         {archive.length > 0 && (
-                            <section className="mt-20 border-t border-white/[0.07] pt-10">
+                            <section className="mt-24">
                                 <BandHeading label="Previous delegations" count={archive.length} />
-                                <div className="space-y-3">
-                                    {archive.map((d) => {
-                                        const open = openArchive === d.id;
-                                        return (
-                                            <div
-                                                key={d.id}
-                                                className="overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.02]"
-                                            >
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setOpenArchive(open ? null : d.id)}
-                                                    aria-expanded={open}
-                                                    className="flex w-full items-center justify-between gap-4 px-4 py-3.5 text-left transition-colors hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-                                                >
-                                                    <span className="min-w-0">
-                                                        <span className="block truncate text-[13px] font-bold text-white">
-                                                            {d.tournamentName}
-                                                        </span>
-                                                        <span className="mt-0.5 block text-[11px] text-zinc-400">
-                                                            {d.hostCountry} · {tripDates(d.startDate, d.endDate)} ·{" "}
-                                                            {d.memberCount} representing India
-                                                        </span>
-                                                    </span>
-                                                    <ChevronDown
-                                                        aria-hidden="true"
-                                                        className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`}
-                                                    />
-                                                </button>
-                                                {open && (
-                                                    <div className="border-t border-white/[0.06] p-4">
-                                                        <Squad delegation={d} />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                <ul className="divide-y divide-white/[0.07] border-y border-white/[0.07]">
+                                    {archive.map((d) => (
+                                        <ArchiveRow key={d.id} delegation={d} />
+                                    ))}
+                                </ul>
                             </section>
                         )}
                     </>

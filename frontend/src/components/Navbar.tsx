@@ -61,6 +61,12 @@ interface NavLink {
     href: string;
     icon?: string;
     live?: boolean;
+    /**
+     * Carries the Kyokushin red instead of the neutral label colour. Reserved
+     * for one destination at a time — the point is that it is the only
+     * coloured item in the bar.
+     */
+    accent?: boolean;
 }
 
 interface NavDropdown {
@@ -235,8 +241,9 @@ export default function Navbar() {
         eventsDropdown,
         exploreDropdown,
         // Top level rather than nested under Explore: the squad travelling
-        // abroad is a headline story, and it needs to be one click away.
-        { name: "Team India", href: "/team-india" },
+        // abroad is a headline story, and it needs to be one click away. It is
+        // also the bar's only coloured label, so it reads as the standout.
+        { name: "Team India", href: "/team-india", accent: true },
         { name: "Store", href: "/store" },
         { name: "Verify", href: "/verify" },
     ];
@@ -271,7 +278,7 @@ export default function Navbar() {
         {
             label: null,
             items: [
-                { name: "Team India", href: "/team-india", icon: Plane },
+                { name: "Team India", href: "/team-india", icon: Plane, accent: true },
                 { name: "Store", href: "/store", icon: ShoppingBag },
                 { name: "Verify Belt", href: "/verify", icon: ShieldCheck },
             ],
@@ -317,24 +324,40 @@ export default function Navbar() {
 
                     {/* Links */}
                     <div className="flex items-center justify-center h-10 ml-8 flex-1">
-                        {navItems.map((item) =>
-                            isDropdown(item) ? (
-                                <DesktopDropdown key={item.name} dropdown={item} pathname={pathname} />
-                            ) : (
+                        {navItems.map((item) => {
+                            if (isDropdown(item)) {
+                                return <DesktopDropdown key={item.name} dropdown={item} pathname={pathname} />;
+                            }
+
+                            const active = pathname === item.href;
+                            // The accent item stays red in every state; going
+                            // white on active would drop the one colour that
+                            // makes it findable. #FF0000 clears 4.5:1 on the
+                            // bar's near-black; the lighter red is the hover.
+                            const tone = item.accent
+                                ? active
+                                    ? "text-[#FF4D4D]"
+                                    : "text-[#FF0000] hover:text-[#FF4D4D]"
+                                : active
+                                    ? "text-white"
+                                    : "text-zinc-400 hover:text-white";
+
+                            return (
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className={`relative text-xs font-bold uppercase tracking-widest px-4 h-full flex items-center transition-colors group ${
-                                        pathname === item.href ? "text-white" : "text-zinc-400 hover:text-white"
-                                    }`}
+                                    className={`relative text-xs font-bold uppercase tracking-widest px-4 h-full flex items-center gap-1.5 transition-colors group ${tone}`}
                                 >
+                                    {item.accent && (
+                                        <span aria-hidden="true" className="h-1 w-1 rounded-full bg-current" />
+                                    )}
                                     {item.name}
-                                    {pathname === item.href && (
+                                    {active && (
                                         <motion.div layoutId="navIndicator" className="absolute inset-0 bg-white/5 rounded-full" transition={{ duration: 0.2 }} />
                                     )}
                                 </Link>
-                            )
-                        )}
+                            );
+                        })}
                     </div>
 
                     {/* End Actions */}
@@ -467,6 +490,11 @@ export default function Navbar() {
                                     ) : (
                                         group.items.map((item, index) => {
                                             const Icon = item.icon;
+                                            // Same rule as the desktop bar: the accent
+                                            // destination keeps its red tile whether or
+                                            // not it is the current page.
+                                            const accent = 'accent' in item && item.accent === true;
+                                            const highlighted = accent || pathname === item.href;
                                             return (
                                                 <motion.div
                                                     key={item.href}
@@ -477,10 +505,10 @@ export default function Navbar() {
                                                     <Link
                                                         href={item.href}
                                                         className={`flex items-center gap-4 text-xl font-black py-4 transition-colors ${
-                                                            pathname === item.href ? 'text-red-500' : 'text-white'
+                                                            highlighted ? 'text-red-500' : 'text-white'
                                                         }`}
                                                     >
-                                                        <div className={`p-2 rounded-xl ${pathname === item.href ? 'bg-red-500/20' : 'bg-white/5'}`}>
+                                                        <div className={`p-2 rounded-xl ${highlighted ? 'bg-red-500/20' : 'bg-white/5'}`}>
                                                             <Icon className="w-5 h-5 shrink-0" />
                                                         </div>
                                                         {item.name}

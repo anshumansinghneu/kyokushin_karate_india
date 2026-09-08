@@ -6,7 +6,7 @@ import { Plane, ArrowRight } from "lucide-react";
 import api from "@/lib/api";
 import { getImageUrl } from "@/lib/imageUtils";
 import { formatDateOnly } from "@/lib/dateOnly";
-import type { Delegation, SquadMember } from "@/app/team-india/page";
+import type { Delegation, SquadMember } from "@/lib/teamIndia";
 
 /**
  * Homepage ticker for the featured Team India delegation.

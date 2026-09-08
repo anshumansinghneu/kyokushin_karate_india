@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import {
     Plus, Trash2, Star, StarOff, Eye, EyeOff, Search, X, Plane,
-    AlertTriangle, RefreshCw, ChevronLeft, Loader2, ImageOff,
+    AlertTriangle, RefreshCw, ChevronLeft, Loader2, ImageOff, ImagePlus,
 } from "lucide-react";
 import api from "@/lib/api";
 import { getImageUrl } from "@/lib/imageUtils";
 import { formatDateOnly } from "@/lib/dateOnly";
-import type { Delegation, SquadMember } from "@/app/team-india/page";
+import type { Delegation, SquadMember } from "@/lib/teamIndia";
 
 /**
  * Admin surface for "Team India" — the squads that travel when a foreign
@@ -42,6 +42,7 @@ const emptyForm = {
     startDate: "",
     endDate: "",
     summary: "",
+    coverImageUrl: "",
 };
 
 export default function TeamIndiaManager() {
@@ -88,6 +89,26 @@ export default function TeamIndiaManager() {
             setError(readError(err, "Could not create the trip."));
         } finally {
             setSaving(false);
+        }
+    };
+
+    /**
+     * Uploads an image and returns its stored URL, or null on failure.
+     *
+     * The cover drives the hero on the public page; without one, that page
+     * falls back to a montage of the squad's own portraits.
+     */
+    const uploadImage = async (file: File): Promise<string | null> => {
+        const fd = new FormData();
+        fd.append("image", file);
+        try {
+            const res = await api.post("/upload?folder=delegations", fd, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            return res.data.data.url as string;
+        } catch {
+            setError("Cover upload failed. Try a smaller image.");
+            return null;
         }
     };
 
@@ -189,6 +210,37 @@ export default function TeamIndiaManager() {
                                     placeholder="Invited by the Japan Karate Organisation to compete in the open-weight division." />
                             </Field>
                         </div>
+                        <div className="sm:col-span-2">
+                            <Field label="Cover image">
+                                <div className="flex items-center gap-3">
+                                    {form.coverImageUrl ? (
+                                        <div className="relative h-16 w-24 overflow-hidden rounded-lg border border-white/10">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={getImageUrl(form.coverImageUrl) || ""} alt="" className="h-full w-full object-cover" />
+                                            <button type="button" title="Remove cover"
+                                                onClick={() => setForm({ ...form, coverImageUrl: "" })}
+                                                className="absolute right-1 top-1 rounded-full bg-black/70 p-0.5 text-white">
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-[12px] font-semibold text-zinc-300 hover:bg-white/[0.08]">
+                                            <ImagePlus className="h-4 w-4" aria-hidden="true" /> Upload cover
+                                            <input type="file" accept="image/*" className="hidden"
+                                                onChange={async (e) => {
+                                                    const f = e.target.files?.[0];
+                                                    if (!f) return;
+                                                    const url = await uploadImage(f);
+                                                    if (url) setForm((prev) => ({ ...prev, coverImageUrl: url }));
+                                                }} />
+                                        </label>
+                                    )}
+                                    <span className="text-[11px] text-zinc-400">
+                                        Optional. Without one, the page builds its hero from the squad&apos;s own photos.
+                                    </span>
+                                </div>
+                            </Field>
+                        </div>
                     </div>
                     <div className="mt-3 flex justify-end gap-2">
                         <button type="button" onClick={() => { setShowForm(false); setError(null); }}
@@ -244,6 +296,32 @@ export default function TeamIndiaManager() {
                                 </button>
 
                                 <div className="flex shrink-0 items-center gap-1.5">
+                                    {/* Covers matter most for trips that already
+                                        exist, so this is editable per row and not
+                                        only on the create form. */}
+                                    <label
+                                        title={d.coverImageUrl ? "Replace cover image" : "Add cover image"}
+                                        className={`inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border transition-colors ${
+                                            d.coverImageUrl
+                                                ? "border-[#FFD700]/40 text-[#FFD700] hover:bg-[#FFD700]/10"
+                                                : "border-white/[0.1] text-zinc-300 hover:bg-white/[0.06]"
+                                        }`}
+                                    >
+                                        <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                                        <input type="file" accept="image/*" className="hidden"
+                                            onChange={async (e) => {
+                                                const f = e.target.files?.[0];
+                                                if (!f) return;
+                                                const url = await uploadImage(f);
+                                                if (url) await patchTrip(d.id, { coverImageUrl: url });
+                                            }} />
+                                    </label>
+                                    {d.coverImageUrl && (
+                                        <IconBtn title="Remove cover image"
+                                            onClick={() => patchTrip(d.id, { coverImageUrl: null })}>
+                                            <ImageOff className="h-4 w-4" />
+                                        </IconBtn>
+                                    )}
                                     <IconBtn
                                         title={d.isPublished ? "Unpublish" : "Publish"}
                                         onClick={() => patchTrip(d.id, { isPublished: !d.isPublished })}
