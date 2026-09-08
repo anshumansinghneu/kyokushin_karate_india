@@ -33,6 +33,8 @@ export interface Delegation {
     id: string;
     tournamentName: string;
     hostCountry: string;
+    /** ISO 3166-1 alpha-2, or null for rows created before the picker. */
+    hostCountryCode: string | null;
     hostCity: string | null;
     startDate: string;
     endDate: string | null;
@@ -110,30 +112,12 @@ export function squadStats(delegations: Delegation[]): SquadStats {
 
     for (const d of delegations) {
         for (const m of d.members) athletes.add(m.userId);
-        // Host countries are free text typed by an admin, so fold case and
-        // padding before counting distinct ones.
-        const country = d.hostCountry?.trim().toLowerCase();
+        // Prefer the ISO code: it is canonical, so two trips to the same place
+        // count once even if an admin typed the name differently. Rows created
+        // before the picker have no code, so fall back to the folded name.
+        const country = d.hostCountryCode?.trim().toUpperCase() || d.hostCountry?.trim().toLowerCase();
         if (country) countries.add(country);
     }
 
     return { trips: delegations.length, athletes: athletes.size, countries: countries.size };
-}
-
-/**
- * Images for the hero, in priority order.
- *
- * A cover image is the art-directed choice, so when one exists it is used
- * alone. Otherwise the squad's own portraits become the hero — the people are
- * the story, and a real montage of them beats an empty coloured panel where a
- * photograph belongs. Members arrive leader-first, so the montage does too.
- */
-export function heroPhotos(delegation: Delegation, limit: number): string[] {
-    if (delegation.coverImageUrl) return [delegation.coverImageUrl];
-
-    const seen = new Set<string>();
-    for (const m of delegation.members) {
-        if (seen.size >= limit) break;
-        if (m.profilePhotoUrl) seen.add(m.profilePhotoUrl);
-    }
-    return [...seen];
 }

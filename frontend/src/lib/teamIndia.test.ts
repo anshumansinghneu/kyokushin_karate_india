@@ -3,7 +3,6 @@ import {
     tripDates,
     groupSquad,
     squadStats,
-    heroPhotos,
     type Delegation,
     type SquadMember,
 } from './teamIndia';
@@ -41,6 +40,7 @@ function delegation(overrides: Partial<Delegation> = {}): Delegation {
         id: 'd1',
         tournamentName: 'Test Cup',
         hostCountry: 'Japan',
+        hostCountryCode: 'JP',
         hostCity: 'Tokyo',
         startDate: '2026-05-03T00:00:00.000Z',
         endDate: null,
@@ -158,8 +158,8 @@ describe('groupSquad', () => {
 describe('squadStats', () => {
     it('counts trips, unique athletes and unique countries', () => {
         const stats = squadStats([
-            delegation({ id: 'a', hostCountry: 'Japan', members: [member(), member()] }),
-            delegation({ id: 'b', hostCountry: 'Russia', members: [member()] }),
+            delegation({ id: 'a', hostCountry: 'Japan', hostCountryCode: 'JP', members: [member(), member()] }),
+            delegation({ id: 'b', hostCountry: 'Russia', hostCountryCode: 'RU', members: [member()] }),
         ]);
         expect(stats).toEqual({ trips: 2, athletes: 3, countries: 2 });
     });
@@ -177,72 +177,36 @@ describe('squadStats', () => {
 
     it('treats the same country written differently as one country', () => {
         const stats = squadStats([
-            delegation({ id: 'a', hostCountry: 'Japan' }),
-            delegation({ id: 'b', hostCountry: ' japan ' }),
+            delegation({ id: 'a', hostCountry: 'Japan', hostCountryCode: null }),
+            delegation({ id: 'b', hostCountry: ' japan ', hostCountryCode: null }),
         ]);
         expect(stats.countries).toBe(1);
     });
 
+    it('counts by ISO code when one is present', () => {
+        // Two trips to Japan, one row labelled "Nippon" by an admin. The code
+        // is canonical, so this is still one country.
+        const stats = squadStats([
+            delegation({ id: 'a', hostCountry: 'Japan', hostCountryCode: 'JP' }),
+            delegation({ id: 'b', hostCountry: 'Nippon', hostCountryCode: 'JP' }),
+        ]);
+        expect(stats.countries).toBe(1);
+    });
+
+    it('still counts a row that predates the picker', () => {
+        const stats = squadStats([
+            delegation({ id: 'a', hostCountry: 'Japan', hostCountryCode: 'JP' }),
+            delegation({ id: 'b', hostCountry: 'Russia', hostCountryCode: null }),
+        ]);
+        expect(stats.countries).toBe(2);
+    });
+
     it('ignores a blank country rather than counting it', () => {
-        const stats = squadStats([delegation({ hostCountry: '   ' })]);
+        const stats = squadStats([delegation({ hostCountry: '   ', hostCountryCode: null })]);
         expect(stats.countries).toBe(0);
     });
 
     it('returns zeros for no delegations', () => {
         expect(squadStats([])).toEqual({ trips: 0, athletes: 0, countries: 0 });
-    });
-});
-
-/* ─── heroPhotos ─────────────────────────────────────────── */
-
-describe('heroPhotos', () => {
-    it('prefers the cover image when the admin set one', () => {
-        const d = delegation({
-            coverImageUrl: '/cover.jpg',
-            members: [member({ profilePhotoUrl: '/a.jpg' })],
-        });
-        expect(heroPhotos(d, 4)).toEqual(['/cover.jpg']);
-    });
-
-    it('falls back to the squad’s own photos when there is no cover', () => {
-        const d = delegation({
-            members: [
-                member({ profilePhotoUrl: '/a.jpg' }),
-                member({ profilePhotoUrl: '/b.jpg' }),
-            ],
-        });
-        expect(heroPhotos(d, 4)).toEqual(['/a.jpg', '/b.jpg']);
-    });
-
-    it('skips members whose photo is missing', () => {
-        const d = delegation({
-            members: [member({ profilePhotoUrl: null }), member({ profilePhotoUrl: '/b.jpg' })],
-        });
-        expect(heroPhotos(d, 4)).toEqual(['/b.jpg']);
-    });
-
-    it('de-duplicates a photo shared by two records', () => {
-        const d = delegation({
-            members: [
-                member({ profilePhotoUrl: '/same.jpg' }),
-                member({ profilePhotoUrl: '/same.jpg' }),
-            ],
-        });
-        expect(heroPhotos(d, 4)).toEqual(['/same.jpg']);
-    });
-
-    it('honours the limit', () => {
-        const d = delegation({
-            members: [
-                member({ profilePhotoUrl: '/a.jpg' }),
-                member({ profilePhotoUrl: '/b.jpg' }),
-                member({ profilePhotoUrl: '/c.jpg' }),
-            ],
-        });
-        expect(heroPhotos(d, 2)).toEqual(['/a.jpg', '/b.jpg']);
-    });
-
-    it('returns nothing when there is neither a cover nor a single photo', () => {
-        expect(heroPhotos(delegation(), 4)).toEqual([]);
     });
 });

@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
     Plus, Trash2, Star, StarOff, Eye, EyeOff, Search, X, Plane,
-    AlertTriangle, RefreshCw, ChevronLeft, Loader2, ImageOff, ImagePlus,
+    AlertTriangle, RefreshCw, ChevronLeft, Loader2, ImageOff, ImagePlus, Globe2,
 } from "lucide-react";
 import api from "@/lib/api";
 import { getImageUrl } from "@/lib/imageUtils";
 import { formatDateOnly } from "@/lib/dateOnly";
 import type { Delegation, SquadMember } from "@/lib/teamIndia";
+import { COUNTRIES, findCountry, flagUrl, searchCountries, type Country } from "@/lib/countries";
 
 /**
  * Admin surface for "Team India" — the squads that travel when a foreign
@@ -43,6 +44,7 @@ const emptyForm = {
     endDate: "",
     summary: "",
     coverImageUrl: "",
+    hostCountryCode: "",
 };
 
 export default function TeamIndiaManager() {
@@ -54,6 +56,9 @@ export default function TeamIndiaManager() {
     const [form, setForm] = useState(emptyForm);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // "form" while creating a trip, or a delegation id when changing an
+    // existing trip's country. null means the picker is closed.
+    const [pickerFor, setPickerFor] = useState<string | null>(null);
 
     const load = useCallback(async () => {
         setIsLoading(true);
@@ -96,7 +101,7 @@ export default function TeamIndiaManager() {
      * Uploads an image and returns its stored URL, or null on failure.
      *
      * The cover drives the hero on the public page; without one, that page
-     * falls back to a montage of the squad's own portraits.
+     * builds its hero from the host country's flag colours instead.
      */
     const uploadImage = async (file: File): Promise<string | null> => {
         const fd = new FormData();
@@ -110,6 +115,18 @@ export default function TeamIndiaManager() {
             setError("Cover upload failed. Try a smaller image.");
             return null;
         }
+    };
+
+    const chooseCountry = async (country: Country) => {
+        const target = pickerFor;
+        setPickerFor(null);
+        if (!target) return;
+        // Name and code are always written together so they cannot drift.
+        if (target === "form") {
+            setForm((prev) => ({ ...prev, hostCountry: country.name, hostCountryCode: country.code }));
+            return;
+        }
+        await patchTrip(target, { hostCountry: country.name, hostCountryCode: country.code });
     };
 
     const patchTrip = async (id: string, body: Record<string, unknown>) => {
@@ -175,6 +192,10 @@ export default function TeamIndiaManager() {
 
             {error && <Banner message={error} onDismiss={() => setError(null)} />}
 
+            {pickerFor && (
+                <CountryPicker onSelect={chooseCountry} onClose={() => setPickerFor(null)} />
+            )}
+
             {showForm && (
                 <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -184,9 +205,24 @@ export default function TeamIndiaManager() {
                                 placeholder="12th IKO World Championship" />
                         </Field>
                         <Field label="Host country *">
-                            <input className={inputCls} value={form.hostCountry}
-                                onChange={(e) => setForm({ ...form, hostCountry: e.target.value })}
-                                placeholder="Japan" />
+                            {/* Picked, never typed: the country code drives the
+                                flag and the hero theme on the public page, and
+                                free text cannot be matched to a flag. */}
+                            <button type="button" onClick={() => setPickerFor("form")}
+                                className="flex h-[38px] w-full items-center gap-2 rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 text-left text-[13px] text-white hover:bg-white/[0.07]">
+                                {form.hostCountryCode ? (
+                                    <>
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={flagUrl(form.hostCountryCode, 40)} alt="" width={22} height={15} className="rounded-[2px]" />
+                                        <span className="truncate">{form.hostCountry}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Globe2 className="h-4 w-4 shrink-0 text-zinc-400" aria-hidden="true" />
+                                        <span className="text-zinc-400">Choose a country</span>
+                                    </>
+                                )}
+                            </button>
                         </Field>
                         <Field label="Host city">
                             <input className={inputCls} value={form.hostCity}
@@ -236,7 +272,7 @@ export default function TeamIndiaManager() {
                                         </label>
                                     )}
                                     <span className="text-[11px] text-zinc-400">
-                                        Optional. Without one, the page builds its hero from the squad&apos;s own photos.
+                                        Optional. Without one, the hero is built from the host country&apos;s flag colours.
                                     </span>
                                 </div>
                             </Field>
@@ -289,16 +325,30 @@ export default function TeamIndiaManager() {
                                             {d.isPublished ? "Published" : "Draft"}
                                         </span>
                                     </div>
-                                    <span className="mt-1 block text-[11px] text-zinc-400">
-                                        {d.hostCity ? `${d.hostCity}, ` : ""}{d.hostCountry} ·{" "}
-                                        {formatDateOnly(d.startDate)} · {d.memberCount} member{d.memberCount === 1 ? "" : "s"}
+                                    <span className="mt-1 flex items-center gap-1.5 text-[11px] text-zinc-400">
+                                        {findCountry(d.hostCountryCode) && (
+                                            /* eslint-disable-next-line @next/next/no-img-element */
+                                            <img src={flagUrl(d.hostCountryCode, 40)} alt="" width={16} height={11}
+                                                loading="lazy" className="shrink-0 rounded-[2px]" />
+                                        )}
+                                        <span className="truncate">
+                                            {d.hostCity ? `${d.hostCity}, ` : ""}{d.hostCountry} ·{" "}
+                                            {formatDateOnly(d.startDate)} · {d.memberCount} member{d.memberCount === 1 ? "" : "s"}
+                                        </span>
                                     </span>
                                 </button>
 
                                 <div className="flex shrink-0 items-center gap-1.5">
-                                    {/* Covers matter most for trips that already
-                                        exist, so this is editable per row and not
-                                        only on the create form. */}
+                                    {/* Country and cover both matter most for trips
+                                        that already exist, so both are editable per
+                                        row and not only on the create form. */}
+                                    <IconBtn
+                                        title={d.hostCountryCode ? "Change host country" : "Set host country"}
+                                        active={!d.hostCountryCode}
+                                        onClick={() => setPickerFor(d.id)}
+                                    >
+                                        <Globe2 className="h-4 w-4" />
+                                    </IconBtn>
                                     <label
                                         title={d.coverImageUrl ? "Replace cover image" : "Add cover image"}
                                         className={`inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border transition-colors ${
@@ -541,6 +591,103 @@ function SquadEditor({
 }
 
 /* ─── Small pieces ───────────────────────────────────────── */
+
+/* ─── Country picker ───────────────────────────────────────
+   Every country, searchable, with its flag alongside so the admin can confirm
+   visually that they picked the right one — the whole point of storing a code
+   rather than typed text.
+   ---------------------------------------------------------- */
+
+function CountryPicker({
+    onSelect,
+    onClose,
+}: {
+    onSelect: (country: Country) => void;
+    onClose: () => void;
+}) {
+    const [query, setQuery] = useState("");
+    const results = searchCountries(query);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        inputRef.current?.focus();
+    }, []);
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        document.addEventListener("keydown", onKey);
+        // The list is long; stop the page behind the dialog from scrolling too.
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.removeEventListener("keydown", onKey);
+            document.body.style.overflow = prev;
+        };
+    }, [onClose]);
+
+    return (
+        <div
+            className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/80 p-4 pt-[8vh] backdrop-blur-sm"
+            onClick={onClose}
+        >
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Choose host country"
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.1] bg-[#0b0b0d] shadow-2xl"
+            >
+                <div className="flex items-center gap-2 border-b border-white/[0.08] p-3">
+                    <Search className="h-4 w-4 shrink-0 text-zinc-500" aria-hidden="true" />
+                    <input
+                        ref={inputRef}
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                            // Enter picks the only remaining match, so typing
+                            // "japa" + Enter is the whole interaction.
+                            if (e.key === "Enter" && results.length > 0) onSelect(results[0]);
+                        }}
+                        placeholder={`Search ${COUNTRIES.length} countries`}
+                        className="h-8 min-w-0 flex-1 bg-transparent text-[13px] text-white placeholder:text-zinc-500 focus:outline-none"
+                    />
+                    <button type="button" onClick={onClose} aria-label="Close"
+                        className="rounded p-1 text-zinc-400 hover:bg-white/[0.06] hover:text-white">
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+
+                <ul className="max-h-[52vh] overflow-y-auto py-1">
+                    {results.length === 0 ? (
+                        <li className="px-4 py-8 text-center text-[12px] text-zinc-400">
+                            No country matches &ldquo;{query.trim()}&rdquo;.
+                        </li>
+                    ) : (
+                        results.map((c) => (
+                            <li key={c.code}>
+                                <button
+                                    type="button"
+                                    onClick={() => onSelect(c)}
+                                    className="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-white/[0.06] focus:bg-white/[0.06] focus:outline-none"
+                                >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={flagUrl(c.code, 40)} alt="" width={24} height={16} loading="lazy"
+                                        className="shrink-0 rounded-[2px]" />
+                                    <span className="min-w-0 flex-1 truncate text-[13px] text-white">{c.name}</span>
+                                    <span className="shrink-0 text-[11px] font-semibold tabular-nums text-zinc-500">
+                                        {c.code}
+                                    </span>
+                                </button>
+                            </li>
+                        ))
+                    )}
+                </ul>
+            </div>
+        </div>
+    );
+}
 
 const inputCls =
     "w-full rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-[13px] text-white placeholder:text-zinc-600 focus:border-red-500/50 focus:outline-none";

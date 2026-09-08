@@ -5,6 +5,7 @@ import { catchAsync } from '../utils/catchAsync';
 import { parseDateField, parseOptionalDateField } from '../utils/parseDateField';
 import { parseRank, rankTitle } from '../utils/rank';
 import { resolveBio } from '../utils/delegationBio';
+import { normaliseCountryCode } from '../utils/countryCodes';
 
 /**
  * "Team India" — the squad that travels when a foreign federation invites KKFI
@@ -89,6 +90,7 @@ function serializeDelegation(delegation: any) {
         id: delegation.id,
         tournamentName: delegation.tournamentName,
         hostCountry: delegation.hostCountry,
+        hostCountryCode: delegation.hostCountryCode,
         hostCity: delegation.hostCity,
         startDate: delegation.startDate,
         endDate: delegation.endDate,
@@ -200,8 +202,22 @@ export const getEligibleMembers = catchAsync(async (req: Request, res: Response)
     res.status(200).json({ status: 'success', results: eligible.length, data: { users: eligible } });
 });
 
+/**
+ * An ISO 3166-1 alpha-2 code, or null when none was supplied.
+ *
+ * A value that was sent but is not a real country is an error rather than a
+ * silent null: the caller believed it set a country, and the public page would
+ * otherwise show a broken flag for it.
+ */
+function parseCountryCode(value: unknown): string | null {
+    if (value === undefined || value === null || value === '') return null;
+    const code = normaliseCountryCode(value);
+    if (!code) throw new AppError('hostCountryCode must be a valid ISO 3166-1 alpha-2 country code', 400);
+    return code;
+}
+
 export const createDelegation = catchAsync(async (req: Request, res: Response) => {
-    const { tournamentName, hostCountry, hostCity, startDate, endDate, summary, coverImageUrl } = req.body;
+    const { tournamentName, hostCountry, hostCountryCode, hostCity, startDate, endDate, summary, coverImageUrl } = req.body;
 
     const start = parseDateField(startDate, 'startDate');
     const end = parseOptionalDateField(endDate, 'endDate');
@@ -211,6 +227,9 @@ export const createDelegation = catchAsync(async (req: Request, res: Response) =
         data: {
             tournamentName: String(tournamentName ?? '').trim(),
             hostCountry: String(hostCountry ?? '').trim(),
+            // Silently dropping an unrecognised code would leave the page
+            // rendering a broken flag, so reject it outright.
+            hostCountryCode: parseCountryCode(hostCountryCode),
             hostCity: hostCity ? String(hostCity).trim() : null,
             startDate: start,
             endDate: end ?? null,
@@ -224,11 +243,12 @@ export const createDelegation = catchAsync(async (req: Request, res: Response) =
 });
 
 export const updateDelegation = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { tournamentName, hostCountry, hostCity, startDate, endDate, summary, coverImageUrl, isPublished } = req.body;
+    const { tournamentName, hostCountry, hostCountryCode, hostCity, startDate, endDate, summary, coverImageUrl, isPublished } = req.body;
 
     const data: any = {};
     if (tournamentName !== undefined) data.tournamentName = String(tournamentName).trim();
     if (hostCountry !== undefined) data.hostCountry = String(hostCountry).trim();
+    if (hostCountryCode !== undefined) data.hostCountryCode = parseCountryCode(hostCountryCode);
     if (hostCity !== undefined) data.hostCity = hostCity ? String(hostCity).trim() : null;
     if (startDate !== undefined) data.startDate = parseDateField(startDate, 'startDate');
     if (endDate !== undefined) data.endDate = parseOptionalDateField(endDate, 'endDate') ?? null;

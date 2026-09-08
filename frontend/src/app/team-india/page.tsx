@@ -11,56 +11,163 @@ import {
     tripDates,
     groupSquad,
     squadStats,
-    heroPhotos,
     type Delegation,
     type SquadMember,
 } from "@/lib/teamIndia";
+import {
+    INDIA_THEME,
+    countryTheme,
+    countryWordmark,
+    findCountry,
+    flagUrl,
+    isCountryCode,
+} from "@/lib/countries";
+
+/* ─── Flag chip ─────────────────────────────────────────── */
+
+function Flag({ code, w = 44 }: { code: string | null | undefined; w?: number }) {
+    // Guarded rather than trusted: an unrecognised code would build
+    // ".../w160/.png" and ship a broken-image box. Callers pass validated
+    // codes today, but the flag is decorative and rendering nothing is always
+    // better than rendering a broken tile.
+    if (!isCountryCode(code)) return null;
+
+    // Plain <img>, not next/image: flags are tiny, already optimised, and
+    // there is no reason to route ~200 possible files through the optimizer.
+    // Emoji flags are not an option — Windows Chrome renders them as letters.
+    return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+            src={flagUrl(code, 160)}
+            alt=""
+            width={w}
+            height={Math.round((w * 2) / 3)}
+            loading="lazy"
+            className="block rounded-[3px] shadow-[0_2px_12px_rgba(0,0,0,.75)]"
+        />
+    );
+}
 
 /* ─── Hero backdrop ─────────────────────────────────────────
-   A cover image is the art-directed choice. Without one, the squad's own
-   portraits become the backdrop — the people are the story, and a montage of
-   the actual karateka beats an empty panel where a photograph belongs.
+   India's colours bloom from the left, the host country's from the right, and
+   the centre stays dark so the type never fights the colour. Both halves are
+   generated from flag colours, so any country the admin picks is themed
+   without hand art-direction.
+
+   This is the one place on the page where colour outside the Kyokushin
+   red/gold palette is allowed; everything below the fold stays on-system.
    ---------------------------------------------------------- */
 
-function HeroBackdrop({ photos }: { photos: string[] }) {
-    if (photos.length === 0) {
-        // Nothing to show yet. A faint red bloom on black rather than a flat
-        // rectangle, so the fold still has depth.
+function HeroBackdrop({ cover, hostCode }: { cover: string | null; hostCode: string | null }) {
+    // An admin's cover image is a deliberate art-directed choice, so it wins.
+    if (cover) {
+        const src = getImageUrl(cover);
         return (
-            <div
-                aria-hidden="true"
-                className="absolute inset-0"
-                style={{
-                    background:
-                        "radial-gradient(75% 60% at 50% 0%, rgba(255,0,0,0.10), transparent 70%)",
-                }}
-            />
+            <div aria-hidden="true" className="absolute inset-0">
+                {src && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={src} alt="" className="h-full w-full object-cover object-center opacity-[0.55]" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/45" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/55 to-transparent" />
+            </div>
         );
     }
 
-    const single = photos.length === 1;
+    const host = countryTheme(hostCode);
+    const [ind1, ind2] = INDIA_THEME.colors;
+    const [host1, host2] = host.colors;
 
     return (
         <div aria-hidden="true" className="absolute inset-0">
-            <div className="flex h-full w-full">
-                {photos.map((src) => (
-                    <div key={src} className="relative h-full flex-1 overflow-hidden">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src={getImageUrl(src) || ""}
-                            alt=""
-                            className={`h-full w-full object-cover ${
-                                single ? "object-center" : "object-top"
-                            } opacity-[0.45] grayscale`}
-                        />
-                    </div>
-                ))}
-            </div>
-            {/* Two scrims: one lifts the type off the image, one grounds the
-                fold into the black page below it. */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/85 to-black/50" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/55 to-transparent" />
+            <div
+                className="absolute inset-0"
+                style={{
+                    background: [
+                        `radial-gradient(62% 105% at -6% 30%, ${ind1} 0%, ${hexA(ind1, 0.5)} 32%, transparent 62%)`,
+                        `radial-gradient(52% 95% at 2% 90%, ${ind2} 0%, ${hexA(ind2, 0.42)} 34%, transparent 64%)`,
+                        `radial-gradient(66% 110% at 104% 50%, ${host1} 0%, ${hexA(host1, 0.55)} 34%, transparent 66%)`,
+                        `radial-gradient(44% 70% at 92% 96%, ${hexA(host2, 0.5)} 0%, transparent 62%)`,
+                        "#05050a",
+                    ].join(","),
+                }}
+            />
+            {/* Type guard: darkens only the lower-left where the copy sits, so
+                the colour survives instead of being flattened everywhere. */}
+            <div
+                className="absolute inset-0"
+                style={{
+                    background: [
+                        "radial-gradient(ellipse 82% 66% at 16% 90%, rgba(0,0,0,.94), rgba(0,0,0,.55) 52%, transparent 78%)",
+                        "linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.30) 38%, transparent 62%)",
+                    ].join(","),
+                }}
+            />
         </div>
+    );
+}
+
+/** #RRGGBB + alpha -> rgba(), so flag hexes can be faded in a gradient. */
+function hexA(hex: string, alpha: number): string {
+    const h = hex.replace("#", "");
+    const n = parseInt(h, 16);
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+}
+
+/* ─── Host wordmark ─────────────────────────────────────────
+   The host country's name in its own language, sitting behind the type. For
+   Japan that is 日本; for a country with no distinct endonym it is the English
+   name. Purely decorative, so it is hidden from assistive tech.
+   ---------------------------------------------------------- */
+
+function HostWordmark({ hostCode }: { hostCode: string | null }) {
+    const word = countryWordmark(hostCode);
+    if (!word) return null;
+
+    // Count code points, not UTF-16 units, so 日本 measures as 2 and not 4.
+    const len = [...word].length;
+
+    // A very long name stops being a graphic and becomes unreadable clutter at
+    // any size that would still fit, so it is simply not drawn.
+    if (len > 14) return null;
+
+    // Sized by length rather than a single ceiling: a 2-glyph script can fill
+    // the fold, but "Brazil" at the same size overflows and gets clipped
+    // mid-word, which reads as a rendering bug rather than a design.
+    const fontSize =
+        len <= 3
+            ? "clamp(6rem, 20vw, 17rem)"
+            : len <= 7
+              ? "clamp(2.5rem, 8vw, 7rem)"
+              : "clamp(2rem, 5.5vw, 4.75rem)";
+
+    return (
+        <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 right-0 hidden items-center justify-end overflow-hidden pr-10 font-black leading-none text-white/[0.10] sm:flex"
+            style={{ fontSize, maxWidth: "62%" }}
+        >
+            <span className="whitespace-nowrap">{word}</span>
+        </div>
+    );
+}
+
+/* ─── Flag rule ─────────────────────────────────────────────
+   A hairline along the bottom of the fold that runs India's colours into the
+   host's — the two nations meeting, and a clean edge into the black page.
+   ---------------------------------------------------------- */
+
+function FlagRule({ hostCode }: { hostCode: string | null }) {
+    const [ind1, ind2] = INDIA_THEME.colors;
+    const [host1, host2] = countryTheme(hostCode).colors;
+    return (
+        <div
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-0 h-[4px]"
+            style={{
+                background: `linear-gradient(to right, ${ind1}, #ffffff 22%, ${ind2} 40%, ${host1} 68%, ${host2})`,
+            }}
+        />
     );
 }
 
@@ -368,9 +475,12 @@ function ArchiveRow({ delegation }: { delegation: Delegation }) {
                     <span className="block truncate text-[14px] font-bold text-white">
                         {delegation.tournamentName}
                     </span>
-                    <span className="mt-0.5 block text-[11px] text-zinc-400">
-                        {delegation.hostCountry} · {tripDates(delegation.startDate, delegation.endDate)} ·{" "}
-                        {delegation.memberCount} representing India
+                    <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-zinc-400">
+                        <Flag code={delegation.hostCountryCode} w={16} />
+                        <span className="truncate">
+                            {delegation.hostCountry} · {tripDates(delegation.startDate, delegation.endDate)} ·{" "}
+                            {delegation.memberCount} representing India
+                        </span>
                     </span>
                 </span>
                 <span className="hidden shrink-0 sm:block">
@@ -452,7 +562,8 @@ export default function TeamIndiaPage() {
 
     // Most recent trip leads; everything older becomes the archive.
     const [current, ...archive] = delegations;
-    const photos = useMemo(() => (current ? heroPhotos(current, 5) : []), [current]);
+    const hostCode = current?.hostCountryCode ?? null;
+    const hostCountry = findCountry(hostCode);
 
     // `animate` is unconditional on purpose. useReducedMotion() reports false
     // on the first render and can flip to true straight after; if the reduced
@@ -467,15 +578,16 @@ export default function TeamIndiaPage() {
     return (
         <div className="min-h-screen bg-black text-white">
             {/* ── Hero ──
-                Tall enough for the photography to carry the fold when there is
-                a squad to show; without imagery that height is just dead black,
-                so it collapses to the height of its own type. */}
+                Full height once there is a trip to dramatise; with nothing
+                published it collapses to the height of its own type rather
+                than leaving a viewport of dead black. */}
             <section
                 className={`relative isolate flex items-end overflow-hidden pb-12 pt-32 sm:pb-16 ${
-                    photos.length > 0 ? "min-h-[72vh] sm:min-h-[78vh]" : ""
+                    current ? "min-h-[70vh] sm:min-h-[76vh]" : ""
                 }`}
             >
-                <HeroBackdrop photos={photos} />
+                <HeroBackdrop cover={current?.coverImageUrl ?? null} hostCode={hostCode} />
+                {current && !current.coverImageUrl && <HostWordmark hostCode={hostCode} />}
 
                 <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
                     <motion.span
@@ -509,16 +621,66 @@ export default function TeamIndiaPage() {
                         who travel to represent India on the international floor.
                     </motion.p>
 
+                    {current && (
+                        <motion.div
+                            {...rise}
+                            transition={{ duration: 0.6, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                            className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3"
+                        >
+                            <span className="flex items-center gap-2.5">
+                                <Flag code="IN" />
+                                <span className="text-[14px] font-black uppercase tracking-[0.13em] text-white">
+                                    India
+                                </span>
+                            </span>
+                            {hostCountry && (
+                                <>
+                                    <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-zinc-300">
+                                        travels to
+                                    </span>
+                                    <span className="flex items-center gap-2.5">
+                                        <Flag code={hostCountry.code} />
+                                        <span className="text-[14px] font-black uppercase tracking-[0.13em] text-white">
+                                            {hostCountry.name}
+                                        </span>
+                                    </span>
+                                </>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {current && (
+                        <motion.div
+                            {...rise}
+                            transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                            className="mt-7"
+                        >
+                            <h2
+                                className="font-black uppercase leading-[0.98] text-white"
+                                style={{
+                                    fontSize: "clamp(1.4rem, 3.2vw, 2.3rem)",
+                                    letterSpacing: "-0.02em",
+                                    textWrap: "balance",
+                                }}
+                            >
+                                {current.tournamentName}
+                            </h2>
+                            <TripFacts delegation={current} className="mt-3" />
+                        </motion.div>
+                    )}
+
                     {delegations.length > 0 && (
                         <motion.div
                             {...rise}
-                            transition={{ duration: 0.6, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                            transition={{ duration: 0.6, delay: 0.26, ease: [0.22, 1, 0.36, 1] }}
                             className="mt-8 border-t border-white/[0.12] pt-5"
                         >
                             <StatLine delegations={delegations} />
                         </motion.div>
                     )}
                 </div>
+
+                {current && <FlagRule hostCode={hostCode} />}
             </section>
 
             {/* ── Body ── */}
@@ -548,19 +710,10 @@ export default function TeamIndiaPage() {
                     <EmptyState />
                 ) : (
                     <>
-                        {/* Current trip */}
+                        {/* Current trip. The tournament name and facts are the
+                            hero's subject, so this section carries the prose
+                            and the squad only. */}
                         <section className="pt-14">
-                            <TripFacts delegation={current} className="mb-3" />
-                            <h2
-                                className="font-black uppercase leading-[0.95] text-white"
-                                style={{
-                                    fontSize: "clamp(1.5rem, 3.5vw, 2.5rem)",
-                                    letterSpacing: "-0.02em",
-                                    textWrap: "balance",
-                                }}
-                            >
-                                {current.tournamentName}
-                            </h2>
                             {current.summary && (
                                 <p
                                     className="mt-3 max-w-[68ch] text-[14px] leading-relaxed text-zinc-300"

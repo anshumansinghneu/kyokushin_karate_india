@@ -6,6 +6,7 @@ import { Plane, ArrowRight } from "lucide-react";
 import api from "@/lib/api";
 import { getImageUrl } from "@/lib/imageUtils";
 import { formatDateOnly } from "@/lib/dateOnly";
+import { findCountry, flagUrl } from "@/lib/countries";
 import type { Delegation, SquadMember } from "@/lib/teamIndia";
 
 /**
@@ -59,10 +60,17 @@ export default function TeamIndiaStrip() {
                         >
                             {delegation.tournamentName}
                         </h2>
-                        <p className="mt-1 text-[12px] text-zinc-400">
-                            {delegation.hostCity ? `${delegation.hostCity}, ` : ""}
-                            {delegation.hostCountry} · {formatDateOnly(delegation.startDate)} ·{" "}
-                            {delegation.memberCount} travelling
+                        <p className="mt-1 flex items-center gap-1.5 text-[12px] text-zinc-400">
+                            {findCountry(delegation.hostCountryCode) && (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img src={flagUrl(delegation.hostCountryCode, 40)} alt="" width={18} height={12}
+                                    loading="lazy" className="shrink-0 rounded-[2px]" />
+                            )}
+                            <span>
+                                {delegation.hostCity ? `${delegation.hostCity}, ` : ""}
+                                {delegation.hostCountry} · {formatDateOnly(delegation.startDate)} ·{" "}
+                                {delegation.memberCount} travelling
+                            </span>
                         </p>
                     </div>
                     <Link

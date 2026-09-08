@@ -940,6 +940,10 @@ model Delegation {
   id             String    @id @default(uuid())
   tournamentName String
   hostCountry    String
+  // ISO 3166-1 alpha-2, uppercase. Drives the host flag and the hero's colour
+  // field; `hostCountry` above stays the display name. Nullable so rows
+  // created before the picker existed still load.
+  hostCountryCode String?
   hostCity       String?
   startDate      DateTime
   endDate        DateTime?
