@@ -16,6 +16,7 @@ import VideoPlayer from "@/components/gallery/VideoPlayer";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+import KarateLoader from '@/components/KarateLoader';
 type MediaType = 'IMAGE' | 'VIDEO';
 
 interface Photo {
@@ -332,7 +333,7 @@ export default function AlbumDetailPage() {
     if (isLoading && !album) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-white/70 animate-spin" />
+                <KarateLoader label="Opening album" />
             </div>
         );
     }

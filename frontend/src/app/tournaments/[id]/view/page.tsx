@@ -10,6 +10,7 @@ import axios from "axios";
 import { io, Socket } from "socket.io-client";
 
 import { API_URL, BACKEND_URL } from '@/lib/config';
+import KarateLoader from '@/components/KarateLoader';
 const SOCKET_URL = BACKEND_URL;
 
 interface Match {
@@ -194,10 +195,7 @@ export default function PublicTournamentViewer() {
     if (loading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-gray-300">Loading tournament...</p>
-                </div>
+                <KarateLoader label="Loading tournament" />
             </div>
         );
     }

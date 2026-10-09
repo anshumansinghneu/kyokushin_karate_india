@@ -39,7 +39,8 @@ function HeroPoster() {
     return (
         <div className="absolute inset-0 bg-black">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_50%,rgba(139,0,0,0.4),transparent_55%)]" />
-            <KankuMark className="absolute right-[6%] top-1/2 hidden h-[52vh] w-[52vh] -translate-y-1/2 text-white/80 md:block" />
+            {/* Centred where the 3D emblem and the intro both put it: 73.5% across, 58vh tall. */}
+            <KankuMark className="absolute left-[73.5%] top-1/2 hidden h-[58vh] w-[58vh] -translate-x-1/2 -translate-y-1/2 text-white/80 md:block" />
         </div>
     );
 }

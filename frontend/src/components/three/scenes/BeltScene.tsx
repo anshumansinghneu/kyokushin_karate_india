@@ -21,6 +21,8 @@ interface BeltSceneProps {
     /** 0..1 through the journey. */
     progress?: MotionValue<number>;
     stops: BeltStop[];
+    /** Framed for a smaller, centred window (the homepage stage) instead of a full-width hero. */
+    compact?: boolean;
     onReady?: () => void;
 }
 
@@ -32,7 +34,7 @@ const TWIST = Math.PI * 0.6;
  * most of each step and turns over quickly between them, the way a grading
  * is a moment, not a gradient. Gold enters only with the dan bars.
  */
-export default function BeltScene({ progress, stops, onReady }: BeltSceneProps) {
+export default function BeltScene({ progress, stops, compact = false, onReady }: BeltSceneProps) {
     const curve = useMemo(() => beltCurve(), []);
     const geometry = useMemo(() => buildBelt(curve, 360, 0.46, 0.045, TWIST), [curve]);
     const stitches = useMemo(() => stitchTexture(), []);
@@ -114,7 +116,7 @@ export default function BeltScene({ progress, stops, onReady }: BeltSceneProps) 
             <ambientLight intensity={0.35} />
             <pointLight ref={goldLight} position={[3.2, 1.2, 1.2]} distance={4} color="#ffcc33" intensity={0} />
 
-            <group ref={group} position={portrait ? [0.2, 2.1, 0] : [1.05, 0.3, 0]} scale={portrait ? 0.62 : 0.9}>
+            <group ref={group} position={compact ? [0.05, 0.25, 0] : portrait ? [0.2, 2.1, 0] : [1.05, 0.3, 0]} scale={compact ? (portrait ? 0.55 : 0.78) : portrait ? 0.62 : 0.9}>
                 <mesh geometry={geometry} castShadow>
                     <meshPhysicalMaterial
                         ref={cloth}

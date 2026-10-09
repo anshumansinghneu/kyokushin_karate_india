@@ -2,11 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion, useInView } from "framer-motion";
-import SplashScreen from "@/components/SplashScreen";
+import InkSplash from "@/components/brand/InkSplash";
+import PathsJourney from "@/components/home/PathsJourney";
+import PhotoMoment from "@/components/home/PhotoMoment";
+import FilmStrip from "@/components/home/FilmStrip";
+import EventSpotlight from "@/components/home/EventSpotlight";
 import { ArrowRight, ArrowUpRight, MapPin, Calendar, X } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
-import { getEventStatus } from "@/lib/eventStatus";
 import HeroSectionV2 from "@/components/HeroSectionV2";
 import LeadershipSection from "@/components/LeadershipSection";
 import MonthlyChampions from "@/components/MonthlyChampions";
@@ -82,77 +85,17 @@ function FounderPortrait({ src }: { src: string }) {
   );
 }
 
-/* Countdown to the next upcoming event. */
-function NextEventCountdown({ event }: { event: Event }) {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-
-  useEffect(() => {
-    const target = new Date(event.startDate).getTime();
-    const tick = () => {
-      const diff = Math.max(0, target - Date.now());
-      setTimeLeft({
-        days: Math.floor(diff / 86400000),
-        hours: Math.floor((diff % 86400000) / 3600000),
-        minutes: Math.floor((diff % 3600000) / 60000),
-        seconds: Math.floor((diff % 60000) / 1000),
-      });
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [event.startDate]);
-
-  const blocks = [
-    { value: timeLeft.days, label: "days" },
-    { value: timeLeft.hours, label: "hours" },
-    { value: timeLeft.minutes, label: "min" },
-    { value: timeLeft.seconds, label: "sec" },
-  ];
-
-  return (
-    <Section rhythm="base" width="wide" className="border-y border-white/10">
-      <div className="grid items-end gap-10 lg:grid-cols-[1fr_auto]">
-        <Reveal>
-          <p className="mb-4 text-sm font-semibold text-primary-light">Next on the calendar</p>
-          <Heading size="headline" className="max-w-[18ch]">{event.name}</Heading>
-          <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-white/70">
-            <MapPin className="h-4 w-4" aria-hidden="true" /> {event.location || "Location to be announced"}
-            <span aria-hidden="true" className="text-white/30">/</span>
-            {formatDateOnly(event.startDate, { day: "numeric", month: "long", year: "numeric" }, "en-IN")}
-          </p>
-          <div className="mt-8">
-            <BrandLink href={`/events/${event.id}`}>
-              Register <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </BrandLink>
-          </div>
-        </Reveal>
-
-        <Reveal kind="depth" delay={0.1}>
-          <div role="timer" aria-label="Time until the event starts" className="flex items-baseline gap-5 sm:gap-8">
-            {blocks.map(({ value, label }, i) => (
-              <div key={label} className="flex items-baseline gap-5 sm:gap-8">
-                <div className="text-center">
-                  <div className="text-[clamp(2.75rem,7vw,5.5rem)] font-black leading-none tracking-[-0.03em] text-white tabular-nums">
-                    {String(value).padStart(2, "0")}
-                  </div>
-                  <div className="mt-2 text-sm font-semibold text-white/60">{label}</div>
-                </div>
-                {i < blocks.length - 1 && <span aria-hidden="true" className="text-[clamp(2rem,5vw,4rem)] font-black leading-none text-white/20">:</span>}
-              </div>
-            ))}
-          </div>
-        </Reveal>
-      </div>
-    </Section>
-  );
-}
-
 export default function Home() {
   const [showSplash, setShowSplash] = useState(false);
 
   // Check splash after mount (sessionStorage is client-only) to avoid a hydration mismatch.
   useEffect(() => {
     if (sessionStorage.getItem('splash_seen')) return;
+    // Reduced motion: no intro at all; mark it seen so it never ambushes later.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      sessionStorage.setItem('splash_seen', 'true');
+      return;
+    }
     const id = requestAnimationFrame(() => setShowSplash(true));
     return () => cancelAnimationFrame(id);
   }, []);
@@ -226,6 +169,8 @@ export default function Home() {
         <div aria-hidden={showSplash || undefined}>
           <HeroSectionV2 content={content} />
 
+          <PathsJourney />
+
           {/* PHILOSOPHY: the founder, and his words set large beside him. */}
           <Section rhythm="open" width="wide" className="bg-black">
             <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-20">
@@ -254,25 +199,27 @@ export default function Home() {
             </div>
           </Section>
 
-          <LeadershipSection />
-
-          {/* THE FOUNDATION IN NUMBERS: one sentence, not a dashboard. */}
-          {(siteStats.dojos > 0 || siteStats.members > 0) && (
-            <Section rhythm="base" width="wide" className="bg-black">
-              <Reveal kind="focus">
-                <p className="max-w-[28ch] text-balance text-[clamp(1.75rem,4.5vw,3.75rem)] font-extrabold leading-[1.1] tracking-[-0.02em] text-white/45">
+          {/* THE FOUNDATION IN NUMBERS: one sentence on one photograph. */}
+          <PhotoMoment>
+            <Reveal kind="focus">
+              {siteStats.dojos > 0 || siteStats.members > 0 ? (
+                <p className="max-w-[28ch] text-balance text-[clamp(1.75rem,4.5vw,3.75rem)] font-extrabold leading-[1.1] tracking-[-0.02em] text-white/55">
                   <span className="text-white"><Count target={siteStats.members} />+ members</span> training in{" "}
                   <span className="text-white"><Count target={siteStats.dojos} /> dojos</span>, tested across{" "}
                   <span className="text-white"><Count target={siteStats.events} /> events</span>, with{" "}
                   <span className="text-secondary"><Count target={siteStats.blackBelts} /> black belts</span> earned.
                 </p>
-              </Reveal>
-            </Section>
-          )}
+              ) : (
+                <p className="max-w-[22ch] text-balance text-[clamp(1.75rem,4.5vw,3.75rem)] font-extrabold leading-[1.1] tracking-[-0.02em] text-white">
+                  Full contact. Full respect<span className="text-primary">.</span>
+                </p>
+              )}
+            </Reveal>
+          </PhotoMoment>
 
-          {featuredEvents.length > 0 && getEventStatus(featuredEvents[0]) === 'UPCOMING' && (
-            <NextEventCountdown event={featuredEvents[0]} />
-          )}
+          <EventSpotlight events={featuredEvents} />
+
+          <LeadershipSection />
 
           <MonthlyChampions />
 
@@ -310,6 +257,8 @@ export default function Home() {
           </AnimatePresence>
 
           <TestimonialsSection />
+
+          <FilmStrip />
 
           {/* DOJO CHRONICLES: one lead story, two follow-ups. */}
           {!dataLoaded ? (
@@ -409,11 +358,9 @@ export default function Home() {
       )}
 
       {/* Last, not first: anything ahead of the hero stops its negative margin collapsing and shifts the page. */}
-      <AnimatePresence mode="wait">
-        {showSplash && (
-          <SplashScreen key="splash" onFinish={() => { sessionStorage.setItem('splash_seen', 'true'); setShowSplash(false); }} />
-        )}
-      </AnimatePresence>
+      {showSplash && (
+        <InkSplash onFinish={() => { sessionStorage.setItem('splash_seen', 'true'); setShowSplash(false); }} />
+      )}
     </div>
   );
 }

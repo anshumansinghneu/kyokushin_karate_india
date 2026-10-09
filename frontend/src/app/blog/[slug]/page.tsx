@@ -8,6 +8,7 @@ import Link from "next/link";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import DOMPurify from "dompurify";
 
+import KarateLoader from '@/components/KarateLoader';
 export default function BlogPost() {
     const { slug } = useParams();
     const [post, setPost] = useState<any>(null);
@@ -111,7 +112,7 @@ export default function BlogPost() {
         <div ref={containerRef} className="min-h-screen bg-black text-white selection:bg-red-900 selection:text-white">
             {isLoading ? (
                 <div className="min-h-screen flex items-center justify-center bg-black">
-                    <div className="animate-spin rounded-full h-12 w-12 border-2 border-red-500/20 border-t-red-500"></div>
+                    <KarateLoader label="Loading story" />
                 </div>
             ) : !post ? (
                 <div className="min-h-screen flex flex-col items-center justify-center bg-black">

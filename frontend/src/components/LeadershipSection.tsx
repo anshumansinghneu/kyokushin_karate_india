@@ -18,7 +18,7 @@ function Portrait({ src, alt, name, role, rank }: { src: StaticImageData; alt: s
                 ref={tiltRef as React.Ref<HTMLElement>}
                 {...tiltHandlers}
                 style={tiltStyle}
-                className="group relative aspect-[4/5] overflow-hidden rounded-xl bg-surface"
+                className="group relative aspect-[4/5] max-w-[26rem] overflow-hidden rounded-xl bg-surface"
             >
                 <Image
                     src={src}
@@ -41,14 +41,14 @@ function Portrait({ src, alt, name, role, rank }: { src: StaticImageData; alt: s
 /** The line of authority, from the world headquarters to India. */
 export default function LeadershipSection() {
     return (
-        <Section rhythm="open" width="wide" className="bg-black">
+        <Section rhythm="base" width="wide" className="bg-black">
             <Reveal>
                 <Heading className="max-w-[20ch]">
                     One lineage, from the Honbu dojo to India<span className="text-primary">.</span>
                 </Heading>
             </Reveal>
 
-            <div className="mt-16 grid gap-16 lg:mt-24 lg:grid-cols-2 lg:gap-12">
+            <div className="mt-12 grid gap-14 md:grid-cols-2 lg:mt-16 lg:gap-12">
                 <article>
                     <Portrait
                         src={ryukoTake}
@@ -57,21 +57,17 @@ export default function LeadershipSection() {
                         role="President, IKO World Kyokushin Kaikan"
                         rank="8th Dan"
                     />
-                    <Reveal delay={0.1} className="mt-8 max-w-[56ch] space-y-5 text-lg leading-relaxed text-white/75">
+                    <Reveal delay={0.1} className="mt-6 max-w-[48ch] leading-relaxed text-white/75">
                         <p>
-                            Born in Kagoshima Prefecture, he entered the Honbu Dojo at 18 and trained directly
-                            under <span className="text-white">Sosai Masutatsu Oyama</span>.
-                        </p>
-                        <p>
-                            Renowned for his tsuki and gedan, he founded a branch dojo in Kagoshima in 1981 that
-                            has grown to 59 dojos. Today he leads the International Karate Organization World
+                            Trained directly under <span className="text-white">Sosai Masutatsu Oyama</span> from the
+                            age of 18. Founded the Kagoshima branch in 1981, now 59 dojos, and today leads IKO World
                             Kyokushin Kaikan.
                         </p>
                     </Reveal>
                 </article>
 
                 {/* Offset down on wide screens: the second generation follows the first. */}
-                <article className="lg:mt-40">
+                <article className="md:mt-24">
                     <Portrait
                         src={shihanVasant}
                         alt="Shihan Vasant Kumar Singh, Country Director for India"
@@ -79,16 +75,11 @@ export default function LeadershipSection() {
                         role="Country Director, India"
                         rank="Founder of KKFI, 2013"
                     />
-                    <Reveal delay={0.1} className="mt-8 max-w-[56ch] space-y-5 text-lg leading-relaxed text-white/75">
+                    <Reveal delay={0.1} className="mt-6 max-w-[48ch] leading-relaxed text-white/75">
                         <p>
-                            <span className="text-white">Shihan Vasant Kumar Singh</span> began training in 1987.
-                            Seeing the need for authentic Kyokushin in India, he founded the Kyokushin Karate
-                            Foundation of India in 2013.
-                        </p>
-                        <p>
-                            Under his leadership the foundation has grown to{" "}
-                            <span className="font-semibold text-white">more than 100 dojos</span> across the
-                            country, raising a new generation of strong spirits and disciplined minds.
+                            Training since 1987, he founded the Kyokushin Karate Foundation of India in 2013 and has
+                            grown it to <span className="font-semibold text-white">more than 100 dojos</span> across
+                            the country.
                         </p>
                     </Reveal>
                 </article>

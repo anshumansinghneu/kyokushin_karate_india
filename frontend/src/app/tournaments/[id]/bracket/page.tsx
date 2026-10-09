@@ -12,6 +12,7 @@ import BracketTree from "@/components/tournaments/BracketTree";
 import LiveMatchControl from "@/components/tournaments/LiveMatchControl";
 import LiveMatchViewer from "@/components/tournaments/LiveMatchViewer";
 
+import KarateLoader from '@/components/KarateLoader';
 export default function TournamentBracketPage() {
     const { id } = useParams();
     const router = useRouter();
@@ -45,7 +46,7 @@ export default function TournamentBracketPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                <KarateLoader label="Loading bracket" />
             </div>
         );
     }

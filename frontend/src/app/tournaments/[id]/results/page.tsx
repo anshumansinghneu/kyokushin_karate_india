@@ -15,6 +15,7 @@ import { downloadCertificate, downloadAllCertificates } from "@/lib/certificateG
 
 import { API_URL } from '@/lib/config';
 
+import KarateLoader from '@/components/KarateLoader';
 interface Winner {
     id: string;
     name: string;
@@ -185,10 +186,7 @@ export default function TournamentResultsPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-gray-300">Loading results...</p>
-                </div>
+                <KarateLoader label="Loading results" />
             </div>
         );
     }
