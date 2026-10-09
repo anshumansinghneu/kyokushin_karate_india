@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, MapPin, Clock, Shield, CheckCircle, AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, ArrowLeft, ArrowUpRight, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import KankuMark from "@/components/KankuMark";
+import KarateLoader from "@/components/KarateLoader";
+import BrandLink from "@/components/brand/BrandLink";
+import Reveal from "@/components/brand/Reveal";
 import { useParams } from "next/navigation";
 import api from "@/lib/api";
 import { getEventStatus } from "@/lib/eventStatus";
@@ -12,18 +15,66 @@ import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 
 import { formatDateOnly } from '@/lib/dateOnly';
+
+interface EventCategory { name: string; age: string; weight: string }
+interface EventDetail {
+    id: string;
+    name: string;
+    type: string;
+    status?: string;
+    description?: string;
+    imageUrl?: string | null;
+    startDate: string;
+    endDate?: string | null;
+    registrationDeadline?: string | null;
+    location?: string | null;
+    memberFee: number;
+    categories?: EventCategory[] | unknown;
+    dojo?: { city?: string } | null;
+}
+interface Feedback {
+    id: string;
+    feedback: string;
+    status?: string;
+    createdAt: string;
+    user?: { name?: string; currentBeltRank?: string };
+}
+type ApiError = { response?: { data?: { message?: string } } };
+
+const typeLabel = (type: string) =>
+    type === "BELT_EXAM" ? "Grading" : type.charAt(0) + type.slice(1).toLowerCase().replace("_", " ");
+
+/** Sharp, uppercase action button matching BrandLink, for in-page actions. */
+function ActionButton({ children, onClick, disabled, variant = "primary", className = "" }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; variant?: "primary" | "outline" | "ghost"; className?: string }) {
+    const styles = {
+        primary: "bg-primary text-white hover:bg-primary-dark",
+        outline: "border border-white/25 text-white hover:border-white/60 hover:bg-white/10",
+        ghost: "text-white/70 hover:text-white",
+    };
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            disabled={disabled}
+            className={`inline-flex min-h-12 w-full items-center justify-center gap-2 px-6 text-sm font-bold uppercase tracking-[0.1em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50 ${styles[variant]} ${className}`}
+        >
+            {children}
+        </button>
+    );
+}
+
 export default function EventDetailPage() {
     const { id } = useParams();
     const { user } = useAuthStore();
     const { showToast } = useToast();
-    const [event, setEvent] = useState<any>(null);
+    const [event, setEvent] = useState<EventDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [isRegistering, setIsRegistering] = useState(false);
     const [registrationStep, setRegistrationStep] = useState(1);
     const [paymentProcessing, setPaymentProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [eventType, setEventType] = useState<string>("");
-    const [selectedCategory, setSelectedCategory] = useState<{ name: string; age: string; weight: string } | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<EventCategory | null>(null);
 
     // Voucher state
     const [voucherCode, setVoucherCode] = useState("");
@@ -32,8 +83,8 @@ export default function EventDetailPage() {
     const [voucherError, setVoucherError] = useState("");
 
     // Feedback state
-    const [feedbacks, setFeedbacks] = useState<any[]>([]);
-    const [myFeedback, setMyFeedback] = useState<any>(null);
+    const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+    const [myFeedback, setMyFeedback] = useState<Feedback | null>(null);
     const [feedbackText, setFeedbackText] = useState('');
     const [showFeedbackForm, setShowFeedbackForm] = useState(false);
     const [submittingFeedback, setSubmittingFeedback] = useState(false);
@@ -62,12 +113,12 @@ export default function EventDetailPage() {
             try {
                 const res = await api.get(`/feedback/${event.id}`);
                 setFeedbacks(res.data.data.feedbacks || []);
-            } catch { }
+            } catch { /* feedback is optional */ }
             if (user) {
                 try {
                     const res = await api.get(`/feedback/${event.id}/mine`);
                     if (res.data.data.feedback) setMyFeedback(res.data.data.feedback);
-                } catch { }
+                } catch { /* none yet */ }
             }
         };
         fetchFeedback();
@@ -81,19 +132,19 @@ export default function EventDetailPage() {
         setSubmittingFeedback(true);
         try {
             if (isEditingFeedback) {
-                await api.put(`/feedback/${event.id}`, { feedback: feedbackText });
+                await api.put(`/feedback/${event!.id}`, { feedback: feedbackText });
                 showToast('Feedback updated! It will be reviewed again.', 'success');
             } else {
-                await api.post(`/feedback/${event.id}`, { feedback: feedbackText });
+                await api.post(`/feedback/${event!.id}`, { feedback: feedbackText });
                 showToast('Feedback submitted! It will appear after admin approval.', 'success');
             }
-            const res = await api.get(`/feedback/${event.id}/mine`);
+            const res = await api.get(`/feedback/${event!.id}/mine`);
             setMyFeedback(res.data.data.feedback);
             setShowFeedbackForm(false);
             setIsEditingFeedback(false);
             setFeedbackText('');
-        } catch (err: any) {
-            showToast(err?.response?.data?.message || 'Failed to submit feedback', 'error');
+        } catch (err) {
+            showToast((err as ApiError)?.response?.data?.message || 'Failed to submit feedback', 'error');
         } finally {
             setSubmittingFeedback(false);
         }
@@ -129,8 +180,8 @@ export default function EventDetailPage() {
                 amount: res.data.data.voucher.amount,
                 code: res.data.data.voucher.code,
             });
-        } catch (err: any) {
-            setVoucherError(err.response?.data?.message || "Invalid voucher code");
+        } catch (err) {
+            setVoucherError((err as ApiError).response?.data?.message || "Invalid voucher code");
         } finally {
             setVoucherValidating(false);
         }
@@ -146,8 +197,8 @@ export default function EventDetailPage() {
             });
             setRegistrationStep(3);
             showToast("Registration successful! Voucher redeemed.", "success");
-        } catch (err: any) {
-            showToast(err.response?.data?.message || "Voucher redemption failed.", "error");
+        } catch (err) {
+            showToast((err as ApiError).response?.data?.message || "Voucher redemption failed.", "error");
         } finally {
             setPaymentProcessing(false);
         }
@@ -164,195 +215,209 @@ export default function EventDetailPage() {
             });
             setRegistrationStep(3);
             showToast("Registration successful!", "success");
-        } catch (err: any) {
-            showToast(err.response?.data?.message || "Registration failed.", "error");
+        } catch (err) {
+            showToast((err as ApiError).response?.data?.message || "Registration failed.", "error");
         } finally {
             setPaymentProcessing(false);
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>;
-    if (error || !event) return <div className="min-h-screen bg-black flex items-center justify-center text-white">{error || "Event not found"}</div>;
+    if (loading) {
+        return (
+            <div className="flex min-h-[70dvh] items-center justify-center bg-black">
+                <KarateLoader label="Loading event" />
+            </div>
+        );
+    }
+    if (error || !event) {
+        return (
+            <div className="mx-auto flex min-h-[70dvh] max-w-xl flex-col items-start justify-center gap-6 px-4 text-white sm:px-6">
+                <h1 className="text-3xl font-black uppercase tracking-[-0.02em]">{error ? "Could not load this event" : "Event not found"}<span className="text-primary">.</span></h1>
+                <p className="leading-relaxed text-white/70">{error ? "The server did not answer. Try again in a moment." : "It may have been removed or is no longer public."}</p>
+                <BrandLink href="/events" variant="outline"><ArrowLeft className="h-4 w-4" /> All events</BrandLink>
+            </div>
+        );
+    }
 
-    // Parse categories if string, or use directly if array
-    const categories = Array.isArray(event.categories) ? event.categories : [];
+    const categories: EventCategory[] = Array.isArray(event.categories) ? event.categories : [];
+    // Display status is derived from dates (the DB status field goes stale).
+    const status = getEventStatus(event);
+    const finished = status === "COMPLETED";
+    const cancelled = event.status === "CANCELLED";
+    const isTournament = event.type === "TOURNAMENT";
+    const venue = event.location || event.dojo?.city;
+    const longDate = (d: string) => formatDateOnly(d, { weekday: "short", day: "numeric", month: "long", year: "numeric" }, "en-IN");
+    const multiDay = !!event.endDate && event.endDate !== event.startDate;
+
+    const startRegistration = () => {
+        handleRegister();
+        document.getElementById("register")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
 
     return (
-        <div className="min-h-screen w-full bg-black text-white relative">
-            {/* Hero */}
-            <div className="relative min-h-[380px] w-full">
-                <div className="absolute inset-0">
+        <div className="min-h-dvh w-full bg-black text-white">
+            {/* Opener: the event's own image when it has one, otherwise the Kanku in the dark. */}
+            <header data-bleed className="relative flex min-h-[72svh] overflow-hidden">
+                <div className="absolute inset-0" aria-hidden="true">
                     {event.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                             src={event.imageUrl}
-                            alt={event.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                            }}
+                            alt=""
+                            className="h-full w-full scale-110 object-cover opacity-50 blur-md grayscale-[0.4]"
+                            onError={(e) => { e.currentTarget.style.display = "none"; }}
                         />
-                    ) : null}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/40" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+                    ) : (
+                        <KankuMark className="absolute -right-[12vw] top-1/2 h-[90vh] w-[90vh] -translate-y-1/2 text-white/[0.05]" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/75 to-black/45" />
                 </div>
 
-                <div className="absolute inset-0 container-responsive flex flex-col justify-end pb-10 z-10">
-                    <Link href="/events" className="text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white flex items-center gap-2 mb-5 transition-colors w-fit">
-                        <ArrowLeft className="w-3.5 h-3.5" /> All Events
+                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(2.5rem,7vh,5rem)] pt-32 sm:px-6 md:pt-40 lg:px-8">
+                    <Link href="/events" className="mb-8 inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white">
+                        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All events
                     </Link>
-
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                        {/* Badges */}
-                        <div className="flex flex-wrap items-center gap-2 mb-4">
-                            <span className="px-2.5 py-1 rounded bg-primary text-white text-[8px] font-extrabold uppercase tracking-[2px]">
-                                {event.type.replace('_', ' ')}
-                            </span>
-                            {(() => {
-                                // Display status is derived from dates (the DB status field goes stale).
-                                const st = getEventStatus(event);
-                                return (
-                                    <span className={`px-2.5 py-1 rounded text-[8px] font-bold uppercase tracking-[2px] ${
-                                        st === 'COMPLETED' ? 'bg-zinc-700 text-zinc-300' :
-                                        'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
-                                    }`}>
-                                        {st}
-                                    </span>
-                                );
-                            })()}
+                    <p className="text-sm font-semibold text-white/75">
+                        {typeLabel(event.type)}
+                        <span className="mx-2 text-white/30" aria-hidden="true">·</span>
+                        <span className={cancelled ? "text-white/60" : finished ? "text-white/60" : "text-primary-light"}>
+                            {cancelled ? "Cancelled" : status === "ONGOING" ? "In progress" : finished ? "Completed" : "Upcoming"}
+                        </span>
+                    </p>
+                    <h1 className="mt-4 max-w-[22ch] text-balance text-[clamp(2.25rem,6vw,4.75rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
+                        {event.name}
+                    </h1>
+                    <dl className="mt-8 flex flex-wrap gap-x-10 gap-y-4 border-t border-white/15 pt-5 text-sm">
+                        <div>
+                            <dt className="text-white/60">{multiDay ? "Starts" : "Date"}</dt>
+                            <dd className="mt-1 font-bold">{longDate(event.startDate)}</dd>
                         </div>
-
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight mb-4 leading-snug max-w-3xl">
-                            {event.name}
-                        </h1>
-
-                        {/* Meta row */}
-                        <div className="flex flex-wrap items-center gap-4 text-[12px] text-zinc-400">
-                            <span className="flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5 text-primary" />
-                                {formatDateOnly(event.startDate, { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }, 'en-IN')}
-                            </span>
-                            {event.endDate && event.endDate !== event.startDate && (
-                                <span className="flex items-center gap-1.5">
-                                    <Clock className="w-3.5 h-3.5 text-primary" />
-                                    Ends {formatDateOnly(event.endDate, { day: 'numeric', month: 'long', year: 'numeric' }, 'en-IN')}
-                                </span>
-                            )}
-                            {(event.location || event.dojo?.city) && (
-                                <span className="flex items-center gap-1.5">
-                                    <MapPin className="w-3.5 h-3.5 text-primary" />
-                                    {event.location || event.dojo?.city}
-                                </span>
-                            )}
+                        {multiDay && (
+                            <div>
+                                <dt className="text-white/60">Ends</dt>
+                                <dd className="mt-1 font-bold">{longDate(event.endDate!)}</dd>
+                            </div>
+                        )}
+                        {venue && (
+                            <div>
+                                <dt className="text-white/60">Venue</dt>
+                                <dd className="mt-1 font-bold">{venue}</dd>
+                            </div>
+                        )}
+                        <div>
+                            <dt className="text-white/60">Fee</dt>
+                            <dd className="mt-1 font-bold tabular-nums">{event.memberFee > 0 ? `₹${event.memberFee}` : "Free"}</dd>
                         </div>
-                    </motion.div>
+                    </dl>
+                    <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                        {!finished && !cancelled && (
+                            <button
+                                type="button"
+                                onClick={startRegistration}
+                                className="inline-flex min-h-12 items-center justify-center gap-2 bg-primary px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                            >
+                                Register
+                            </button>
+                        )}
+                        {isTournament && (
+                            <>
+                                <BrandLink href={`/tournaments/${event.id}/view`} variant="outline">Brackets <ArrowUpRight className="h-4 w-4" /></BrandLink>
+                                <BrandLink href={`/tournaments/${event.id}/results`} variant="outline">Results <ArrowUpRight className="h-4 w-4" /></BrandLink>
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </header>
 
-            <div className="container-responsive py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
-                {/* Left Column: Details */}
-                <div className="lg:col-span-2 space-y-12">
-                    {/* Description */}
-                    <motion.section
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                    >
-                        <h2 className="text-lg font-black uppercase tracking-tight mb-5 flex items-center gap-3">
-                            <div className="w-[3px] h-5 rounded-full bg-primary" />
-                            Event Overview
-                        </h2>
-                        <p className="text-gray-400 text-lg leading-relaxed">
-                            {event.description}
-                        </p>
-                    </motion.section>
+            <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-14 px-4 py-[clamp(3.5rem,8vw,6rem)] sm:px-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-20 lg:px-8">
+                <div className="space-y-16">
+                    {/* The event's own poster, shown whole: the hero only uses it as atmosphere. */}
+                    {event.imageUrl && (
+                        <Reveal as="section" kind="depth">
+                            <figure>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={event.imageUrl}
+                                    alt={`Poster for ${event.name}`}
+                                    loading="lazy"
+                                    className="w-full max-w-2xl rounded-lg border border-white/10"
+                                    onError={(e) => { (e.currentTarget.closest("section") as HTMLElement | null)?.style.setProperty("display", "none"); }}
+                                />
+                            </figure>
+                        </Reveal>
+                    )}
 
-                    {/* Categories */}
-                    <motion.section
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                    >
-                        <h2 className="text-lg font-black uppercase tracking-tight mb-5 flex items-center gap-3">
-                            <div className="w-[3px] h-5 rounded-full bg-primary" />
-                            Categories
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {categories.map((cat: any, i: number) => (
-                                <div key={i} className="glass-card p-4 flex justify-between items-center">
-                                    <div>
-                                        <h4 className="font-bold text-white">{cat.name}</h4>
-                                        <p className="text-sm text-gray-400">Age: {cat.age}</p>
-                                    </div>
-                                    <span className="px-3 py-1 rounded bg-white/5 text-primary font-mono text-sm border border-white/10">
-                                        {cat.weight}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </motion.section>
+                    {event.description && (
+                        <Reveal as="section">
+                            <h2 className="text-2xl font-extrabold md:text-3xl">About this event</h2>
+                            <p className="mt-6 max-w-[65ch] whitespace-pre-line text-pretty text-lg leading-relaxed text-white/80">{event.description}</p>
+                        </Reveal>
+                    )}
 
-                    {/* Schedule (Mock for now as it's not in DB model explicitly as array) */}
-                    <motion.section
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                    >
-                        <h2 className="text-lg font-black uppercase tracking-tight mb-5 flex items-center gap-3">
-                            <div className="w-[3px] h-5 rounded-full bg-primary" />
-                            Event Schedule
-                        </h2>
-                        <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-white/10">
-                            <div className="flex items-center gap-6 relative">
-                                <div className="w-10 h-10 rounded-full bg-black border-2 border-primary flex items-center justify-center z-10">
-                                    <Clock className="w-4 h-4 text-primary" />
-                                </div>
-                                <div className="glass-card p-4 flex-1 flex justify-between items-center">
-                                    <span className="font-bold text-white">Starts</span>
-                                    <span className="text-sm font-mono text-gray-400">{formatDateOnly(event.startDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }, 'en-IN')}</span>
-                                </div>
+                    {categories.length > 0 && (
+                        <Reveal as="section">
+                            <h2 className="text-2xl font-extrabold md:text-3xl">Categories</h2>
+                            <div className="mt-6 overflow-x-auto">
+                                <table className="w-full min-w-[28rem] text-left">
+                                    <thead>
+                                        <tr className="border-b border-white/20 text-sm text-white/60">
+                                            <th scope="col" className="py-3 pr-6 font-semibold">Category</th>
+                                            <th scope="col" className="py-3 pr-6 font-semibold">Age</th>
+                                            <th scope="col" className="py-3 font-semibold">Weight</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/10">
+                                        {categories.map((cat, i) => (
+                                            <tr key={i}>
+                                                <th scope="row" className="py-4 pr-6 font-bold">{cat.name}</th>
+                                                <td className="py-4 pr-6 text-white/75 tabular-nums">{cat.age || "Open"}</td>
+                                                <td className="py-4 text-white/75 tabular-nums">{cat.weight || "Open"}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                            <div className="flex items-center gap-6 relative">
-                                <div className="w-10 h-10 rounded-full bg-black border-2 border-primary flex items-center justify-center z-10">
-                                    <Clock className="w-4 h-4 text-primary" />
-                                </div>
-                                <div className="glass-card p-4 flex-1 flex justify-between items-center">
-                                    <span className="font-bold text-white">Ends</span>
-                                    <span className="text-sm font-mono text-gray-400">{formatDateOnly(event.endDate || event.startDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }, 'en-IN')}</span>
-                                </div>
+                        </Reveal>
+                    )}
+
+                    <Reveal as="section">
+                        <h2 className="text-2xl font-extrabold md:text-3xl">Key dates</h2>
+                        <dl className="mt-6 divide-y divide-white/10 border-y border-white/10">
+                            <div className="flex flex-wrap justify-between gap-2 py-4">
+                                <dt className="font-semibold text-white/70">Starts</dt>
+                                <dd className="font-bold">{longDate(event.startDate)}</dd>
                             </div>
-                        </div>
-                    </motion.section>
+                            <div className="flex flex-wrap justify-between gap-2 py-4">
+                                <dt className="font-semibold text-white/70">Ends</dt>
+                                <dd className="font-bold">{longDate(event.endDate || event.startDate)}</dd>
+                            </div>
+                            {event.registrationDeadline && (
+                                <div className="flex flex-wrap justify-between gap-2 py-4">
+                                    <dt className="font-semibold text-white/70">Registration closes</dt>
+                                    <dd className="font-bold">{longDate(event.registrationDeadline)}</dd>
+                                </div>
+                            )}
+                        </dl>
+                    </Reveal>
 
-                    {/* Feedback Section — only for completed events */}
-                    {event.status !== 'CANCELLED' && getEventStatus(event) === 'COMPLETED' && (
-                        <motion.section
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                        >
-                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
-                                <span className="w-1 h-8 bg-primary rounded-full" />
-                                Feedback
-                            </h2>
+                    {/* Feedback — only for completed events */}
+                    {!cancelled && finished && (
+                        <Reveal as="section">
+                            <h2 className="text-2xl font-extrabold md:text-3xl">From those who were there</h2>
 
-                            {/* My feedback status */}
                             {user && myFeedback && !showFeedbackForm && (
-                                <div className="glass-card p-4 mb-6 border border-yellow-500/30 bg-yellow-500/5">
-                                    <div className="flex justify-between items-start">
+                                <div className="mt-6 rounded-lg border border-white/15 p-5">
+                                    <div className="flex items-start justify-between gap-4">
                                         <div>
-                                            <p className="text-sm text-gray-400 mb-1">Your feedback</p>
-                                            <p className="text-white">{myFeedback.feedback}</p>
-                                            <span className={`inline-block mt-2 px-2 py-0.5 rounded text-xs font-medium ${
-                                                myFeedback.status === 'APPROVED' ? 'bg-green-500/20 text-green-400' :
-                                                myFeedback.status === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
-                                                'bg-yellow-500/20 text-yellow-400'
-                                            }`}>
-                                                {myFeedback.status === 'PENDING' ? 'Awaiting Approval' : myFeedback.status}
-                                            </span>
+                                            <p className="text-sm text-white/60">Your feedback</p>
+                                            <p className="mt-1 text-white">{myFeedback.feedback}</p>
+                                            <p className="mt-3 text-sm font-semibold text-white/70">
+                                                {myFeedback.status === "PENDING" ? "Awaiting approval" : myFeedback.status === "APPROVED" ? "Published" : myFeedback.status === "REJECTED" ? "Not published" : myFeedback.status}
+                                            </p>
                                         </div>
                                         <button
                                             onClick={() => { setFeedbackText(myFeedback.feedback); setIsEditingFeedback(true); setShowFeedbackForm(true); }}
-                                            className="text-xs text-gray-400 hover:text-white transition-colors"
+                                            className="min-h-11 px-2 text-sm font-semibold text-white/70 transition-colors hover:text-white"
                                         >
                                             Edit
                                         </button>
@@ -360,204 +425,190 @@ export default function EventDetailPage() {
                                 </div>
                             )}
 
-                            {/* Submit/Edit form */}
                             {user && showFeedbackForm && (
-                                <div className="glass-card p-4 mb-6">
+                                <div className="mt-6">
+                                    <label htmlFor="feedback" className="text-sm font-semibold text-white/70">Your experience</label>
                                     <textarea
+                                        id="feedback"
                                         value={feedbackText}
                                         onChange={(e) => setFeedbackText(e.target.value)}
-                                        placeholder="Share your experience... (min 10 characters)"
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-gray-400 focus:border-primary focus:outline-none resize-none"
+                                        placeholder="At least 10 characters"
+                                        className="mt-2 w-full resize-none rounded-none border-b-2 border-white/20 bg-transparent p-3 text-white placeholder:text-white/50 focus:border-primary focus:outline-none"
                                         rows={4}
                                         maxLength={2000}
                                     />
-                                    <div className="flex justify-between items-center mt-2">
-                                        <span className="text-xs text-gray-400">{feedbackText.length}/2000</span>
+                                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                                        <span className="text-sm text-white/50 tabular-nums">{feedbackText.length}/2000</span>
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => { setShowFeedbackForm(false); setIsEditingFeedback(false); setFeedbackText(''); }}
-                                                className="px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+                                                className="min-h-11 px-4 text-sm font-semibold text-white/70 hover:text-white"
                                             >
                                                 Cancel
                                             </button>
                                             <button
                                                 onClick={handleFeedbackSubmit}
                                                 disabled={submittingFeedback || feedbackText.trim().length < 10}
-                                                className="px-4 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                className="min-h-11 bg-primary px-5 text-sm font-bold uppercase tracking-[0.1em] text-white hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                                             >
-                                                {submittingFeedback ? 'Submitting...' : isEditingFeedback ? 'Update' : 'Submit'}
+                                                {submittingFeedback ? "Sending…" : isEditingFeedback ? "Update" : "Submit"}
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Write feedback button */}
                             {user && !myFeedback && !showFeedbackForm && (
                                 <button
                                     onClick={() => setShowFeedbackForm(true)}
-                                    className="glass-card p-4 mb-6 w-full text-left hover:bg-white/5 transition-colors border border-dashed border-white/10 rounded-xl"
+                                    className="mt-6 inline-flex min-h-12 items-center border border-white/25 px-5 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10"
                                 >
-                                    <p className="text-gray-400 text-sm">Participated in this event? Share your feedback!</p>
+                                    Were you there? Share your feedback
                                 </button>
                             )}
 
-                            {/* Approved feedback list */}
                             {feedbacks.length > 0 ? (
-                                <div className="space-y-4">
-                                    {feedbacks.map((fb: any) => (
-                                        <div key={fb.id} className="glass-card p-4">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                                                    {fb.user?.name?.[0] || '?'}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-white">{fb.user?.name}</p>
-                                                    <p className="text-xs text-gray-400">{fb.user?.currentBeltRank?.replace('_', ' ')} &bull; {new Date(fb.createdAt).toLocaleDateString()}</p>
-                                                </div>
-                                            </div>
-                                            <p className="text-gray-300 text-sm">{fb.feedback}</p>
-                                        </div>
+                                <ul className="mt-8 divide-y divide-white/10 border-y border-white/10">
+                                    {feedbacks.map((fb) => (
+                                        <li key={fb.id} className="py-6">
+                                            <blockquote className="max-w-[60ch] text-pretty text-lg leading-relaxed text-white/85">&ldquo;{fb.feedback}&rdquo;</blockquote>
+                                            <p className="mt-3 text-sm text-white/60">
+                                                <span className="font-semibold text-white">{fb.user?.name}</span>
+                                                {fb.user?.currentBeltRank && <> · {fb.user.currentBeltRank.replace('_', ' ').toLowerCase()}</>}
+                                                {" · "}{new Date(fb.createdAt).toLocaleDateString("en-IN")}
+                                            </p>
+                                        </li>
                                     ))}
-                                </div>
+                                </ul>
                             ) : (
-                                !showFeedbackForm && (
-                                    <p className="text-gray-400 text-sm">No feedback yet.</p>
-                                )
+                                !showFeedbackForm && <p className="mt-6 text-white/60">No feedback yet.</p>
                             )}
-                        </motion.section>
+                        </Reveal>
                     )}
                 </div>
 
-                {/* Right Column: Registration */}
-                <div className="lg:col-span-1">
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="rounded-xl border border-white/10 bg-white/5 p-5 sm:p-6 sticky top-24"
-                    >
-                        {!isRegistering ? (
+                {/* Registration */}
+                <aside id="register" className="scroll-mt-28 lg:sticky lg:top-28 lg:self-start">
+                    <div className="rounded-lg border border-white/15 bg-surface p-6">
+                        {cancelled || finished ? (
                             <>
-                                <div className="mb-5">
-                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Registration Fee</p>
-                                    <p className="text-3xl font-black text-white">₹{event.memberFee}</p>
+                                <p className="text-sm font-semibold text-white/60">Registration</p>
+                                <p className="mt-2 text-2xl font-extrabold">{cancelled ? "This event was cancelled." : "This event has finished."}</p>
+                                <p className="mt-3 leading-relaxed text-white/70">See what is coming up next on the calendar.</p>
+                                <div className="mt-6 grid gap-3">
+                                    <BrandLink href="/events">Upcoming events</BrandLink>
+                                    <BrandLink href="/gallery" variant="outline">Photos</BrandLink>
                                 </div>
-
-                                <div className="space-y-2.5 mb-6 pb-5 border-b border-white/[0.05]">
-                                    <div className="flex items-center gap-2.5 text-sm text-zinc-400">
-                                        <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-                                        <span>Official Tournament T-Shirt</span>
-                                    </div>
-                                    <div className="flex items-center gap-2.5 text-sm text-zinc-400">
-                                        <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-                                        <span>Participation Certificate</span>
-                                    </div>
-                                </div>
-
-                                <Button onClick={handleRegister} className="w-full h-12 text-xs font-bold uppercase tracking-wider bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-                                    Register Now
-                                </Button>
-                                <p className="text-center text-xs text-gray-400 mt-4">
-                                    Registration closes on {formatDateOnly(event.registrationDeadline)}
-                                </p>
+                            </>
+                        ) : !isRegistering ? (
+                            <>
+                                <p className="text-sm font-semibold text-white/60">Registration fee</p>
+                                <p className="mt-1 text-4xl font-black tabular-nums">{event.memberFee > 0 ? `₹${event.memberFee}` : "Free"}</p>
+                                {isTournament && (
+                                    <ul className="mt-5 space-y-2 border-t border-white/10 pt-5 text-sm text-white/75">
+                                        <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 shrink-0 text-white/60" aria-hidden="true" /> Official tournament T-shirt</li>
+                                        <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 shrink-0 text-white/60" aria-hidden="true" /> Participation certificate</li>
+                                    </ul>
+                                )}
+                                <ActionButton onClick={handleRegister} className="mt-6">Register now</ActionButton>
+                                {event.registrationDeadline && (
+                                    <p className="mt-4 text-center text-sm text-white/60">Closes {formatDateOnly(event.registrationDeadline)}</p>
+                                )}
+                                <p className="mt-2 text-center text-sm text-white/50">Active members only.</p>
                             </>
                         ) : (
-                            <div className="space-y-6">
+                            <div>
                                 {registrationStep === 1 && (
                                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                                        <h3 className="text-xl font-bold text-white mb-4">Select Event Type</h3>
-                                        <div className="space-y-4 mb-6">
-                                            <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Event Type *</label>
-                                            <div className="grid grid-cols-3 gap-2">
+                                        <h3 className="text-xl font-extrabold">How will you compete?</h3>
+                                        <fieldset className="mt-5">
+                                            <legend className="text-sm font-semibold text-white/70">Event type</legend>
+                                            <div className="mt-2 grid grid-cols-3 gap-2">
                                                 {['Kata', 'Kumite', 'Both'].map((type) => (
                                                     <button
                                                         key={type}
+                                                        type="button"
+                                                        aria-pressed={eventType === type}
                                                         onClick={() => setEventType(type)}
-                                                        className={`p-3 rounded-lg border text-sm font-bold transition-all ${eventType === type
-                                                            ? 'bg-primary text-white border-primary'
-                                                            : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
-                                                            }`}
+                                                        className={`min-h-11 border text-sm font-bold transition-colors ${eventType === type ? 'border-white bg-white text-black' : 'border-white/20 text-white/75 hover:bg-white/10'}`}
                                                     >
                                                         {type}
                                                     </button>
                                                 ))}
                                             </div>
-                                        </div>
+                                        </fieldset>
 
-                                        {/* Category Selection (if event has categories) */}
                                         {categories.length > 0 && (
-                                            <div className="space-y-4 mb-6">
-                                                <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Competition Category *</label>
-                                                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                                    {categories.map((cat: any, i: number) => (
-                                                        <button
-                                                            key={i}
-                                                            onClick={() => setSelectedCategory(cat)}
-                                                            className={`w-full p-3 rounded-lg border text-left transition-all ${
-                                                                selectedCategory?.name === cat.name && selectedCategory?.age === cat.age
-                                                                    ? 'bg-primary/10 text-white border-primary'
-                                                                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
-                                                            }`}
-                                                        >
-                                                            <span className="font-bold text-sm">{cat.name}</span>
-                                                            <div className="flex gap-3 mt-1 text-xs text-gray-400">
-                                                                {cat.age && <span>Age: {cat.age}</span>}
-                                                                {cat.weight && <span>Weight: {cat.weight}</span>}
-                                                            </div>
-                                                        </button>
-                                                    ))}
+                                            <fieldset className="mt-6">
+                                                <legend className="text-sm font-semibold text-white/70">Category</legend>
+                                                <div className="mt-2 max-h-56 space-y-2 overflow-y-auto pr-1" data-lenis-prevent>
+                                                    {categories.map((cat, i) => {
+                                                        const on = selectedCategory?.name === cat.name && selectedCategory?.age === cat.age;
+                                                        return (
+                                                            <button
+                                                                key={i}
+                                                                type="button"
+                                                                aria-pressed={on}
+                                                                onClick={() => setSelectedCategory(cat)}
+                                                                className={`w-full border p-3 text-left transition-colors ${on ? 'border-white bg-white/10' : 'border-white/15 hover:bg-white/5'}`}
+                                                            >
+                                                                <span className="block font-bold">{cat.name}</span>
+                                                                <span className="mt-1 flex gap-3 text-sm text-white/60 tabular-nums">
+                                                                    {cat.age && <span>Age {cat.age}</span>}
+                                                                    {cat.weight && <span>{cat.weight}</span>}
+                                                                </span>
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
-                                            </div>
+                                            </fieldset>
                                         )}
 
-                                        <Button
+                                        <ActionButton
                                             onClick={() => setRegistrationStep(2)}
                                             disabled={!eventType || (categories.length > 0 && !selectedCategory)}
-                                            className="w-full bg-primary hover:bg-primary-dark"
+                                            className="mt-6"
                                         >
                                             Continue
-                                        </Button>
-                                        <Button variant="ghost" onClick={() => setIsRegistering(false)} className="w-full mt-2">
-                                            Cancel
-                                        </Button>
+                                        </ActionButton>
+                                        <ActionButton variant="ghost" onClick={() => setIsRegistering(false)} className="mt-1">Cancel</ActionButton>
                                     </motion.div>
                                 )}
 
                                 {registrationStep === 2 && (
                                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                                        <h3 className="text-xl font-bold text-white mb-4">Confirm Registration</h3>
-                                        <div className="space-y-4 mb-6 text-sm">
-                                            <div className="flex justify-between text-gray-400">
-                                                <span>Event</span>
-                                                <span className="text-white text-right w-1/2">{event.name}</span>
+                                        <h3 className="text-xl font-extrabold">Confirm registration</h3>
+                                        <dl className="mt-5 divide-y divide-white/10 border-y border-white/10 text-sm">
+                                            <div className="flex justify-between gap-4 py-3">
+                                                <dt className="text-white/60">Event</dt>
+                                                <dd className="text-right font-semibold">{event.name}</dd>
                                             </div>
-                                            <div className="flex justify-between text-gray-400">
-                                                <span>Type</span>
-                                                <span className="text-white font-bold">{eventType}</span>
+                                            <div className="flex justify-between gap-4 py-3">
+                                                <dt className="text-white/60">Type</dt>
+                                                <dd className="font-bold">{eventType}</dd>
                                             </div>
                                             {selectedCategory && (
-                                                <div className="flex justify-between text-gray-400">
-                                                    <span>Category</span>
-                                                    <span className="text-white font-bold text-right">{selectedCategory.name}{selectedCategory.weight ? ` (${selectedCategory.weight})` : ''}</span>
+                                                <div className="flex justify-between gap-4 py-3">
+                                                    <dt className="text-white/60">Category</dt>
+                                                    <dd className="text-right font-bold">{selectedCategory.name}{selectedCategory.weight ? ` (${selectedCategory.weight})` : ''}</dd>
                                                 </div>
                                             )}
                                             {!voucherValid && (
-                                                <div className="flex justify-between text-gray-400 border-t border-white/10 pt-4">
-                                                    <span>Total Amount</span>
-                                                    <span className="text-xl font-bold text-primary">₹{event.memberFee}</span>
+                                                <div className="flex justify-between gap-4 py-3">
+                                                    <dt className="text-white/60">Total</dt>
+                                                    <dd className="text-lg font-black tabular-nums">₹{event.memberFee}</dd>
                                                 </div>
                                             )}
-                                        </div>
+                                        </dl>
 
-                                        {/* Voucher Section - mandatory for paid events */}
                                         {event.memberFee > 0 ? (
-                                            <div className="mb-6 space-y-3">
-                                                <label className="text-sm font-bold text-gray-400 uppercase tracking-wider">Cash Voucher Code *</label>
-                                                <p className="text-xs text-gray-400">Enter the voucher code provided by your instructor</p>
-                                                <div className="flex gap-2">
+                                            <div className="mt-6">
+                                                <label htmlFor="voucher" className="text-sm font-semibold text-white/70">Cash voucher code</label>
+                                                <p className="mt-1 text-sm text-white/55">From your instructor.</p>
+                                                <div className="mt-2 flex gap-2">
                                                     <input
-                                                        placeholder="e.g. KKFI-XXXX-XXXX"
+                                                        id="voucher"
+                                                        placeholder="KKFI-XXXX-XXXX"
                                                         value={voucherCode}
                                                         onChange={(e) => {
                                                             setVoucherCode(e.target.value.toUpperCase());
@@ -565,17 +616,13 @@ export default function EventDetailPage() {
                                                             setVoucherValid(null);
                                                         }}
                                                         disabled={!!voucherValid}
-                                                        className="flex-1 bg-white/5 border border-white/10 focus:border-green-500 h-10 rounded-lg text-white placeholder:text-gray-400 font-mono tracking-wider px-3 text-sm outline-none"
+                                                        className="h-12 min-w-0 flex-1 rounded-none border-b-2 border-white/20 bg-transparent px-3 font-mono text-sm tracking-wider text-white outline-none placeholder:text-white/50 focus:border-primary"
                                                     />
                                                     {voucherValid ? (
                                                         <button
                                                             type="button"
-                                                            onClick={() => {
-                                                                setVoucherValid(null);
-                                                                setVoucherCode("");
-                                                                setVoucherError("");
-                                                            }}
-                                                            className="px-3 py-2 rounded-lg bg-zinc-700 text-zinc-300 text-sm font-medium hover:bg-zinc-600 transition-colors"
+                                                            onClick={() => { setVoucherValid(null); setVoucherCode(""); setVoucherError(""); }}
+                                                            className="min-h-12 border border-white/25 px-4 text-sm font-bold text-white hover:bg-white/10"
                                                         >
                                                             Change
                                                         </button>
@@ -584,63 +631,53 @@ export default function EventDetailPage() {
                                                             type="button"
                                                             onClick={handleValidateEventVoucher}
                                                             disabled={voucherValidating || !voucherCode.trim()}
-                                                            className="px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold transition-all disabled:opacity-50"
+                                                            className="min-h-12 border border-white/25 px-4 text-sm font-bold text-white hover:bg-white/10 disabled:opacity-50"
                                                         >
-                                                            {voucherValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Validate"}
+                                                            {voucherValidating ? <Loader2 className="h-4 w-4 animate-spin" aria-label="Checking" /> : "Check"}
                                                         </button>
                                                     )}
                                                 </div>
-
                                                 {voucherError && (
-                                                    <div className="flex items-center gap-2 text-red-400 text-sm">
-                                                        <AlertCircle className="w-4 h-4" />
-                                                        {voucherError}
-                                                    </div>
+                                                    <p role="alert" className="mt-3 flex items-center gap-2 text-sm text-primary-light">
+                                                        <AlertCircle className="h-4 w-4" aria-hidden="true" /> {voucherError}
+                                                    </p>
                                                 )}
-
                                                 {voucherValid && (
-                                                    <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
-                                                        <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
-                                                        <div>
-                                                            <p className="text-sm font-bold text-green-400">Voucher Valid!</p>
-                                                            <p className="text-xs text-gray-400">Covers ₹{voucherValid.amount} — registration fee covered.</p>
-                                                        </div>
-                                                    </div>
+                                                    <p className="mt-3 flex items-center gap-2 text-sm text-white">
+                                                        <CheckCircle className="h-4 w-4 text-secondary" aria-hidden="true" />
+                                                        Voucher accepted: covers ₹{voucherValid.amount}.
+                                                    </p>
                                                 )}
                                             </div>
                                         ) : null}
 
                                         {event.memberFee > 0 ? (
-                                            <Button onClick={handleVoucherRedemption} disabled={paymentProcessing || !voucherValid} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50">
-                                                {paymentProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Redeeming...</> : <><CheckCircle className="w-4 h-4 mr-2" /> Register with Voucher</>}
-                                            </Button>
+                                            <ActionButton onClick={handleVoucherRedemption} disabled={paymentProcessing || !voucherValid} className="mt-6">
+                                                {paymentProcessing ? <><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Registering…</> : "Register with voucher"}
+                                            </ActionButton>
                                         ) : (
-                                            <Button onClick={handleFreeRegistration} disabled={paymentProcessing} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50">
-                                                {paymentProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Registering...</> : <><CheckCircle className="w-4 h-4 mr-2" /> Register (Free)</>}
-                                            </Button>
+                                            <ActionButton onClick={handleFreeRegistration} disabled={paymentProcessing} className="mt-6">
+                                                {paymentProcessing ? <><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Registering…</> : "Register (free)"}
+                                            </ActionButton>
                                         )}
-                                        <Button variant="ghost" onClick={() => setRegistrationStep(1)} className="w-full mt-2">
-                                            Back
-                                        </Button>
+                                        <ActionButton variant="ghost" onClick={() => setRegistrationStep(1)} className="mt-1">Back</ActionButton>
                                     </motion.div>
                                 )}
 
                                 {registrationStep === 3 && (
-                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-8">
-                                        <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-                                            <CheckCircle className="w-8 h-8 text-green-500" />
+                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-4">
+                                        <CheckCircle className="h-10 w-10 text-secondary" aria-hidden="true" />
+                                        <h3 className="mt-4 text-2xl font-extrabold">You&apos;re registered.</h3>
+                                        <p className="mt-2 text-white/70">Your place is confirmed. Osu, and good luck.</p>
+                                        <div className="mt-6">
+                                            <BrandLink href="/dashboard" className="w-full">Go to dashboard</BrandLink>
                                         </div>
-                                        <h3 className="text-2xl font-bold text-white mb-2">Registration Successful!</h3>
-                                        <p className="text-gray-400 mb-6">Your spot has been confirmed. Good luck!</p>
-                                        <Link href="/dashboard">
-                                            <Button className="w-full">Go to Dashboard</Button>
-                                        </Link>
                                     </motion.div>
                                 )}
                             </div>
                         )}
-                    </motion.div>
-                </div>
+                    </div>
+                </aside>
             </div>
         </div>
     );

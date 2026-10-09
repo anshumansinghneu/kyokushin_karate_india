@@ -2,13 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
-import {
-    Trophy, Medal, Crown, Award, TrendingUp, Zap, Target,
-    Calendar, MapPin, Users, ArrowLeft, Download, Share2, FileCheck
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Download, Share2, FileCheck } from "lucide-react";
 import Link from "next/link";
+import Reveal from "@/components/brand/Reveal";
+import BrandLink from "@/components/brand/BrandLink";
+import { formatDateOnly } from "@/lib/dateOnly";
 import { useToast } from "@/contexts/ToastContext";
 import axios from "axios";
 import { downloadCertificate, downloadAllCertificates } from "@/lib/certificateGenerator";
@@ -109,18 +107,6 @@ export default function TournamentResultsPage() {
         }
     };
 
-    const getMedalIcon = (place: number) => {
-        if (place === 1) return <Trophy className="w-6 h-6 text-yellow-400" />;
-        if (place === 2) return <Medal className="w-6 h-6 text-gray-400" />;
-        return <Award className="w-6 h-6 text-orange-600" />;
-    };
-
-    const getPodiumHeight = (place: number) => {
-        if (place === 1) return "h-48";
-        if (place === 2) return "h-40";
-        return "h-32";
-    };
-
     const handleDownloadCertificate = (winner: Winner, position: number, categoryName: string) => {
         if (!statistics) return;
 
@@ -185,7 +171,7 @@ export default function TournamentResultsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
+            <div className="min-h-[70dvh] bg-black flex items-center justify-center">
                 <KarateLoader label="Loading results" />
             </div>
         );
@@ -193,403 +179,196 @@ export default function TournamentResultsPage() {
 
     if (!statistics) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="text-center text-white">
-                    <Trophy className="w-16 h-16 mx-auto mb-4 text-yellow-500" />
-                    <h1 className="text-2xl font-bold mb-2">Results Not Available</h1>
-                    <p className="text-gray-300">Tournament results will be published after completion.</p>
+            <div className="mx-auto flex min-h-[70dvh] max-w-xl flex-col items-start justify-center gap-6 px-4 text-white sm:px-6">
+                <h1 className="text-3xl font-black uppercase tracking-[-0.02em]">Results not available yet<span className="text-primary">.</span></h1>
+                <p className="leading-relaxed text-white/70">Tournament results are published after the final match.</p>
+                <div className="flex flex-wrap gap-3">
+                    <BrandLink href={`/tournaments/${id}/view`} variant="outline">See the brackets</BrandLink>
+                    <BrandLink href="/events" variant="outline">All events</BrandLink>
                 </div>
             </div>
         );
     }
 
-    const topThreeDojos = statistics.dojoLeaderboard.slice(0, 3);
+    const { tournament, categoryWinners, dojoLeaderboard, performanceStats } = statistics;
+    const podium = dojoLeaderboard.slice(0, 3);
+    const highlights = [
+        performanceStats.fastestWin && { label: "Fastest win", value: `${performanceStats.fastestWin.duration} min`, who: performanceStats.fastestWin.winner },
+        performanceStats.highestScore && { label: "Highest score", value: `${performanceStats.highestScore.score} pts`, who: performanceStats.highestScore.winner },
+        performanceStats.mostDominant && { label: "Most dominant", value: performanceStats.mostDominant.finalScore, who: performanceStats.mostDominant.winner },
+    ].filter(Boolean) as { label: string; value: string; who: { name: string; dojoName: string } }[];
+
+    const hasResults = categoryWinners.some((c) => c.firstPlace || c.secondPlace || c.thirdPlace) || dojoLeaderboard.length > 0;
+
+    const places: { key: "firstPlace" | "secondPlace" | "thirdPlace"; n: 1 | 2 | 3; label: string }[] = [
+        { key: "firstPlace", n: 1, label: "1st" },
+        { key: "secondPlace", n: 2, label: "2nd" },
+        { key: "thirdPlace", n: 3, label: "3rd" },
+    ];
 
     return (
-        <div className="min-h-screen bg-black text-white">
-            {/* Header */}
-            <div className="border-b border-white/10 bg-black/40 backdrop-blur-md sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <Link href={`/tournaments/${id}/view`} className="inline-flex items-center text-white/60 hover:text-white mb-2 text-sm transition-colors">
-                                <ArrowLeft className="w-4 h-4 mr-1" />
-                                Back to Brackets
-                            </Link>
-                            <div className="flex items-center gap-3">
-                                <Trophy className="w-8 h-8 text-yellow-500" />
-                                <div>
-                                    <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight">
-                                        {statistics.tournament.name}
-                                    </h1>
-                                    <div className="flex items-center gap-4 text-xs text-white/60 mt-1">
-                                        <span className="flex items-center gap-1">
-                                            <Calendar className="w-3 h-3" />
-                                            {new Date(statistics.tournament.date).toLocaleDateString()}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <MapPin className="w-3 h-3" />
-                                            {statistics.tournament.location}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <Users className="w-3 h-3" />
-                                            {statistics.tournament.totalParticipants} participants
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+        <div className="min-h-dvh bg-black text-white">
+            <header className="mx-auto max-w-[1400px] px-4 pb-12 pt-6 sm:px-6 md:pt-10 lg:px-8">
+                <Link href={`/tournaments/${id}/view`} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white">
+                    <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Brackets
+                </Link>
+                <p className="mt-8 text-sm font-semibold text-secondary">Results</p>
+                <h1 className="mt-3 max-w-[20ch] text-balance text-[clamp(2.25rem,6vw,4.5rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
+                    {tournament.name}
+                </h1>
+                <p className="mt-6 max-w-[56ch] text-pretty text-lg leading-relaxed text-white/75">
+                    {tournament.date && <>{formatDateOnly(tournament.date, { day: "numeric", month: "long", year: "numeric" }, "en-IN")}{tournament.location ? `, ${tournament.location}` : ""}. </>}
+                    {hasResults ? (
+                        <>
+                    <span className="tabular-nums">{tournament.totalParticipants}</span> fighters across{" "}
+                    <span className="tabular-nums">{tournament.totalCategories}</span> categories,{" "}
+                    <span className="tabular-nums">{tournament.completedMatches}</span> of <span className="tabular-nums">{tournament.totalMatches}</span> matches fought,{" "}
+                    <span className="tabular-nums">{dojoLeaderboard.length}</span> dojos on the board.
+                        </>
+                    ) : (
+                        <>No scored matches have been recorded for this event.</>
+                    )}
+                </p>
+                <div className="mt-8 flex flex-wrap gap-3">
+                    {hasResults && (
+                    <button
+                        onClick={handleDownloadAllCertificates}
+                        className="inline-flex min-h-12 items-center gap-2 bg-primary px-6 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                    >
+                        <Download className="h-4 w-4" aria-hidden="true" /> All certificates
+                    </button>
+                    )}
+                    <button onClick={handleShare} className="inline-flex min-h-12 items-center gap-2 border border-white/25 px-5 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10">
+                        <Share2 className="h-4 w-4" aria-hidden="true" /> Share
+                    </button>
+                </div>
+            </header>
 
-                        <div className="flex items-center gap-2">
-                            <Button
-                                onClick={handleShare}
-                                size="sm"
-                                variant="outline"
-                                className="hidden md:flex items-center gap-2"
-                            >
-                                <Share2 className="w-4 h-4" />
-                                Share
-                            </Button>
-                            <Button
-                                onClick={handleDownloadAllCertificates}
-                                size="sm"
-                                className="hidden md:flex items-center gap-2 rounded-none uppercase tracking-wider font-bold bg-[#FF0000] hover:bg-[#8B0000] text-white focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                            >
-                                <Download className="w-4 h-4" />
-                                Download All Certificates
-                            </Button>
+            {!hasResults ? (
+                <div className="mx-auto max-w-[1400px] px-4 pb-24 sm:px-6 lg:px-8">
+                    <div className="border-y border-white/10 py-16">
+                        <p className="text-2xl font-extrabold">No results to show.</p>
+                        <p className="mt-3 max-w-[46ch] leading-relaxed text-white/70">Champions, medal standings and certificates appear here once matches are scored.</p>
+                        <div className="mt-8 flex flex-wrap gap-3">
+                            <BrandLink href={`/events/${id}`} variant="outline">Event details</BrandLink>
+                            <BrandLink href="/events" variant="outline">All events</BrandLink>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-                {/* Tournament Stats Summary */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-black/40 border border-white/10 rounded-xl p-4 text-center"
-                    >
-                        <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                        <div className="text-2xl font-bold">{statistics.tournament.totalCategories}</div>
-                        <div className="text-sm text-gray-300">Categories</div>
-                    </motion.div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="bg-black/40 border border-white/10 rounded-xl p-4 text-center"
-                    >
-                        <Users className="w-8 h-8 text-white/70 mx-auto mb-2" />
-                        <div className="text-2xl font-bold">{statistics.tournament.totalParticipants}</div>
-                        <div className="text-sm text-gray-300">Participants</div>
-                    </motion.div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="bg-black/40 border border-white/10 rounded-xl p-4 text-center"
-                    >
-                        <Target className="w-8 h-8 text-white/70 mx-auto mb-2" />
-                        <div className="text-2xl font-bold">{statistics.tournament.completedMatches}</div>
-                        <div className="text-sm text-gray-300">Matches Completed</div>
-                    </motion.div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="bg-black/40 border border-white/10 rounded-xl p-4 text-center"
-                    >
-                        <Award className="w-8 h-8 text-white/70 mx-auto mb-2" />
-                        <div className="text-2xl font-bold">{statistics.dojoLeaderboard.length}</div>
-                        <div className="text-sm text-gray-300">Dojos</div>
-                    </motion.div>
-                </div>
-
-                {/* Dojo Podium */}
-                {topThreeDojos.length >= 3 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-gradient-to-b from-yellow-500/10 to-transparent border border-yellow-500/20 rounded-2xl p-8"
-                    >
-                        <h2 className="text-2xl font-black uppercase tracking-tight mb-8 text-center flex items-center justify-center gap-2">
-                            <Crown className="w-8 h-8 text-yellow-500" />
-                            Top Performing Dojos
-                        </h2>
-
-                        <div className="flex items-end justify-center gap-4 max-w-3xl mx-auto">
-                            {/* Second Place */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 50 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="flex-1 text-center"
-                            >
-                                <div className={`${getPodiumHeight(2)} bg-gradient-to-t from-gray-400/20 to-gray-400/5 border-2 border-gray-400 rounded-t-xl flex flex-col items-center justify-end pb-4 relative`}>
-                                    <div className="absolute -top-16">
-                                        <div className="w-20 h-20 bg-gray-400/20 border-2 border-gray-400 rounded-full flex items-center justify-center mb-2">
-                                            <Medal className="w-10 h-10 text-gray-400" />
-                                        </div>
-                                    </div>
-                                    <div className="text-4xl font-black text-gray-400 mb-2">2</div>
-                                    <div className="font-bold text-sm">{topThreeDojos[1]?.dojoName}</div>
-                                    <div className="text-xs text-white/60 mt-2">
-                                        🥇{topThreeDojos[1]?.gold} 🥈{topThreeDojos[1]?.silver} 🥉{topThreeDojos[1]?.bronze}
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            {/* First Place */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 50 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                                className="flex-1 text-center"
-                            >
-                                <div className={`${getPodiumHeight(1)} bg-gradient-to-t from-yellow-500/20 to-yellow-500/5 border-2 border-yellow-500 rounded-t-xl flex flex-col items-center justify-end pb-4 relative`}>
-                                    <div className="absolute -top-20">
-                                        <div className="w-24 h-24 bg-yellow-500/20 border-4 border-yellow-500 rounded-full flex items-center justify-center mb-2 animate-pulse">
-                                            <Crown className="w-12 h-12 text-yellow-500" />
-                                        </div>
-                                    </div>
-                                    <div className="text-5xl font-black text-yellow-500 mb-2">1</div>
-                                    <div className="font-bold">{topThreeDojos[0]?.dojoName}</div>
-                                    <div className="text-xs text-white/60 mt-2">
-                                        🥇{topThreeDojos[0]?.gold} 🥈{topThreeDojos[0]?.silver} 🥉{topThreeDojos[0]?.bronze}
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            {/* Third Place */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 50 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="flex-1 text-center"
-                            >
-                                <div className={`${getPodiumHeight(3)} bg-gradient-to-t from-orange-600/20 to-orange-600/5 border-2 border-orange-600 rounded-t-xl flex flex-col items-center justify-end pb-4 relative`}>
-                                    <div className="absolute -top-14">
-                                        <div className="w-16 h-16 bg-orange-600/20 border-2 border-orange-600 rounded-full flex items-center justify-center mb-2">
-                                            <Award className="w-8 h-8 text-orange-600" />
-                                        </div>
-                                    </div>
-                                    <div className="text-3xl font-black text-orange-600 mb-2">3</div>
-                                    <div className="font-bold text-sm">{topThreeDojos[2]?.dojoName}</div>
-                                    <div className="text-xs text-white/60 mt-2">
-                                        🥇{topThreeDojos[2]?.gold} 🥈{topThreeDojos[2]?.silver} 🥉{topThreeDojos[2]?.bronze}
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </div>
-                    </motion.div>
+            ) : (
+            <div className="mx-auto max-w-[1400px] space-y-20 px-4 pb-24 sm:px-6 lg:px-8">
+                {/* Dojo podium: gold for first, the rest in plain white weights. */}
+                {podium.length >= 3 && (
+                    <section aria-labelledby="podium-heading">
+                        <h2 id="podium-heading" className="mb-10 text-2xl font-extrabold md:text-3xl">Top dojos</h2>
+                        <ol className="mx-auto grid max-w-3xl grid-cols-3 items-end gap-3 sm:gap-5">
+                            {[1, 0, 2].map((i) => {
+                                const d = podium[i];
+                                const first = i === 0;
+                                const height = first ? "h-44 sm:h-56" : i === 1 ? "h-36 sm:h-44" : "h-28 sm:h-36";
+                                return (
+                                    <li key={d.dojoName} className="flex flex-col items-center text-center">
+                                        <p className={`mb-3 line-clamp-2 text-sm font-bold sm:text-base ${first ? "text-white" : "text-white/80"}`}>{d.dojoName}</p>
+                                        <Reveal kind="rise" delay={first ? 0.1 : i === 1 ? 0.2 : 0.3} className="w-full">
+                                            <div className={`flex w-full flex-col items-center justify-start rounded-t-md pt-4 ${height} ${first ? "bg-secondary text-black" : "bg-white/10 text-white"}`}>
+                                                <span className="text-4xl font-black tabular-nums sm:text-5xl">{i + 1}</span>
+                                                <span className={`mt-2 text-xs font-semibold tabular-nums ${first ? "text-black/70" : "text-white/60"}`}>
+                                                    {d.gold}G · {d.silver}S · {d.bronze}B
+                                                </span>
+                                            </div>
+                                        </Reveal>
+                                    </li>
+                                );
+                            })}
+                        </ol>
+                    </section>
                 )}
 
-                {/* Performance Highlights */}
-                {(statistics.performanceStats.fastestWin || statistics.performanceStats.highestScore || statistics.performanceStats.mostDominant) && (
-                    <div className="grid md:grid-cols-3 gap-4">
-                        {statistics.performanceStats.fastestWin && (
-                            <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className="bg-white/5 border border-white/10 rounded-xl p-6"
-                            >
-                                <div className="flex items-center gap-3 mb-4">
-                                    <Zap className="w-8 h-8 text-white/70" />
-                                    <h3 className="font-bold">Fastest Win</h3>
+                {highlights.length > 0 && (
+                    <section aria-labelledby="highlights-heading">
+                        <h2 id="highlights-heading" className="mb-6 text-2xl font-extrabold md:text-3xl">Highlights</h2>
+                        <dl className="grid gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10 sm:grid-cols-3">
+                            {highlights.map((h) => (
+                                <div key={h.label} className="bg-black p-6">
+                                    <dt className="text-sm font-semibold text-white/60">{h.label}</dt>
+                                    <dd className="mt-3 text-3xl font-black tabular-nums">{h.value}</dd>
+                                    <dd className="mt-3 font-bold">{h.who.name}</dd>
+                                    <dd className="text-sm text-white/60">{h.who.dojoName}</dd>
                                 </div>
-                                <div className="text-3xl font-black text-white mb-2">
-                                    {statistics.performanceStats.fastestWin.duration} min
-                                </div>
-                                <div className="text-white/80">{statistics.performanceStats.fastestWin.winner.name}</div>
-                                <div className="text-sm text-gray-300">{statistics.performanceStats.fastestWin.winner.dojoName}</div>
-                            </motion.div>
-                        )}
-
-                        {statistics.performanceStats.highestScore && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                                className="bg-white/5 border border-white/10 rounded-xl p-6"
-                            >
-                                <div className="flex items-center gap-3 mb-4">
-                                    <TrendingUp className="w-8 h-8 text-white/70" />
-                                    <h3 className="font-bold">Highest Score</h3>
-                                </div>
-                                <div className="text-3xl font-black text-white mb-2">
-                                    {statistics.performanceStats.highestScore.score} points
-                                </div>
-                                <div className="text-white/80">{statistics.performanceStats.highestScore.winner.name}</div>
-                                <div className="text-sm text-gray-300">{statistics.performanceStats.highestScore.winner.dojoName}</div>
-                            </motion.div>
-                        )}
-
-                        {statistics.performanceStats.mostDominant && (
-                            <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="bg-white/5 border border-[#FF0000]/30 rounded-xl p-6"
-                            >
-                                <div className="flex items-center gap-3 mb-4">
-                                    <Target className="w-8 h-8 text-[#FF0000]" />
-                                    <h3 className="font-bold">Most Dominant</h3>
-                                </div>
-                                <div className="text-3xl font-black text-[#FF4D4D] mb-2">
-                                    {statistics.performanceStats.mostDominant.finalScore}
-                                </div>
-                                <div className="text-white/80">{statistics.performanceStats.mostDominant.winner.name}</div>
-                                <div className="text-sm text-gray-300">{statistics.performanceStats.mostDominant.winner.dojoName}</div>
-                            </motion.div>
-                        )}
-                    </div>
+                            ))}
+                        </dl>
+                    </section>
                 )}
 
-                {/* Category Winners */}
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                    <h2 className="text-2xl font-black uppercase tracking-tight mb-6 flex items-center gap-2">
-                        <Trophy className="w-6 h-6 text-yellow-500" />
-                        Category Champions
-                    </h2>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                        {statistics.categoryWinners.map((category, idx) => (
-                            <motion.div
-                                key={category.bracketId}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className="bg-white/5 border border-white/10 rounded-xl p-4"
-                            >
-                                <h3 className="font-bold text-lg mb-4 text-yellow-500">{category.categoryName}</h3>
-
-                                <div className="space-y-3">
-                                    {category.firstPlace && (
-                                        <div className="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg group hover:bg-yellow-500/20 transition-colors">
-                                            {getMedalIcon(1)}
-                                            <div className="flex-1">
-                                                <div className="font-bold">{category.firstPlace.name}</div>
-                                                <div className="text-xs text-white/60">{category.firstPlace.dojoName}</div>
-                                            </div>
-                                            <div className="text-xs bg-yellow-500/20 px-2 py-1 rounded">1st</div>
-                                            <Button
-                                                onClick={() => handleDownloadCertificate(category.firstPlace!, 1, category.categoryName)}
-                                                size="sm"
-                                                variant="ghost"
-                                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <FileCheck className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    )}
-
-                                    {category.secondPlace && (
-                                        <div className="flex items-center gap-3 p-3 bg-gray-400/10 border border-gray-400/30 rounded-lg group hover:bg-gray-400/20 transition-colors">
-                                            {getMedalIcon(2)}
-                                            <div className="flex-1">
-                                                <div className="font-bold">{category.secondPlace.name}</div>
-                                                <div className="text-xs text-white/60">{category.secondPlace.dojoName}</div>
-                                            </div>
-                                            <div className="text-xs bg-gray-400/20 px-2 py-1 rounded">2nd</div>
-                                            <Button
-                                                onClick={() => handleDownloadCertificate(category.secondPlace!, 2, category.categoryName)}
-                                                size="sm"
-                                                variant="ghost"
-                                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <FileCheck className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    )}
-
-                                    {category.thirdPlace && (
-                                        <div className="flex items-center gap-3 p-3 bg-orange-600/10 border border-orange-600/30 rounded-lg group hover:bg-orange-600/20 transition-colors">
-                                            {getMedalIcon(3)}
-                                            <div className="flex-1">
-                                                <div className="font-bold">{category.thirdPlace.name}</div>
-                                                <div className="text-xs text-white/60">{category.thirdPlace.dojoName}</div>
-                                            </div>
-                                            <div className="text-xs bg-orange-600/20 px-2 py-1 rounded">3rd</div>
-                                            <Button
-                                                onClick={() => handleDownloadCertificate(category.thirdPlace!, 3, category.categoryName)}
-                                                size="sm"
-                                                variant="ghost"
-                                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <FileCheck className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    )}
+                <section aria-labelledby="champions-heading">
+                    <h2 id="champions-heading" className="mb-6 text-2xl font-extrabold md:text-3xl">Category champions</h2>
+                    {categoryWinners.length === 0 ? (
+                        <p className="text-white/70">No categories have finished yet.</p>
+                    ) : (
+                        <div className="grid gap-x-12 gap-y-10 lg:grid-cols-2">
+                            {categoryWinners.map((category) => (
+                                <div key={category.bracketId}>
+                                    <h3 className="border-b border-white/15 pb-3 text-lg font-extrabold">{category.categoryName}</h3>
+                                    <ol className="divide-y divide-white/10">
+                                        {places.map(({ key, n, label }) => {
+                                            const w = category[key];
+                                            if (!w) return null;
+                                            return (
+                                                <li key={key} className="flex items-center gap-4 py-3">
+                                                    <span className={`w-10 shrink-0 text-sm font-black tabular-nums ${n === 1 ? "text-secondary" : "text-white/60"}`}>{label}</span>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className={`truncate font-bold ${n === 1 ? "text-white" : "text-white/85"}`}>{w.name}</p>
+                                                        <p className="truncate text-sm text-white/55">{w.dojoName}</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleDownloadCertificate(w, n, category.categoryName)}
+                                                        aria-label={`Download ${label} place certificate for ${w.name}`}
+                                                        className="inline-flex min-h-11 items-center gap-1.5 px-2 text-sm font-semibold text-white/60 transition-colors hover:text-white"
+                                                    >
+                                                        <FileCheck className="h-4 w-4" aria-hidden="true" />
+                                                        <span className="hidden sm:inline">Certificate</span>
+                                                    </button>
+                                                </li>
+                                            );
+                                        })}
+                                    </ol>
                                 </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
 
-                {/* Full Dojo Leaderboard */}
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                    <h2 className="text-2xl font-black uppercase tracking-tight mb-6 flex items-center gap-2">
-                        <Award className="w-6 h-6 text-yellow-500" />
-                        Dojo Medal Standings
-                    </h2>
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                <section aria-labelledby="standings-heading">
+                    <h2 id="standings-heading" className="mb-6 text-2xl font-extrabold md:text-3xl">Dojo medal standings</h2>
+                    <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+                        <table className="w-full min-w-[34rem] text-left">
                             <thead>
-                                <tr className="border-b border-white/10">
-                                    <th className="text-left py-3 px-4 text-gray-300 font-semibold">Rank</th>
-                                    <th className="text-left py-3 px-4 text-gray-300 font-semibold">Dojo</th>
-                                    <th className="text-center py-3 px-4 text-gray-300 font-semibold">🥇</th>
-                                    <th className="text-center py-3 px-4 text-gray-300 font-semibold">🥈</th>
-                                    <th className="text-center py-3 px-4 text-gray-300 font-semibold">🥉</th>
-                                    <th className="text-center py-3 px-4 text-gray-300 font-semibold">Total</th>
+                                <tr className="border-b border-white/20 text-sm text-white/60">
+                                    <th scope="col" className="py-3 pr-4 font-semibold">Rank</th>
+                                    <th scope="col" className="py-3 pr-4 font-semibold">Dojo</th>
+                                    <th scope="col" className="py-3 pr-4 text-right font-semibold">Gold</th>
+                                    <th scope="col" className="py-3 pr-4 text-right font-semibold">Silver</th>
+                                    <th scope="col" className="py-3 pr-4 text-right font-semibold">Bronze</th>
+                                    <th scope="col" className="py-3 text-right font-semibold">Total</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {statistics.dojoLeaderboard.map((dojo, idx) => (
-                                    <motion.tr
-                                        key={dojo.dojoName}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
-                                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                                    >
-                                        <td className="py-3 px-4">
-                                            <div className="font-bold text-lg">{idx + 1}</div>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <div className="font-bold">{dojo.dojoName}</div>
-                                        </td>
-                                        <td className="py-3 px-4 text-center">
-                                            <span className="text-yellow-500 font-bold">{dojo.gold}</span>
-                                        </td>
-                                        <td className="py-3 px-4 text-center">
-                                            <span className="text-gray-400 font-bold">{dojo.silver}</span>
-                                        </td>
-                                        <td className="py-3 px-4 text-center">
-                                            <span className="text-orange-600 font-bold">{dojo.bronze}</span>
-                                        </td>
-                                        <td className="py-3 px-4 text-center">
-                                            <span className="text-white font-black text-lg">{dojo.total}</span>
-                                        </td>
-                                    </motion.tr>
+                            <tbody className="divide-y divide-white/10 tabular-nums">
+                                {dojoLeaderboard.map((dojo, idx) => (
+                                    <tr key={dojo.dojoName}>
+                                        <td className={`py-4 pr-4 text-lg font-black ${idx === 0 ? "text-secondary" : "text-white/70"}`}>{idx + 1}</td>
+                                        <th scope="row" className="py-4 pr-4 font-bold">{dojo.dojoName}</th>
+                                        <td className="py-4 pr-4 text-right font-bold text-secondary">{dojo.gold}</td>
+                                        <td className="py-4 pr-4 text-right font-bold text-white/80">{dojo.silver}</td>
+                                        <td className="py-4 pr-4 text-right font-bold text-white/60">{dojo.bronze}</td>
+                                        <td className="py-4 text-right text-lg font-black">{dojo.total}</td>
+                                    </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </section>
             </div>
-
-            {/* Footer */}
-            <div className="border-t border-white/10 bg-black/40 backdrop-blur-md mt-12">
-                <div className="max-w-7xl mx-auto px-4 py-6 text-center">
-                    <p className="text-white/40 text-sm">
-                        Tournament Results & Statistics • {new Date(statistics.tournament.date).toLocaleDateString()}
-                    </p>
-                </div>
-            </div>
+            )}
         </div>
     );
 }

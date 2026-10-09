@@ -174,7 +174,7 @@ export default function Home() {
           {/* PHILOSOPHY: the founder, and his words set large beside him. */}
           <Section rhythm="open" width="wide" className="bg-black">
             <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-20">
-              <FounderPortrait src={content['mas_oyama_image']?.value || "/oyama.png"} />
+              <FounderPortrait src={content['mas_oyama_image']?.value || "/history/oyama.jpg"} />
               <div>
                 <Reveal kind="mask" duration={1.2}>
                   <blockquote>

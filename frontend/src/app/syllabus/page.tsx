@@ -1,11 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, ChevronDown, ChevronRight, Shield, Award, Swords, Dumbbell, Target, CheckCircle } from 'lucide-react';
-import Link from 'next/link';
-
-const BELT_ORDER = ['White', 'Orange', 'Blue', 'Yellow', 'Green', 'Brown', 'Black'];
+import { ArrowRight, Printer } from 'lucide-react';
+import PageHero from '@/components/brand/PageHero';
+import BrandLink from '@/components/brand/BrandLink';
+import Reveal from '@/components/brand/Reveal';
 
 interface KataInfo {
     name: string;
@@ -189,175 +187,171 @@ const SYLLABUS: SyllabusEntry[] = [
     },
 ];
 
-const SECTION_ICONS = {
-    kihon: Target,
-    kata: BookOpen,
-    kumite: Swords,
-    fitness: Dumbbell,
-    additional: Award,
+/** The belt's own colour, used only as a swatch: it means the rank, so it is the one colour on each section. */
+const SWATCH: Record<string, string> = {
+    White: '#ffffff',
+    Orange: '#f97316',
+    Blue: '#3b82f6',
+    Yellow: '#eab308',
+    Green: '#22c55e',
+    Brown: '#92400e',
+    Black: '#161616',
 };
 
-export default function SyllabusPage() {
-    const [expandedBelt, setExpandedBelt] = useState<string | null>('White');
-    const [expandedSection, setExpandedSection] = useState<Record<string, string | null>>({});
+const SECTIONS = [
+    { key: 'kihon', label: 'Kihon', gloss: 'Basics' },
+    { key: 'kumite', label: 'Kumite', gloss: 'Sparring' },
+    { key: 'fitness', label: 'Fitness', gloss: 'Requirements' },
+    { key: 'additional', label: 'Additional', gloss: 'Knowledge and etiquette' },
+] as const;
 
-    const toggleBelt = (belt: string) => {
-        setExpandedBelt(prev => prev === belt ? null : belt);
-    };
+const anchor = (belt: string) => `belt-${belt.toLowerCase()}`;
 
-    const toggleSection = (belt: string, section: string) => {
-        setExpandedSection(prev => ({
-            ...prev,
-            [belt]: prev[belt] === section ? null : section,
-        }));
-    };
-
+function Swatch({ belt, className = 'h-3 w-8' }: { belt: string; className?: string }) {
     return (
-        <div className="min-h-screen bg-black text-white">
-            {/* Hero */}
-            <div className="relative overflow-hidden border-b border-white/5">
-                <div className="absolute inset-0 bg-black" />
-                <div className="max-w-5xl mx-auto px-4 py-20 relative z-10">
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full mb-6">
-                            <BookOpen className="w-4 h-4 text-red-500" />
-                            <span className="text-xs font-bold text-red-400 uppercase tracking-wider">Training Curriculum</span>
-                        </div>
-                        <h1 className="text-4xl sm:text-6xl font-black mb-4 tracking-tight">Belt Syllabus</h1>
-                        <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                            Your complete guide to the Kyokushin Karate belt progression — from White to Black belt.
-                        </p>
-                    </motion.div>
+        <span
+            aria-hidden="true"
+            className={`inline-block shrink-0 rounded-sm ring-1 print:ring-black/40 ${belt === 'Black' ? 'ring-secondary/70' : 'ring-white/30'} ${className}`}
+            style={{ backgroundColor: SWATCH[belt] }}
+        />
+    );
+}
+
+function BeltSection({ entry }: { entry: SyllabusEntry }) {
+    return (
+        <section
+            id={anchor(entry.belt)}
+            aria-labelledby={`${anchor(entry.belt)}-title`}
+            className="scroll-mt-40 border-t border-white/15 py-14 first:border-t-0 first:pt-0 md:scroll-mt-32 print:break-inside-avoid print:border-black/20 print:py-6"
+        >
+            <Reveal>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <Swatch belt={entry.belt} className="h-4 w-12" />
+                    <p className="text-sm font-semibold text-white/60 print:text-black/60">
+                        {entry.timeRequired} · {entry.kata.length} kata
+                    </p>
+                </div>
+                <h2
+                    id={`${anchor(entry.belt)}-title`}
+                    className="mt-4 text-[clamp(2rem,4.5vw,3.25rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] text-white print:text-black"
+                >
+                    {entry.belt} belt{entry.belt === 'Black' ? <span className="text-secondary print:text-black">.</span> : <span className="text-white/35 print:text-black">.</span>}
+                </h2>
+                <p className="mt-4 max-w-[60ch] text-pretty text-lg leading-relaxed text-white/80 print:text-black">{entry.overview}</p>
+            </Reveal>
+
+            {/* Kata gets a table: name, Japanese, and what it trains. */}
+            <div className="mt-10">
+                <h3 className="text-sm font-bold uppercase tracking-[0.1em] text-white print:text-black">
+                    Kata <span className="font-semibold normal-case tracking-normal text-white/55 print:text-black/60">· Forms</span>
+                </h3>
+                <div className="mt-3 overflow-x-auto">
+                    <table className="w-full min-w-[520px] text-left">
+                        <thead>
+                            <tr className="border-b border-white/20 text-sm text-white/55 print:border-black/30 print:text-black/60">
+                                <th scope="col" className="py-2 pr-6 font-semibold">Kata</th>
+                                <th scope="col" className="py-2 pr-6 font-semibold">Japanese</th>
+                                <th scope="col" className="py-2 font-semibold">Focus</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/10 print:divide-black/15">
+                            {entry.kata.map((k) => (
+                                <tr key={k.name}>
+                                    <th scope="row" className="py-3 pr-6 font-bold text-white print:text-black">{k.name}</th>
+                                    <td lang="ja" className="py-3 pr-6 text-white/75 print:text-black">{k.japanese}</td>
+                                    <td className="py-3 text-white/75 print:text-black">{k.description}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            {/* Belt Progression Visual */}
-            <div className="max-w-5xl mx-auto px-4 py-8">
-                <div className="flex items-center justify-center gap-1 sm:gap-2 mb-12 overflow-x-auto pb-2">
-                    {SYLLABUS.map((entry, i) => (
-                        <button
-                            key={entry.belt}
-                            onClick={() => setExpandedBelt(entry.belt)}
-                            className={`flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl transition-all ${
-                                expandedBelt === entry.belt ? `${entry.bgColor} ${entry.borderColor} border scale-110` : 'hover:bg-white/5'
-                            }`}
-                        >
-                            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 ${
-                                entry.belt === 'White' ? 'bg-white border-gray-300' :
-                                entry.belt === 'Orange' ? 'bg-orange-500 border-orange-600' :
-                                entry.belt === 'Blue' ? 'bg-blue-500 border-blue-600' :
-                                entry.belt === 'Yellow' ? 'bg-yellow-500 border-yellow-600' :
-                                entry.belt === 'Green' ? 'bg-green-500 border-green-600' :
-                                entry.belt === 'Brown' ? 'bg-amber-700 border-amber-800' :
-                                'bg-black border-red-500'
-                            }`} />
-                            <span className={`text-[9px] sm:text-[10px] font-bold ${expandedBelt === entry.belt ? entry.color : 'text-gray-400'}`}>
-                                {entry.belt}
-                            </span>
-                        </button>
-                    ))}
-                </div>
+            <div className="mt-10 grid gap-x-12 gap-y-10 md:grid-cols-2">
+                {SECTIONS.map(({ key, label, gloss }) => (
+                    <div key={key}>
+                        <h3 className="text-sm font-bold uppercase tracking-[0.1em] text-white print:text-black">
+                            {label} <span className="font-semibold normal-case tracking-normal text-white/55 print:text-black/60">· {gloss}</span>
+                        </h3>
+                        <ul className="mt-3 divide-y divide-white/10 border-y border-white/10 print:divide-black/15 print:border-black/15">
+                            {entry[key].map((item) => (
+                                <li key={item} className="flex gap-3 py-2.5 leading-snug text-white/85 print:text-black">
+                                    <span aria-hidden="true" className="mt-[0.55em] h-1 w-1 shrink-0 rounded-full bg-white/50 print:bg-black" />
+                                    {item}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
 
-                {/* Syllabus Accordion */}
-                <div className="space-y-4">
-                    {SYLLABUS.map((entry, beltIndex) => (
-                        <motion.div
-                            key={entry.belt}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: beltIndex * 0.05 }}
-                            className={`rounded-2xl border overflow-hidden transition-all ${
-                                expandedBelt === entry.belt ? `${entry.borderColor} ${entry.bgColor}` : 'border-white/5 bg-white/[0.02]'
-                            }`}
-                        >
+export default function SyllabusPage() {
+    return (
+        <div className="min-h-screen text-white print:bg-white print:text-black">
+            {/* Printing: keep only the syllabus itself, black on white. */}
+            <style>{`@media print {
+                body { background: #fff !important; }
+                nav, footer, [data-print-hide] { display: none !important; }
+                main { padding: 0 !important; }
+            }`}</style>
+
+            <div data-print-hide>
+                <PageHero
+                    height="tall"
+                    title={<>Belt syllabus<span className="text-primary">.</span></>}
+                    lede="Your complete guide to the Kyokushin Karate belt progression — from White to Black belt."
+                    media={
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src="/history/belt-grip.jpg" alt="" className="h-full w-full object-cover object-center opacity-70 grayscale" />
+                    }
+                    actions={
+                        <>
+                            <BrandLink href="/belt-system">
+                                See the belt path <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                            </BrandLink>
                             <button
-                                onClick={() => toggleBelt(entry.belt)}
-                                className="w-full flex items-center justify-between p-5 sm:p-6 text-left"
+                                type="button"
+                                onClick={() => window.print()}
+                                className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/25 px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black ${
-                                        entry.belt === 'White' ? 'bg-white text-black' :
-                                        entry.belt === 'Orange' ? 'bg-orange-500 text-white' :
-                                        entry.belt === 'Blue' ? 'bg-blue-500 text-white' :
-                                        entry.belt === 'Yellow' ? 'bg-yellow-500 text-white' :
-                                        entry.belt === 'Green' ? 'bg-green-500 text-white' :
-                                        entry.belt === 'Brown' ? 'bg-amber-700 text-white' :
-                                        'bg-black text-red-500 border border-red-500/50'
-                                    }`}>
-                                        {beltIndex + 1}
-                                    </div>
-                                    <div>
-                                        <h3 className={`text-lg font-black ${entry.color}`}>{entry.belt} Belt</h3>
-                                        <p className="text-xs text-gray-400 font-semibold">{entry.timeRequired} • {entry.kata.length} Kata</p>
-                                    </div>
-                                </div>
-                                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${expandedBelt === entry.belt ? 'rotate-180' : ''}`} />
+                                <Printer className="h-4 w-4" aria-hidden="true" /> Print
                             </button>
+                        </>
+                    }
+                />
+            </div>
 
-                            <AnimatePresence>
-                                {expandedBelt === entry.belt && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="overflow-hidden"
-                                    >
-                                        <div className="px-5 sm:px-6 pb-6 space-y-4">
-                                            <p className="text-sm text-gray-400 leading-relaxed">{entry.overview}</p>
+            <h1 className="sr-only print:not-sr-only print:mb-6 print:text-3xl print:font-black">KKFI belt syllabus</h1>
 
-                                            {(['kihon', 'kata', 'kumite', 'fitness', 'additional'] as const).map(section => {
-                                                const Icon = SECTION_ICONS[section];
-                                                const items = section === 'kata'
-                                                    ? entry.kata.map(k => `${k.name}${k.japanese ? ` (${k.japanese})` : ''}${k.description ? ` — ${k.description}` : ''}`)
-                                                    : entry[section];
-                                                const isExpanded = expandedSection[entry.belt] === section;
-                                                const sectionLabel = section === 'kihon' ? 'Kihon (Basics)' :
-                                                    section === 'kata' ? 'Kata (Forms)' :
-                                                    section === 'kumite' ? 'Kumite (Sparring)' :
-                                                    section === 'fitness' ? 'Fitness Requirements' :
-                                                    'Additional';
+            <div className="mx-auto max-w-[1400px] px-4 pb-24 sm:px-6 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-16 lg:px-8 print:block print:p-0">
+                {/* Belt index: a swatch rail that stays with you while you read. */}
+                <nav
+                    aria-label="Belts"
+                    data-print-hide
+                    className="sticky top-16 z-10 -mx-4 mb-10 overflow-x-auto border-b border-white/10 bg-black px-4 py-3 md:top-28 lg:mx-0 lg:mb-0 lg:self-start lg:overflow-visible lg:border-b-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none"
+                >
+                    <ol className="flex gap-1 lg:flex-col lg:gap-0 lg:pt-14">
+                        {SYLLABUS.map((entry) => (
+                            <li key={entry.belt}>
+                                <a
+                                    href={`#${anchor(entry.belt)}`}
+                                    className="flex min-h-11 items-center gap-3 whitespace-nowrap px-3 text-sm font-bold text-white/70 transition-colors hover:text-white lg:border-t lg:border-white/10 lg:px-0 lg:py-3"
+                                >
+                                    <Swatch belt={entry.belt} className="h-2.5 w-6" />
+                                    {entry.belt}
+                                    <span className="hidden font-semibold text-white/40 lg:inline">{entry.timeRequired}</span>
+                                </a>
+                            </li>
+                        ))}
+                    </ol>
+                </nav>
 
-                                                return (
-                                                    <div key={section} className="rounded-xl border border-white/5 overflow-hidden">
-                                                        <button
-                                                            onClick={() => toggleSection(entry.belt, section)}
-                                                            className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
-                                                        >
-                                                            <div className="flex items-center gap-3">
-                                                                <Icon className="w-4 h-4 text-gray-400" />
-                                                                <span className="text-sm font-bold text-white">{sectionLabel}</span>
-                                                                <span className="text-[10px] text-gray-400 font-semibold bg-white/5 px-2 py-0.5 rounded-full">{items.length}</span>
-                                                            </div>
-                                                            <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                                                        </button>
-                                                        <AnimatePresence>
-                                                            {isExpanded && (
-                                                                <motion.div
-                                                                    initial={{ height: 0 }}
-                                                                    animate={{ height: 'auto' }}
-                                                                    exit={{ height: 0 }}
-                                                                    className="overflow-hidden"
-                                                                >
-                                                                    <div className="px-4 pb-4 space-y-2">
-                                                                        {items.map((item, idx) => (
-                                                                            <div key={idx} className="flex items-start gap-2">
-                                                                                <CheckCircle className="w-3.5 h-3.5 text-red-500 mt-0.5 flex-shrink-0" />
-                                                                                <span className="text-sm text-gray-300">{item}</span>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </motion.div>
-                                                            )}
-                                                        </AnimatePresence>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </motion.div>
+                <div className="lg:pt-14">
+                    {SYLLABUS.map((entry) => (
+                        <BeltSection key={entry.belt} entry={entry} />
                     ))}
                 </div>
             </div>

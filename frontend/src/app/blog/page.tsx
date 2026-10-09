@@ -2,60 +2,29 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, RefreshCw } from "lucide-react";
 import api from "@/lib/api";
-import { Calendar, User, AlertCircle, RefreshCw, BookOpen, Award, History, Swords, ArrowRight } from "lucide-react";
+import PageHero from "@/components/brand/PageHero";
+import Section, { Heading } from "@/components/brand/Section";
+import Reveal from "@/components/brand/Reveal";
+import { GUIDES } from "./_components/article";
 
-const PILLAR_ARTICLES = [
-    {
-        slug: "kyokushin-vs-shotokan",
-        title: "What Makes Kyokushin Different from Shotokan?",
-        excerpt: "Discover the key differences between Kyokushin and Shotokan karate — full-contact sparring, conditioning, and the spirit of Osu!",
-        category: "Karate Knowledge",
-        icon: Swords,
-        date: "February 13, 2026",
-    },
-    {
-        slug: "full-contact-training-youth-benefits",
-        title: "The Benefits of Full-Contact Training for Youth",
-        excerpt: "Why parents across India are choosing Kyokushin for their children — confidence, discipline, anti-bullying resilience & fitness.",
-        category: "Youth Development",
-        icon: Award,
-        date: "February 13, 2026",
-    },
-    {
-        slug: "history-kyokushin-india",
-        title: "History of Kyokushin in India: From Sosai Oyama to Today",
-        excerpt: "The complete journey of Kyokushin Karate from Japan to India — from Sosai Oyama to KKFI under Shihan Vasant Kumar Singh.",
-        category: "Our Heritage",
-        icon: History,
-        date: "February 13, 2026",
-    },
-    {
-        slug: "kyokushin-grading-syllabus-2026",
-        title: "Kyokushin Grading Syllabus 2026: Complete Belt Guide",
-        excerpt: "Complete belt rank guide from white to black belt — kata requirements, kumite expectations & promotion criteria.",
-        category: "Official Syllabus",
-        icon: BookOpen,
-        date: "February 13, 2026",
-    },
-];
+interface Post {
+    id: string;
+    slug: string;
+    title: string;
+    excerpt?: string;
+    imageUrl?: string | null;
+    publishedAt: string;
+    author?: { name?: string } | null;
+}
 
-const stagger = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.08 } },
-};
-
-const fadeUp = {
-    hidden: { opacity: 0, y: 16 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } },
-};
+const longDate = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 
 export default function BlogList() {
-    const [posts, setPosts] = useState<any[]>([]);
+    const [posts, setPosts] = useState<Post[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(false);
-    const reduceMotion = useReducedMotion();
 
     const fetchPosts = async () => {
         setIsLoading(true);
@@ -72,165 +41,139 @@ export default function BlogList() {
     };
 
     useEffect(() => {
-        fetchPosts();
+        // Deferred a frame so the fetch's state updates never run synchronously inside the effect.
+        const id = requestAnimationFrame(() => { fetchPosts(); });
+        return () => cancelAnimationFrame(id);
     }, []);
+
+    const [lead, ...rest] = GUIDES;
+    const [latest, ...older] = posts;
 
     return (
         <div className="min-h-screen bg-black text-white">
-            {/* Top accent */}
-            <div className="h-px bg-gradient-to-r from-transparent via-red-600/50 to-transparent" />
+            <PageHero
+                height="tall"
+                title={<>Dojo chronicles<span className="text-primary">.</span></>}
+                lede="Expert articles on Kyokushin training, philosophy, youth development, and the martial arts journey in India."
+                media={
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src="/gallery/DSC08858.JPG" alt="" className="h-full w-full object-cover opacity-70 grayscale-[0.4]" />
+                }
+            />
 
-            {/* Hero */}
-            <div className="relative pt-28 pb-16 overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#FF0000]/[0.06] rounded-full blur-[100px]" />
+            {/* GUIDES: one lead story, three to follow. */}
+            <Section rhythm="base" width="wide">
+                <Heading>Guides</Heading>
+                <div className="mt-10 grid gap-12 lg:grid-cols-[1.35fr_1fr] lg:gap-14">
+                    <Reveal kind="depth">
+                        <Link href={`/blog/${lead.slug}`} className="group block">
+                            <div className="aspect-[16/10] overflow-hidden rounded-xl bg-surface">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={lead.image} alt={lead.imageAlt} className="h-full w-full object-cover grayscale-[0.25] transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
+                            </div>
+                            <p className="mt-6 text-sm font-semibold text-white/60">{lead.category} · {lead.date}</p>
+                            <h3 className="mt-2 max-w-[24ch] text-balance text-[clamp(1.6rem,3vw,2.4rem)] font-extrabold leading-[1.08] tracking-[-0.015em] text-white transition-colors group-hover:text-primary-light">
+                                {lead.title}
+                            </h3>
+                            <p className="mt-4 max-w-[56ch] text-pretty leading-relaxed text-white/70">{lead.excerpt}</p>
+                            <span className="mt-6 inline-flex items-center gap-2 font-semibold text-white">
+                                Read the guide <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                            </span>
+                        </Link>
+                    </Reveal>
 
-                <motion.div
-                    initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="relative z-10 text-center max-w-3xl mx-auto px-5"
-                >
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold uppercase text-gray-300 tracking-[0.1em] mb-6">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#FF0000]" />
-                        DOJO CHRONICLES
-                    </div>
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 leading-[1.05]">
-                        Stories from the <span className="text-[#FF0000]">Dojo Floor</span>
-                    </h1>
-                    <p className="text-gray-300 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-                        Expert articles on Kyokushin training, philosophy, youth development, and the martial arts journey in India.
-                    </p>
-                </motion.div>
-            </div>
-
-            <div className="max-w-6xl mx-auto px-5 pb-20">
-                {/* Featured Pillar Articles */}
-                <motion.section
-                    variants={stagger}
-                    initial={reduceMotion ? "show" : "hidden"}
-                    animate="show"
-                    className="mb-20"
-                >
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="w-8 h-px bg-[#FF0000]" />
-                        <h2 className="text-xs font-bold text-[#FF0000] uppercase tracking-[0.2em]">Featured Guides</h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {PILLAR_ARTICLES.map((article) => {
-                            const Icon = article.icon;
-                            return (
-                                <motion.div key={article.slug} variants={fadeUp}>
-                                    <Link href={`/blog/${article.slug}`} className="group block">
-                                        <article className="relative bg-white/5 rounded-xl p-6 border border-white/10 hover:bg-white/10 hover:border-[#FF0000]/25 transition-all duration-300 h-full flex flex-col overflow-hidden">
-                                            <div className="relative z-10 flex flex-col h-full">
-                                                <div className="flex items-center gap-3 mb-4">
-                                                    <div className="w-9 h-9 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center">
-                                                        <Icon className="w-4 h-4 text-[#FF0000]" />
-                                                    </div>
-                                                    <span className="text-[10px] font-bold text-[#FF4D4D] uppercase tracking-[0.15em]">{article.category}</span>
-                                                </div>
-                                                <h3 className="text-lg font-bold text-white/90 mb-2 group-hover:text-white transition-colors leading-snug">
-                                                    {article.title}
-                                                </h3>
-                                                <p className="text-gray-300 text-sm flex-1 leading-relaxed mb-5">
-                                                    {article.excerpt}
-                                                </p>
-                                                <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                                                    <span className="text-xs text-gray-400 font-mono">{article.date}</span>
-                                                    <span className="flex items-center gap-1.5 text-[#FF0000] text-xs font-semibold group-hover:text-[#FF4D4D] group-hover:gap-2.5 transition-all">
-                                                        Read <ArrowRight className="w-3 h-3" />
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </article>
-                                    </Link>
-                                </motion.div>
-                            );
-                        })}
-                    </div>
-                </motion.section>
-
-                {/* Latest Posts */}
-                {posts.length > 0 && (
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="w-8 h-px bg-white/20" />
-                        <h2 className="text-xs font-bold text-gray-300 uppercase tracking-[0.2em]">Latest Posts</h2>
-                        <div className="flex-1 h-px bg-white/10" />
-                    </div>
-                )}
-
-                {isLoading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="aspect-[4/5] bg-white/[0.03] rounded-xl animate-pulse" />
+                    <ul className="divide-y divide-white/10 border-y border-white/10 self-start">
+                        {rest.map((g, i) => (
+                            <Reveal as="li" key={g.slug} delay={0.08 * (i + 1)}>
+                                <Link href={`/blog/${g.slug}`} className="group flex gap-5 py-6">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={g.image} alt="" className="h-24 w-24 shrink-0 rounded-lg object-cover grayscale transition duration-500 group-hover:grayscale-0 sm:h-28 sm:w-28" />
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-semibold text-white/55">{g.category}</p>
+                                        <h3 className="mt-1 text-pretty text-lg font-bold leading-snug text-white transition-colors group-hover:text-primary-light">{g.title}</h3>
+                                        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/60">{g.excerpt}</p>
+                                    </div>
+                                </Link>
+                            </Reveal>
                         ))}
-                    </div>
-                ) : error ? (
-                    <div className="text-center py-24">
-                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] mb-5">
-                            <AlertCircle className="w-6 h-6 text-[#FF0000]" />
+                    </ul>
+                </div>
+            </Section>
+
+            {/* FROM THE DOJOS: posts published through the admin. Silent when there are none. */}
+            {isLoading ? (
+                <Section rhythm="tight" width="wide" aria-busy="true">
+                    <div className="h-9 w-64 animate-pulse rounded bg-white/5" />
+                    <div className="mt-10 grid gap-10 lg:grid-cols-[1.35fr_1fr]">
+                        <div className="aspect-[16/10] animate-pulse rounded-xl bg-white/5" />
+                        <div className="space-y-6">
+                            <div className="h-24 animate-pulse rounded-lg bg-white/5" />
+                            <div className="h-24 animate-pulse rounded-lg bg-white/5" />
                         </div>
-                        <p className="text-gray-300 text-lg mb-5">Failed to load chronicles</p>
-                        <button onClick={fetchPosts} className="inline-flex items-center gap-2 px-6 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none text-sm font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-                            <RefreshCw className="w-3.5 h-3.5" /> Try Again
+                    </div>
+                </Section>
+            ) : error ? (
+                <Section rhythm="tight" width="wide">
+                    <div className="border-t border-white/15 pt-10">
+                        <p className="text-lg font-bold text-white">We couldn&apos;t load the latest posts.</p>
+                        <p className="mt-2 text-white/65">The guides above are always available.</p>
+                        <button
+                            onClick={fetchPosts}
+                            className="mt-6 inline-flex min-h-12 items-center gap-2 border border-white/25 px-6 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                        >
+                            <RefreshCw className="h-4 w-4" aria-hidden="true" /> Try again
                         </button>
                     </div>
-                ) : posts.length === 0 ? null : (
-                    <motion.div
-                        variants={stagger}
-                        initial={reduceMotion ? "show" : "hidden"}
-                        animate="show"
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
-                    >
-                        {posts.map((post) => (
-                            <motion.div key={post.id} variants={fadeUp}>
-                                <Link href={`/blog/${post.slug}`} className="group block h-full">
-                                    <article className="bg-white/5 rounded-xl overflow-hidden border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 h-full flex flex-col">
-                                        <div className="aspect-video bg-white/[0.03] relative overflow-hidden">
-                                            {post.imageUrl ? (
-                                                <img
-                                                    src={post.imageUrl}
-                                                    alt={post.title}
-                                                    loading="lazy"
-                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center">
-                                                    <span className="text-white/[0.06] text-4xl font-black">KKFI</span>
-                                                </div>
+                </Section>
+            ) : latest ? (
+                <Section rhythm="base" width="wide">
+                    <Heading>From the dojos</Heading>
+                    <div className="mt-10 grid gap-12 lg:grid-cols-[1.35fr_1fr] lg:gap-14">
+                        <Reveal kind="depth">
+                            <Link href={`/blog/${latest.slug}`} className="group block">
+                                <div className="aspect-[16/10] overflow-hidden rounded-xl bg-surface">
+                                    {latest.imageUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={latest.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
+                                    ) : (
+                                        <div className="flex h-full w-full items-end p-8">
+                                            <span className="text-[clamp(2rem,5vw,3.5rem)] font-black leading-none text-white/10">KKFI</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="mt-6 text-sm font-semibold text-white/60">
+                                    {longDate(latest.publishedAt)}
+                                    {latest.author?.name && <> · {latest.author.name}</>}
+                                </p>
+                                <h3 className="mt-2 max-w-[24ch] text-balance text-[clamp(1.6rem,3vw,2.4rem)] font-extrabold leading-[1.08] tracking-[-0.015em] text-white transition-colors group-hover:text-primary-light">
+                                    {latest.title}
+                                </h3>
+                                {latest.excerpt && <p className="mt-4 max-w-[56ch] text-pretty leading-relaxed text-white/70 line-clamp-3">{latest.excerpt}</p>}
+                            </Link>
+                        </Reveal>
+                        {older.length > 0 && (
+                            <ul className="divide-y divide-white/10 border-y border-white/10 self-start">
+                                {older.map((post, i) => (
+                                    <Reveal as="li" key={post.id} delay={Math.min(i, 3) * 0.06}>
+                                        <Link href={`/blog/${post.slug}`} className="group flex gap-5 py-6">
+                                            {post.imageUrl && (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={post.imageUrl} alt="" loading="lazy" className="h-24 w-24 shrink-0 rounded-lg object-cover grayscale transition duration-500 group-hover:grayscale-0" />
                                             )}
-                                        </div>
-                                        <div className="p-5 flex-1 flex flex-col">
-                                            <div className="flex items-center gap-4 text-[11px] text-gray-400 mb-3 font-medium">
-                                                <span className="flex items-center gap-1.5">
-                                                    <Calendar size={11} className="text-[#FF0000]/80" />
-                                                    {new Date(post.publishedAt).toLocaleDateString()}
-                                                </span>
-                                                {post.author?.name && (
-                                                    <span className="flex items-center gap-1.5">
-                                                        <User size={11} className="text-[#FF0000]/80" />
-                                                        {post.author.name}
-                                                    </span>
-                                                )}
+                                            <div className="min-w-0">
+                                                <p className="text-sm text-white/55">{longDate(post.publishedAt)}</p>
+                                                <h3 className="mt-1 text-lg font-bold leading-snug text-white transition-colors group-hover:text-primary-light line-clamp-2">{post.title}</h3>
                                             </div>
-                                            <h2 className="text-base font-bold mb-3 text-white/90 group-hover:text-white transition-colors line-clamp-2 leading-snug">
-                                                {post.title}
-                                            </h2>
-                                            <p className="text-gray-300 text-sm line-clamp-3 mb-5 flex-1 leading-relaxed">
-                                                {post.excerpt}
-                                            </p>
-                                            <span className="flex items-center gap-1.5 text-[#FF0000] text-xs font-semibold group-hover:text-[#FF4D4D] group-hover:gap-2.5 transition-all">
-                                                Read More <ArrowRight className="w-3 h-3" />
-                                            </span>
-                                        </div>
-                                    </article>
-                                </Link>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                )}
-            </div>
+                                        </Link>
+                                    </Reveal>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                </Section>
+            ) : null}
+
+            <div className="h-[clamp(2rem,6vw,5rem)]" />
         </div>
     );
 }

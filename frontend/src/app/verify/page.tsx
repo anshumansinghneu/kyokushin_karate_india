@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Search, ArrowRight, Shield, Fingerprint, Database, Eye } from 'lucide-react';
+import { ArrowRight, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
+import Section from '@/components/brand/Section';
+import Reveal from '@/components/brand/Reveal';
 
 const RECENT_FORMATS = [
     'KKI-2025-MUM-00001',
@@ -12,23 +13,15 @@ const RECENT_FORMATS = [
     'KKI-2026-BLR-00103',
 ];
 
+const STEPS = [
+    { title: 'Enter the ID', desc: 'Type the membership number exactly as it appears on the card or certificate.' },
+    { title: 'Checked against the register', desc: 'The number is looked up in the official KKFI membership database.' },
+    { title: 'Read the record', desc: 'Belt rank, dojo, years of training and the full promotion history.' },
+];
+
 export default function VerifyIndexPage() {
     const router = useRouter();
     const [query, setQuery] = useState('');
-    const [isFocused, setIsFocused] = useState(false);
-    const [typedExample, setTypedExample] = useState('');
-
-    // Typing animation for placeholder
-    useEffect(() => {
-        const example = 'KKI-2025-MUM-00001';
-        let i = 0;
-        const interval = setInterval(() => {
-            setTypedExample(example.slice(0, i + 1));
-            i++;
-            if (i >= example.length) clearInterval(interval);
-        }, 80);
-        return () => clearInterval(interval);
-    }, []);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,146 +31,81 @@ export default function VerifyIndexPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white relative">
-            {/* Background elements */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.012)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.012)_1px,transparent_1px)] bg-[size:48px_48px]" />
-            </div>
-
-            {/* Top accent line */}
-            <div className="h-[2px] bg-[#FF0000]" />
-
-            {/* Main content */}
-            <div className="relative z-10 max-w-xl mx-auto px-5 pt-16 sm:pt-24 pb-20">
-
-                {/* Logo + Title block */}
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="text-center mb-12"
-                >
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-white/[0.06] bg-white/[0.02] mb-6 relative">
-                        <Image src="/kkfi-logo.avif" alt="KKFI" width={36} height={36} className="w-9 h-9" />
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-black border border-white/[0.08] flex items-center justify-center">
-                            <Shield className="w-2.5 h-2.5 text-[#FF0000]" />
-                        </div>
+        <div className="min-h-screen text-white selection:bg-primary selection:text-white">
+            <header data-bleed className="relative flex min-h-[78svh] overflow-hidden bg-black">
+                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(3rem,8vh,5rem)] pt-36 sm:px-6 md:pt-44 lg:px-8">
+                    <div className="mb-8 flex items-center gap-3 text-sm font-semibold text-white/75">
+                        <Image src="/kkfi-logo.avif" alt="" width={36} height={36} className="h-9 w-9" />
+                        <span>The official KKFI membership register</span>
                     </div>
-                    <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
-                        Membership Verification
+                    <h1 className="max-w-[14ch] text-balance text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.92] tracking-[-0.035em]">
+                        Verify a member<span className="text-primary">.</span>
                     </h1>
-                    <p className="text-gray-400 text-sm sm:text-[15px] max-w-sm mx-auto leading-relaxed">
-                        Confirm the authenticity of any KKFI membership by entering an ID below.
+                    <p className="mt-6 max-w-[46ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
+                        Confirm that a KKFI membership, rank and dojo are genuine. Public lookup, no account needed.
                     </p>
-                </motion.div>
 
-                {/* Search */}
-                <motion.form
-                    onSubmit={handleSubmit}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                    className="mb-16"
-                >
-                    <div className={`flex items-center bg-white/[0.03] rounded-xl border transition-all duration-300 ${isFocused ? 'border-[#FF0000]/40 shadow-[0_0_30px_rgba(255,0,0,0.08)]' : 'border-white/[0.06]'}`}>
-                        <div className="pl-4 text-gray-400">
-                            <Search className="w-[18px] h-[18px]" />
-                        </div>
-                        <input
-                            type="text"
-                            value={query}
-                            onChange={e => setQuery(e.target.value)}
-                            onFocus={() => setIsFocused(true)}
-                            onBlur={() => setIsFocused(false)}
-                            placeholder={query ? '' : typedExample || 'KKI-2025-MUM-00001'}
-                            className="flex-1 px-3 py-4 bg-transparent text-white text-[15px] placeholder-gray-400 focus:outline-none font-mono"
-                            autoFocus
-                        />
-                        <div className="pr-1.5">
+                    <form onSubmit={handleSubmit} className="mt-12 max-w-2xl" role="search" aria-label="Verify a membership number">
+                        <label htmlFor="verify-id" className="mb-3 block text-sm font-semibold text-white/80">
+                            Membership number
+                        </label>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+                            <input
+                                id="verify-id"
+                                type="text"
+                                value={query}
+                                onChange={e => setQuery(e.target.value)}
+                                placeholder="KKI-2025-MUM-00001"
+                                autoComplete="off"
+                                autoCapitalize="characters"
+                                spellCheck={false}
+                                className="min-h-14 flex-1 rounded-none border-0 border-b-2 border-white/30 bg-transparent px-1 text-2xl font-bold uppercase tracking-[0.04em] text-white tabular-nums placeholder:font-semibold placeholder:normal-case placeholder:tracking-normal placeholder:text-white/40 transition-colors focus:outline-none focus-visible:border-primary"
+                            />
                             <button
                                 type="submit"
                                 disabled={!query.trim()}
-                                className="flex items-center gap-1.5 px-5 py-2.5 bg-[#FF0000] text-white font-bold uppercase tracking-wider text-sm rounded-none hover:bg-[#8B0000] disabled:bg-white/[0.05] disabled:text-gray-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-none bg-primary px-8 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/50"
                             >
                                 Verify
-                                <ArrowRight className="w-3.5 h-3.5" />
+                                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                             </button>
                         </div>
-                    </div>
-                    <div className="flex items-center justify-between mt-3 px-1">
-                        <p className="text-[11px] text-gray-400">
-                            Public lookup — no account needed
-                        </p>
-                        <div className="flex items-center gap-1 text-[11px] text-gray-400">
-                            <Shield className="w-3 h-3" />
-                            Secure
+                        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/60">
+                            <span>Try an example:</span>
+                            {RECENT_FORMATS.map((fmt) => (
+                                <button
+                                    key={fmt}
+                                    type="button"
+                                    onClick={() => setQuery(fmt)}
+                                    className="min-h-11 font-semibold tabular-nums text-white/80 underline decoration-white/25 underline-offset-4 transition-colors hover:text-white hover:decoration-white"
+                                >
+                                    {fmt}
+                                </button>
+                            ))}
                         </div>
-                    </div>
-                </motion.form>
+                        <p className="mt-1 text-sm text-white/50">Pattern: KKI-YEAR-CITY-NUMBER</p>
+                    </form>
+                </div>
+            </header>
 
-                {/* How it works – card style */}
-                <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                >
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="h-px flex-1 bg-white/[0.04]" />
-                        <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-[0.2em]">How it works</span>
-                        <div className="h-px flex-1 bg-white/[0.04]" />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {[
-                            { num: '01', icon: Fingerprint, title: 'Enter ID', desc: 'Type the membership number from their card or certificate' },
-                            { num: '02', icon: Database, title: 'We verify', desc: 'Instantly checked against the official KKFI database' },
-                            { num: '03', icon: Eye, title: 'View details', desc: 'Belt rank, dojo, experience, and promotion history' },
-                        ].map((step, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 + i * 0.08 }}
-                                className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] transition-colors group"
-                            >
-                                <div className="flex items-center gap-2.5 mb-2.5">
-                                    <div className="w-7 h-7 rounded-lg bg-[#FF0000]/[0.08] flex items-center justify-center">
-                                        <step.icon className="w-3.5 h-3.5 text-[#FF4D4D]" />
-                                    </div>
-                                    <span className="text-[10px] font-mono text-gray-400">{step.num}</span>
-                                </div>
-                                <h3 className="text-[13px] font-semibold text-gray-200 mb-1">{step.title}</h3>
-                                <p className="text-[12px] text-gray-400 leading-relaxed">{step.desc}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </motion.div>
-
-                {/* Example format hint */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="mt-10 p-4 rounded-xl bg-white/[0.015] border border-white/[0.04]"
-                >
-                    <p className="text-[10px] text-gray-400 mb-3 font-semibold uppercase tracking-wider">Example IDs</p>
-                    <div className="flex flex-wrap gap-2">
-                        {RECENT_FORMATS.map((fmt, i) => (
-                            <button
-                                key={i}
-                                type="button"
-                                onClick={() => setQuery(fmt)}
-                                className="px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.05] text-xs font-mono text-gray-300 hover:text-white hover:border-white/[0.12] hover:bg-white/[0.05] transition-all cursor-pointer"
-                            >
-                                {fmt}
-                            </button>
-                        ))}
-                    </div>
-                    <p className="text-[10px] text-gray-400 mt-3 font-mono">
-                        Pattern: KKI-YEAR-CITY-NUMBER
-                    </p>
-                </motion.div>
-            </div>
+            {/* A real sequence, so it is numbered. */}
+            <Section rhythm="base" width="wide" className="bg-black">
+                <Reveal>
+                    <h2 className="flex items-center gap-3 text-[clamp(1.75rem,3.5vw,2.5rem)] font-extrabold leading-[1.05] tracking-[-0.02em]">
+                        <ShieldCheck className="h-7 w-7 text-secondary" aria-hidden="true" />
+                        How verification works
+                    </h2>
+                </Reveal>
+                <ol className="mt-12 grid gap-10 border-t border-white/10 pt-10 md:grid-cols-3 md:gap-12">
+                    {STEPS.map((step, i) => (
+                        <Reveal as="li" key={step.title} delay={i * 0.08}>
+                            <span className="text-sm font-bold tabular-nums text-white/45">0{i + 1}</span>
+                            <h3 className="mt-3 text-xl font-extrabold text-white">{step.title}</h3>
+                            <p className="mt-2 max-w-[36ch] leading-relaxed text-white/70">{step.desc}</p>
+                        </Reveal>
+                    ))}
+                </ol>
+            </Section>
         </div>
     );
 }

@@ -5,24 +5,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag,
   Search,
-  Filter,
   Plus,
   Minus,
-  ShoppingCart,
   X,
-  Package,
-  Tag,
-  ChevronRight,
   Loader2,
-  MapPin,
-  Phone,
-  User as UserIcon,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import KankuMark from "@/components/KankuMark";
+import Portal from "@/components/ui/portal";
 
 interface Product {
   id: string;
@@ -50,20 +42,64 @@ const categories = [
   { key: "ACCESSORIES", label: "Accessories" },
 ];
 
+const categoryLabel = (c: string) => c.charAt(0) + c.slice(1).toLowerCase();
+const rupees = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+
+/** DESIGN.md underline field for the checkout form. */
+const fieldClass =
+  "w-full min-h-12 rounded-none border-0 border-b-2 border-white/25 bg-transparent px-1 text-base text-white placeholder:text-white/45 transition-colors focus:outline-none focus-visible:border-primary";
+
+/** A product shot on black, or the Kanku as a quiet stand-in when there is no photograph. */
+function ProductImage({ product, className = "" }: { product: Product; className?: string }) {
+  return (
+    <div className={`relative overflow-hidden bg-[#0d0d0d] ${className}`}>
+      {product.images[0] ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={product.images[0]}
+          alt={product.name}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+        />
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-4">
+          <KankuMark className="h-20 w-20 text-white/15" />
+          <span className="text-sm font-semibold text-white/45">{categoryLabel(product.category)}</span>
+        </div>
+      )}
+      {!product.inStock && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+          <span className="border border-white/40 px-3 py-1 text-xs font-bold uppercase tracking-[0.1em] text-white">Out of stock</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PriceLine({ product, large = false }: { product: Product; large?: boolean }) {
+  const off = product.comparePrice ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100) : 0;
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+      <span className={`font-black tabular-nums text-white ${large ? "text-4xl" : "text-xl"}`}>{rupees(product.price)}</span>
+      {product.comparePrice && (
+        <>
+          <span className={`tabular-nums text-white/50 line-through ${large ? "text-lg" : "text-sm"}`}>{rupees(product.comparePrice)}</span>
+          <span className="text-sm font-bold text-secondary">{off}% off</span>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function StorePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("ALL");
   const [search, setSearch] = useState("");
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('kkfi_cart');
-        return saved ? JSON.parse(saved) : [];
-      } catch { return []; }
-    }
-    return [];
-  });
+  // The cart lives in localStorage, which the server cannot see: start empty
+  // on both sides and load it after mount, so hydration always matches.
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartLoaded, setCartLoaded] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState("");
@@ -81,10 +117,23 @@ export default function StorePage() {
   const { user, isAuthenticated } = useAuthStore();
   const { showToast } = useToast();
 
-  // Persist cart to localStorage
+  // Load the saved cart once, after mount.
   useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      try {
+        const saved = localStorage.getItem('kkfi_cart');
+        if (saved) setCart(JSON.parse(saved));
+      } catch { /* a corrupt cart simply starts empty */ }
+      setCartLoaded(true);
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  // Persist cart to localStorage (only once the saved one has been read).
+  useEffect(() => {
+    if (!cartLoaded) return;
     localStorage.setItem('kkfi_cart', JSON.stringify(cart));
-  }, [cart]);
+  }, [cart, cartLoaded]);
 
   // Escape key to close modals/cart
   useEffect(() => {
@@ -100,15 +149,17 @@ export default function StorePage() {
 
   // Pre-fill shipping from user
   useEffect(() => {
-    if (user) {
+    if (!user) return;
+    const id = requestAnimationFrame(() =>
       setShipping((s) => ({
         ...s,
         name: s.name || user.name || "",
         phone: s.phone || user.phone || "",
         city: s.city || user.city || "",
         state: s.state || user.state || "",
-      }));
-    }
+      })),
+    );
+    return () => cancelAnimationFrame(id);
   }, [user]);
 
   useEffect(() => {
@@ -215,523 +266,395 @@ export default function StorePage() {
       setCart([]);
       setCartOpen(false);
       setShowShipping(false);
-    } catch (err: any) {
-      showToast(err.response?.data?.message || err.message || "Failed to place order", "error");
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      showToast(e.response?.data?.message || e.message || "Failed to place order", "error");
     } finally {
       setCheckingOut(false);
     }
   };
 
+  const openProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setSelectedSize(product.sizes[0] || "");
+  };
+
+  const cartButton = (
+    <button
+      type="button"
+      onClick={() => setCartOpen(true)}
+      aria-label={`Open cart, ${cartCount} ${cartCount === 1 ? "item" : "items"}`}
+      className="inline-flex min-h-12 items-center gap-3 rounded-none border border-white/25 px-5 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+    >
+      <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+      Cart
+      <span className={`min-w-6 px-1.5 text-center tabular-nums ${cartCount > 0 ? "bg-primary text-white" : "bg-white/10 text-white/70"}`}>{cartCount}</span>
+    </button>
+  );
+
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
-      <div className="max-w-7xl mx-auto px-5">
-        {/* Hero */}
-        <div className="relative pt-28 pb-8 md:pt-32 md:pb-10">
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-white/10" />
-
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h1 className="font-black tracking-tighter uppercase mb-2" style={{ fontSize: 'clamp(2rem, 6vw, 4rem)' }}>
-                <span className="text-white">KKFI </span>
-                <span className="text-[#FF0000]">STORE</span>
-              </h1>
-              <p className="text-gray-400 text-sm">
-                Official Kyokushin Karate Federation merchandise
-              </p>
-            </motion.div>
-
-            {/* Cart Button */}
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              onClick={() => setCartOpen(true)}
-              className="relative flex items-center gap-2 px-5 min-h-[44px] rounded-none bg-white text-black font-bold text-xs uppercase tracking-wider hover:bg-zinc-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              Cart
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#FF0000] text-white text-[10px] font-black flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </motion.button>
+    <div className="min-h-screen bg-black pb-24 text-white selection:bg-primary selection:text-white">
+      {/* Opener */}
+      <header data-bleed className="relative flex min-h-[58svh] overflow-hidden">
+        <KankuMark className="pointer-events-none absolute -right-[10vw] top-1/2 h-[78vh] w-[78vh] -translate-y-1/2 text-white/[0.05]" />
+        <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end gap-8 px-4 pb-[clamp(2.5rem,6vh,4rem)] pt-36 sm:px-6 md:flex-row md:items-end md:justify-between md:pt-44 lg:px-8">
+          <div>
+            <h1 className="text-balance text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.92] tracking-[-0.035em]">
+              The KKFI store<span className="text-primary">.</span>
+            </h1>
+            <p className="mt-5 max-w-[46ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
+              Official Kyokushin Karate Foundation of India gi, gear and apparel. Order online; we contact you for payment.
+            </p>
           </div>
+          <div className="shrink-0">{cartButton}</div>
         </div>
+      </header>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-8 pt-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
+        {/* Toolbar */}
+        <div className="flex flex-col gap-5 border-y border-white/10 py-5 md:flex-row md:items-center md:justify-between">
+          <div role="tablist" aria-label="Categories" className="-mx-1 flex overflow-x-auto scrollbar-hide">
+            {categories.map((cat) => {
+              const on = category === cat.key;
+              return (
+                <button
+                  key={cat.key}
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => setCategory(cat.key)}
+                  className={`min-h-11 whitespace-nowrap px-4 text-sm font-bold uppercase tracking-[0.1em] transition-colors ${on ? "text-white shadow-[inset_0_-2px_0_0_theme(colors.primary.DEFAULT)]" : "text-white/55 hover:text-white"}`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="relative md:w-80">
+            <label htmlFor="store-search" className="sr-only">Search products</label>
+            <Search className="pointer-events-none absolute left-1 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" aria-hidden="true" />
             <input
-              type="text"
-              placeholder="Search products..."
+              id="store-search"
+              type="search"
+              placeholder="Search products"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:border-[#FF0000] focus:outline-none transition-colors text-xs"
+              className={`${fieldClass} pl-7`}
             />
-          </div>
-          <div className="flex p-1 bg-white/[0.02] border border-white/[0.04] rounded-xl overflow-x-auto scrollbar-hide">
-            {categories.map((cat) => (
-              <button
-                key={cat.key}
-                onClick={() => setCategory(cat.key)}
-                className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all ${
-                  category === cat.key
-                    ? "bg-[#FF0000] text-white"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
           </div>
         </div>
 
-        {/* Products Grid */}
+        {/* Products */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="aspect-[3/4] bg-white/[0.03] rounded-xl animate-pulse"
-              />
+              <div key={i}>
+                <div className="aspect-[4/5] animate-pulse rounded-md bg-white/[0.04]" />
+                <div className="mt-4 h-4 w-2/3 animate-pulse bg-white/[0.04]" />
+                <div className="mt-2 h-5 w-1/4 animate-pulse bg-white/[0.04]" />
+              </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20">
-            <Package className="w-10 h-10 text-zinc-700 mx-auto mb-4" />
-            <h3 className="text-sm font-bold text-white/80">No products found</h3>
+          <div className="py-24">
+            <h2 className="text-2xl font-extrabold text-white">
+              {search ? `Nothing matches “${search}”.` : "Nothing here yet."}
+            </h2>
+            <p className="mt-3 max-w-[48ch] text-white/70">
+              {search ? "Try a shorter search, or another category." : "New gear is added from time to time. Check back soon, or ask your dojo."}
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04, duration: 0.4 }}
-                onClick={() => {
-                  setSelectedProduct(product);
-                  setSelectedSize(product.sizes[0] || "");
-                }}
-                className="group cursor-pointer rounded-2xl overflow-hidden border border-white/[0.05] hover:border-red-600/15 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_0_40px_-12px_rgba(220,38,38,0.1)]"
-              >
-                {/* Image */}
-                <div className="aspect-[4/3] bg-[#0a0a0a] relative overflow-hidden">
-                  {product.images[0] ? (
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                      <div className="w-16 h-16 rounded-full bg-red-600/10 border border-red-600/20 flex items-center justify-center">
-                        <ShoppingBag className="w-7 h-7 text-red-500/40" />
+          <ul className={`mt-10 grid grid-cols-1 gap-x-6 gap-y-14 sm:grid-cols-2 ${filtered.length >= 3 ? "lg:grid-cols-3" : "lg:max-w-5xl"}`}>
+            {filtered.map((product, index) => {
+              // The first featured product leads, set wider; the rest follow in the grid.
+              const lead = index === 0 && product.featured && filtered.length > 2;
+              return (
+                <motion.li
+                  key={product.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(index, 8) * 0.04, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  className={lead ? "sm:col-span-2" : ""}
+                >
+                  <button type="button" onClick={() => openProduct(product)} className="group block w-full text-left focus-visible:outline-none">
+                    <ProductImage product={product} className={`rounded-md ring-1 ring-white/10 transition-shadow group-focus-visible:ring-2 group-focus-visible:ring-primary ${lead ? "aspect-[16/10]" : "aspect-[4/5]"}`} />
+                    <div className="mt-4 flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white/55">
+                          {categoryLabel(product.category)}
+                          {product.featured && <span className="ml-2 text-secondary">Featured</span>}
+                        </p>
+                        <h3 className={`mt-1 font-extrabold leading-snug text-white transition-colors group-hover:text-primary-light ${lead ? "text-2xl" : "text-lg"}`}>
+                          {product.name}
+                        </h3>
+                        {product.sizes.length > 0 && (
+                          <p className="mt-1.5 text-sm text-white/55">{product.sizes.join(" · ")}</p>
+                        )}
                       </div>
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{product.category}</span>
+                      <div className="shrink-0 text-right">
+                        <PriceLine product={product} />
+                      </div>
                     </div>
-                  )}
-                  {/* Badges */}
-                  <div className="absolute top-3 left-3 flex gap-1.5">
-                    {product.featured && (
-                      <span className="px-2 py-1 rounded bg-red-600 text-white text-[8px] font-extrabold uppercase tracking-[1.5px]">Featured</span>
-                    )}
-                    {product.comparePrice && (
-                      <span className="px-2 py-1 rounded bg-emerald-500 text-white text-[8px] font-extrabold">
-                        {Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}% OFF
-                      </span>
-                    )}
-                  </div>
-                  {!product.inStock && (
-                    <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                      <span className="text-white text-[10px] font-extrabold uppercase tracking-[2px]">Out of Stock</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-60" />
-                </div>
+                  </button>
+                </motion.li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
 
-                {/* Info */}
-                <div className="p-4 bg-[#0a0a0a]">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[9px] text-gray-400 uppercase tracking-[2px] font-bold mb-1">{product.category}</p>
-                      <h3 className="font-bold text-white text-sm group-hover:text-[#FF4D4D] transition-colors line-clamp-1">{product.name}</h3>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-lg font-black text-white">₹{product.price.toLocaleString()}</span>
-                      {product.comparePrice && (
-                        <span className="block text-[10px] text-gray-400 line-through">₹{product.comparePrice.toLocaleString()}</span>
-                      )}
-                    </div>
-                  </div>
-                  {product.sizes.length > 0 && (
-                    <div className="flex gap-1.5 mt-3">
-                      {product.sizes.slice(0, 5).map(s => (
-                        <span key={s} className="px-2 py-0.5 rounded text-[9px] font-bold text-gray-300 bg-white/5 border border-white/10">{s}</span>
+      {/* Overlays are portalled to <body>: inside <main> (z-[1]) they would sit under the navbar. */}
+      <Portal>
+      {/* Product detail */}
+      <AnimatePresence>
+        {selectedProduct && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[150] flex items-end justify-center bg-black/85 p-0 sm:items-center sm:p-6"
+            onClick={() => setSelectedProduct(null)}
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="product-title"
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 24, opacity: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative grid max-h-[92svh] w-full max-w-4xl overflow-y-auto border border-white/10 bg-surface md:grid-cols-2"
+            >
+              <ProductImage product={selectedProduct} className="aspect-[4/5] md:aspect-auto md:min-h-full" />
+              <button
+                onClick={() => setSelectedProduct(null)}
+                aria-label="Close"
+                className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center bg-black/70 text-white transition-colors hover:bg-black"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="flex flex-col p-6 sm:p-8">
+                <p className="text-sm font-semibold text-white/55">{categoryLabel(selectedProduct.category)}</p>
+                <h2 id="product-title" className="mt-2 text-balance text-3xl font-black uppercase leading-[1] tracking-[-0.02em] text-white">
+                  {selectedProduct.name}
+                </h2>
+                <div className="mt-5">
+                  <PriceLine product={selectedProduct} large />
+                </div>
+                {selectedProduct.description && (
+                  <p className="mt-5 text-pretty leading-relaxed text-white/75">{selectedProduct.description}</p>
+                )}
+
+                {selectedProduct.sizes.length > 0 && (
+                  <fieldset className="mt-7">
+                    <legend className="mb-3 text-sm font-semibold text-white/80">Size</legend>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProduct.sizes.map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          aria-pressed={selectedSize === size}
+                          onClick={() => setSelectedSize(size)}
+                          className={`min-h-12 min-w-12 rounded-none px-4 text-sm font-bold uppercase tracking-[0.1em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                            selectedSize === size
+                              ? "bg-white text-black"
+                              : "border border-white/20 text-white/80 hover:border-white/60 hover:text-white"
+                          }`}
+                        >
+                          {size}
+                        </button>
                       ))}
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-
-        {/* Product Detail Modal */}
-        <AnimatePresence>
-          {selectedProduct && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-              onClick={() => setSelectedProduct(null)}
-            >
-              <motion.div
-                initial={{ scale: 0.95, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.95, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-[#111] rounded-xl overflow-hidden max-w-md w-full border border-white/[0.08]"
-              >
-                {/* Image */}
-                <div className="aspect-video bg-zinc-800 relative">
-                  {selectedProduct.images[0] ? (
-                    <img
-                      src={selectedProduct.images[0]}
-                      alt={selectedProduct.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <ShoppingBag className="w-16 h-16 text-zinc-700" />
-                    </div>
-                  )}
-                  <button
-                    onClick={() => setSelectedProduct(null)}
-                    className="absolute top-4 right-4 w-11 h-11 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/80 transition-colors active:scale-90"
-                  >
-                    <X className="w-4 h-4 text-white" />
-                  </button>
-                </div>
-
-                <div className="p-6">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-1">
-                    {selectedProduct.category}
-                  </p>
-                  <h2 className="text-2xl font-black text-white mb-2">
-                    {selectedProduct.name}
-                  </h2>
-                  {selectedProduct.description && (
-                    <p className="text-gray-400 text-sm mb-4">
-                      {selectedProduct.description}
-                    </p>
-                  )}
-
-                  <div className="flex items-center gap-3 mb-6">
-                    <span className="text-3xl font-black text-white">
-                      ₹{selectedProduct.price.toLocaleString()}
-                    </span>
-                    {selectedProduct.comparePrice && (
-                      <span className="text-lg text-gray-400 line-through">
-                        ₹{selectedProduct.comparePrice.toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Sizes */}
-                  {selectedProduct.sizes.length > 0 && (
-                    <div className="mb-6">
-                      <p className="text-sm font-bold text-gray-400 mb-2">
-                        Size
-                      </p>
-                      <div className="flex gap-2 flex-wrap">
-                        {selectedProduct.sizes.map((size) => (
-                          <button
-                            key={size}
-                            onClick={() => setSelectedSize(size)}
-                            className={`px-4 min-h-[44px] rounded-none text-sm font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
-                              selectedSize === size
-                                ? "bg-[#FF0000] text-white"
-                                : "bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 hover:text-white"
-                            }`}
-                          >
-                            {size}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={() =>
-                      addToCart(selectedProduct, selectedSize || "One Size")
-                    }
-                    disabled={!selectedProduct.inStock}
-                    className="w-full bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold py-6 rounded-none text-lg focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                  >
-                    {selectedProduct.inStock ? (
-                      <>
-                        <ShoppingCart className="w-5 h-5 mr-2" />
-                        Add to Cart
-                      </>
-                    ) : (
-                      "Out of Stock"
-                    )}
-                  </Button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Cart Drawer */}
-        <AnimatePresence>
-          {cartOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm"
-              onClick={() => setCartOpen(false)}
-            >
-              <motion.div
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-0 h-full w-full max-w-md bg-zinc-900 border-l border-white/10 flex flex-col"
-              >
-                {/* Cart Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/10">
-                  <h2 className="text-xl font-black text-white flex items-center gap-2">
-                    <ShoppingCart className="w-5 h-5" /> Cart ({cartCount})
-                  </h2>
-                  <button
-                    onClick={() => setCartOpen(false)}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-
-                {/* Cart Items */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                  {cart.length === 0 ? (
-                    <div className="text-center py-12">
-                      <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-zinc-700" />
-                      <p className="text-gray-400">Your cart is empty</p>
-                    </div>
-                  ) : (
-                    cart.map((item) => (
-                      <div
-                        key={`${item.product.id}-${item.size}`}
-                        className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/10"
-                      >
-                        <div className="w-16 h-16 rounded-lg bg-white/5 flex-shrink-0 overflow-hidden">
-                          {item.product.images[0] ? (
-                            <img
-                              src={item.product.images[0]}
-                              alt={item.product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <ShoppingBag className="w-6 h-6 text-zinc-600" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-white text-sm truncate">
-                            {item.product.name}
-                          </h4>
-                          <p className="text-xs text-gray-400">
-                            Size: {item.size}
-                          </p>
-                          <div className="flex items-center justify-between mt-2">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() =>
-                                  updateQuantity(
-                                    item.product.id,
-                                    item.size,
-                                    -1
-                                  )
-                                }
-                                className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-transform min-w-[36px] min-h-[36px]"
-                              >
-                                <Minus className="w-3.5 h-3.5" />
-                              </button>
-                              <span className="text-sm font-bold text-white w-8 text-center">
-                                {item.quantity}
-                              </span>
-                              <button
-                                onClick={() =>
-                                  updateQuantity(
-                                    item.product.id,
-                                    item.size,
-                                    1
-                                  )
-                                }
-                                className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-white hover:bg-white/20 active:scale-90 transition-transform min-w-[36px] min-h-[36px]"
-                              >
-                                <Plus className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                            <span className="font-bold text-white text-sm">
-                              ₹
-                              {(
-                                item.product.price * item.quantity
-                              ).toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() =>
-                            removeFromCart(item.product.id, item.size)
-                          }
-                          className="text-gray-400 hover:text-[#FF0000] self-start p-2 -mr-2 rounded-lg hover:bg-white/5 min-w-[40px] min-h-[40px] flex items-center justify-center active:scale-90 transition-all"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* Cart Footer */}
-                {cart.length > 0 && (
-                  <div className="p-6 border-t border-white/10 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Total</span>
-                      <span className="text-2xl font-black text-white">
-                        ₹{cartTotal.toLocaleString()}
-                      </span>
-                    </div>
-
-                    {!showShipping ? (
-                      <Button
-                        onClick={() => {
-                          if (!isAuthenticated) {
-                            showToast("Please login to place an order", "error");
-                            return;
-                          }
-                          setShowShipping(true);
-                        }}
-                        className="w-full bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold py-6 rounded-none text-lg focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                      >
-                        Proceed to Checkout
-                      </Button>
-                    ) : (
-                      <div className="space-y-3">
-                        <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Shipping Details</p>
-                        <div>
-                          <label htmlFor="ship-name" className="text-xs text-gray-400 mb-1 block">Full Name</label>
-                          <div className="relative">
-                            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                              id="ship-name"
-                              type="text"
-                              placeholder="Full Name"
-                              value={shipping.name}
-                              onChange={(e) => setShipping({ ...shipping, name: e.target.value })}
-                              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label htmlFor="ship-phone" className="text-xs text-gray-400 mb-1 block">Phone</label>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                              id="ship-phone"
-                              type="tel"
-                              placeholder="Phone"
-                              value={shipping.phone}
-                              onChange={(e) => setShipping({ ...shipping, phone: e.target.value })}
-                              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label htmlFor="ship-address" className="text-xs text-gray-400 mb-1 block">Full Address</label>
-                          <textarea
-                            id="ship-address"
-                            placeholder="Full Address"
-                            value={shipping.address}
-                            onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
-                            rows={2}
-                            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all resize-none"
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          <div>
-                            <label htmlFor="ship-city" className="text-xs text-gray-400 mb-1 block">City</label>
-                            <input
-                              id="ship-city"
-                              type="text"
-                              placeholder="City"
-                              value={shipping.city}
-                              onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
-                              className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all"
-                            />
-                          </div>
-                          <div>
-                            <label htmlFor="ship-state" className="text-xs text-gray-400 mb-1 block">State</label>
-                            <input
-                              id="ship-state"
-                              type="text"
-                              placeholder="State"
-                              value={shipping.state}
-                              onChange={(e) => setShipping({ ...shipping, state: e.target.value })}
-                              className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all"
-                            />
-                          </div>
-                          <div>
-                            <label htmlFor="ship-pincode" className="text-xs text-gray-400 mb-1 block">PIN Code</label>
-                            <input
-                              id="ship-pincode"
-                              type="text"
-                              placeholder="PIN Code"
-                              value={shipping.pincode}
-                              onChange={(e) => setShipping({ ...shipping, pincode: e.target.value })}
-                              className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 focus:outline-none transition-all"
-                            />
-                          </div>
-                        </div>
-                        <Button
-                          onClick={handleCheckout}
-                          disabled={checkingOut}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 rounded-none text-lg focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                        >
-                          {checkingOut ? (
-                            <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Placing Order...</>
-                          ) : (
-                            `Place Order — ₹${cartTotal.toLocaleString()}`
-                          )}
-                        </Button>
-                        <button
-                          onClick={() => setShowShipping(false)}
-                          className="w-full text-center text-sm text-gray-400 hover:text-white transition-colors"
-                        >
-                          Back to Cart
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  </fieldset>
                 )}
-              </motion.div>
+
+                <p className={`mt-6 text-sm font-semibold ${selectedProduct.inStock ? "text-white/70" : "text-primary-light"}`}>
+                  {selectedProduct.inStock ? "In stock" : "Out of stock"}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => addToCart(selectedProduct, selectedSize || "One Size")}
+                  disabled={!selectedProduct.inStock}
+                  className="mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-none bg-primary text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/50 md:mt-auto"
+                >
+                  {selectedProduct.inStock ? (
+                    <>
+                      <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+                      Add to cart
+                    </>
+                  ) : (
+                    "Out of stock"
+                  )}
+                </button>
+              </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cart drawer */}
+      <AnimatePresence>
+        {cartOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[150] bg-black/80"
+            onClick={() => setCartOpen(false)}
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="cart-title"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-white/10 bg-surface"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
+                <h2 id="cart-title" className="text-2xl font-black uppercase tracking-[-0.01em] text-white">
+                  Cart <span className="tabular-nums text-white/50">{cartCount}</span>
+                </h2>
+                <button onClick={() => setCartOpen(false)} aria-label="Close cart" className="flex h-11 w-11 items-center justify-center text-white/70 transition-colors hover:text-white">
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-6" data-lenis-prevent>
+                {cart.length === 0 ? (
+                  <div className="py-16">
+                    <p className="text-lg font-bold text-white">Your cart is empty.</p>
+                    <p className="mt-2 text-white/65">Choose a product to add it here.</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-white/10">
+                    {cart.map((item) => (
+                      <li key={`${item.product.id}-${item.size}`} className="flex gap-4 py-5">
+                        <ProductImage product={item.product} className="h-20 w-16 shrink-0 rounded-sm" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <h3 className="truncate font-bold text-white">{item.product.name}</h3>
+                              <p className="text-sm text-white/60">Size {item.size}</p>
+                            </div>
+                            <button
+                              onClick={() => removeFromCart(item.product.id, item.size)}
+                              aria-label={`Remove ${item.product.name}, size ${item.size}`}
+                              className="-mr-2 -mt-2 flex h-11 w-11 shrink-0 items-center justify-center text-white/50 transition-colors hover:text-primary-light"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between">
+                            <div className="flex items-center border border-white/15">
+                              <button
+                                onClick={() => updateQuantity(item.product.id, item.size, -1)}
+                                aria-label="One fewer"
+                                className="flex h-11 w-11 items-center justify-center text-white transition-colors hover:bg-white/10"
+                              >
+                                <Minus className="h-3.5 w-3.5" />
+                              </button>
+                              <span className="w-8 text-center font-bold tabular-nums text-white" aria-live="polite">{item.quantity}</span>
+                              <button
+                                onClick={() => updateQuantity(item.product.id, item.size, 1)}
+                                aria-label="One more"
+                                className="flex h-11 w-11 items-center justify-center text-white transition-colors hover:bg-white/10"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            <span className="font-bold tabular-nums text-white">{rupees(item.product.price * item.quantity)}</span>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {cart.length > 0 && (
+                <div className="space-y-5 border-t border-white/10 px-6 py-6">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-white/70">Total</span>
+                    <span className="text-3xl font-black tabular-nums text-white">{rupees(cartTotal)}</span>
+                  </div>
+
+                  {!showShipping ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          showToast("Please login to place an order", "error");
+                          return;
+                        }
+                        setShowShipping(true);
+                      }}
+                      className="inline-flex min-h-14 w-full items-center justify-center rounded-none bg-primary text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                    >
+                      Proceed to checkout
+                    </button>
+                  ) : (
+                    <div className="space-y-5">
+                      <p className="text-sm font-semibold text-white/80">Shipping details</p>
+                      <div>
+                        <label htmlFor="ship-name" className="mb-1 block text-sm text-white/65">Full name</label>
+                        <input id="ship-name" type="text" autoComplete="name" placeholder="Full name" value={shipping.name} onChange={(e) => setShipping({ ...shipping, name: e.target.value })} className={fieldClass} />
+                      </div>
+                      <div>
+                        <label htmlFor="ship-phone" className="mb-1 block text-sm text-white/65">Phone (10 digits)</label>
+                        <input id="ship-phone" type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="9876543210" value={shipping.phone} onChange={(e) => setShipping({ ...shipping, phone: e.target.value })} className={fieldClass} />
+                      </div>
+                      <div>
+                        <label htmlFor="ship-address" className="mb-1 block text-sm text-white/65">Full address</label>
+                        <textarea id="ship-address" autoComplete="street-address" placeholder="House, street, area" value={shipping.address} onChange={(e) => setShipping({ ...shipping, address: e.target.value })} rows={2} className={`${fieldClass} resize-none py-2`} />
+                      </div>
+                      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                        <div>
+                          <label htmlFor="ship-city" className="mb-1 block text-sm text-white/65">City</label>
+                          <input id="ship-city" type="text" autoComplete="address-level2" placeholder="City" value={shipping.city} onChange={(e) => setShipping({ ...shipping, city: e.target.value })} className={fieldClass} />
+                        </div>
+                        <div>
+                          <label htmlFor="ship-state" className="mb-1 block text-sm text-white/65">State</label>
+                          <input id="ship-state" type="text" autoComplete="address-level1" placeholder="State" value={shipping.state} onChange={(e) => setShipping({ ...shipping, state: e.target.value })} className={fieldClass} />
+                        </div>
+                        <div>
+                          <label htmlFor="ship-pincode" className="mb-1 block text-sm text-white/65">PIN code</label>
+                          <input id="ship-pincode" type="text" inputMode="numeric" autoComplete="postal-code" placeholder="6 digits" value={shipping.pincode} onChange={(e) => setShipping({ ...shipping, pincode: e.target.value })} className={fieldClass} />
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCheckout}
+                        disabled={checkingOut}
+                        className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-none bg-primary text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-60"
+                      >
+                        {checkingOut ? (
+                          <><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Placing order</>
+                        ) : (
+                          `Place order · ${rupees(cartTotal)}`
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowShipping(false)}
+                        className="min-h-11 w-full text-center text-sm font-semibold text-white/65 transition-colors hover:text-white"
+                      >
+                        Back to cart
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      </Portal>
     </div>
   );
 }

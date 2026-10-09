@@ -1,21 +1,42 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { MapPin, Phone, Mail, Clock, ExternalLink, Send, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowUpRight, Check, Loader2 } from 'lucide-react';
+import Section from '@/components/brand/Section';
+import Reveal from '@/components/brand/Reveal';
+import KankuMark from '@/components/KankuMark';
 
 const GOOGLE_MAPS_LINK = 'https://maps.app.goo.gl/o8ttnRaNuRAPqA3H9';
 const GOOGLE_MAPS_EMBED = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3558.5!2d80.78!3d26.84!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjbCsDUwJzI0LjAiTiA4MMKwNDYnNDguMCJF!5e0!3m2!1sen!2sin!4v1700000000000';
 
-const fadeUp = {
-    hidden: { opacity: 0, y: 16 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } },
-};
+const HOURS = [
+    { days: 'Monday to Friday', time: '6:00 AM – 8:00 PM' },
+    { days: 'Saturday', time: '7:00 AM – 5:00 PM' },
+    { days: 'Sunday', time: '8:00 AM – 12:00 PM' },
+];
 
-const stagger = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.1 } },
-};
+/** DESIGN.md underline field: a line to write on, label always visible above it. */
+function Field({
+    id,
+    label,
+    children,
+}: {
+    id: string;
+    label: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div>
+            <label htmlFor={id} className="mb-2 block text-sm font-semibold text-white/80">
+                {label}
+            </label>
+            {children}
+        </div>
+    );
+}
+
+const inputClass =
+    'peer w-full min-h-12 rounded-none border-0 border-b-2 border-white/25 bg-transparent px-1 text-base text-white placeholder:text-white/45 transition-colors focus:outline-none focus-visible:border-primary [&:user-invalid]:border-primary-light';
 
 export default function ContactPage() {
     const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
@@ -33,257 +54,207 @@ export default function ContactPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black">
-            {/* Top accent */}
-            <div className="h-px bg-gradient-to-r from-transparent via-[#FF0000]/50 to-transparent" />
-
-            {/* Hero */}
-            <div className="relative pt-28 pb-14 overflow-hidden">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="relative z-10 text-center max-w-3xl mx-auto px-5"
-                >
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-bold uppercase text-gray-300 tracking-[0.1em] mb-6">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#FF0000]" />
-                        GET IN TOUCH
-                    </div>
-                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
-                        Contact <span className="text-[#FF0000]">KKFI</span>
+        <div className="min-h-screen text-white selection:bg-primary selection:text-white">
+            {/* Opener: typographic, with the Kanku as a quiet watermark. */}
+            <header data-bleed className="relative flex min-h-[62svh] overflow-hidden bg-black">
+                <KankuMark className="pointer-events-none absolute -right-[12vw] top-1/2 h-[80vh] w-[80vh] -translate-y-1/2 text-white/[0.05]" />
+                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(3rem,8vh,5rem)] pt-36 sm:px-6 md:pt-44 lg:px-8">
+                    <h1 className="max-w-[14ch] text-balance text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.92] tracking-[-0.035em]">
+                        Talk to the dojo<span className="text-primary">.</span>
                     </h1>
-                    <p className="text-gray-400 text-base md:text-lg max-w-lg mx-auto leading-relaxed">
-                        Get in touch with Kyokushin Karate Foundation of India. We&apos;d love to hear from you.
+                    <p className="mt-6 max-w-[48ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
+                        Questions about training, gradings, events or membership. Write to us, call, or come and
+                        watch a class at the headquarters in Shuklaganj.
                     </p>
-                </motion.div>
-            </div>
+                </div>
+            </header>
 
-            <div className="max-w-6xl mx-auto px-5 pb-20">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                    {/* Contact Info */}
-                    <motion.div
-                        variants={stagger}
-                        initial="hidden"
-                        animate="show"
-                        className="space-y-4"
-                    >
-                        <motion.a
-                            variants={fadeUp}
-                            href={GOOGLE_MAPS_LINK}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group block bg-white/5 border border-white/10 rounded-xl p-5 hover:border-[#FF0000]/25 transition-all duration-300"
-                        >
-                            <div className="flex items-start gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center flex-shrink-0">
-                                    <MapPin className="w-5 h-5 text-[#FF0000]" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-white font-bold mb-1 flex items-center gap-2">
-                                        Our Location
-                                        <ExternalLink className="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </h3>
-                                    <p className="text-gray-400 text-sm leading-relaxed">
-                                        Shuklaganj Bypass Rd, Poni Road,<br />
-                                        Shuklaganj, Netua Grameen,<br />
-                                        Uttar Pradesh 209861, India
-                                    </p>
-                                    <span className="text-[#FF4D4D] text-xs font-semibold mt-2 inline-block group-hover:text-[#FF0000] transition-colors">
-                                        Open in Google Maps →
-                                    </span>
-                                </div>
+            <Section rhythm="tight" width="wide" className="bg-black">
+                <div className="grid gap-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-20">
+                    {/* Details: a directory, not a stack of cards. */}
+                    <Reveal>
+                        <dl className="divide-y divide-white/10 border-y border-white/10">
+                            <div className="py-7">
+                                <dt className="text-sm font-semibold text-white/60">Headquarters</dt>
+                                <dd className="mt-2">
+                                    <a
+                                        href={GOOGLE_MAPS_LINK}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="group inline-flex items-start gap-2 text-xl font-bold leading-snug text-white transition-colors hover:text-primary-light"
+                                    >
+                                        <span>
+                                            Shuklaganj Bypass Rd, Poni Road,<br />
+                                            Shuklaganj, Netua Grameen,<br />
+                                            Uttar Pradesh 209861, India
+                                        </span>
+                                        <ArrowUpRight className="mt-1 h-5 w-5 shrink-0 text-white/50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary-light" aria-hidden="true" />
+                                        <span className="sr-only">(opens Google Maps)</span>
+                                    </a>
+                                </dd>
                             </div>
-                        </motion.a>
-
-                        <motion.a
-                            variants={fadeUp}
-                            href="tel:+919956745114"
-                            className="group block bg-white/5 border border-white/10 rounded-xl p-5 hover:border-[#FF0000]/25 transition-all duration-300"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center flex-shrink-0">
-                                    <Phone className="w-5 h-5 text-[#FF0000]" />
+                            <div className="grid gap-7 py-7 sm:grid-cols-2">
+                                <div>
+                                    <dt className="text-sm font-semibold text-white/60">Phone</dt>
+                                    <dd className="mt-2">
+                                        <a href="tel:+919956745114" className="text-xl font-bold tabular-nums text-white transition-colors hover:text-primary-light">
+                                            +91 99567 45114
+                                        </a>
+                                    </dd>
                                 </div>
                                 <div>
-                                    <h3 className="text-white font-bold mb-0.5">Phone</h3>
-                                    <p className="text-gray-400 font-mono text-sm group-hover:text-white transition-colors">
-                                        +91 99567 45114
-                                    </p>
+                                    <dt className="text-sm font-semibold text-white/60">Email</dt>
+                                    <dd className="mt-2">
+                                        <a href="mailto:contact@kyokushin.in" className="break-all text-xl font-bold text-white transition-colors hover:text-primary-light">
+                                            contact@kyokushin.in
+                                        </a>
+                                    </dd>
                                 </div>
                             </div>
-                        </motion.a>
-
-                        <motion.a
-                            variants={fadeUp}
-                            href="mailto:contact@kyokushin.in"
-                            className="group block bg-white/5 border border-white/10 rounded-xl p-5 hover:border-[#FF0000]/25 transition-all duration-300"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center flex-shrink-0">
-                                    <Mail className="w-5 h-5 text-[#FF0000]" />
-                                </div>
-                                <div>
-                                    <h3 className="text-white font-bold mb-0.5">Email</h3>
-                                    <p className="text-gray-400 text-sm group-hover:text-white transition-colors">
-                                        contact@kyokushin.in
-                                    </p>
-                                </div>
+                            <div className="py-7">
+                                <dt className="text-sm font-semibold text-white/60">Training hours</dt>
+                                <dd className="mt-3">
+                                    <table className="w-full text-left">
+                                        <caption className="sr-only">Training hours at headquarters</caption>
+                                        <tbody>
+                                            {HOURS.map((h) => (
+                                                <tr key={h.days}>
+                                                    <th scope="row" className="py-1.5 pr-6 font-semibold text-white/85">{h.days}</th>
+                                                    <td className="py-1.5 text-right tabular-nums text-white/70">{h.time}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </dd>
                             </div>
-                        </motion.a>
+                        </dl>
 
-                        <motion.div
-                            variants={fadeUp}
-                            className="bg-white/5 border border-white/10 rounded-xl p-5"
-                        >
-                            <div className="flex items-start gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center flex-shrink-0">
-                                    <Clock className="w-5 h-5 text-[#FF0000]" />
-                                </div>
-                                <div>
-                                    <h3 className="text-white font-bold mb-2">Training Hours</h3>
-                                    <div className="text-gray-300 text-sm space-y-1">
-                                        <div className="flex justify-between gap-8">
-                                            <span>Mon – Fri</span>
-                                            <span className="text-gray-400 font-mono text-xs">6:00 AM – 8:00 PM</span>
-                                        </div>
-                                        <div className="flex justify-between gap-8">
-                                            <span>Saturday</span>
-                                            <span className="text-gray-400 font-mono text-xs">7:00 AM – 5:00 PM</span>
-                                        </div>
-                                        <div className="flex justify-between gap-8">
-                                            <span>Sunday</span>
-                                            <span className="text-gray-400 font-mono text-xs">8:00 AM – 12:00 PM</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-
-                        {/* Map */}
-                        <motion.div
-                            variants={fadeUp}
-                            className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
-                        >
+                        <div className="mt-8 overflow-hidden rounded-xl border border-white/10 bg-surface">
                             <iframe
                                 src={GOOGLE_MAPS_EMBED}
                                 width="100%"
-                                height="220"
-                                style={{ border: 0 }}
+                                height="260"
+                                style={{ border: 0, filter: 'grayscale(1) invert(0.92) contrast(0.9)' }}
                                 allowFullScreen
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"
-                                title="KKFI Location"
-                                className="rounded-xl"
+                                title="Map of the KKFI headquarters in Shuklaganj"
+                                className="block"
                             />
-                        </motion.div>
-                    </motion.div>
+                        </div>
+                    </Reveal>
 
-                    {/* Contact Form */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.5 }}
-                    >
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-6 md:p-8">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-9 h-9 rounded-lg bg-[#FF0000]/[0.08] border border-[#FF0000]/[0.12] flex items-center justify-center">
-                                    <Send className="w-4 h-4 text-[#FF0000]" />
-                                </div>
-                                <h3 className="text-lg font-bold text-white">Send Us a Message</h3>
-                            </div>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.15em] mb-1.5 block">Name</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.name}
-                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                            placeholder="Your name"
-                                            className="w-full h-11 rounded-none border-b-2 border-white/20 bg-transparent px-1 text-sm text-white placeholder:text-gray-400 focus:outline-none focus-visible:border-[#FF0000] transition-colors"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.15em] mb-1.5 block">Email</label>
-                                        <input
-                                            type="email"
-                                            required
-                                            value={formData.email}
-                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                            placeholder="your@email.com"
-                                            className="w-full h-11 rounded-none border-b-2 border-white/20 bg-transparent px-1 text-sm text-white placeholder:text-gray-400 focus:outline-none focus-visible:border-[#FF0000] transition-colors"
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.15em] mb-1.5 block">Subject</label>
+                    {/* The form. */}
+                    <Reveal delay={0.1}>
+                        <h2 className="text-[clamp(1.75rem,3.5vw,2.5rem)] font-extrabold leading-[1.05] tracking-[-0.02em]">
+                            Send a message
+                        </h2>
+                        <p className="mt-3 max-w-[48ch] text-white/70">
+                            Every field is needed. We usually reply within two working days.
+                        </p>
+
+                        <form onSubmit={handleSubmit} className="mt-10 space-y-9">
+                            <div className="grid gap-9 sm:grid-cols-2">
+                                <Field id="contact-name" label="Name">
                                     <input
+                                        id="contact-name"
+                                        name="name"
                                         type="text"
+                                        autoComplete="name"
                                         required
-                                        value={formData.subject}
-                                        onChange={e => setFormData({ ...formData, subject: e.target.value })}
-                                        placeholder="What is this regarding?"
-                                        className="w-full h-11 rounded-none border-b-2 border-white/20 bg-transparent px-1 text-sm text-white placeholder:text-gray-400 focus:outline-none focus-visible:border-[#FF0000] transition-colors"
+                                        value={formData.name}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        placeholder="Your full name"
+                                        className={inputClass}
                                     />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.15em] mb-1.5 block">Message</label>
-                                    <textarea
+                                </Field>
+                                <Field id="contact-email" label="Email">
+                                    <input
+                                        id="contact-email"
+                                        name="email"
+                                        type="email"
+                                        autoComplete="email"
                                         required
-                                        rows={5}
-                                        value={formData.message}
-                                        onChange={e => setFormData({ ...formData, message: e.target.value })}
-                                        placeholder="Your message..."
-                                        className="w-full rounded-none border border-white/20 bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-400 focus:outline-none focus-visible:border-[#FF0000] transition-colors resize-none"
+                                        value={formData.email}
+                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                        placeholder="you@example.com"
+                                        className={inputClass}
                                     />
-                                </div>
+                                </Field>
+                            </div>
+                            <Field id="contact-subject" label="Subject">
+                                <input
+                                    id="contact-subject"
+                                    name="subject"
+                                    type="text"
+                                    required
+                                    value={formData.subject}
+                                    onChange={e => setFormData({ ...formData, subject: e.target.value })}
+                                    placeholder="Training, gradings, events, membership…"
+                                    className={inputClass}
+                                />
+                            </Field>
+                            <Field id="contact-message" label="Message">
+                                <textarea
+                                    id="contact-message"
+                                    name="message"
+                                    required
+                                    rows={6}
+                                    value={formData.message}
+                                    onChange={e => setFormData({ ...formData, message: e.target.value })}
+                                    placeholder="Tell us what you need"
+                                    className={`${inputClass} resize-none py-2 leading-relaxed`}
+                                />
+                            </Field>
+
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                                 <button
                                     type="submit"
                                     disabled={sending}
-                                    className="w-full h-12 min-h-[44px] rounded-none bg-[#FF0000] text-white font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-2 transition-all hover:bg-[#8B0000] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-60 active:scale-[0.98]"
+                                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-none bg-primary px-8 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-60 active:scale-[0.98]"
                                 >
                                     {sending ? (
-                                        <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
-                                    ) : sent ? (
-                                        <><CheckCircle className="w-4 h-4" /> Message Sent!</>
+                                        <><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Sending</>
                                     ) : (
-                                        <><Send className="w-4 h-4" /> Send Message</>
+                                        'Send message'
                                     )}
                                 </button>
-                            </form>
-                        </div>
-                    </motion.div>
+                                <p role="status" aria-live="polite" className="text-sm font-semibold text-white/80">
+                                    {sent && (
+                                        <span className="inline-flex items-center gap-2">
+                                            <Check className="h-4 w-4 text-secondary" aria-hidden="true" />
+                                            Message sent. Osu, we will be in touch.
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+                        </form>
+                    </Reveal>
                 </div>
+            </Section>
 
-                {/* Bottom CTA */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="mt-16 text-center"
-                >
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-8 md:p-12 relative overflow-hidden">
-                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FF0000]/30 to-transparent" />
-                        <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
-                            Begin Your <span className="text-[#FF0000]">Journey</span>
-                        </h2>
-                        <p className="text-gray-400 mb-6 max-w-lg mx-auto text-sm">
-                            Whether you&apos;re a beginner or an experienced martial artist, Kyokushin welcomes you. Visit us or reach out today.
-                        </p>
-                        <a
-                            href={GOOGLE_MAPS_LINK}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 min-h-[44px] bg-transparent border border-white/20 text-white font-bold uppercase tracking-wider px-6 py-3 rounded-none text-sm hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black transition-colors active:scale-[0.97]"
-                        >
-                            <MapPin className="w-4 h-4" />
-                            Get Directions
-                            <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                    </div>
-                </motion.div>
-            </div>
+            <Section rhythm="base" width="wide" className="bg-black">
+                <Reveal kind="mask">
+                    <p className="max-w-[18ch] text-balance text-[clamp(2rem,5vw,4rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
+                        The best introduction is a class<span className="text-primary">.</span>
+                    </p>
+                </Reveal>
+                <Reveal delay={0.1} className="mt-8">
+                    <p className="max-w-[52ch] text-lg leading-relaxed text-white/75">
+                        Beginners and experienced martial artists alike are welcome to visit. Come and watch, or
+                        join in.
+                    </p>
+                    <a
+                        href={GOOGLE_MAPS_LINK}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group mt-8 inline-flex min-h-12 items-center gap-2 rounded-none border border-white/25 px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                    >
+                        Get directions
+                        <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                    </a>
+                </Reveal>
+            </Section>
         </div>
     );
 }

@@ -1,5 +1,19 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Reveal from '@/components/brand/Reveal';
+import { ArticleBody, ArticleCta, ArticleHero, AUTHOR, GUIDES, KeepReading, Lede, PullQuote } from '../_components/article';
+
+const guide = GUIDES[3];
+
+/** Belt cloth colours for the swatches; black is lifted off pure black so it reads. */
+const SWATCH: Record<string, string> = {
+  'White Belt': '#f5f5f5',
+  'Orange Belt': '#f97316',
+  'Blue Belt': '#2563eb',
+  'Yellow Belt': '#facc15',
+  'Green Belt': '#16a34a',
+  'Brown Belt': '#92400e',
+  'Black Belt': '#161616',
+};
 
 export const metadata: Metadata = {
   title: 'Kyokushin Grading Syllabus 2026 | Complete Belt Rank Guide & Requirements',
@@ -147,154 +161,113 @@ export default function GradingSyllabus2026() {
 
   return (
     <article className="min-h-screen bg-black text-white">
-      {/* Hero */}
-      <div className="relative bg-black py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <span className="inline-block px-4 py-1.5 bg-white/5 border border-white/10 rounded-none text-[#FF4D4D] text-xs font-bold uppercase tracking-widest mb-6">
-            Official Syllabus
-          </span>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6">
-            Kyokushin <span className="text-red-500">Grading Syllabus</span> 2026
-          </h1>
-          <p className="text-xl text-gray-400 mb-2">Complete Belt Rank Guide & Requirements</p>
-          <p className="text-gray-400 text-lg">
-            Published February 13, 2026 · By Kyokushin Karate Foundation of India
-          </p>
-        </div>
-      </div>
+      <ArticleHero
+        category={guide.category}
+        title="Kyokushin Grading Syllabus 2026"
+        subtitle="Complete Belt Rank Guide & Requirements"
+        image={guide.image}
+        imageAlt={guide.imageAlt}
+        meta={
+          <>
+            <span>Published {guide.date}</span>
+            <span aria-hidden="true" className="text-white/30">/</span>
+            <span>By {AUTHOR}</span>
+          </>
+        }
+      />
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-16">
-        <p className="text-xl text-gray-300 leading-relaxed mb-6">
+      <ArticleBody>
+        <Lede>
           The Kyokushin belt system is not just about learning techniques — it&apos;s about
           forging character through progressively harder challenges. Each belt grade demands more
           physical conditioning, technical skill, and mental toughness. Below is the complete
           2026 KKFI grading syllabus from white belt (Mukyu) to black belt (Shodan).
-        </p>
+        </Lede>
 
-        <div className="bg-white/5 rounded-xl p-6 border border-[#FFD700]/20 mb-12">
-          <p className="text-[#FFD700] font-bold text-sm mb-2">⚡ IMPORTANT NOTE</p>
-          <p className="text-gray-300 text-sm">
+        <aside className="!my-10 rounded-lg border border-white/15 p-6">
+          <p className="!my-0 text-sm font-semibold text-white">Important note</p>
+          <p className="!mb-0 !mt-2 text-base text-white/75">
             Kyokushin promotions are earned — never purchased. Every grading includes demonstrated
             kata, kumite (sparring), and conditioning. There are no &quot;fast-track&quot; belts.
             The requirements below are minimum standards; your instructor may require additional
             preparation before approving you for grading.
           </p>
-        </div>
+        </aside>
+      </ArticleBody>
 
-        {/* Belt Cards */}
-        <div className="space-y-8">
+      {/* The ranks, in order: a swatch of the belt, the essentials, then the full list. */}
+      <section aria-label="Belt requirements" className="mx-auto max-w-[1100px] px-4 py-6 sm:px-6 lg:px-8">
+        <ol className="border-t border-white/15">
           {beltRanks.map((belt, i) => (
-            <div key={i} className="bg-white/5 rounded-xl overflow-hidden border border-white/10 hover:bg-white/10 transition-colors">
-              {/* Belt Header */}
-              <div className={`flex items-center gap-4 p-6 ${i === beltRanks.length - 1 ? 'bg-white/10' : ''}`}>
-                <div className={`w-10 h-10 rounded-full ${belt.color} flex-shrink-0`} />
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-white">{belt.belt}</h2>
-                  <p className="text-red-400 text-sm font-medium">{belt.rank}</p>
-                </div>
-                <span className="text-xs text-gray-400 font-mono">{belt.minTraining}</span>
+            <Reveal as="li" key={belt.belt} delay={Math.min(i, 2) * 0.05} className="grid gap-6 border-b border-white/10 py-10 md:grid-cols-[16rem_1fr] md:gap-12">
+              <div>
+                <span
+                  aria-hidden="true"
+                  className={`block h-3 w-24 rounded-sm ${belt.belt === 'Black Belt' ? 'ring-1 ring-secondary/60' : 'ring-1 ring-white/20'}`}
+                  style={{ backgroundColor: SWATCH[belt.belt] }}
+                />
+                <h2 className="mt-5 text-2xl font-extrabold leading-tight text-white">{belt.belt}</h2>
+                <p className="mt-1 text-sm font-semibold text-white/60">{belt.rank}</p>
+                <p className="mt-4 text-sm text-white/55">Minimum training</p>
+                <p className="font-semibold text-white">{belt.minTraining}</p>
               </div>
-
-              <div className="px-6 pb-6">
-                {/* Meta row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div className="bg-black/30 rounded-lg p-3">
-                    <span className="text-xs text-gray-400 uppercase tracking-wider">Kata Required</span>
-                    <p className="text-white font-medium text-sm mt-1">{belt.kataRequired}</p>
+              <div className="max-w-[60ch]">
+                <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                  <div>
+                    <dt className="text-sm text-white/55">Kata required</dt>
+                    <dd className="mt-1 font-semibold text-white">{belt.kataRequired}</dd>
                   </div>
-                  <div className="bg-black/30 rounded-lg p-3">
-                    <span className="text-xs text-gray-400 uppercase tracking-wider">Kumite</span>
-                    <p className="text-white font-medium text-sm mt-1">{belt.kumite}</p>
+                  <div>
+                    <dt className="text-sm text-white/55">Kumite</dt>
+                    <dd className="mt-1 font-semibold text-white">{belt.kumite}</dd>
                   </div>
-                </div>
-
-                {/* Requirements */}
-                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Requirements</h3>
-                <ul className="space-y-2">
-                  {belt.requirements.map((req, j) => (
-                    <li key={j} className="flex items-start gap-2 text-gray-300 text-sm">
-                      <span className="text-red-500 mt-0.5 flex-shrink-0">●</span>
-                      {req}
-                    </li>
+                </dl>
+                <h3 className="mt-7 text-sm font-semibold text-white/55">Requirements</h3>
+                <ul className="mt-3 list-disc space-y-2 pl-5 text-[1.0625rem] leading-[1.65] text-white/80 marker:text-white/35">
+                  {belt.requirements.map((req) => (
+                    <li key={req} className="pl-1">{req}</li>
                   ))}
                 </ul>
               </div>
-            </div>
+            </Reveal>
           ))}
-        </div>
+        </ol>
+      </section>
 
-        {/* Beyond Black Belt */}
-        <div className="mt-16 prose prose-invert prose-lg prose-red max-w-none">
-          <h2 className="text-3xl font-bold text-white mb-6">Beyond Shodan: The Dan Ranks</h2>
-          <p className="text-gray-300">
-            Earning a black belt in Kyokushin is not the end — it is the beginning. The dan ranks
-            (Shodan through Judan) represent decades of continued training, teaching, and contribution
-            to the art. Promotions beyond Shodan typically require:
-          </p>
-          <ul className="text-gray-300">
-            <li><strong>Nidan (2nd Dan):</strong> Minimum 2 years after Shodan + 30-man kumite</li>
-            <li><strong>Sandan (3rd Dan):</strong> Minimum 3 years + advanced kata + tournament achievements</li>
-            <li><strong>Yondan (4th Dan):</strong> &quot;Sensei&quot; title earned + 10+ years of accumulated training</li>
-            <li><strong>Godan+ (5th Dan+):</strong> Recognized for lifetime contributions to Kyokushin. The legendary 100-man kumite is associated with this level.</li>
-          </ul>
+      <ArticleBody>
+        <h2>Beyond Shodan: The Dan Ranks</h2>
+        <p>
+          Earning a black belt in Kyokushin is not the end — it is the beginning. The dan ranks
+          (Shodan through Judan) represent decades of continued training, teaching, and contribution
+          to the art. Promotions beyond Shodan typically require:
+        </p>
+        <ul>
+          <li><strong>Nidan (2nd Dan):</strong> Minimum 2 years after Shodan + 30-man kumite</li>
+          <li><strong>Sandan (3rd Dan):</strong> Minimum 3 years + advanced kata + tournament achievements</li>
+          <li><strong>Yondan (4th Dan):</strong> &quot;Sensei&quot; title earned + 10+ years of accumulated training</li>
+          <li><strong>Godan+ (5th Dan+):</strong> Recognized for lifetime contributions to Kyokushin. The legendary 100-man kumite is associated with this level.</li>
+        </ul>
 
-          <blockquote className="border border-red-600/20 rounded-xl p-6 my-8 italic text-gray-400">
-            &quot;A black belt is a white belt who never quit.&quot;
-            <br />— Common Kyokushin saying
-          </blockquote>
-        </div>
+        <PullQuote cite="Common Kyokushin saying">&quot;A black belt is a white belt who never quit.&quot;</PullQuote>
+      </ArticleBody>
 
-        {/* Grading Schedule CTA */}
-        <div className="mt-12 p-8 bg-white/5 rounded-xl border border-white/10 text-center">
-          <h3 className="text-2xl font-bold text-white mb-3">Ready for Your Next Grading?</h3>
-          <p className="text-gray-400 mb-6">
-            KKFI conducts official belt gradings quarterly. Register as a member to be eligible
-            for promotions and track your belt progression digitally.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/syllabus"
-              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-transparent hover:bg-white/10 text-white font-bold uppercase tracking-wider rounded-none transition-colors border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-            >
-              Full Training Syllabus
-            </Link>
-            <Link
-              href="/register"
-              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold uppercase tracking-wider rounded-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-            >
-              Become a KKFI Member
-            </Link>
-          </div>
-        </div>
+      <ArticleCta
+        title="Ready for Your Next Grading?"
+        body="KKFI conducts official belt gradings quarterly. Register as a member to be eligible for promotions and track your belt progression digitally."
+        actions={[
+          { href: '/register', label: 'Become a KKFI Member', primary: true },
+          { href: '/syllabus', label: 'Full Training Syllabus' },
+        ]}
+      />
 
-        {/* Internal Links */}
-        <div className="mt-12 pt-8 border-t border-white/10">
-          <h3 className="text-lg font-bold text-white mb-4">Related Articles</h3>
-          <ul className="space-y-2">
-            <li>
-              <Link href="/blog/kyokushin-vs-shotokan" className="text-red-400 hover:text-red-300 transition-colors">
-                What Makes Kyokushin Different from Shotokan? →
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog/full-contact-training-youth-benefits" className="text-red-400 hover:text-red-300 transition-colors">
-                The Benefits of Full-Contact Training for Youth →
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog/history-kyokushin-india" className="text-red-400 hover:text-red-300 transition-colors">
-                History of Kyokushin in India: From Sosai Oyama to Today →
-              </Link>
-            </li>
-            <li>
-              <Link href="/events" className="text-red-400 hover:text-red-300 transition-colors">
-                Upcoming KKFI Tournaments & Events →
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
+      <KeepReading
+        links={[
+          { href: '/blog/kyokushin-vs-shotokan', title: 'What Makes Kyokushin Different from Shotokan?', note: 'Karate Knowledge' },
+          { href: '/blog/full-contact-training-youth-benefits', title: 'The Benefits of Full-Contact Training for Youth', note: 'Youth Development' },
+          { href: '/blog/history-kyokushin-india', title: 'History of Kyokushin in India: From Sosai Oyama to Today', note: 'Our Heritage' },
+          { href: '/events', title: 'Upcoming KKFI Tournaments & Events', note: 'Events' },
+        ]}
+      />
     </article>
   );
 }

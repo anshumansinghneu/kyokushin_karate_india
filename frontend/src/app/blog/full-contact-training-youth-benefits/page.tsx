@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Reveal from '@/components/brand/Reveal';
+import { ArticleBody, ArticleCta, ArticleHero, AUTHOR, GUIDES, KeepReading, Lede, PullQuote } from '../_components/article';
+
+const guide = GUIDES[1];
 
 export const metadata: Metadata = {
   title: 'Benefits of Full-Contact Karate Training for Youth | Martial Arts for Kids',
@@ -63,150 +66,112 @@ export default function YouthBenefits() {
 
   return (
     <article className="min-h-screen bg-black text-white">
-      {/* Hero */}
-      <div className="relative bg-black py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <span className="inline-block px-4 py-1.5 bg-white/5 border border-white/10 rounded-none text-[#FF4D4D] text-xs font-bold uppercase tracking-widest mb-6">
-            Youth Development
-          </span>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6">
-            The Benefits of <span className="text-red-500">Full-Contact Training</span> for Youth
-          </h1>
-          <p className="text-gray-400 text-lg">
-            Published February 13, 2026 · By Kyokushin Karate Foundation of India
-          </p>
-        </div>
-      </div>
+      <ArticleHero
+        category={guide.category}
+        title="The Benefits of Full-Contact Training for Youth"
+        image={guide.image}
+        imageAlt={guide.imageAlt}
+        meta={
+          <>
+            <span>Published {guide.date}</span>
+            <span aria-hidden="true" className="text-white/30">/</span>
+            <span>By {AUTHOR}</span>
+          </>
+        }
+      />
 
-      {/* Content */}
-      <div className="max-w-3xl mx-auto px-4 py-16">
-        <p className="text-xl text-gray-300 leading-relaxed mb-12">
+      <ArticleBody>
+        <Lede>
           Every parent wants their child to be confident, disciplined, and physically fit. Many consider
           martial arts — but with dozens of styles available, how do you choose? If your goal is
           <strong> real-world results</strong> rather than just trophies, full-contact Kyokushin karate training
           offers benefits that no other sport or martial art can match. Here&apos;s why parents across India
           are choosing Kyokushin for their children.
-        </p>
+        </Lede>
+      </ArticleBody>
 
-        {/* Benefits Grid */}
-        <div className="space-y-8 mb-16">
+      {/* Six benefits: two ruled columns, each heading leading its own paragraph. */}
+      <section aria-label="Benefits" className="mx-auto max-w-[1100px] px-4 py-6 sm:px-6 lg:px-8">
+        <div className="grid gap-x-12 md:grid-cols-2">
           {benefits.map((benefit, i) => (
-            <div key={i} className="bg-white/5 rounded-xl p-8 border border-white/10 hover:bg-white/10 transition-colors">
-              <div className="flex items-start gap-4">
-                <span className="text-4xl flex-shrink-0">{benefit.icon}</span>
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-3">{benefit.title}</h2>
-                  <p className="text-gray-300 leading-relaxed">{benefit.description}</p>
-                </div>
-              </div>
-            </div>
+            <Reveal key={benefit.title} delay={(i % 2) * 0.08} className="border-t border-white/15 py-8">
+              <h2 className="text-balance text-2xl font-extrabold leading-tight tracking-[-0.01em] text-white">{benefit.title}</h2>
+              <p className="mt-3 max-w-[56ch] text-pretty text-[1.0625rem] leading-[1.75] text-white/75">{benefit.description}</p>
+            </Reveal>
           ))}
         </div>
+      </section>
 
-        {/* What Age Can Kids Start? */}
-        <div className="prose prose-invert prose-lg prose-red max-w-none">
-          <h2 className="text-3xl font-bold text-white mt-12 mb-6">What Age Can Kids Start Kyokushin?</h2>
-          <p className="text-gray-300">
-            Children as young as <strong>5-6 years old</strong> can begin training. At this age, classes focus on
-            basic movements, coordination, and the foundational principles of discipline and respect. Full-contact
-            sparring is introduced gradually — typically from ages 8-10 — with appropriate protective gear and
-            close instructor supervision. By their teenage years, students are confident, skilled fighters with
-            years of conditioning behind them.
-          </p>
+      <ArticleBody>
+        <h2>What Age Can Kids Start Kyokushin?</h2>
+        <p>
+          Children as young as <strong>5-6 years old</strong> can begin training. At this age, classes focus on
+          basic movements, coordination, and the foundational principles of discipline and respect. Full-contact
+          sparring is introduced gradually — typically from ages 8-10 — with appropriate protective gear and
+          close instructor supervision. By their teenage years, students are confident, skilled fighters with
+          years of conditioning behind them.
+        </p>
 
-          <h2 className="text-3xl font-bold text-white mt-12 mb-6">&quot;But Isn&apos;t Full-Contact Dangerous?&quot;</h2>
-          <p className="text-gray-300">
-            This is the #1 concern parents have — and it&apos;s a valid question. The answer: <strong>Kyokushin
-            is safer than most team sports</strong>. Studies show that football, rugby, and even basketball cause
-            more youth injuries than martial arts. In a Kyokushin dojo:
-          </p>
-          <ul className="text-gray-300 space-y-2">
-            <li>Training is supervised by certified, experienced instructors</li>
-            <li>Sparring is matched by age, weight, and skill level</li>
-            <li>Proper technique is taught before contact is introduced</li>
-            <li>The culture emphasizes <strong>control</strong> — hurting your training partner is dishonorable</li>
-            <li>Children are taught to distinguish between training and real confrontation</li>
-          </ul>
+        <h2>&quot;But Isn&apos;t Full-Contact Dangerous?&quot;</h2>
+        <p>
+          This is the #1 concern parents have — and it&apos;s a valid question. The answer: <strong>Kyokushin
+          is safer than most team sports</strong>. Studies show that football, rugby, and even basketball cause
+          more youth injuries than martial arts. In a Kyokushin dojo:
+        </p>
+        <ul>
+          <li>Training is supervised by certified, experienced instructors</li>
+          <li>Sparring is matched by age, weight, and skill level</li>
+          <li>Proper technique is taught before contact is introduced</li>
+          <li>The culture emphasizes <strong>control</strong> — hurting your training partner is dishonorable</li>
+          <li>Children are taught to distinguish between training and real confrontation</li>
+        </ul>
 
-          <h2 className="text-3xl font-bold text-white mt-12 mb-6">The Academic Connection</h2>
-          <p className="text-gray-300">
-            Multiple studies have shown that children who practice martial arts regularly perform better academically.
-            The discipline of bowing, listening, repeating techniques hundreds of times, and persevering through
-            difficult training directly translates to improved focus in classrooms. KKFI instructors routinely
-            report that parents notice improvements in school performance within the first 3 months.
-          </p>
+        <h2>The Academic Connection</h2>
+        <p>
+          Multiple studies have shown that children who practice martial arts regularly perform better academically.
+          The discipline of bowing, listening, repeating techniques hundreds of times, and persevering through
+          difficult training directly translates to improved focus in classrooms. KKFI instructors routinely
+          report that parents notice improvements in school performance within the first 3 months.
+        </p>
 
-          <blockquote className="border border-red-600/20 rounded-xl p-6 my-8 italic text-gray-400">
-            &quot;One thousand days of training to forge, ten thousand days of training to polish. The path of
-            true martial arts is one that requires patience.&quot;
-            <br />— Sosai Masutatsu Oyama
-          </blockquote>
-        </div>
+        <PullQuote cite="Sosai Masutatsu Oyama">
+          &quot;One thousand days of training to forge, ten thousand days of training to polish. The path of
+          true martial arts is one that requires patience.&quot;
+        </PullQuote>
 
-        {/* Stats Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-12">
+        {/* The figures as one quiet ruled row, not a wall of big numbers. */}
+        <dl className="!my-12 grid grid-cols-2 gap-x-8 gap-y-6 border-y border-white/15 py-8 sm:grid-cols-4">
           {[
             { stat: '250+', label: 'Youth Students' },
             { stat: '15+', label: 'Cities Across India' },
             { stat: '93%', label: 'Parent Satisfaction' },
             { stat: '5+', label: 'Age to Start' },
-          ].map((item, i) => (
-            <div key={i} className="bg-white/5 rounded-xl p-6 text-center border border-white/10">
-              <div className="text-3xl font-black text-red-500">{item.stat}</div>
-              <div className="text-xs text-gray-400 mt-1 font-medium uppercase tracking-wider">{item.label}</div>
+          ].map((item) => (
+            <div key={item.label}>
+              <dt className="text-sm text-white/60">{item.label}</dt>
+              <dd className="mt-1 text-2xl font-extrabold text-white tabular-nums">{item.stat}</dd>
             </div>
           ))}
-        </div>
+        </dl>
+      </ArticleBody>
 
-        <div className="mt-12 p-8 bg-white/5 rounded-xl border border-white/10 text-center">
-          <h3 className="text-2xl font-bold text-white mb-3">Enroll Your Child in Kyokushin Today</h3>
-          <p className="text-gray-400 mb-6">
-            Give your child the gift of discipline, confidence, and real self-defense skills.
-            KKFI dojos across India welcome students from age 5 and up.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/dojos"
-              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-transparent hover:bg-white/10 text-white font-bold uppercase tracking-wider rounded-none transition-colors border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-            >
-              Find a Dojo Near You
-            </Link>
-            <Link
-              href="/register"
-              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold uppercase tracking-wider rounded-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-            >
-              Register Now — ₹295 Only
-            </Link>
-          </div>
-        </div>
+      <ArticleCta
+        title="Enroll Your Child in Kyokushin Today"
+        body="Give your child the gift of discipline, confidence, and real self-defense skills. KKFI dojos across India welcome students from age 5 and up."
+        actions={[
+          { href: '/register', label: 'Register Now — ₹295 Only', primary: true },
+          { href: '/dojos', label: 'Find a Dojo Near You' },
+        ]}
+      />
 
-        {/* Internal Links */}
-        <div className="mt-12 pt-8 border-t border-white/10">
-          <h3 className="text-lg font-bold text-white mb-4">Related Articles</h3>
-          <ul className="space-y-2">
-            <li>
-              <Link href="/blog/kyokushin-vs-shotokan" className="text-red-400 hover:text-red-300 transition-colors">
-                What Makes Kyokushin Different from Shotokan? →
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog/history-kyokushin-india" className="text-red-400 hover:text-red-300 transition-colors">
-                History of Kyokushin in India: From Sosai Oyama to Today →
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog/kyokushin-grading-syllabus-2026" className="text-red-400 hover:text-red-300 transition-colors">
-                Kyokushin Grading Syllabus 2026: Complete Belt Guide →
-              </Link>
-            </li>
-            <li>
-              <Link href="/dojos" className="text-red-400 hover:text-red-300 transition-colors">
-                Find a KKFI Dojo Near You →
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
+      <KeepReading
+        links={[
+          { href: '/blog/kyokushin-vs-shotokan', title: 'What Makes Kyokushin Different from Shotokan?', note: 'Karate Knowledge' },
+          { href: '/blog/history-kyokushin-india', title: 'History of Kyokushin in India: From Sosai Oyama to Today', note: 'Our Heritage' },
+          { href: '/blog/kyokushin-grading-syllabus-2026', title: 'Kyokushin Grading Syllabus 2026: Complete Belt Guide', note: 'Official Syllabus' },
+          { href: '/dojos', title: 'Find a KKFI Dojo Near You', note: 'Dojos' },
+        ]}
+      />
     </article>
   );
 }

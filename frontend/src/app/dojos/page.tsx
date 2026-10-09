@@ -1,28 +1,88 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Users, ArrowRight, ChevronRight, Map, LayoutGrid, AlertCircle, RefreshCw } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, ArrowUpRight, MapPin, RefreshCw, Search, X } from "lucide-react";
 import api from "@/lib/api";
 import KarateLoader from "@/components/KarateLoader";
+import PageHero from "@/components/brand/PageHero";
+import BrandLink from "@/components/brand/BrandLink";
+
+interface DojoInstructor {
+    name?: string;
+    currentBeltRank?: string;
+}
+
+interface Dojo {
+    id: string;
+    name: string;
+    dojoCode?: string;
+    city: string;
+    state?: string;
+    address?: string | null;
+    chiefInstructor?: string | null;
+    instructors?: DojoInstructor[];
+}
+
+const instructorOf = (d: Dojo) => d.chiefInstructor || d.instructors?.find((i) => i.name)?.name || null;
+
+/** Dojos grouped by state, states and dojos in alphabetical order. */
+function byState(dojos: Dojo[]) {
+    const groups = new Map<string, Dojo[]>();
+    for (const d of dojos) {
+        const key = d.state?.trim() || "Other";
+        groups.set(key, [...(groups.get(key) ?? []), d]);
+    }
+    return [...groups.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([state, list]) => ({ state, list: list.sort((a, b) => a.city.localeCompare(b.city) || a.name.localeCompare(b.name)) }));
+}
+
+function DojoRow({ dojo }: { dojo: Dojo }) {
+    const instructor = instructorOf(dojo);
+    return (
+        <li>
+            <Link
+                href={`/dojos/${dojo.id}`}
+                className="group grid gap-x-8 gap-y-1.5 py-6 sm:grid-cols-[10rem_minmax(0,1fr)_auto] sm:items-baseline"
+            >
+                <span className="text-sm font-bold text-white/60">{dojo.city}</span>
+                <span className="min-w-0">
+                    <span className="block text-pretty text-lg font-extrabold leading-snug text-white transition-colors group-hover:text-primary-light">
+                        {dojo.name}
+                    </span>
+                    {(dojo.address || instructor) && (
+                        <span className="mt-1.5 flex flex-col gap-1 text-sm text-white/65 md:flex-row md:gap-6">
+                            {dojo.address && (
+                                <span className="flex min-w-0 items-start gap-1.5">
+                                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                    <span>{dojo.address}</span>
+                                </span>
+                            )}
+                            {instructor && <span className="shrink-0">Instructor: <span className="font-semibold text-white/85">{instructor}</span></span>}
+                        </span>
+                    )}
+                </span>
+                <ArrowUpRight
+                    className="hidden h-5 w-5 text-white/40 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white sm:block"
+                    aria-hidden="true"
+                />
+            </Link>
+        </li>
+    );
+}
 
 export default function DojoListPage() {
-    const [dojos, setDojos] = useState<any[]>([]);
+    const [dojos, setDojos] = useState<Dojo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
-    const mapRef = useRef<HTMLDivElement>(null);
-    const mapInstanceRef = useRef<any>(null);
 
     const fetchDojos = async () => {
         setIsLoading(true);
         setError(false);
         try {
-            const response = await api.get('/dojos');
+            const response = await api.get("/dojos");
             setDojos(response.data.data.dojos);
         } catch (err) {
             console.error("Failed to fetch dojos", err);
@@ -33,262 +93,130 @@ export default function DojoListPage() {
     };
 
     useEffect(() => {
-        fetchDojos();
+        // Deferred a frame so the fetch's state updates don't run synchronously inside the effect.
+        const id = requestAnimationFrame(() => {
+            void fetchDojos();
+        });
+        return () => cancelAnimationFrame(id);
     }, []);
 
-    const filteredDojos = dojos.filter(dojo =>
-        dojo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        dojo.city.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filtered = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return dojos;
+        return dojos.filter((dojo) =>
+            [dojo.name, dojo.city, dojo.state, dojo.address, instructorOf(dojo)].some((v) => v?.toLowerCase().includes(q)),
+        );
+    }, [dojos, searchQuery]);
 
-    // Initialize Leaflet map when switching to map view
-    useEffect(() => {
-        if (viewMode !== 'map' || isLoading || !mapRef.current) return;
-        if (mapInstanceRef.current) {
-            mapInstanceRef.current.invalidateSize();
-            return;
-        }
-
-        const initMap = async () => {
-            const L = (await import('leaflet')).default;
-
-            // Add Leaflet CSS via link tag
-            if (!document.querySelector('link[href*="leaflet"]')) {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-                document.head.appendChild(link);
-            }
-
-            const map = L.map(mapRef.current!, {
-                center: [20.5937, 78.9629], // India center
-                zoom: 5,
-                scrollWheelZoom: true,
-            });
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors',
-            }).addTo(map);
-
-            // Custom red marker
-            const redIcon = L.divIcon({
-                html: `<div style="width:32px;height:32px;background:#ef4444;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:12px;">K</div>`,
-                iconSize: [32, 32],
-                iconAnchor: [16, 32],
-                popupAnchor: [0, -32],
-                className: '',
-            });
-
-            // Major Indian cities fallback coordinates
-            const cityCoords: Record<string, [number, number]> = {
-                'mumbai': [19.076, 72.8777], 'delhi': [28.6139, 77.209],
-                'bangalore': [12.9716, 77.5946], 'bengaluru': [12.9716, 77.5946],
-                'chennai': [13.0827, 80.2707], 'kolkata': [22.5726, 88.3639],
-                'hyderabad': [17.385, 78.4867], 'pune': [18.5204, 73.8567],
-                'ahmedabad': [23.0225, 72.5714], 'jaipur': [26.9124, 75.7873],
-                'lucknow': [26.8467, 80.9462], 'chandigarh': [30.7333, 76.7794],
-                'bhopal': [23.2599, 77.4126], 'patna': [25.6093, 85.1376],
-                'guwahati': [26.1445, 91.7362], 'thiruvananthapuram': [8.5241, 76.9366],
-                'kochi': [9.9312, 76.2673], 'indore': [22.7196, 75.8577],
-                'nagpur': [21.1458, 79.0882], 'coimbatore': [11.0168, 76.9558],
-                'visakhapatnam': [17.6868, 83.2185], 'surat': [21.1702, 72.8311],
-                'vadodara': [22.3072, 73.1812], 'noida': [28.5355, 77.391],
-                'gurgaon': [28.4595, 77.0266], 'gurugram': [28.4595, 77.0266],
-            };
-
-            filteredDojos.forEach(dojo => {
-                const lat = dojo.latitude || cityCoords[dojo.city?.toLowerCase()]?.[0];
-                const lng = dojo.longitude || cityCoords[dojo.city?.toLowerCase()]?.[1];
-                if (lat && lng) {
-                    L.marker([lat, lng], { icon: redIcon })
-                        .addTo(map)
-                        .bindPopup(`
-                            <div style="min-width:200px;font-family:sans-serif;">
-                                <h3 style="font-weight:900;font-size:16px;margin:0 0 4px;">${dojo.name}</h3>
-                                <p style="color:#666;font-size:13px;margin:0 0 8px;">${dojo.address || dojo.city + ', ' + (dojo.state || '')}</p>
-                                ${dojo.contactPhone ? `<p style="font-size:12px;margin:0;">📞 ${dojo.contactPhone}</p>` : ''}
-                                <a href="/dojos/${dojo.id}" style="display:inline-block;margin-top:8px;color:#ef4444;font-weight:700;font-size:13px;text-decoration:none;">View Details →</a>
-                            </div>
-                        `);
-                }
-            });
-
-            mapInstanceRef.current = map;
-        };
-
-        initMap();
-
-        return () => {
-            // Don't destroy map on re-renders, just when component unmounts
-        };
-    }, [viewMode, isLoading, filteredDojos]);
+    const groups = useMemo(() => byState(filtered), [filtered]);
+    const cities = useMemo(() => new Set(dojos.map((d) => d.city.trim().toLowerCase())).size, [dojos]);
 
     return (
-        <div className="min-h-screen w-full bg-black text-white relative overflow-hidden selection:bg-red-600 selection:text-white">
-            {/* Background Elements */}
-            <div className="fixed inset-0 bg-black pointer-events-none" />
-            <div className="fixed top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-[0.03] pointer-events-none" />
+        <div className="min-h-screen text-white selection:bg-primary selection:text-white">
+            <PageHero
+                height="compact"
+                title={<>The dojo directory<span className="text-primary">.</span></>}
+                lede={
+                    isLoading
+                        ? "Begin your journey. Locate the nearest Kyokushin Karate dojo and forge your spirit."
+                        : error
+                          ? "Begin your journey. Locate the nearest Kyokushin Karate dojo and forge your spirit."
+                          : `${dojos.length} official KKFI ${dojos.length === 1 ? "dojo" : "dojos"} in ${cities} ${cities === 1 ? "city" : "cities"}. Begin your journey: locate the nearest one and forge your spirit.`
+                }
+                media={
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src="/history/solitude.jpg" alt="" className="h-full w-full object-cover opacity-55 grayscale" />
+                }
+                actions={
+                    <BrandLink href="/find-a-dojo" variant="outline">
+                        Open the 3D map <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </BrandLink>
+                }
+            />
 
-            <div className="container-responsive py-8 sm:py-12 md:py-24 relative z-10">
-                {/* Header */}
-                <div className="text-center mb-10 md:mb-20">
-                    <motion.h1
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter mb-6"
-                    >
-                        FIND YOUR <span className="text-[#FF0000]">DOJO</span>
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.8 }}
-                        className="text-xl text-gray-400 max-w-2xl mx-auto font-light"
-                    >
-                        Begin your journey. Locate the nearest Kyokushin Karate dojo and forge your spirit.
-                    </motion.p>
-                </div>
-
-                {/* Floating Search Bar */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="sticky top-8 z-50 max-w-2xl mx-auto mb-12 md:mb-24"
-                >
-                    <div className="relative group">
-                        <div className="absolute inset-0 bg-red-600/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="relative flex items-center bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl shadow-black/50 transition-all group-hover:border-red-500/30">
-                            <Search className="absolute left-6 w-5 h-5 text-gray-400 group-focus-within:text-red-500 transition-colors" />
-                            <Input
-                                placeholder="Search by city or dojo name..."
-                                className="w-full h-16 pl-16 pr-6 rounded-full bg-transparent border-none text-lg text-white placeholder:text-gray-400 focus:ring-0 focus:bg-transparent"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
+            <div className="mx-auto max-w-6xl px-4 pb-28 sm:px-6 lg:px-8">
+                {/* Search: an underline field, sticky under the navbar while the list scrolls. */}
+                <div className="sticky top-16 z-10 -mx-4 bg-black px-4 pb-4 pt-6 sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8">
+                    <label htmlFor="dojo-search" className="sr-only">
+                        Search dojos
+                    </label>
+                    <div className="relative">
+                        <Search className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-white/60" aria-hidden="true" />
+                        <input
+                            id="dojo-search"
+                            type="search"
+                            placeholder="City, dojo or instructor"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="h-14 w-full rounded-none border-0 border-b-2 border-white/20 bg-transparent pl-9 pr-10 text-lg text-white placeholder:text-white/55 focus:border-primary focus:outline-none focus:ring-0 [&::-webkit-search-cancel-button]:hidden"
+                        />
+                        {searchQuery && (
+                            <button
+                                type="button"
+                                onClick={() => setSearchQuery("")}
+                                aria-label="Clear search"
+                                className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-white/60 hover:text-white"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        )}
                     </div>
-                </motion.div>
-
-                {/* View Toggle */}
-                <div className="flex justify-center gap-2 mb-12">
-                    <button
-                        onClick={() => setViewMode('grid')}
-                        className={`flex items-center gap-2 px-5 py-3 rounded-none text-xs font-bold uppercase tracking-wider transition-all min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${viewMode === 'grid' ? 'bg-[#FF0000] hover:bg-[#8B0000] text-white' : 'bg-zinc-900 text-gray-400 border border-white/20 hover:bg-white/10 hover:text-white'}`}
-                    >
-                        <LayoutGrid className="w-4 h-4" /> Grid
-                    </button>
-                    <button
-                        onClick={() => setViewMode('map')}
-                        className={`flex items-center gap-2 px-5 py-3 rounded-none text-xs font-bold uppercase tracking-wider transition-all min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${viewMode === 'map' ? 'bg-[#FF0000] hover:bg-[#8B0000] text-white' : 'bg-zinc-900 text-gray-400 border border-white/20 hover:bg-white/10 hover:text-white'}`}
-                    >
-                        <Map className="w-4 h-4" /> Map View
-                    </button>
+                    {!isLoading && !error && (
+                        <p className="mt-3 text-sm text-white/60" aria-live="polite">
+                            {searchQuery ? `${filtered.length} of ${dojos.length} dojos` : `${dojos.length} dojos`}
+                        </p>
+                    )}
                 </div>
 
-                {/* Loading State */}
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-4 h-[50vh]">
-                        <KarateLoader />
+                    <div className="flex h-[40vh] items-center justify-center">
+                        <KarateLoader label="Loading dojos" />
                     </div>
                 ) : error ? (
-                    <div className="text-center py-20">
-                        <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
-                        <p className="text-gray-400 text-lg mb-4">Failed to load dojos</p>
-                        <button onClick={fetchDojos} className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none text-xs font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-                            <RefreshCw className="w-4 h-4" /> Try Again
+                    <div className="py-20">
+                        <p className="text-xl font-extrabold text-white">We could not load the dojo list.</p>
+                        <p className="mt-2 text-white/65">The server did not respond. Try again in a moment.</p>
+                        <button
+                            type="button"
+                            onClick={fetchDojos}
+                            className="mt-6 inline-flex min-h-12 items-center gap-2 bg-primary px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                        >
+                            <RefreshCw className="h-4 w-4" aria-hidden="true" /> Try again
                         </button>
                     </div>
-                ) : (
-                    <>
-                    {/* Map View */}
-                    {viewMode === 'map' && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="mb-12"
-                        >
-                            <div
-                                ref={mapRef}
-                                className="w-full h-[500px] md:h-[600px] rounded-xl border border-white/10 overflow-hidden"
-                                style={{ background: '#1a1a1a' }}
-                            />
-                            <p className="text-center text-xs text-gray-400 mt-3">
-                                Click markers to see dojo details • Dojos without coordinates shown in grid only
-                            </p>
-                        </motion.div>
-                    )}
-
-                    {/* Dojo Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-                        <AnimatePresence>
-                            {filteredDojos.map((dojo, index) => (
-                                <Link href={`/dojos/${dojo.id}`} key={dojo.id}>
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 50 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true, amount: 0.15 }}
-                                        exit={{ opacity: 0, scale: 0.9 }}
-                                        transition={{ delay: index * 0.08, duration: 0.5 }}
-                                        className="group relative h-[320px] sm:h-[380px] md:h-[500px] rounded-xl overflow-hidden cursor-pointer bg-zinc-900 border border-white/10 hover:border-red-600/50 transition-all duration-500 hover:shadow-2xl hover:shadow-red-900/20 active:scale-[0.98]"
-                                    >
-                                        {/* Background Image */}
-                                        <div className="absolute inset-0">
-                                            <img
-                                                src="/dojo-bg.png" // Fallback image
-                                                alt={dojo.name}
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter grayscale group-hover:grayscale-0"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-between">
-                                            <div className="flex justify-between items-start">
-                                                <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-wider">
-                                                    {dojo.city}
-                                                </span>
-                                            </div>
-
-                                            <div className="transform transition-transform duration-500 group-hover:-translate-y-2">
-                                                <h3 className="text-2xl sm:text-3xl font-black text-white mb-2 leading-none uppercase italic">
-                                                    {dojo.name}
-                                                </h3>
-                                                <div className="flex items-center gap-2 text-gray-400 mb-6 group-hover:text-white transition-colors">
-                                                    <MapPin className="w-4 h-4 text-red-600" />
-                                                    <span className="text-sm font-medium">{dojo.address || `${dojo.city}, ${dojo.state}`}</span>
-                                                </div>
-
-                                                <div className="h-auto md:h-0 md:overflow-hidden md:group-hover:h-auto transition-all duration-500">
-                                                    <p className="text-gray-400 text-sm line-clamp-2 mb-3 sm:mb-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity delay-100">
-                                                        Experience traditional training in a modern facility. Join us to push your limits.
-                                                    </p>
-                                                </div>
-
-                                                <div className="flex items-center justify-between border-t border-white/10 pt-6 mt-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex -space-x-2">
-                                                            {[1, 2, 3].map(i => (
-                                                                <div key={i} className="w-6 h-6 rounded-full bg-zinc-800 border border-black flex items-center justify-center text-[8px] text-white">
-                                                                    {i}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                        <span className="text-xs text-gray-400 ml-2">Active Members</span>
-                                                    </div>
-                                                    <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center transform translate-x-0 opacity-100 md:translate-x-4 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100 transition-all duration-300">
-                                                        <ArrowRight className="w-5 h-5" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                </Link>
-                            ))}
-                        </AnimatePresence>
+                ) : filtered.length === 0 ? (
+                    <div className="py-20">
+                        <p className="text-xl font-extrabold text-white">No dojo matches &ldquo;{searchQuery}&rdquo;.</p>
+                        <p className="mt-2 text-white/65">Try a nearby city or the state name, or see every dojo on the map.</p>
+                        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                            <button
+                                type="button"
+                                onClick={() => setSearchQuery("")}
+                                className="inline-flex min-h-12 items-center justify-center border border-white/25 px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-white/10"
+                            >
+                                Clear search
+                            </button>
+                            <BrandLink href="/find-a-dojo">Open the map</BrandLink>
+                        </div>
                     </div>
-                    </>
+                ) : (
+                    <div className="mt-6 space-y-14">
+                        {groups.map(({ state, list }) => (
+                            <section key={state} aria-labelledby={`state-${state}`}>
+                                <h2 id={`state-${state}`} className="flex items-baseline justify-between border-b border-white/20 pb-3 text-xl font-extrabold text-white">
+                                    {state}
+                                    <span className="text-sm font-semibold text-white/55">
+                                        {list.length} {list.length === 1 ? "dojo" : "dojos"}
+                                    </span>
+                                </h2>
+                                <ul className="divide-y divide-white/10">
+                                    {list.map((dojo) => (
+                                        <DojoRow key={dojo.id} dojo={dojo} />
+                                    ))}
+                                </ul>
+                            </section>
+                        ))}
+                    </div>
                 )}
             </div>
         </div>

@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
-import { Trophy, Crown, Calendar, MapPin, Users, RefreshCw, Share2, Wifi, WifiOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ArrowUpRight, Crown, RefreshCw, Share2 } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
+import BrandLink from "@/components/brand/BrandLink";
+import { formatDateOnly } from "@/lib/dateOnly";
 import axios from "axios";
 import { io, Socket } from "socket.io-client";
 
@@ -50,7 +51,9 @@ interface Bracket {
 interface Tournament {
     id: string;
     name: string;
-    date: string;
+    /** The events endpoint sends startDate; older payloads used date. */
+    date?: string;
+    startDate?: string;
     location: string;
     description: string;
     registrationCount: number;
@@ -70,17 +73,19 @@ export default function PublicTournamentViewer() {
 
     const fetchData = async () => {
         try {
-            const [tournamentRes, bracketsRes] = await Promise.all([
+            // Settled separately: an event with no brackets drawn yet is still a real event.
+            const [tournamentRes, bracketsRes] = await Promise.allSettled([
                 axios.get(`${API_URL}/events/${id}`),
                 axios.get(`${API_URL}/tournaments/${id}`)
             ]);
 
-            setTournament(tournamentRes.data.data.event);
-            setBrackets(bracketsRes.data.data.brackets || []);
+            if (tournamentRes.status === "fulfilled") setTournament(tournamentRes.value.data.data.event);
+            const fetched: Bracket[] = bracketsRes.status === "fulfilled" ? bracketsRes.value.data.data.brackets || [] : [];
+            setBrackets(fetched);
             setLastUpdated(new Date());
 
-            if (!selectedBracket && bracketsRes.data.data.brackets?.length > 0) {
-                setSelectedBracket(bracketsRes.data.data.brackets[0]);
+            if (!selectedBracket && fetched.length > 0) {
+                setSelectedBracket(fetched[0]);
             }
         } catch (error) {
             console.error("Failed to fetch tournament data", error);
@@ -179,22 +184,9 @@ export default function PublicTournamentViewer() {
         return rounds;
     };
 
-    const getBeltColor = (rank: string) => {
-        const colors: { [key: string]: string } = {
-            'WHITE': 'bg-white text-black',
-            'YELLOW': 'bg-yellow-400 text-black',
-            'ORANGE': 'bg-orange-500 text-white',
-            'BLUE': 'bg-blue-500 text-white',
-            'GREEN': 'bg-green-600 text-white',
-            'BROWN': 'bg-yellow-800 text-white',
-            'BLACK': 'bg-black text-white border border-white'
-        };
-        return colors[rank] || 'bg-gray-500 text-white';
-    };
-
     if (loading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
+            <div className="min-h-[70dvh] bg-black flex items-center justify-center">
                 <KarateLoader label="Loading tournament" />
             </div>
         );
@@ -202,277 +194,211 @@ export default function PublicTournamentViewer() {
 
     if (!tournament) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="text-center text-white">
-                    <Trophy className="w-16 h-16 mx-auto mb-4 text-red-500" />
-                    <h1 className="text-2xl font-bold mb-2">Tournament Not Found</h1>
-                    <p className="text-gray-300">The tournament you&apos;re looking for doesn&apos;t exist.</p>
-                </div>
+            <div className="mx-auto flex min-h-[70dvh] max-w-xl flex-col items-start justify-center gap-6 px-4 text-white sm:px-6">
+                <h1 className="text-3xl font-black uppercase tracking-[-0.02em]">Tournament not found<span className="text-primary">.</span></h1>
+                <p className="leading-relaxed text-white/70">The tournament you&apos;re looking for doesn&apos;t exist, or its brackets are not public yet.</p>
+                <BrandLink href="/events" variant="outline">All events</BrandLink>
             </div>
         );
     }
 
+    const rounds = selectedBracket ? getMatchesByRound(selectedBracket) : {};
+    const roundKeys = Object.keys(rounds).map(Number).sort((a, b) => a - b);
+
     return (
-        <div className="min-h-screen bg-black text-white">
-            {/* Header */}
-            <div className="border-b border-white/10 bg-black/40 backdrop-blur-md sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Trophy className="w-8 h-8 text-red-500" />
-                            <div>
-                                <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight">
-                                    {tournament.name}
-                                </h1>
-                                <div className="flex items-center gap-4 text-xs text-white/60 mt-1">
-                                    <span className="flex items-center gap-1">
-                                        <Calendar className="w-3 h-3" />
-                                        {new Date(tournament.date).toLocaleDateString()}
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        <MapPin className="w-3 h-3" />
-                                        {tournament.location}
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        <Users className="w-3 h-3" />
-                                        {tournament.registrationCount} participants
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <Button
-                                onClick={handleShare}
-                                size="sm"
-                                variant="outline"
-                                className="hidden md:flex items-center gap-2"
-                            >
-                                <Share2 className="w-4 h-4" />
-                                Share
-                            </Button>
-                            <Button
-                                onClick={fetchData}
-                                size="sm"
-                                variant="outline"
-                                className="flex items-center gap-2"
-                            >
-                                <RefreshCw className="w-4 h-4" />
-                                Refresh
-                            </Button>
-                        </div>
-                    </div>
+        <div className="min-h-dvh bg-black text-white">
+            <header className="mx-auto max-w-[1400px] px-4 pb-10 pt-8 sm:px-6 md:pt-12 lg:px-8">
+                <div className="flex flex-wrap items-center gap-3 text-sm font-semibold">
+                    <span className={`inline-flex items-center gap-2 ${isConnected && liveUpdates ? "text-primary-light" : "text-white/60"}`}>
+                        <span aria-hidden="true" className={`h-2 w-2 rounded-full ${isConnected && liveUpdates ? "bg-primary animate-pulse" : "bg-white/30"}`} />
+                        {isConnected && liveUpdates ? "Live" : liveUpdates ? "Connecting…" : "Live updates paused"}
+                    </span>
+                    <span className="text-white/30" aria-hidden="true">/</span>
+                    <span className="text-white/60 tabular-nums">Updated {lastUpdated.toLocaleTimeString()}</span>
                 </div>
-            </div>
-
-            <div className="max-w-7xl mx-auto px-4 py-6">
-                {/* Live updates indicator */}
-                <div className="flex items-center justify-between mb-6 p-3 bg-black/40 rounded-lg border border-white/10">
-                    <div className="flex items-center gap-3">
-                        {isConnected ? (
-                            <Wifi className="w-4 h-4 text-green-500" />
-                        ) : (
-                            <WifiOff className="w-4 h-4 text-gray-500" />
-                        )}
-                        <span className="text-sm text-white/60">
-                            {isConnected ? 'Live updates active' : 'Live updates disconnected'}
-                            {' • '}
-                            Last updated: {lastUpdated.toLocaleTimeString()}
-                        </span>
+                <h1 className="mt-4 max-w-[20ch] text-balance text-[clamp(2.25rem,6vw,4.5rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
+                    {tournament.name}
+                </h1>
+                <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-4 border-t border-white/15 pt-5 text-sm">
+                    <div>
+                        <dt className="text-white/60">Date</dt>
+                        <dd className="mt-1 font-bold tabular-nums">{(tournament.startDate || tournament.date) ? formatDateOnly((tournament.startDate || tournament.date)!, { day: "numeric", month: "long", year: "numeric" }, "en-IN") : "To be announced"}</dd>
                     </div>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    {tournament.location && (
+                        <div>
+                            <dt className="text-white/60">Venue</dt>
+                            <dd className="mt-1 font-bold">{tournament.location}</dd>
+                        </div>
+                    )}
+                    <div>
+                        <dt className="text-white/60">Fighters</dt>
+                        <dd className="mt-1 font-bold tabular-nums">{tournament.registrationCount ?? 0}</dd>
+                    </div>
+                </dl>
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                    <BrandLink href={`/tournaments/${id}/results`}>
+                        Results <ArrowUpRight className="h-4 w-4" />
+                    </BrandLink>
+                    <button onClick={handleShare} className="inline-flex min-h-12 items-center gap-2 border border-white/25 px-5 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10">
+                        <Share2 className="h-4 w-4" aria-hidden="true" /> Share
+                    </button>
+                    <button onClick={fetchData} className="inline-flex min-h-12 items-center gap-2 border border-white/25 px-5 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10">
+                        <RefreshCw className="h-4 w-4" aria-hidden="true" /> Refresh
+                    </button>
+                    <label className="ml-1 inline-flex min-h-12 cursor-pointer items-center gap-2 text-sm font-semibold text-white/75">
                         <input
                             type="checkbox"
                             checked={liveUpdates}
                             onChange={(e) => setLiveUpdates(e.target.checked)}
-                            className="w-4 h-4 rounded bg-white/10 border-white/20"
+                            className="h-4 w-4 accent-[#FF0000]"
                         />
-                        <span className="text-sm text-white/80">Live updates</span>
+                        Live updates
                     </label>
                 </div>
+            </header>
 
+            <div className="mx-auto max-w-[1400px] px-4 pb-24 sm:px-6 lg:px-8">
                 {brackets.length === 0 ? (
-                    <div className="text-center py-20">
-                        <Trophy className="w-16 h-16 mx-auto mb-4 text-white/20" />
-                        <h2 className="text-xl font-bold mb-2">No Brackets Generated Yet</h2>
-                        <p className="text-white/60">Brackets will appear here once the tournament begins.</p>
+                    <div className="border-y border-white/10 py-16">
+                        <p className="text-2xl font-extrabold">No brackets drawn yet.</p>
+                        <p className="mt-3 max-w-[46ch] leading-relaxed text-white/70">Brackets appear here once the draw is made, and scores update live during the tournament.</p>
+                        <div className="mt-8">
+                            <BrandLink href={`/events/${id}`} variant="outline">Event details</BrandLink>
+                        </div>
                     </div>
                 ) : (
                     <>
-                        {/* Category Selector */}
                         {brackets.length > 1 && (
-                            <div className="mb-6">
-                                <div className="flex flex-wrap gap-2">
-                                    {brackets.map((bracket) => (
+                            <div role="tablist" aria-label="Categories" className="-mx-4 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+                                {brackets.map((bracket) => {
+                                    const on = selectedBracket?.id === bracket.id;
+                                    return (
                                         <button
                                             key={bracket.id}
+                                            role="tab"
+                                            aria-selected={on}
                                             onClick={() => setSelectedBracket(bracket)}
-                                            className={`px-4 py-2 min-h-[44px] rounded-none uppercase tracking-wider font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
-                                                selectedBracket?.id === bracket.id
-                                                    ? 'bg-[#FF0000] hover:bg-[#8B0000] text-white'
-                                                    : 'border border-white/20 text-gray-300 hover:bg-white/10'
-                                            }`}
+                                            className={`min-h-11 shrink-0 px-4 text-sm font-bold uppercase tracking-[0.08em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${on ? "bg-white text-black" : "border border-white/20 text-white/75 hover:bg-white/10 hover:text-white"}`}
                                         >
                                             {bracket.categoryName}
                                         </button>
-                                    ))}
-                                </div>
+                                    );
+                                })}
                             </div>
                         )}
 
-                        {/* Bracket Display */}
                         {selectedBracket && (
-                            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-2xl font-bold">{selectedBracket.categoryName}</h2>
-                                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                                        selectedBracket.status === 'COMPLETED'
-                                            ? 'bg-green-600/20 text-green-400'
-                                            : selectedBracket.status === 'IN_PROGRESS'
-                                            ? 'bg-yellow-600/20 text-yellow-400'
-                                            : 'bg-gray-600/20 text-gray-400'
-                                    }`}>
-                                        {selectedBracket.status}
-                                    </span>
+                            <section aria-labelledby="bracket-heading">
+                                <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
+                                    <h2 id="bracket-heading" className="text-2xl font-extrabold md:text-3xl">{selectedBracket.categoryName}</h2>
+                                    <span className="text-sm font-semibold text-white/60">{statusLabel(selectedBracket.status)}</span>
                                 </div>
 
-                                {/* Bracket Tree */}
-                                <div className="overflow-x-auto">
-                                    <div className="min-w-max flex gap-8 pb-4">
-                                        {Object.entries(getMatchesByRound(selectedBracket))
-                                            .sort(([a], [b]) => parseInt(a) - parseInt(b))
-                                            .map(([roundNum, matches]) => {
-                                                const roundIndex = parseInt(roundNum) - 1;
-                                                const rounds = Object.keys(getMatchesByRound(selectedBracket));
-
-                                                return (
-                                                    <div key={roundNum} className="flex flex-col gap-4">
-                                                        {/* Round Header */}
-                                                        <div className="sticky top-20 z-10">
-                                                            <div className="bg-red-600/20 border border-red-500/30 rounded-lg p-3 mb-4">
-                                                                <span className="text-white font-bold text-sm">
-                                                                    {roundIndex === rounds.length - 1
-                                                                        ? '🏆 Final'
-                                                                        : roundIndex === rounds.length - 2
-                                                                        ? 'Semi Finals'
-                                                                        : `Round ${parseInt(roundNum)}`
-                                                                    }
-                                                                </span>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Matches */}
-                                                        {matches.map((match) => (
-                                                            <motion.div
-                                                                key={match.id}
-                                                                initial={{ opacity: 0, y: 20 }}
-                                                                animate={{ opacity: 1, y: 0 }}
-                                                                className={`bg-black/60 border rounded-xl overflow-hidden min-w-[280px] ${
-                                                                    match.status === 'COMPLETED'
-                                                                        ? 'border-green-500/30'
-                                                                        : match.status === 'LIVE'
-                                                                        ? 'border-red-500 shadow-lg shadow-red-500/20'
-                                                                        : 'border-white/10'
-                                                                }`}
-                                                            >
-                                                                {/* Live Indicator */}
-                                                                {match.status === 'LIVE' && (
-                                                                    <div className="bg-red-600 px-3 py-1 text-xs font-bold flex items-center justify-center gap-2">
-                                                                        <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                                                                        LIVE MATCH
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Fighter A */}
-                                                                <div className={`p-4 flex items-center gap-3 ${
-                                                                    match.winnerId === match.fighterAId
-                                                                        ? 'bg-yellow-500/20 border border-yellow-500/30'
-                                                                        : ''
-                                                                }`}>
-                                                                    <div className="flex-1">
-                                                                        {match.fighterA || match.fighterAName ? (
-                                                                            <>
-                                                                                <div className="flex items-center gap-2 mb-1">
-                                                                                    {match.winnerId === match.fighterAId && (
-                                                                                        <Crown className="w-4 h-4 text-yellow-400" />
-                                                                                    )}
-                                                                                    <span className="text-white font-bold">
-                                                                                        {match.fighterA?.name || match.fighterAName}
-                                                                                    </span>
-                                                                                </div>
-                                                                                {match.fighterA && (
-                                                                                    <span className={`text-xs px-2 py-0.5 rounded-full inline-block ${getBeltColor(match.fighterA.currentBeltRank)}`}>
-                                                                                        {match.fighterA.currentBeltRank}
-                                                                                    </span>
-                                                                                )}
-                                                                            </>
-                                                                        ) : (
-                                                                            <span className="text-gray-400 italic">TBD</span>
-                                                                        )}
-                                                                    </div>
-                                                                    {match.fighterAScore !== null && (
-                                                                        <span className="text-3xl font-black text-white">
-                                                                            {match.fighterAScore}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-
-                                                                <div className="h-px bg-white/10" />
-
-                                                                {/* Fighter B */}
-                                                                <div className={`p-4 flex items-center gap-3 ${
-                                                                    match.winnerId === match.fighterBId
-                                                                        ? 'bg-yellow-500/20 border border-yellow-500/30'
-                                                                        : ''
-                                                                }`}>
-                                                                    <div className="flex-1">
-                                                                        {match.fighterB || match.fighterBName ? (
-                                                                            <>
-                                                                                <div className="flex items-center gap-2 mb-1">
-                                                                                    {match.winnerId === match.fighterBId && (
-                                                                                        <Crown className="w-4 h-4 text-yellow-400" />
-                                                                                    )}
-                                                                                    <span className="text-white font-bold">
-                                                                                        {match.fighterB?.name || match.fighterBName}
-                                                                                    </span>
-                                                                                </div>
-                                                                                {match.fighterB && (
-                                                                                    <span className={`text-xs px-2 py-0.5 rounded-full inline-block ${getBeltColor(match.fighterB.currentBeltRank)}`}>
-                                                                                        {match.fighterB.currentBeltRank}
-                                                                                    </span>
-                                                                                )}
-                                                                            </>
-                                                                        ) : (
-                                                                            <span className="text-gray-400 italic">TBD</span>
-                                                                        )}
-                                                                    </div>
-                                                                    {match.fighterBScore !== null && (
-                                                                        <span className="text-3xl font-black text-white">
-                                                                            {match.fighterBScore}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </motion.div>
-                                                        ))}
-                                                    </div>
-                                                );
-                                            })}
+                                {/* Rounds scroll sideways inside their own container on small screens. */}
+                                <div className="-mx-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0">
+                                    <div className="flex min-w-max gap-6">
+                                        {roundKeys.map((roundNum, roundIndex) => (
+                                            <div key={roundNum} className="flex w-[17.5rem] flex-col">
+                                                <h3 className="mb-4 border-b border-white/15 pb-3 text-sm font-bold uppercase tracking-[0.08em] text-white/70">
+                                                    {roundIndex === roundKeys.length - 1 ? "Final" : roundIndex === roundKeys.length - 2 ? "Semi-finals" : `Round ${roundNum}`}
+                                                </h3>
+                                                <ol className="flex flex-1 flex-col justify-around gap-4">
+                                                    {rounds[roundNum].map((match) => (
+                                                        <li key={match.id}>
+                                                            <MatchCard match={match} />
+                                                        </li>
+                                                    ))}
+                                                </ol>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
-                            </div>
+                            </section>
                         )}
                     </>
                 )}
-            </div>
 
-            {/* Footer */}
-            <div className="border-t border-white/10 bg-black/40 backdrop-blur-md mt-12">
-                <div className="max-w-7xl mx-auto px-4 py-6 text-center">
-                    <p className="text-white/40 text-sm">
-                        Live Tournament Brackets • Auto-refreshing every 30 seconds
-                    </p>
-                </div>
+                <p className="mt-16 border-t border-white/10 pt-6 text-sm text-white/50">
+                    Scores update live while the connection is on. <Link href={`/events/${id}`} className="font-semibold text-white/75 underline-offset-4 hover:text-white hover:underline">Event details</Link>
+                </p>
             </div>
         </div>
+    );
+}
+
+const statusLabel = (status: string) =>
+    status === "COMPLETED" ? "Completed" : status === "IN_PROGRESS" ? "In progress" : status === "PENDING" ? "Not started" : status.replace("_", " ").toLowerCase();
+
+const BELT_SWATCH: Record<string, string> = {
+    WHITE: "#ffffff",
+    YELLOW: "#eab308",
+    ORANGE: "#f97316",
+    BLUE: "#3b82f6",
+    GREEN: "#22c55e",
+    BROWN: "#92400e",
+    BLACK: "#161616",
+};
+
+function Fighter({ name, belt, score, won, decided }: { name: string | null; belt?: string; score: number | null; won: boolean; decided: boolean }) {
+    return (
+        <div className={`flex items-center gap-3 px-4 py-3 ${won ? "bg-secondary/10" : ""}`}>
+            <div className="min-w-0 flex-1">
+                {name ? (
+                    <>
+                        <p className={`flex items-center gap-1.5 truncate font-bold ${decided && !won ? "text-white/50" : "text-white"}`}>
+                            {won && <Crown className="h-3.5 w-3.5 shrink-0 text-secondary" aria-label="Winner" />}
+                            <span className="truncate">{name}</span>
+                        </p>
+                        {belt && (
+                            <p className="mt-1 flex items-center gap-1.5 text-xs text-white/55">
+                                <span aria-hidden="true" className="h-2 w-4 rounded-sm ring-1 ring-white/25" style={{ backgroundColor: BELT_SWATCH[belt] ?? "#666" }} />
+                                {belt.charAt(0) + belt.slice(1).toLowerCase().replace("_", " ")}
+                            </p>
+                        )}
+                    </>
+                ) : (
+                    <p className="text-white/40">To be decided</p>
+                )}
+            </div>
+            {score !== null && (
+                <span className={`text-2xl font-black tabular-nums ${won ? "text-secondary" : "text-white/80"}`}>{score}</span>
+            )}
+        </div>
+    );
+}
+
+function MatchCard({ match }: { match: Match }) {
+    const live = match.status === "LIVE";
+    const decided = !!match.winnerId;
+    return (
+        <article
+            aria-label={`Match ${match.matchNumber}`}
+            className={`overflow-hidden rounded-lg border bg-surface ${live ? "border-primary" : "border-white/10"}`}
+        >
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-1.5 text-xs font-semibold text-white/50">
+                <span className="tabular-nums">Match {match.matchNumber}</span>
+                {live && (
+                    <span className="flex items-center gap-1.5 font-bold text-primary-light">
+                        <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" /> Live
+                    </span>
+                )}
+                {match.status === "COMPLETED" && <span>Final</span>}
+            </div>
+            <Fighter
+                name={match.fighterA?.name || match.fighterAName}
+                belt={match.fighterA?.currentBeltRank}
+                score={match.fighterAScore}
+                won={decided && match.winnerId === match.fighterAId}
+                decided={decided}
+            />
+            <div className="h-px bg-white/10" />
+            <Fighter
+                name={match.fighterB?.name || match.fighterBName}
+                belt={match.fighterB?.currentBeltRank}
+                score={match.fighterBScore}
+                won={decided && match.winnerId === match.fighterBId}
+                decided={decided}
+            />
+        </article>
     );
 }

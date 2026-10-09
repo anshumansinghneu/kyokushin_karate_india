@@ -2,20 +2,23 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-    MapPin, Phone, Mail, Users, Calendar, ArrowLeft,
-    ArrowUpRight, Camera, Shield, ChevronRight, Navigation, Clock, Activity, Flag, Info, Award
-} from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Mail, MapPin, Navigation, Phone, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import api from "@/lib/api";
 import { getEventStatus } from "@/lib/eventStatus";
+import { CITY_INDEX, normalizeCity } from "@/lib/cityCoords";
 import KarateLoader from "@/components/KarateLoader";
+import KankuMark from "@/components/KankuMark";
+import PageHero from "@/components/brand/PageHero";
+import BrandLink from "@/components/brand/BrandLink";
+import Reveal from "@/components/brand/Reveal";
+import Section, { Heading } from "@/components/brand/Section";
 import 'leaflet/dist/leaflet.css';
 
-import { dateOnlyParts, formatDateOnly } from '@/lib/dateOnly';
+import { dateOnlyParts } from '@/lib/dateOnly';
+
 /* ── Interfaces ── */
 interface Instructor {
     id: string;
@@ -31,7 +34,13 @@ interface Event {
     name: string;
     type: string;
     startDate: string;
+    endDate?: string | null;
     description: string;
+}
+
+interface GalleryPhoto {
+    url?: string;
+    imageUrl?: string;
 }
 
 interface Dojo {
@@ -46,34 +55,87 @@ interface Dojo {
     latitude?: number | null;
     longitude?: number | null;
     instructors: Instructor[];
-    gallery: any[];
+    gallery: GalleryPhoto[];
     events: Event[];
 }
 
-const CITY_COORDS: Record<string, [number, number]> = {
-  mumbai: [19.076, 72.8777], delhi: [28.7041, 77.1025], bangalore: [12.9716, 77.5946],
-  kolkata: [22.5726, 88.3639], chennai: [13.0827, 80.2707], hyderabad: [17.385, 78.4867],
-  pune: [18.5204, 73.8567], ahmedabad: [23.0225, 72.5714], surat: [21.1702, 72.8311],
-  jaipur: [26.9124, 75.7873], lucknow: [26.8467, 80.9462], kanpur: [26.4499, 80.3319],
-  nagpur: [21.1458, 79.0882], patna: [25.5941, 85.1376], indore: [22.7196, 75.8577],
-  bhopal: [23.2599, 77.4126], visakhapatnam: [17.6868, 83.2185], vadodara: [22.3072, 73.1812],
-  kochi: [9.9312, 76.2673], guwahati: [26.1445, 91.7362], bhubaneswar: [20.2961, 85.8245],
-  dehradun: [30.3165, 78.0322], chandigarh: [30.7333, 76.7794], noida: [28.5355, 77.391],
-  gurugram: [28.4595, 77.0266], alipurduar: [26.4918, 89.5271]
-};
+/* Belt ranks arrive as text ("Black 2nd Dan", "BROWN", "1ST_DAN"); read the colour and any dan degree out of it. */
+const KYU_SWATCH: [RegExp, string][] = [
+    [/white/i, "#ffffff"],
+    [/orange/i, "#f97316"],
+    [/blue/i, "#3b82f6"],
+    [/yellow/i, "#eab308"],
+    [/green/i, "#22c55e"],
+    [/brown/i, "#92400e"],
+];
 
-const BELT_COLORS: Record<string, string> = {
-    WHITE: "bg-white text-black",
-    ORANGE: "bg-orange-500 text-white",
-    BLUE: "bg-[#1d4ed8] text-white",
-    YELLOW: "bg-yellow-400 text-black",
-    GREEN: "bg-[#15803d] text-white",
-    BROWN: "bg-amber-900 text-white",
-    BLACK: "bg-black text-white border border-white/20",
-    "1ST_DAN": "bg-black text-white border border-yellow-500/50",
-    "2ND_DAN": "bg-black text-white border border-yellow-500/50",
-    "3RD_DAN": "bg-black text-white border border-yellow-500/50",
-};
+function beltOf(rank?: string) {
+    const text = (rank ?? "").replace(/_/g, " ");
+    const dan = /(\d+)\s*(st|nd|rd|th)?\s*dan/i.exec(text);
+    if (dan || /black/i.test(text)) return { color: "#161616", dan: dan ? Number(dan[1]) : 0, label: text };
+    const kyu = KYU_SWATCH.find(([re]) => re.test(text));
+    return { color: kyu ? kyu[1] : null, dan: 0, label: text };
+}
+
+const typeLabel = (type: string) =>
+    type === "BELT_EXAM" ? "Grading" : type.charAt(0) + type.slice(1).toLowerCase().replace("_", " ");
+
+function coordsOf(dojo: Dojo): [number, number] | null {
+    if (dojo.latitude && dojo.longitude) return [dojo.latitude, dojo.longitude];
+    return CITY_INDEX[normalizeCity(dojo.city)] ?? null;
+}
+
+/** Directions: exact pin when we have one, otherwise let Maps search the address. */
+function directionsUrl(dojo: Dojo) {
+    if (dojo.latitude && dojo.longitude) return `https://www.google.com/maps/dir/?api=1&destination=${dojo.latitude},${dojo.longitude}`;
+    const q = [dojo.name, dojo.address, dojo.city, dojo.state].filter(Boolean).join(", ");
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+}
+
+function InstructorRow({ inst }: { inst: Instructor }) {
+    const belt = beltOf(inst.currentBeltRank);
+    return (
+        <li className="flex items-center gap-5 py-5">
+            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-surface">
+                {inst.profilePhotoUrl ? (
+                    <Image src={inst.profilePhotoUrl} alt={inst.name} width={80} height={80} className="h-full w-full object-cover grayscale" />
+                ) : (
+                    <>
+                        <KankuMark className="absolute inset-1 h-auto w-auto text-white/[0.06]" />
+                        <span className="absolute inset-0 flex items-center justify-center text-2xl font-black uppercase text-white/40">
+                            {inst.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("")}
+                        </span>
+                    </>
+                )}
+            </div>
+            <div className="min-w-0">
+                <p className="text-lg font-extrabold leading-tight text-white">{inst.name}</p>
+                <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/65">
+                    <span className="capitalize">{inst.role?.toLowerCase()}</span>
+                    {inst.currentBeltRank && (
+                        <span className="flex items-center gap-2">
+                            {belt.color && (
+                                <span
+                                    aria-hidden="true"
+                                    className={`h-2.5 w-6 rounded-sm ring-1 ${belt.dan ? "ring-secondary/70" : "ring-white/30"}`}
+                                    style={{ backgroundColor: belt.color }}
+                                />
+                            )}
+                            {belt.dan > 0 && (
+                                <span aria-hidden="true" className="flex gap-0.5">
+                                    {Array.from({ length: Math.min(6, belt.dan) }).map((_, i) => (
+                                        <span key={i} className="h-2.5 w-0.5 bg-secondary" />
+                                    ))}
+                                </span>
+                            )}
+                            <span className={belt.dan ? "font-semibold text-secondary" : ""}>{belt.label}</span>
+                        </span>
+                    )}
+                </p>
+            </div>
+        </li>
+    );
+}
 
 export default function DojoDetailPage() {
     const params = useParams();
@@ -81,27 +143,20 @@ export default function DojoDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
-    
+
     // Mini-map map reference
     const mapRef = useRef<HTMLDivElement>(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mapInstanceRef = useRef<any>(null);
 
     useEffect(() => {
-        // Lock page to pure black
-        document.documentElement.style.background = '#000';
-        return () => {
-            document.documentElement.style.background = '';
-        };
-    }, []);
-
-    useEffect(() => {
         const fetchDojo = async () => {
             try {
                 const response = await api.get(`/dojos/${params.id}`);
                 setDojo(response.data.data.dojo);
-            } catch (err: any) {
-                setError(err.response?.data?.message || "Failed to load dojo details.");
+            } catch (err: unknown) {
+                const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+                setError(message || "Failed to load dojo details.");
             } finally {
                 setIsLoading(false);
             }
@@ -111,31 +166,24 @@ export default function DojoDetailPage() {
 
     useEffect(() => {
         if (!dojo || !mapRef.current || mapInstanceRef.current) return;
-
-        let coords: [number, number] | null = null;
-        if (dojo.latitude && dojo.longitude) {
-            coords = [dojo.latitude, dojo.longitude];
-        } else if (dojo.city && CITY_COORDS[dojo.city.toLowerCase()]) {
-            coords = CITY_COORDS[dojo.city.toLowerCase()];
-        }
-
+        const coords = coordsOf(dojo);
         if (!coords) return;
+        const exact = Boolean(dojo.latitude && dojo.longitude);
 
         const initMap = async () => {
             const L = (await import('leaflet')).default;
             if (!mapRef.current || mapInstanceRef.current) return;
 
             const map = L.map(mapRef.current, {
-                center: coords!,
-                zoom: 14,
+                center: coords,
+                // A city-level fallback should not pretend to street precision.
+                zoom: exact ? 14 : 11,
                 zoomControl: false,
                 scrollWheelZoom: false,
                 dragging: false,
             });
 
-            // Esri Dark Gray Canvas — keyless, genuinely dark, English labels.
-            // Replaces CARTO's dark_all, which now watermarks every tile with
-            // "API KEY REQUIRED". Kept in sync with /find-a-dojo.
+            // Esri Dark Gray Canvas — keyless, genuinely dark, English labels. Kept in sync with /find-a-dojo.
             L.tileLayer(
                 'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
                 {
@@ -144,15 +192,14 @@ export default function DojoDetailPage() {
                 },
             ).addTo(map);
 
-            const pinHTML = `<div style="width:20px;height:20px;border-radius:50%;background:#dc2626;border:2.5px solid #fff;box-shadow:0 0 12px rgba(220,38,38,0.4);"></div>`;
             const icon = L.divIcon({
-                html: pinHTML,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10],
+                html: `<div style="width:18px;height:18px;border-radius:50%;background:#ff0000;border:2.5px solid #fff;"></div>`,
+                iconSize: [18, 18],
+                iconAnchor: [9, 9],
                 className: '',
             });
 
-            L.marker(coords!, { icon }).addTo(map);
+            L.marker(coords, { icon }).addTo(map);
             mapInstanceRef.current = map;
         };
 
@@ -168,337 +215,256 @@ export default function DojoDetailPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <KarateLoader />
+            <div className="flex min-h-[80vh] items-center justify-center">
+                <KarateLoader label="Loading dojo" />
             </div>
         );
     }
 
     if (error || !dojo) {
         return (
-            <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white px-4">
-                <div className="w-16 h-16 rounded-2xl bg-red-600/10 border border-red-600/20 flex items-center justify-center mb-6">
-                    <Shield className="w-8 h-8 text-red-500" />
-                </div>
-                <h2 className="text-2xl font-bold mb-3">{error || "Dojo not found"}</h2>
-                <p className="text-zinc-400 mb-8 text-center max-w-md text-sm">
-                    The requested Dojo record could not be loaded. Please try again.
+            <div className="mx-auto flex min-h-[70vh] max-w-3xl flex-col justify-center px-4 py-20 sm:px-6">
+                <h1 className="text-[clamp(2rem,5vw,3.25rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] text-white">
+                    {error ? "We could not load this dojo" : "Dojo not found"}<span className="text-primary">.</span>
+                </h1>
+                <p className="mt-5 max-w-[48ch] text-lg leading-relaxed text-white/70">
+                    {error && error !== "Failed to load dojo details." ? `${error}. ` : ""}
+                    The requested dojo record could not be loaded. Please try again, or find another dojo.
                 </p>
-                <Link href="/find-a-dojo">
-                    <Button className="bg-white text-black hover:bg-gray-200 font-semibold px-6">
-                        <ArrowLeft className="w-4 h-4 mr-2" /> Unified Directory
-                    </Button>
-                </Link>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                    <BrandLink href="/find-a-dojo">
+                        <ArrowLeft className="h-4 w-4" /> All dojos
+                    </BrandLink>
+                    <BrandLink href="/dojos" variant="outline">Dojo directory</BrandLink>
+                </div>
             </div>
         );
     }
 
+    const events = [...(dojo.events ?? [])].sort((a, b) => {
+        // Active (upcoming/ongoing) first, completed last; each group chronological.
+        const ca = getEventStatus(a) === 'COMPLETED' ? 1 : 0;
+        const cb = getEventStatus(b) === 'COMPLETED' ? 1 : 0;
+        if (ca !== cb) return ca - cb;
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    });
+    const photos = (dojo.gallery ?? []).slice(0, 6);
+    const place = [dojo.city, dojo.state].filter(Boolean).join(", ");
+
     return (
-        <div className="min-h-screen w-full bg-black text-white font-sans selection:bg-red-600 selection:text-white">
-
-            {/* ── HERO ── */}
-            <div className="relative min-h-[380px] w-full">
-                {/* Background */}
-                <div className="absolute inset-0">
-                    <Image src="/dojo-bg.png" alt="Dojo" fill className="object-cover" priority />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/40" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
-                </div>
-
-                {/* Back Nav */}
-                <div className="absolute top-0 left-0 right-0 z-20 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-                    <Link
-                        href="/find-a-dojo"
-                        className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors"
-                    >
-                        <ArrowLeft className="w-3.5 h-3.5" /> All Dojos
-                    </Link>
-                </div>
-
-                {/* Content */}
-                <div className="absolute inset-0 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-10 z-10">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="max-w-3xl"
-                    >
-                        {/* Badges — clean, minimal */}
-                        <div className="flex flex-wrap items-center gap-2 mb-4">
-                            {dojo.dojoCode && (
-                                <span className="px-2.5 py-1 rounded bg-red-600 text-white text-[8px] font-extrabold uppercase tracking-[2px]">
-                                    {dojo.dojoCode}
-                                </span>
-                            )}
-                            <span className="px-2.5 py-1 rounded bg-white/[0.06] border border-white/[0.08] text-white/70 text-[8px] font-bold uppercase tracking-[2px]">
-                                {dojo.city}, {dojo.state}
-                            </span>
-                            <span className="flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-bold uppercase tracking-[2px]">
-                                <Shield className="w-2.5 h-2.5" /> Verified
-                            </span>
-                        </div>
-
-                        {/* Name — capped size so long names don't break */}
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight mb-4 leading-snug text-white">
-                            {dojo.name}
-                        </h1>
-
-                        {/* Meta row */}
-                        <div className="flex flex-wrap items-center gap-4 text-[12px] text-zinc-400 mb-5">
-                            {dojo.address && (
-                                <span className="flex items-center gap-1.5">
-                                    <MapPin className="w-3.5 h-3.5 text-red-500" />
-                                    {dojo.address}
-                                </span>
-                            )}
-                            <span className="flex items-center gap-1.5">
-                                <Users className="w-3.5 h-3.5 text-red-500" />
-                                {dojo.instructors?.length || 0} Instructor{dojo.instructors?.length !== 1 ? 's' : ''}
-                            </span>
-                            {dojo.events?.length > 0 && (
-                                <span className="flex items-center gap-1.5">
-                                    <Calendar className="w-3.5 h-3.5 text-red-500" />
-                                    {dojo.events.length} Event{dojo.events.length !== 1 ? 's' : ''}
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Quick action buttons */}
-                        <div className="flex flex-wrap gap-2">
-                            {(dojo.latitude && dojo.longitude) && (
-                                <a
-                                    href={`https://www.google.com/maps/dir/?api=1&destination=${dojo.latitude},${dojo.longitude}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-none bg-white text-black text-[11px] font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                                >
-                                    <Navigation className="w-3.5 h-3.5" /> Get Directions
-                                </a>
-                            )}
-                            {dojo.contactPhone && (
-                                <a
-                                    href={`tel:${dojo.contactPhone}`}
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-none bg-transparent border border-white/20 text-white text-[11px] font-bold uppercase tracking-wider hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                                >
-                                    <Phone className="w-3.5 h-3.5" /> Call
-                                </a>
-                            )}
-                            {dojo.contactEmail && (
-                                <a
-                                    href={`mailto:${dojo.contactEmail}`}
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-none bg-transparent border border-white/20 text-white text-[11px] font-bold uppercase tracking-wider hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                                >
-                                    <Mail className="w-3.5 h-3.5" /> Email
-                                </a>
-                            )}
-                        </div>
-                    </motion.div>
-                </div>
-            </div>
-
-            {/* ── MAIN CONTENT ── */}
-            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-32 grid grid-cols-1 lg:grid-cols-3 gap-10">
-                
-                {/* LEFT PORTFOLIO COLUMN */}
-                <div className="lg:col-span-2 space-y-12">
-                    
-                    {/* About */}
-                    <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-                        <h2 className="text-lg font-black uppercase tracking-tight mb-4 flex items-center gap-3">
-                            <div className="w-[3px] h-5 rounded-full bg-red-600" />
-                            Dojo Overview
-                        </h2>
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-8">
-                            <div className="text-zinc-400 leading-relaxed text-sm space-y-2">
-                                <p>Official KKFI registered branch in {dojo.city}, {dojo.state}.</p>
-                                {dojo.address && <p className="flex items-start gap-2"><MapPin className="w-3.5 h-3.5 text-zinc-400 mt-0.5 shrink-0" /> {dojo.address}</p>}
-                                {dojo.contactPhone && <p className="flex items-center gap-2"><Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" /> {dojo.contactPhone}</p>}
-                                {dojo.contactEmail && <p className="flex items-center gap-2"><Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" /> {dojo.contactEmail}</p>}
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    {/* Instructors */}
-                    <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-                        <h2 className="text-lg font-black uppercase tracking-tight mb-4 flex items-center gap-3">
-                            <div className="w-[3px] h-5 rounded-full bg-red-600" />
-                            Faculty & Instructors
-                        </h2>
-                        {dojo.instructors && dojo.instructors.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {dojo.instructors.map((inst, idx) => (
-                                    <div key={idx} className="bg-white/5 border border-white/10 p-5 rounded-xl flex items-center gap-5 hover:bg-white/[0.07] transition-colors">
-                                        <div className="w-16 h-16 rounded-lg bg-zinc-800 shrink-0 overflow-hidden border border-white/10">
-                                            {inst.profilePhotoUrl ? (
-                                                <Image src={inst.profilePhotoUrl} alt={inst.name} width={64} height={64} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-2xl font-black text-white/20 uppercase">
-                                                    {inst.name.charAt(0)}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-white tracking-tight">{inst.name}</p>
-                                            <div className="flex items-center gap-2 mt-1.5">
-                                                <span className="text-xs text-zinc-400 font-medium">{inst.role}</span>
-                                                <span className="w-1 h-1 rounded-full bg-white/20" />
-                                                <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${BELT_COLORS[inst.currentBeltRank] || "bg-zinc-700 text-white/70"}`}>
-                                                    {inst.currentBeltRank?.replace(/_/g, " ")}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="bg-white/5 border border-white/10 p-10 rounded-xl text-center flex flex-col items-center">
-                                <Users className="w-8 h-8 text-white/20 mb-3" />
-                                <h3 className="font-bold text-white/80 text-sm">No Instructors Listed</h3>
-                            </div>
-                        )}
-                    </motion.div>
-
-                    {/* Gallery */}
-                    <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-                        <h2 className="text-lg font-black uppercase tracking-tight mb-4 flex items-center gap-3">
-                            <div className="w-[3px] h-5 rounded-full bg-red-600" />
-                            Branch Facility
-                        </h2>
-                        {dojo.gallery && dojo.gallery.length > 0 ? (
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                                {dojo.gallery.slice(0, 6).map((photo: any, i: number) => (
-                                    <div
-                                        key={i}
-                                        className="aspect-square rounded-xl overflow-hidden bg-zinc-900 relative cursor-pointer group border border-white/10"
-                                        onClick={() => setLightboxIdx(i)}
-                                    >
-                                        <img
-                                            src={photo.url || photo.imageUrl}
-                                            alt={`Gallery ${i + 1}`}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                                        />
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                            <ArrowUpRight className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0" />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="bg-white/5 border border-white/10 p-10 rounded-xl text-center flex flex-col items-center">
-                                <Camera className="w-8 h-8 text-white/20 mb-3" />
-                                <h3 className="font-bold text-white/80 text-sm">No Photos Available</h3>
-                            </div>
-                        )}
-                    </motion.div>
-
-                    {/* Events */}
-                    <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-                        <h2 className="text-lg font-black uppercase tracking-tight mb-4 flex items-center gap-3">
-                            <div className="w-[3px] h-5 rounded-full bg-red-600" />
-                            Official Events
-                        </h2>
-                        {dojo.events && dojo.events.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {[...dojo.events]
-                                    // Active (upcoming/ongoing) first, completed last; each group chronological.
-                                    .sort((a, b) => {
-                                        const ca = getEventStatus(a) === 'COMPLETED' ? 1 : 0;
-                                        const cb = getEventStatus(b) === 'COMPLETED' ? 1 : 0;
-                                        if (ca !== cb) return ca - cb;
-                                        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
-                                    })
-                                    .map((event) => {
-                                        const done = getEventStatus(event) === 'COMPLETED';
-                                        return (
-                                    <Link key={event.id} href={`/events/${event.id}`}>
-                                        <div className={`bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors p-5 rounded-xl flex items-center gap-5 group ${done ? 'opacity-60' : ''}`}>
-                                            <div className="w-14 h-14 rounded-lg border border-white/10 bg-white/[0.02] flex flex-col items-center justify-center text-center shrink-0">
-                                                <span className={`text-[10px] uppercase font-bold mb-0.5 leading-none ${done ? 'text-gray-400' : 'text-red-500'}`}>
-                                                    {formatDateOnly(event.startDate, { month: 'short' }, 'en-US')}
-                                                </span>
-                                                <span className="text-lg font-black text-white leading-none">
-                                                    {dateOnlyParts(event.startDate).day}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold mb-1">
-                                                    {event.type}{done && <span className="text-gray-500"> · Completed</span>}
-                                                </p>
-                                                <h3 className="font-bold text-white group-hover:text-[#FF4D4D] transition-colors tracking-tight line-clamp-1">
-                                                    {event.name}
-                                                </h3>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                        );
-                                    })}
-                            </div>
-                        ) : (
-                            <div className="bg-white/5 border border-white/10 p-8 rounded-xl text-center flex flex-col items-center">
-                                <Calendar className="w-8 h-8 text-white/20 mb-3" />
-                                <h3 className="font-bold text-white/80 text-sm">No Upcoming Events</h3>
-                            </div>
-                        )}
-                    </motion.div>
-                </div>
-
-                {/* RIGHT SIDEBAR (Contact & Map) */}
-                <div className="lg:col-span-1 space-y-6">
-                    
-                    <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white/5 border border-white/10 rounded-xl p-6 sticky top-24">
-                        <div className="bg-white/5 p-4 rounded-lg mb-6 border border-white/10">
-                            <h3 className="font-black uppercase tracking-widest text-[11px] text-zinc-400 mb-2">Connect</h3>
-                            
-                            {dojo.contactPhone && (
-                                <div className="flex items-center gap-3 mb-2">
-                                    <Phone className="w-4 h-4 text-white" />
-                                    <p className="text-sm font-bold tracking-wide text-white">{dojo.contactPhone}</p>
-                                </div>
-                            )}
-
-                            {dojo.contactEmail && (
-                                <div className="flex items-center gap-3">
-                                    <Mail className="w-4 h-4 text-white" />
-                                    <p className="text-sm text-zinc-300">{dojo.contactEmail}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Embedded Map */}
-                        <div className="w-full h-48 bg-black border border-white/10 rounded-lg overflow-hidden relative mb-4">
-                            <div ref={mapRef} className="kkfi-dark-map w-full h-full z-0" />
-                        </div>
-
-                        {(dojo.latitude && dojo.longitude) && (
-                            <a href={`https://www.google.com/maps/dir/?api=1&destination=${dojo.latitude},${dojo.longitude}`} target="_blank" rel="noreferrer">
-                                <Button className="w-full bg-white text-black hover:bg-zinc-200 font-bold rounded-xl h-12">
-                                    <Navigation className="w-4 h-4 mr-2" /> Get Directions
-                                </Button>
+        <div className="min-h-screen w-full text-white selection:bg-primary selection:text-white">
+            <PageHero
+                height="tall"
+                kicker={
+                    <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        {dojo.dojoCode && <span className="font-bold text-white">{dojo.dojoCode}</span>}
+                        <span>{place}</span>
+                        <span className="text-white/50">Official KKFI branch</span>
+                    </span>
+                }
+                title={<span className="block max-w-[20ch] text-[clamp(2.25rem,5.5vw,4.5rem)] leading-[0.98]">{dojo.name}</span>}
+                lede={dojo.address || `Official KKFI registered branch in ${place}.`}
+                media={
+                    <Image src="/dojo-bg.png" alt="" fill priority sizes="100vw" className="object-cover opacity-55 grayscale" />
+                }
+                actions={
+                    <>
+                        <a
+                            href={directionsUrl(dojo)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="group inline-flex min-h-12 items-center justify-center gap-2 bg-primary px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                        >
+                            <Navigation className="h-4 w-4" aria-hidden="true" /> Get directions
+                        </a>
+                        {dojo.contactPhone && (
+                            <a
+                                href={`tel:${dojo.contactPhone}`}
+                                className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/25 px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10"
+                            >
+                                <Phone className="h-4 w-4" aria-hidden="true" /> Call
                             </a>
                         )}
-                    </motion.div>
+                        {dojo.contactEmail && (
+                            <a
+                                href={`mailto:${dojo.contactEmail}`}
+                                className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/25 px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10"
+                            >
+                                <Mail className="h-4 w-4" aria-hidden="true" /> Email
+                            </a>
+                        )}
+                    </>
+                }
+            >
+                <Link
+                    href="/find-a-dojo"
+                    className="order-first mb-8 inline-flex min-h-11 items-center gap-2 self-start text-sm font-semibold text-white/70 transition-colors hover:text-white"
+                >
+                    <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All dojos
+                </Link>
+            </PageHero>
 
+            <Section rhythm="base" width="wide" className="bg-black">
+                <div className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-20">
+                    <div className="space-y-20">
+                        {/* Instructors */}
+                        <Reveal>
+                            <Heading size="title">Instructors</Heading>
+                            {dojo.instructors && dojo.instructors.length > 0 ? (
+                                <ul className="mt-4 divide-y divide-white/10 border-y border-white/10">
+                                    {dojo.instructors.map((inst) => (
+                                        <InstructorRow key={inst.id ?? inst.name} inst={inst} />
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="mt-4 border-y border-white/10 py-6 text-white/65">
+                                    No instructors are listed for this dojo yet. Contact KKFI for class details.
+                                </p>
+                            )}
+                        </Reveal>
+
+                        {/* Events */}
+                        <Reveal>
+                            <Heading size="title">Events</Heading>
+                            {events.length > 0 ? (
+                                <ul className="mt-4 divide-y divide-white/10 border-y border-white/10">
+                                    {events.map((event) => {
+                                        const done = getEventStatus(event) === 'COMPLETED';
+                                        const d = dateOnlyParts(event.startDate);
+                                        return (
+                                            <li key={event.id}>
+                                                <Link href={`/events/${event.id}`} className="group grid grid-cols-[4rem_minmax(0,1fr)_auto] items-center gap-5 py-5">
+                                                    <span className={`text-center ${done ? "text-white/45" : "text-white"}`}>
+                                                        <span className="block text-sm font-bold">{d.month}</span>
+                                                        <span className="block text-3xl font-black leading-none tabular-nums">{d.day}</span>
+                                                    </span>
+                                                    <span className="min-w-0">
+                                                        <span className="block text-sm font-semibold text-white/55">
+                                                            {typeLabel(event.type)}{done && " · Completed"}
+                                                        </span>
+                                                        <span className={`mt-0.5 block truncate text-lg font-extrabold transition-colors group-hover:text-primary-light ${done ? "text-white/70" : "text-white"}`}>
+                                                            {event.name}
+                                                        </span>
+                                                    </span>
+                                                    <ArrowUpRight className="h-5 w-5 text-white/40 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white" aria-hidden="true" />
+                                                </Link>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            ) : (
+                                <p className="mt-4 border-y border-white/10 py-6 text-white/65">
+                                    No events are scheduled at this dojo. See the national <Link href="/calendar" className="font-semibold text-white underline decoration-primary decoration-2 underline-offset-4">calendar</Link>.
+                                </p>
+                            )}
+                        </Reveal>
+
+                        {/* Facility photos: only shown when there are some. */}
+                        {photos.length > 0 && (
+                            <Reveal>
+                                <Heading size="title">The dojo</Heading>
+                                <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
+                                    {photos.map((photo, i) => (
+                                        <button
+                                            key={i}
+                                            type="button"
+                                            onClick={() => setLightboxIdx(i)}
+                                            aria-label={`Open photo ${i + 1}`}
+                                            className={`group relative overflow-hidden rounded-lg bg-surface ${i === 0 ? "col-span-2 row-span-2 aspect-square md:col-span-2" : "aspect-square"}`}
+                                        >
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={photo.url || photo.imageUrl}
+                                                alt=""
+                                                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                                            />
+                                        </button>
+                                    ))}
+                                </div>
+                            </Reveal>
+                        )}
+                    </div>
+
+                    {/* Visit: address, contact and the map, kept in view on wide screens. */}
+                    <aside aria-label="Visit" className="lg:sticky lg:top-32 lg:self-start">
+                        <Heading size="title">Visit</Heading>
+                        <dl className="mt-4 divide-y divide-white/10 border-y border-white/10">
+                            <div className="flex gap-3 py-4">
+                                <dt className="sr-only">Address</dt>
+                                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-white/60" aria-hidden="true" />
+                                <dd className="leading-relaxed text-white/85">
+                                    {dojo.address ? <>{dojo.address}<br /></> : null}
+                                    {place}
+                                </dd>
+                            </div>
+                            {dojo.contactPhone && (
+                                <div className="flex gap-3 py-4">
+                                    <dt className="sr-only">Phone</dt>
+                                    <Phone className="mt-0.5 h-4 w-4 shrink-0 text-white/60" aria-hidden="true" />
+                                    <dd><a href={`tel:${dojo.contactPhone}`} className="font-semibold text-white hover:text-primary-light">{dojo.contactPhone}</a></dd>
+                                </div>
+                            )}
+                            {dojo.contactEmail && (
+                                <div className="flex gap-3 py-4">
+                                    <dt className="sr-only">Email</dt>
+                                    <Mail className="mt-0.5 h-4 w-4 shrink-0 text-white/60" aria-hidden="true" />
+                                    <dd className="min-w-0 break-words"><a href={`mailto:${dojo.contactEmail}`} className="text-white hover:text-primary-light">{dojo.contactEmail}</a></dd>
+                                </div>
+                            )}
+                        </dl>
+
+                        {coordsOf(dojo) && (
+                            <div className="relative mt-6 h-56 overflow-hidden rounded-lg border border-white/10 bg-surface">
+                                <div ref={mapRef} className="kkfi-dark-map z-0 h-full w-full" aria-label={`Map of ${dojo.city}`} role="img" />
+                                {!(dojo.latitude && dojo.longitude) && (
+                                    <p className="pointer-events-none absolute inset-x-0 bottom-0 z-[400] bg-gradient-to-t from-black/90 to-transparent px-3 pb-2 pt-6 text-xs text-white/70">
+                                        Approximate: city location
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        <a
+                            href={directionsUrl(dojo)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 border border-white/25 px-6 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10"
+                        >
+                            <Navigation className="h-4 w-4" aria-hidden="true" /> Open in Google Maps
+                        </a>
+                    </aside>
                 </div>
-            </div>
+            </Section>
 
             {/* Lightbox Modal */}
             <AnimatePresence>
-                {lightboxIdx !== null && dojo.gallery.length > 0 && (
+                {lightboxIdx !== null && photos.length > 0 && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/95 backdrop-blur-3xl flex items-center justify-center p-4"
+                        className="fixed inset-0 z-[130] flex items-center justify-center bg-black/95 p-4"
                         onClick={() => setLightboxIdx(null)}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Photo"
                     >
+                        <button
+                            type="button"
+                            onClick={() => setLightboxIdx(null)}
+                            aria-label="Close"
+                            className="absolute right-4 top-4 flex h-12 w-12 items-center justify-center text-white/80 hover:text-white"
+                        >
+                            <X className="h-6 w-6" />
+                        </button>
                         <motion.img
-                            initial={{ scale: 0.95, opacity: 0 }}
+                            initial={{ scale: 0.97, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                            src={dojo.gallery[lightboxIdx]?.url || dojo.gallery[lightboxIdx]?.imageUrl}
-                            alt="Gallery Fullscreen"
-                            className="max-w-full max-h-[90vh] rounded-2xl object-contain shadow-2xl"
+                            exit={{ scale: 0.97, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                            src={photos[lightboxIdx]?.url || photos[lightboxIdx]?.imageUrl}
+                            alt=""
+                            className="max-h-[90vh] max-w-full rounded-lg object-contain"
                             onClick={(e) => e.stopPropagation()}
                         />
                     </motion.div>

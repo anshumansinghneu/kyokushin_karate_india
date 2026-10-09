@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, CheckCircle, XCircle, Search, Award, Calendar, MapPin, AlertTriangle, Flame, TrendingUp, ArrowRight, ArrowLeft, Fingerprint, BadgeCheck, Clock, Star } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { ArrowLeft, ArrowRight, BadgeCheck, Printer } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import api from '@/lib/api';
+import KarateLoader from '@/components/KarateLoader';
 
 import { formatDateOnly } from '@/lib/dateOnly';
 interface VerifiedMember {
@@ -32,32 +32,52 @@ interface VerifiedMember {
 import InternationalHonours, { InternationalChip } from "@/components/InternationalHonours";
 import { readInternational, type InternationalRecord } from "@/lib/international";
 
-const BELT_COLORS: Record<string, { bg: string; ring: string; text: string }> = {
-    White: { bg: 'bg-white', ring: 'ring-white/20', text: 'text-white' },
-    Orange: { bg: 'bg-orange-500', ring: 'ring-orange-500/20', text: 'text-orange-400' },
-    Blue: { bg: 'bg-blue-500', ring: 'ring-blue-500/20', text: 'text-blue-400' },
-    Yellow: { bg: 'bg-yellow-400', ring: 'ring-yellow-400/20', text: 'text-yellow-400' },
-    Green: { bg: 'bg-green-500', ring: 'ring-green-500/20', text: 'text-green-400' },
-    Brown: { bg: 'bg-amber-700', ring: 'ring-amber-700/20', text: 'text-amber-500' },
-    Black: { bg: 'bg-gray-800', ring: 'ring-gray-600/20', text: 'text-gray-300' },
+/** Cloth colours, shown only as rank swatches: the colour carries the rank. */
+const BELT_SWATCH: Record<string, string> = {
+    White: '#ffffff',
+    Orange: '#f97316',
+    Blue: '#3b82f6',
+    Yellow: '#eab308',
+    Green: '#22c55e',
+    Brown: '#92400e',
+    Black: '#161616',
 };
 
-function getBeltStyle(rank: string) {
-    const key = Object.keys(BELT_COLORS).find(k => rank.includes(k));
-    return key ? BELT_COLORS[key] : { bg: 'bg-gray-600', ring: 'ring-gray-600/20', text: 'text-gray-400' };
+function beltSwatch(rank: string) {
+    const key = Object.keys(BELT_SWATCH).find(k => rank.includes(k));
+    return key ? BELT_SWATCH[key] : '#555555';
 }
+
+const STATUS: Record<string, { label: string; tone: string }> = {
+    ACTIVE: { label: 'Verified, active member', tone: 'text-white' },
+    EXPIRED: { label: 'Membership expired', tone: 'text-primary-light' },
+    REJECTED: { label: 'Membership rejected', tone: 'text-primary-light' },
+};
+
+const roleLabel = (role: string) => (role === 'INSTRUCTOR' ? 'Instructor' : role === 'ADMIN' ? 'Administrator' : 'Student');
+
+/*
+ * Printing: only the record itself goes to paper, in black on white. Scoped to
+ * this page with a data attribute; the site chrome is left alone on screen.
+ */
+const PRINT_CSS = `@media print {
+  body * { visibility: hidden !important; }
+  [data-print-record], [data-print-record] * { visibility: visible !important; }
+  [data-print-record] { position: absolute; left: 0; top: 0; width: 100%; padding: 24px; background: #fff !important; }
+  [data-print-record] * { color: #000 !important; border-color: rgba(0,0,0,0.25) !important; background: transparent !important; }
+  [data-print-hide] { display: none !important; }
+}`;
 
 export default function VerifyPage() {
     const params = useParams();
-    const router = useRouter();
     const membershipNumberFromUrl = params?.membershipNumber as string | undefined;
 
     const [searchQuery, setSearchQuery] = useState(membershipNumberFromUrl || '');
     const [member, setMember] = useState<VerifiedMember | null>(null);
-    const [loading, setLoading] = useState(false);
+    // Start in the loading state when a number arrives in the URL, so the page never flashes empty.
+    const [loading, setLoading] = useState(!!membershipNumberFromUrl);
     const [searched, setSearched] = useState(false);
     const [error, setError] = useState('');
-    const [isFocused, setIsFocused] = useState(false);
 
     const doSearch = async (query: string) => {
         if (!query.trim()) return;
@@ -73,8 +93,9 @@ export default function VerifyPage() {
             } else {
                 setError(res.data?.message || 'No member found with this membership number');
             }
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to connect to verification server');
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            setError(message || 'Failed to connect to verification server');
         } finally {
             setLoading(false);
         }
@@ -84,7 +105,6 @@ export default function VerifyPage() {
         if (membershipNumberFromUrl) {
             doSearch(membershipNumberFromUrl);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [membershipNumberFromUrl]);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -92,327 +112,224 @@ export default function VerifyPage() {
         doSearch(searchQuery);
     };
 
-    const beltStyle = member ? getBeltStyle(member.currentBeltRank) : null;
+    const status = member ? STATUS[member.membershipStatus] ?? { label: 'Membership pending approval', tone: 'text-white/75' } : null;
     const isActive = member?.membershipStatus === 'ACTIVE';
+    const history = member?.beltHistory?.length
+        ? [...member.beltHistory].sort((a, b) => a.promotionDate.localeCompare(b.promotionDate))
+        : [];
 
     return (
-        <div className="min-h-screen bg-black text-white relative">
-            {/* Background elements */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.012)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.012)_1px,transparent_1px)] bg-[size:48px_48px]" />
-            </div>
+        <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-white">
+            <style dangerouslySetInnerHTML={{ __html: PRINT_CSS }} />
 
-            {/* Top accent */}
-            <div className="h-[2px] bg-[#FF0000]" />
-
-            <div className="relative z-10 max-w-xl mx-auto px-5 pt-6 sm:pt-8 pb-20">
-                {/* Back link */}
-                <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}>
-                    <Link href="/verify" className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-white transition-colors mb-6 uppercase tracking-wider font-medium">
-                        <ArrowLeft className="w-3 h-3" />
-                        Back to search
+            <div className="mx-auto max-w-4xl px-4 pb-24 pt-6 sm:px-6 sm:pt-10">
+                {/* Search another, quietly above the record. */}
+                <div data-print-hide className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+                    <Link href="/verify" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white">
+                        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                        Membership register
                     </Link>
-                </motion.div>
-
-                {/* Compact search bar */}
-                <motion.form
-                    onSubmit={handleSubmit}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.05 }}
-                    className="mb-8"
-                >
-                    <div className={`flex items-center bg-white/[0.03] rounded-xl border transition-all duration-300 ${isFocused ? 'border-[#FF0000]/40 shadow-[0_0_20px_rgba(255,0,0,0.08)]' : 'border-white/[0.06]'}`}>
-                        <div className="pl-4 text-gray-400">
-                            <Search className="w-[18px] h-[18px]" />
+                    <form onSubmit={handleSubmit} role="search" aria-label="Verify another membership number" className="flex w-full items-end gap-3 sm:w-auto">
+                        <div className="flex-1 sm:w-72">
+                            <label htmlFor="verify-again" className="sr-only">Membership number</label>
+                            <input
+                                id="verify-again"
+                                type="text"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                placeholder="Another membership number"
+                                autoComplete="off"
+                                spellCheck={false}
+                                className="min-h-12 w-full rounded-none border-0 border-b-2 border-white/25 bg-transparent px-1 font-semibold uppercase tabular-nums text-white placeholder:normal-case placeholder:font-normal placeholder:text-white/45 transition-colors focus:outline-none focus-visible:border-primary"
+                            />
                         </div>
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            onFocus={() => setIsFocused(true)}
-                            onBlur={() => setIsFocused(false)}
-                            placeholder="Enter membership ID"
-                            className="flex-1 px-3 py-3.5 bg-transparent text-white text-sm placeholder-gray-400 focus:outline-none font-mono"
-                        />
-                        <div className="pr-1.5">
+                        <button
+                            type="submit"
+                            disabled={loading || !searchQuery.trim()}
+                            className="inline-flex min-h-12 items-center gap-2 rounded-none bg-primary px-5 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/50"
+                        >
+                            Verify <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                    </form>
+                </div>
+
+                <div className="mt-12" aria-live="polite">
+                    {loading && (
+                        <div className="flex min-h-[50svh] items-center justify-center">
+                            <KarateLoader label="Checking the register" />
+                        </div>
+                    )}
+
+                    {searched && !loading && error && (
+                        <section className="border-y border-white/10 py-16">
+                            <p className="text-sm font-semibold text-primary-light">No record found</p>
+                            <h1 className="mt-3 max-w-[18ch] text-balance text-[clamp(2rem,5vw,3.5rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
+                                Not in the register<span className="text-primary">.</span>
+                            </h1>
+                            <p className="mt-5 max-w-[52ch] text-lg leading-relaxed text-white/75">{error}</p>
+                            <p className="mt-2 max-w-[52ch] leading-relaxed text-white/60">
+                                Check the number against the membership card or certificate, including every letter and dash.
+                            </p>
                             <button
-                                type="submit"
-                                disabled={loading || !searchQuery.trim()}
-                                className="flex items-center gap-1.5 px-4 py-2 bg-[#FF0000] text-white font-bold uppercase tracking-wider text-xs rounded-none hover:bg-[#8B0000] disabled:bg-white/[0.05] disabled:text-gray-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                onClick={() => { setSearched(false); setError(''); setSearchQuery(''); }}
+                                className="mt-8 inline-flex min-h-12 items-center rounded-none border border-white/25 px-6 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
-                                {loading ? (
-                                    <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-transparent rounded-full animate-spin" />
+                                Try a different ID
+                            </button>
+                        </section>
+                    )}
+
+                    {searched && !loading && member && status && (
+                        <article data-print-record aria-labelledby="record-name" className="rounded-xl border border-white/15 bg-surface">
+                            {/* Letterhead */}
+                            <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-6 py-5 sm:px-10">
+                                <div className="flex items-center gap-3">
+                                    <Image src="/kkfi-logo.avif" alt="" width={36} height={36} className="h-9 w-9" />
+                                    <div>
+                                        <p className="text-sm font-bold text-white">Kyokushin Karate Foundation of India</p>
+                                        <p className="text-sm text-white/60">Membership record</p>
+                                    </div>
+                                </div>
+                                <p className={`flex items-center gap-2 text-sm font-bold ${status.tone}`}>
+                                    {isActive && <BadgeCheck className="h-5 w-5 text-secondary" aria-hidden="true" />}
+                                    {status.label}
+                                </p>
+                            </header>
+
+                            {/* Identity */}
+                            <div className="grid gap-8 px-6 py-10 sm:grid-cols-[auto_1fr] sm:items-center sm:px-10">
+                                {member.profilePhotoUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={member.profilePhotoUrl} alt={`Photograph of ${member.name}`} className="h-36 w-28 rounded-md object-cover ring-1 ring-white/15" />
                                 ) : (
-                                    <>Verify <ArrowRight className="w-3 h-3" /></>
+                                    <div aria-hidden="true" className="flex h-36 w-28 items-center justify-center rounded-md bg-black text-4xl font-black text-white/40 ring-1 ring-white/15">
+                                        {member.name.charAt(0)}
+                                    </div>
                                 )}
+                                <div className="min-w-0">
+                                    <h1 id="record-name" className="text-balance text-[clamp(2rem,5vw,3.25rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] text-white">
+                                        {member.name}
+                                    </h1>
+                                    <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-white/75">
+                                        <span className="text-lg font-bold tabular-nums tracking-[0.04em] text-white">{member.membershipNumber}</span>
+                                        <span>{roleLabel(member.role)}</span>
+                                        <InternationalChip record={readInternational(member.international)} />
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* The facts */}
+                            <dl className="grid border-t border-white/10 sm:grid-cols-2 lg:grid-cols-3">
+                                <div className="border-b border-white/10 px-6 py-6 sm:px-10">
+                                    <dt className="text-sm font-semibold text-white/60">Rank</dt>
+                                    <dd className="mt-2 flex items-center gap-3 text-xl font-extrabold text-white">
+                                        <span className="h-3 w-8 rounded-sm ring-1 ring-white/30" style={{ backgroundColor: beltSwatch(member.currentBeltRank) }} aria-hidden="true" />
+                                        {member.currentBeltRank}
+                                    </dd>
+                                </div>
+                                {member.dojo && (
+                                    <div className="border-b border-white/10 px-6 py-6 sm:px-10">
+                                        <dt className="text-sm font-semibold text-white/60">Dojo</dt>
+                                        <dd className="mt-2">
+                                            <span className="block text-lg font-bold leading-snug text-white">{member.dojo.name}</span>
+                                            <span className="text-white/65">{member.dojo.city}</span>
+                                        </dd>
+                                    </div>
+                                )}
+                                {member.membershipStartDate && (
+                                    <div className="border-b border-white/10 px-6 py-6 sm:px-10">
+                                        <dt className="text-sm font-semibold text-white/60">Member since</dt>
+                                        <dd className="mt-2 text-lg font-bold text-white">
+                                            {formatDateOnly(member.membershipStartDate, { month: 'long', year: 'numeric' }, 'en-IN')}
+                                        </dd>
+                                    </div>
+                                )}
+                                {member.membershipEndDate && (
+                                    <div className="border-b border-white/10 px-6 py-6 sm:px-10">
+                                        <dt className="text-sm font-semibold text-white/60">{isActive ? 'Valid until' : 'Expired'}</dt>
+                                        <dd className={`mt-2 text-lg font-bold ${isActive ? 'text-white' : 'text-primary-light'}`}>
+                                            {formatDateOnly(member.membershipEndDate, { day: 'numeric', month: 'long', year: 'numeric' }, 'en-IN')}
+                                        </dd>
+                                    </div>
+                                )}
+                                {member.experience && (
+                                    <div className="border-b border-white/10 px-6 py-6 sm:px-10">
+                                        <dt className="text-sm font-semibold text-white/60">Training</dt>
+                                        <dd className="mt-2 text-lg font-bold text-white">{member.experience.display}</dd>
+                                    </div>
+                                )}
+                                {typeof member.totalPromotions === 'number' && member.totalPromotions > 0 && (
+                                    <div className="border-b border-white/10 px-6 py-6 sm:px-10">
+                                        <dt className="text-sm font-semibold text-white/60">Promotions</dt>
+                                        <dd className="mt-2 text-lg font-bold tabular-nums text-white">{member.totalPromotions}</dd>
+                                    </div>
+                                )}
+                            </dl>
+
+                            {/* Promotion history, oldest first: the path walked. */}
+                            {(history.length > 0 || member.lastPromotion) && (
+                                <section aria-labelledby="history-heading" className="px-6 py-10 sm:px-10">
+                                    <h2 id="history-heading" className="text-xl font-extrabold text-white">Promotion history</h2>
+                                    {history.length > 0 ? (
+                                        <ol className="mt-6 divide-y divide-white/10 border-y border-white/10">
+                                            {history.map((p, i) => (
+                                                <li key={`${p.newBelt}-${p.promotionDate}-${i}`} className="flex items-center justify-between gap-4 py-4">
+                                                    <span className="flex items-center gap-3 font-bold text-white">
+                                                        <span className="h-3 w-8 rounded-sm ring-1 ring-white/30" style={{ backgroundColor: beltSwatch(p.newBelt) }} aria-hidden="true" />
+                                                        {p.newBelt}
+                                                    </span>
+                                                    <span className="tabular-nums text-white/65">
+                                                        {formatDateOnly(p.promotionDate, { day: 'numeric', month: 'short', year: 'numeric' }, 'en-IN')}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    ) : member.lastPromotion ? (
+                                        <p className="mt-4 text-white/75">
+                                            Last promoted to <span className="font-bold text-white">{member.lastPromotion.newBelt} Belt</span> on{' '}
+                                            {formatDateOnly(member.lastPromotion.promotionDate, { day: 'numeric', month: 'long', year: 'numeric' }, 'en-IN')}.
+                                        </p>
+                                    ) : null}
+                                </section>
+                            )}
+
+                            {/* Representing India. Renders nothing for a member who has never travelled. */}
+                            <div className="px-6 sm:px-10 [&:empty]:hidden">
+                                <InternationalHonours record={readInternational(member.international)} className="mb-10" />
+                            </div>
+
+                            {/* Attestation */}
+                            <footer className="flex flex-col gap-4 border-t border-white/10 px-6 py-6 text-sm text-white/60 sm:flex-row sm:items-center sm:justify-between sm:px-10">
+                                <p>
+                                    Checked against the KKFI register on{' '}
+                                    <span className="font-semibold text-white/85">
+                                        {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                    </span>
+                                    . Verify again at kyokushinfoundation.com/verify.
+                                </p>
+                                <button
+                                    type="button"
+                                    data-print-hide
+                                    onClick={() => window.print()}
+                                    className="inline-flex min-h-11 items-center gap-2 self-start rounded-none border border-white/25 px-4 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10 sm:self-auto"
+                                >
+                                    <Printer className="h-4 w-4" aria-hidden="true" /> Print
+                                </button>
+                            </footer>
+                        </article>
+                    )}
+
+                    {searched && !loading && member && (
+                        <div data-print-hide className="mt-10">
+                            <button
+                                onClick={() => { setSearched(false); setMember(null); setSearchQuery(''); }}
+                                className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white"
+                            >
+                                Verify another member <ArrowRight className="h-4 w-4" aria-hidden="true" />
                             </button>
                         </div>
-                    </div>
-                </motion.form>
-
-                <AnimatePresence mode="wait">
-                    {/* Loading */}
-                    {loading && (
-                        <motion.div
-                            key="loading"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="py-20"
-                        >
-                            <div className="flex flex-col items-center gap-4">
-                                <div className="relative">
-                                    <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
-                                        <Fingerprint className="w-5 h-5 text-[#FF4D4D]" />
-                                    </div>
-                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-black border border-white/[0.08] flex items-center justify-center">
-                                        <div className="w-2.5 h-2.5 border-2 border-[#FF0000] border-t-transparent rounded-full animate-spin" />
-                                    </div>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-sm text-gray-300 font-medium">Verifying membership</p>
-                                    <p className="text-[11px] text-gray-400 mt-1 font-mono">Checking KKFI records...</p>
-                                </div>
-                            </div>
-                        </motion.div>
                     )}
-
-                    {/* Error */}
-                    {searched && !loading && error && (
-                        <motion.div
-                            key="error"
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                        >
-                            <div className="border border-red-500/10 bg-red-500/[0.03] rounded-2xl overflow-hidden">
-                                <div className="px-6 py-10 text-center">
-                                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-red-500/[0.08] border border-red-500/10 flex items-center justify-center">
-                                        <XCircle className="w-6 h-6 text-red-400" />
-                                    </div>
-                                    <h2 className="text-base font-bold text-white mb-2">Membership Not Found</h2>
-                                    <p className="text-sm text-gray-400 max-w-xs mx-auto leading-relaxed">{error}</p>
-                                    <button
-                                        onClick={() => { setSearched(false); setError(''); setSearchQuery(''); }}
-                                        className="mt-5 px-5 py-2.5 rounded-none border border-white/20 text-sm text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                                    >
-                                        Try a different ID
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* Success Result */}
-                    {searched && !loading && member && (
-                        <motion.div
-                            key="result"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4 }}
-                        >
-                            {/* Verification badge / status */}
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.1 }}
-                                className={`relative overflow-hidden rounded-2xl border ${
-                                    isActive
-                                        ? 'border-green-500/15 bg-gradient-to-b from-green-500/[0.06] to-transparent'
-                                        : 'border-amber-500/15 bg-gradient-to-b from-amber-500/[0.06] to-transparent'
-                                }`}
-                            >
-                                {/* Status header */}
-                                <div className="flex items-center justify-between px-5 py-3.5">
-                                    <div className="flex items-center gap-2.5">
-                                        {isActive ? (
-                                            <div className="w-7 h-7 rounded-lg bg-green-500/15 flex items-center justify-center">
-                                                <BadgeCheck className="w-4 h-4 text-green-400" />
-                                            </div>
-                                        ) : member.membershipStatus === 'EXPIRED' ? (
-                                            <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
-                                                <AlertTriangle className="w-4 h-4 text-amber-400" />
-                                            </div>
-                                        ) : member.membershipStatus === 'REJECTED' ? (
-                                            <div className="w-7 h-7 rounded-lg bg-red-500/15 flex items-center justify-center">
-                                                <XCircle className="w-4 h-4 text-red-400" />
-                                            </div>
-                                        ) : (
-                                            <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
-                                                <Clock className="w-4 h-4 text-amber-400" />
-                                            </div>
-                                        )}
-                                        <div>
-                                            <span className={`text-xs font-bold uppercase tracking-wider ${isActive ? 'text-green-400' : 'text-amber-400'}`}>
-                                                {isActive ? 'Verified Member' : member.membershipStatus === 'EXPIRED' ? 'Expired' : member.membershipStatus === 'REJECTED' ? 'Rejected' : 'Pending'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {member.membershipEndDate && (
-                                        <span className="text-[10px] text-gray-400 font-mono">
-                                            exp {formatDateOnly(member.membershipEndDate, { month: 'short', year: 'numeric' }, 'en-IN')}
-                                        </span>
-                                    )}
-                                </div>
-
-                                {/* Identity section */}
-                                <div className="px-5 pb-5 pt-1">
-                                    <div className="flex items-center gap-4">
-                                        <div className="relative flex-shrink-0">
-                                            {member.profilePhotoUrl ? (
-                                                <img
-                                                    src={member.profilePhotoUrl}
-                                                    alt={member.name}
-                                                    className="w-16 h-16 rounded-2xl object-cover ring-2 ring-white/[0.08]"
-                                                />
-                                            ) : (
-                                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/[0.06] flex items-center justify-center text-xl font-black text-white/60">
-                                                    {member.name.charAt(0)}
-                                                </div>
-                                            )}
-                                            {isActive && (
-                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-black flex items-center justify-center">
-                                                    <CheckCircle className="w-3 h-3 text-white" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h2 className="text-xl font-black text-white truncate tracking-tight">{member.name}</h2>
-                                            <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                                                <InternationalChip record={readInternational(member.international)} />
-                                                <span className="px-2 py-0.5 rounded bg-white/[0.06] text-[10px] text-gray-400 font-mono">{member.membershipNumber}</span>
-                                                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
-                                                    {member.role === 'INSTRUCTOR' ? 'Instructor' : member.role === 'ADMIN' ? 'Admin' : 'Student'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            {/* Details card */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="mt-3 rounded-2xl border border-white/[0.06] bg-white/[0.015] overflow-hidden"
-                            >
-                                <div className="divide-y divide-white/[0.04]">
-                                    {/* Belt Rank - special treatment */}
-                                    <div className="flex items-center justify-between px-5 py-4">
-                                        <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Belt Rank</span>
-                                        <div className="flex items-center gap-2.5">
-                                            <div className={`w-3.5 h-3.5 rounded-full ${beltStyle?.bg} ring-4 ${beltStyle?.ring}`} />
-                                            <span className={`text-sm font-bold ${beltStyle?.text}`}>{member.currentBeltRank}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Dojo */}
-                                    {member.dojo && (
-                                        <div className="flex items-center justify-between px-5 py-4">
-                                            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Dojo</span>
-                                            <div className="text-right">
-                                                <span className="text-sm font-semibold text-white">{member.dojo.name}</span>
-                                                <p className="text-[11px] text-gray-400 flex items-center gap-1 justify-end mt-0.5">
-                                                    <MapPin className="w-2.5 h-2.5" />
-                                                    {member.dojo.city}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Member since */}
-                                    {member.membershipStartDate && (
-                                        <div className="flex items-center justify-between px-5 py-4">
-                                            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Member Since</span>
-                                            <span className="text-sm font-semibold text-white">
-                                                {formatDateOnly(member.membershipStartDate, { month: 'long', year: 'numeric' }, 'en-IN')}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {/* Experience */}
-                                    {member.experience && (
-                                        <div className="flex items-center justify-between px-5 py-4">
-                                            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Experience</span>
-                                            <span className="text-sm font-semibold text-white font-mono">{member.experience.display}</span>
-                                        </div>
-                                    )}
-
-                                    {/* Promotions */}
-                                    {typeof member.totalPromotions === 'number' && member.totalPromotions > 0 && (
-                                        <div className="flex items-center justify-between px-5 py-4">
-                                            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Promotions</span>
-                                            <div className="flex items-center gap-1.5">
-                                                <Star className="w-3.5 h-3.5 text-amber-500" />
-                                                <span className="text-sm font-semibold text-white">{member.totalPromotions}</span>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Last promotion */}
-                                    {member.lastPromotion && (
-                                        <div className="flex items-center justify-between px-5 py-4">
-                                            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium">Last Promotion</span>
-                                            <div className="text-right">
-                                                <span className="text-sm font-semibold text-white">{member.lastPromotion.newBelt} Belt</span>
-                                                <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-                                                    {formatDateOnly(member.lastPromotion.promotionDate, { day: 'numeric', month: 'short', year: 'numeric' }, 'en-IN')}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.div>
-
-                            {/* Representing India. Renders nothing for a member
-                                who has never travelled, so an ordinary
-                                verification card is unchanged. */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.25 }}
-                            >
-                                <InternationalHonours
-                                    record={readInternational(member.international)}
-                                    className="mt-3"
-                                />
-                            </motion.div>
-
-                            {/* Footer */}
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.3 }}
-                                className="mt-3 px-5 py-3 rounded-xl bg-white/[0.02] border border-white/[0.04] flex items-center justify-between"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Image src="/kkfi-logo.avif" alt="KKFI" width={14} height={14} className="w-3.5 h-3.5 opacity-30" />
-                                    <span className="text-[10px] text-gray-400">Kyokushin Karate Foundation of India</span>
-                                </div>
-                                <span className="text-[10px] text-gray-400 font-mono">
-                                    {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                </span>
-                            </motion.div>
-
-                            {/* Verify another */}
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.4 }}
-                                className="mt-8 text-center"
-                            >
-                                <button
-                                    onClick={() => { setSearched(false); setMember(null); setSearchQuery(''); }}
-                                    className="text-xs text-gray-400 hover:text-white transition-colors font-medium"
-                                >
-                                    Verify another member &rarr;
-                                </button>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                </div>
             </div>
         </div>
     );

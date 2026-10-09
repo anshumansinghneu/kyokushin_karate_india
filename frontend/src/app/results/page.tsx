@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
-import { Calendar, MapPin, ArrowUpRight, Award, ScrollText } from "lucide-react";
+import { ArrowUpRight, MapPin } from "lucide-react";
 import api from "@/lib/api";
 import KkfiCrest from "@/components/results/KkfiCrest";
+import Reveal from "@/components/brand/Reveal";
+import { Heading } from "@/components/brand/Section";
 
 import { formatDateOnly } from '@/lib/dateOnly';
 interface ExamResult {
@@ -26,133 +26,92 @@ function formatDate(d: string | null): string | null {
 export default function ResultsPage() {
   const [results, setResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
-  const reduce = useReducedMotion();
 
   useEffect(() => {
     api
       .get("/exam-results")
-      .then((res) => setResults(res.data.data.results))
+      // Newest grading first; undated sheets fall back to when they were published.
+      .then((res) => setResults(
+        [...(res.data.data.results as ExamResult[])].sort((a, b) => (b.testDate ?? b.createdAt).localeCompare(a.testDate ?? a.createdAt)),
+      ))
       .catch(() => setResults([]))
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <main className="relative min-h-dvh overflow-hidden bg-black text-white">
-      {/* Ambient lighting */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[460px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(255,0,0,0.12),transparent_72%)]" />
+    <div className="min-h-dvh bg-black text-white">
+      {/* Opener: the crest beside the title, the way a certificate is headed. */}
+      <header className="mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-14 pt-10 sm:px-6 md:flex-row md:items-end md:justify-between md:pb-20 md:pt-16 lg:px-8">
+        <div>
+          <p className="text-sm font-semibold text-white/60">Kyokushin Karate Foundation of India</p>
+          <h1 className="mt-4 max-w-[14ch] text-balance text-[clamp(2.75rem,8vw,5.5rem)] font-black uppercase leading-[0.92] tracking-[-0.035em]">
+            Belt test results<span className="text-primary">.</span>
+          </h1>
+          <p className="mt-6 max-w-[48ch] text-pretty text-lg leading-relaxed text-white/75">
+            Official grading results. Find your name, confirm your rank, and open the certified result
+            sheet, straight from the dojo.
+          </p>
+        </div>
+        <KkfiCrest size={132} glow={false} className="hidden md:block" />
+      </header>
 
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8 sm:py-24">
-        {/* Hero */}
-        <header className="flex flex-col items-center text-center">
-          <KkfiCrest size={108} />
-          <motion.p
-            initial={reduce ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="mt-7 text-[11px] font-semibold uppercase tracking-[0.35em] text-red-400/80"
-          >
-            Kyokushin Karate Foundation of India
-          </motion.p>
-          <motion.h1
-            initial={reduce ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.2 }}
-            className="mt-3 text-4xl font-extrabold tracking-tight text-white sm:text-6xl"
-          >
-            Belt Test Results
-          </motion.h1>
-          <motion.p
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-4 max-w-xl text-sm leading-relaxed text-gray-400 sm:text-base"
-          >
-            Official grading results. Find your name, confirm your rank, and view the certified
-            result sheet — straight from the dojo.
-          </motion.p>
-          <div className="mt-8 h-px w-28 bg-gradient-to-r from-transparent via-red-600/60 to-transparent" />
-        </header>
-
-        {/* Content */}
-        <section className="mt-14">
-          {loading ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-44 animate-pulse rounded-xl border border-white/10 bg-white/5"
-                  style={{ animationDelay: `${i * 90}ms` }}
-                />
-              ))}
-            </div>
-          ) : results.length === 0 ? (
-            <div className="mx-auto flex max-w-md flex-col items-center rounded-xl border border-white/10 bg-white/5 px-8 py-16 text-center">
-              <div className="rounded-xl border border-red-500/20 bg-red-950/30 p-4">
-                <ScrollText className="h-7 w-7 text-red-400" />
-              </div>
-              <p className="mt-5 text-lg font-semibold text-white">No results published yet</p>
-              <p className="mt-2 text-sm text-gray-400">
-                Grading results will appear here once they&apos;re released. Check back soon.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {results.map((r, i) => (
-                <motion.div
-                  key={r.id}
-                  initial={reduce ? false : { opacity: 0, y: 18 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.45, delay: Math.min(i * 0.05, 0.4), ease: "easeOut" }}
-                >
-                  <Link
-                    href={`/results/${r.id}`}
-                    className="group relative flex h-full min-h-[176px] flex-col gap-4 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-red-500/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                  >
-                    {/* top accent */}
-                    <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-500/70 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                    {/* watermark crest */}
-                    <Image
-                      src="/kkfi-logo.png"
-                      alt=""
-                      aria-hidden
-                      width={120}
-                      height={120}
-                      className="pointer-events-none absolute -right-5 -top-5 h-28 w-28 opacity-[0.05] transition-opacity duration-300 group-hover:opacity-[0.09]"
-                    />
-
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="rounded-xl border border-red-500/20 bg-red-950/30 p-3">
-                        <Award className="h-5 w-5 text-red-400" />
-                      </div>
-                      <ArrowUpRight className="h-5 w-5 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-red-400" />
-                    </div>
-
-                    <h2 className="text-lg font-bold leading-snug text-white transition-colors group-hover:text-red-50">
-                      {r.title}
-                    </h2>
-
-                    <div className="mt-auto flex flex-wrap gap-2">
-                      {formatDate(r.testDate) && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-gray-300">
-                          <Calendar className="h-3.5 w-3.5 text-red-400/80" />
-                          {formatDate(r.testDate)}
-                        </span>
-                      )}
-                      {r.location && (
-                        <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-gray-300">
-                          <MapPin className="h-3.5 w-3.5 shrink-0 text-red-400/80" />
-                          <span className="truncate">{r.location}</span>
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+      <section aria-labelledby="results-heading" className="mx-auto max-w-6xl px-4 pb-24 sm:px-6 lg:px-8">
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <Heading size="title" className="text-white/80">
+            <span id="results-heading">Published gradings</span>
+          </Heading>
+          {!loading && results.length > 0 && (
+            <p className="text-sm text-white/60 tabular-nums">{results.length} {results.length === 1 ? "sheet" : "sheets"}</p>
           )}
-        </section>
-      </div>
-    </main>
+        </div>
+
+        {loading ? (
+          <ul aria-busy="true" className="divide-y divide-white/10 border-y border-white/10">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <li key={i} className="py-7">
+                <div className="h-4 w-24 animate-pulse rounded bg-white/5" />
+                <div className="mt-3 h-6 w-2/3 animate-pulse rounded bg-white/5" />
+              </li>
+            ))}
+          </ul>
+        ) : results.length === 0 ? (
+          <div className="border-y border-white/10 py-16">
+            <p className="text-2xl font-extrabold text-white">No results published yet.</p>
+            <p className="mt-3 max-w-[46ch] leading-relaxed text-white/70">
+              Grading results appear here once they are released by the examining board. Check back after
+              your grading, or ask your instructor.
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-white/10 border-y border-white/10">
+            {results.map((r, i) => (
+              <Reveal as="li" key={r.id} delay={Math.min(i * 0.04, 0.3)}>
+                <Link
+                  href={`/results/${r.id}`}
+                  className="group grid items-baseline gap-x-8 gap-y-2 py-7 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:grid-cols-[9rem_1fr_auto]"
+                >
+                  <span className="text-sm font-semibold text-white/60 tabular-nums">{formatDate(r.testDate) ?? "Date to be confirmed"}</span>
+                  <span>
+                    <span className="block text-pretty text-lg font-extrabold leading-snug text-white transition-colors group-hover:text-primary-light md:text-xl">
+                      {r.title}
+                    </span>
+                    {r.location && (
+                      <span className="mt-1.5 flex items-center gap-1.5 text-sm text-white/60">
+                        <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        {r.location}
+                      </span>
+                    )}
+                  </span>
+                  <span className="hidden items-center gap-2 text-sm font-semibold text-white/60 transition-colors group-hover:text-white sm:flex">
+                    Open sheet
+                    <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                  </span>
+                </Link>
+              </Reveal>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
   );
 }

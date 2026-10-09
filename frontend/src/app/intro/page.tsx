@@ -1,158 +1,178 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { ChevronRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronRight } from "lucide-react";
+import PageHero from "@/components/brand/PageHero";
+import BrandLink from "@/components/brand/BrandLink";
+import Reveal from "@/components/brand/Reveal";
+import Section, { Heading } from "@/components/brand/Section";
+import KankuMark from "@/components/KankuMark";
+// Imported so Next can size them and generate blur placeholders at build time.
+import ryukoTake from "../../../public/ryuko-take.png";
+import shihanVasant from "../../../public/shihan-vasant.png";
+
+/* The line of authority, in order. A real sequence, so it is numbered. */
+const LINEAGE: { years: string; name: string; role: string; body: string; image: string | StaticImageData }[] = [
+    {
+        years: "1923–1994",
+        name: "Sosai Masutatsu Oyama",
+        role: "Founder of Kyokushin",
+        body: "Founded the International Karate Organization Kyokushinkaikan in Tokyo in 1964: full-contact fighting, extreme conditioning, and the Osu spirit.",
+        image: "/history/oyama.jpg",
+    },
+    {
+        years: "8th Dan",
+        name: "Daihyo Ryuko Take",
+        role: "President, IKO World Kyokushin Kaikan",
+        body: "Trained directly under Sosai Oyama from the age of 18, founded the Kagoshima branch in 1981, and today leads the world organisation KKFI belongs to.",
+        image: ryukoTake,
+    },
+    {
+        years: "Since 2013",
+        name: "Shihan Vasant Kumar Singh",
+        role: "Country Director, India",
+        body: "Training since 1987, he founded the Kyokushin Karate Foundation of India in 2013 to bring authentic Kyokushin to the country.",
+        image: shihanVasant,
+    },
+];
+
+const WORK = [
+    { title: "Train", body: "Dojos across India teaching one syllabus, from white belt to the dan grades.", href: "/find-a-dojo", cta: "Find a dojo" },
+    { title: "Grade", body: "Belt gradings held to the same standard in every dojo, recorded and verifiable.", href: "/belt-system", cta: "The belt path" },
+    { title: "Compete", body: "National tournaments, camps and seminars, announced on one calendar.", href: "/events", cta: "Events" },
+    { title: "Represent", body: "Team India: the karateka selected to fight for the country abroad.", href: "/team-india", cta: "Team India" },
+];
 
 export default function IntroPage() {
-    const prefersReducedMotion = useReducedMotion();
-    const [rawPhase, setPhase] = useState(0);
-    // With reduced motion, reveal the final composition immediately (no sequence).
-    const phase = prefersReducedMotion ? 5 : rawPhase;
-
-    useEffect(() => {
-        if (prefersReducedMotion) return; // Skip the cinematic timer sequence.
-        // Sequence controller
-        const timer1 = setTimeout(() => setPhase(1), 1000); // Pulse start
-        const timer2 = setTimeout(() => setPhase(2), 2500); // Tricolor burst
-        const timer3 = setTimeout(() => setPhase(3), 4000); // Kanku reveal
-        const timer4 = setTimeout(() => setPhase(4), 5500); // Text slam
-        const timer5 = setTimeout(() => setPhase(5), 7000); // Button reveal
-
-        return () => {
-            clearTimeout(timer1);
-            clearTimeout(timer2);
-            clearTimeout(timer3);
-            clearTimeout(timer4);
-            clearTimeout(timer5);
-        };
-    }, [prefersReducedMotion]);
-
     return (
-        <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center overflow-hidden relative selection:bg-red-600 selection:text-white">
-
-            {/* Ambient Background - single deliberate red glow on pure black */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,0,0,0.10),transparent_60%)] pointer-events-none" />
-
-            {/* Energy Beams */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: phase >= 2 ? 0.4 : 0 }}
-                transition={{ duration: 2 }}
-                className="absolute inset-0 pointer-events-none"
-            >
-                {/* Red Beam */}
-                <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-[#FF0000]/0 via-[#FF0000]/40 to-[#FF0000]/0 blur-xl transform -skew-x-12" />
-                {/* White Beam */}
-                <div className="absolute top-0 left-1/2 w-px h-full bg-gradient-to-b from-white/0 via-white/30 to-white/0 blur-xl transform -skew-x-12" />
-                {/* Red Beam */}
-                <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-[#FF0000]/0 via-[#FF0000]/40 to-[#FF0000]/0 blur-xl transform -skew-x-12" />
-            </motion.div>
-
-            {/* Central Composition */}
-            <div className="relative z-10 flex flex-col items-center">
-
-                {/* The Kanku Symbol - CSS Constructed for perfect scaling */}
-                <motion.div
-                    initial={{ scale: 0, opacity: 0, rotate: -90 }}
-                    animate={{
-                        scale: phase >= 3 ? 1 : 0,
-                        opacity: phase >= 3 ? 1 : 0,
-                        rotate: phase >= 3 ? 0 : -90
-                    }}
-                    transition={{
-                        duration: 1.5,
-                        ease: [0.16, 1, 0.3, 1], // Apple-style ease
-                    }}
-                    className="relative w-48 h-48 md:w-64 md:h-64 mb-12"
-                >
-                    {/* Kanku Circle (The Sun) */}
-                    <div className="absolute inset-0 rounded-full border-4 border-red-600 shadow-[0_0_50px_rgba(220,38,38,0.5)] bg-black/50 backdrop-blur-sm" />
-
-                    {/* Kanku Center (The Void) */}
-                    <div className="absolute inset-[35%] rounded-full bg-red-600 shadow-[0_0_30px_rgba(220,38,38,0.8)]" />
-
-                    {/* Kanku Fingers (The Peaks) - Top */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-[35%] bg-red-600 origin-bottom" />
-                    {/* Bottom */}
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[35%] bg-red-600 origin-top" />
-                    {/* Left (Rotated) */}
-                    <div className="absolute top-1/2 left-0 -translate-y-1/2 h-4 w-[35%] bg-red-600 origin-right" />
-                    {/* Right (Rotated) */}
-                    <div className="absolute top-1/2 right-0 -translate-y-1/2 h-4 w-[35%] bg-red-600 origin-left" />
-
-                    {/* Diagonal Rays (Thin lines for artistic flair) */}
-                    <motion.div
-                        animate={prefersReducedMotion ? undefined : { rotate: 360 }}
-                        transition={prefersReducedMotion ? undefined : { duration: 20, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-0 border border-red-600/20 rounded-full"
+        <div className="min-h-screen text-white selection:bg-primary selection:text-white">
+            <PageHero
+                height="screen"
+                align="bottom-left"
+                kicker={
+                    <span className="flex items-center gap-3">
+                        <span lang="ja" className="text-2xl font-black text-primary-light">極真</span>
+                        <span>The Ultimate Truth</span>
+                    </span>
+                }
+                title={
+                    <span className="uppercase">
+                        Kyokushin<br />India<span className="text-primary">.</span>
+                    </span>
+                }
+                lede="The Kyokushin Karate Foundation of India: the national home of full-contact Kyokushin, in the lineage of Sosai Mas Oyama."
+                media={
+                    <Image
+                        src="/history/grading-floor.jpg"
+                        alt="Karateka in white gi on the mats at a KKFI tournament"
+                        fill
+                        priority
+                        sizes="100vw"
+                        className="object-cover opacity-60 grayscale"
                     />
-                </motion.div>
+                }
+                actions={
+                    <>
+                        <BrandLink href="/">
+                            Enter the dojo <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </BrandLink>
+                        <BrandLink href="/what-is-kyokushin" variant="outline">What is Kyokushin?</BrandLink>
+                    </>
+                }
+            />
 
-                {/* Typography Lockup */}
-                <div className="text-center space-y-2">
-                    <div className="overflow-hidden">
-                        <motion.h1
-                            initial={{ y: 100 }}
-                            animate={{ y: phase >= 4 ? 0 : 100 }}
-                            transition={{ duration: 0.8, ease: "circOut" }}
-                            className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-none mix-blend-difference"
-                        >
-                            KYOKUSHIN
-                        </motion.h1>
-                    </div>
-
-                    <div className="overflow-hidden">
-                        <motion.h2
-                            initial={{ y: 100 }}
-                            animate={{ y: phase >= 4 ? 0 : 100 }}
-                            transition={{ duration: 0.8, delay: 0.1, ease: "circOut" }}
-                            className="text-4xl md:text-7xl font-black tracking-tighter text-white leading-none"
-                        >
-                            INDIA
-                        </motion.h2>
-                    </div>
+            {/* Who we are: one confident statement, then the plain facts. */}
+            <Section rhythm="open" width="wide" className="bg-black">
+                <div className="grid gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-20">
+                    <Reveal kind="mask" duration={1.1}>
+                        <p className="max-w-[20ch] text-balance text-[clamp(2rem,4.8vw,4rem)] font-black leading-[1.02] tracking-[-0.03em] text-white">
+                            One syllabus, one standard, one lineage, in every dojo in India<span className="text-primary">.</span>
+                        </p>
+                    </Reveal>
+                    <Reveal delay={0.1} className="space-y-6 self-end text-pretty text-lg leading-relaxed text-white/75">
+                        <p>
+                            <strong className="text-white">Kyokushin (極真)</strong> means &ldquo;the ultimate truth&rdquo;.
+                            It is the full-contact karate Sosai Masutatsu Oyama founded in 1964: real strikes to the body
+                            and legs, demanding conditioning, and a spirit that does not quit.
+                        </p>
+                        <p>
+                            KKFI is how that karate is taught in India. Led by Shihan Vasant Kumar Singh and part of IKO World
+                            Kyokushin Kaikan, it runs the dojos, gradings, tournaments and national team under one roof.
+                        </p>
+                    </Reveal>
                 </div>
+            </Section>
 
-                {/* Subtitle / Motto */}
-                <motion.p
-                    initial={{ opacity: 0, letterSpacing: "0em" }}
-                    animate={{
-                        opacity: phase >= 4 ? 1 : 0,
-                        letterSpacing: phase >= 4 ? "0.5em" : "0em"
-                    }}
-                    transition={{ duration: 1.5, delay: 0.5 }}
-                    className="mt-8 text-xs md:text-sm font-bold text-gray-400 uppercase"
-                >
-                    The Ultimate Truth
-                </motion.p>
+            {/* Lineage */}
+            <Section rhythm="base" width="wide" className="bg-black">
+                <Reveal>
+                    <Heading className="max-w-[18ch]">From the founder to India<span className="text-primary">.</span></Heading>
+                </Reveal>
+                <ol className="mt-14 grid gap-14 md:grid-cols-3 md:gap-8">
+                    {LINEAGE.map((p, i) => (
+                        <Reveal as="li" key={p.name} kind="depth" delay={i * 0.1}>
+                            <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-surface">
+                                <Image
+                                    src={p.image}
+                                    alt={`${p.name}, ${p.role}`}
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, 33vw"
+                                    placeholder={typeof p.image === "string" ? "empty" : "blur"}
+                                    className="object-cover object-top grayscale"
+                                />
+                            </div>
+                            <p className="mt-6 flex items-baseline gap-3 text-sm font-semibold">
+                                <span className="font-bold tabular-nums text-primary-light">0{i + 1}</span>
+                                <span className="text-secondary">{p.years}</span>
+                            </p>
+                            <h3 className="mt-2 text-2xl font-black uppercase leading-tight text-white">{p.name}</h3>
+                            <p className="mt-1 text-sm text-white/65">{p.role}</p>
+                            <p className="mt-4 max-w-[42ch] leading-relaxed text-white/75">{p.body}</p>
+                        </Reveal>
+                    ))}
+                </ol>
+            </Section>
 
-                {/* Enter Button */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{
-                        opacity: phase >= 5 ? 1 : 0,
-                        y: phase >= 5 ? 0 : 20
-                    }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                    className="mt-16"
-                >
-                    <Link href="/">
-                        <button className="group relative px-8 min-h-[44px] flex items-center bg-transparent overflow-hidden rounded-none border border-white/20 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-                            <span className="relative flex items-center gap-3 text-white font-bold uppercase tracking-widest text-sm">
-                                ENTER THE DOJO
-                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </span>
-                        </button>
-                    </Link>
-                </motion.div>
+            {/* What KKFI does: four rows that lead into the site. */}
+            <Section rhythm="base" width="base" className="bg-black">
+                <Reveal>
+                    <Heading>What we do</Heading>
+                </Reveal>
+                <ul className="mt-10 divide-y divide-white/10 border-y border-white/10">
+                    {WORK.map((w, i) => (
+                        <Reveal as="li" key={w.title} delay={i * 0.05}>
+                            <Link href={w.href} className="group grid items-baseline gap-2 py-7 md:grid-cols-[15rem_minmax(0,1fr)_auto] md:gap-10">
+                                <span className="text-[clamp(1.75rem,3vw,2.25rem)] font-black uppercase leading-none tracking-[-0.02em] text-white transition-colors group-hover:text-primary-light">
+                                    {w.title}
+                                </span>
+                                <span className="max-w-[52ch] text-lg leading-relaxed text-white/75">{w.body}</span>
+                                <span className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.1em] text-white/70 transition-colors group-hover:text-white">
+                                    {w.cta} <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                                </span>
+                            </Link>
+                        </Reveal>
+                    ))}
+                </ul>
+            </Section>
 
-            </div>
-
-            {/* Cinematic Grain Overlay */}
-            <div className="fixed inset-0 bg-[url('/noise.png')] opacity-[0.05] pointer-events-none mix-blend-overlay" />
-
+            {/* Closing */}
+            <Section rhythm="open" width="wide" className="overflow-hidden bg-black">
+                <KankuMark className="pointer-events-none absolute -right-[10vw] top-1/2 h-[70vw] max-h-[720px] w-[70vw] max-w-[720px] -translate-y-1/2 text-white/[0.04]" />
+                <Reveal kind="mask" duration={1.1}>
+                    <p className="text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.95] tracking-[-0.03em] text-white">
+                        The ultimate<br />truth<span className="text-primary">.</span>
+                    </p>
+                </Reveal>
+                <Reveal delay={0.15} className="mt-10 flex flex-col gap-3 sm:flex-row">
+                    <BrandLink href="/">
+                        Enter the dojo <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </BrandLink>
+                    <BrandLink href="/register" variant="outline">
+                        Become a member <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </BrandLink>
+                </Reveal>
+            </Section>
         </div>
     );
 }

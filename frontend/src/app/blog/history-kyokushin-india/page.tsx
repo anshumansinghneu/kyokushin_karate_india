@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Reveal from '@/components/brand/Reveal';
+import { ArticleBody, ArticleCta, ArticleHero, AUTHOR, GUIDES, KeepReading, Lede, PullQuote } from '../_components/article';
+
+const guide = GUIDES[2];
 
 export const metadata: Metadata = {
   title: 'History of Kyokushin Karate in India | From Sosai Oyama to KKFI',
@@ -68,34 +71,32 @@ export default function HistoryKyokushinIndia() {
 
   return (
     <article className="min-h-screen bg-black text-white">
-      {/* Hero */}
-      <div className="relative bg-black py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <span className="inline-block px-4 py-1.5 bg-white/5 border border-white/10 rounded-none text-[#FF4D4D] text-xs font-bold uppercase tracking-widest mb-6">
-            Our Heritage
-          </span>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6">
-            History of <span className="text-red-500">Kyokushin</span> in India
-          </h1>
-          <p className="text-xl text-gray-400 mb-2">From Sosai Oyama to Today</p>
-          <p className="text-gray-400 text-lg">
-            Published February 13, 2026 · By Kyokushin Karate Foundation of India
-          </p>
-        </div>
-      </div>
+      <ArticleHero
+        category={guide.category}
+        title="History of Kyokushin in India"
+        subtitle="From Sosai Oyama to Today"
+        image={guide.image}
+        imageAlt={guide.imageAlt}
+        meta={
+          <>
+            <span>Published {guide.date}</span>
+            <span aria-hidden="true" className="text-white/30">/</span>
+            <span>By {AUTHOR}</span>
+          </>
+        }
+      />
 
-      {/* Content */}
-      <div className="max-w-3xl mx-auto px-4 py-16">
-        <p className="text-xl text-gray-300 leading-relaxed mb-6">
+      <ArticleBody>
+        <Lede>
           The story of Kyokushin Karate in India is a story of warrior spirit traveling across borders.
           From the mountains of Japan where one man forged the &quot;ultimate truth&quot; style through
           superhuman training, to the dojos of Uttar Pradesh, Maharashtra, and beyond — Kyokushin&apos;s
           journey to India is one of perseverance, authenticity, and an unbreakable commitment to
           full-contact martial arts.
-        </p>
+        </Lede>
 
-        <h2 className="text-3xl font-bold text-white mt-12 mb-4">Who Was Sosai Masutatsu Oyama?</h2>
-        <p className="text-gray-300 leading-relaxed mb-12">
+        <h2>Who Was Sosai Masutatsu Oyama?</h2>
+        <p>
           Born Choi Yeong-eui in Korea in 1923, Masutatsu Oyama moved to Japan and trained in multiple
           martial arts before retreating to <strong>Mount Minobu</strong> for 18 months of solitary training.
           He meditated under waterfalls, broke stones with his hands, and fought bulls — killing three
@@ -105,101 +106,63 @@ export default function HistoryKyokushinIndia() {
           proof without real fighting. Without proof, there is no trust. Without trust, there is no
           respect.&quot;</em>
         </p>
+      </ArticleBody>
 
-        {/* Timeline */}
-        <div className="relative">
-          <div className="absolute left-4 md:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-red-600 via-red-600/50 to-transparent" />
-
-          <div className="space-y-12">
-            {timeline.map((event, i) => (
-              <div key={i} className="relative pl-12 md:pl-20">
-                <div className="absolute left-2 md:left-6 top-1 w-5 h-5 rounded-full bg-red-600 border-4 border-black" />
-                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                  <span className="text-red-500 font-black text-sm tracking-widest">{event.year}</span>
-                  <h3 className="text-xl font-bold text-white mt-1 mb-3">{event.title}</h3>
-                  <p className="text-gray-300 leading-relaxed">{event.description}</p>
-                </div>
+      {/* Timeline: a real sequence, so an ordered list with the years carrying it. */}
+      <section aria-label="Timeline" className="mx-auto max-w-[1100px] px-4 py-8 sm:px-6 lg:px-8">
+        <ol className="border-t border-white/15">
+          {timeline.map((event, i) => (
+            <Reveal as="li" key={event.year} delay={Math.min(i, 3) * 0.05} className="grid gap-2 border-b border-white/10 py-9 md:grid-cols-[11rem_1fr] md:gap-10">
+              <span className="text-[clamp(2rem,4vw,3rem)] font-black leading-none tracking-[-0.03em] text-white/35 tabular-nums">{event.year}</span>
+              <div className="max-w-[60ch]">
+                <h3 className="text-xl font-bold leading-snug text-white md:text-2xl">{event.title}</h3>
+                <p className="mt-3 text-pretty text-[1.0625rem] leading-[1.75] text-white/75">{event.description}</p>
               </div>
-            ))}
-          </div>
-        </div>
+            </Reveal>
+          ))}
+        </ol>
+      </section>
 
-        {/* Shihan Section */}
-        <div className="mt-16 prose prose-invert prose-lg prose-red max-w-none">
-          <h2 className="text-3xl font-bold text-white mt-12 mb-6">Shihan Vasant Kumar Singh & KKFI&apos;s Mission</h2>
-          <p className="text-gray-300">
-            Under the leadership of <strong>Shihan Vasant Kumar Singh</strong>, the Kyokushin Karate Foundation
-            of India carries forward Sosai Oyama&apos;s vision with a distinctly Indian mission: to make
-            world-class, authentic Kyokushin training accessible to practitioners across the country —
-            regardless of economic background.
-          </p>
-          <p className="text-gray-300">
-            KKFI&apos;s key initiatives include:
-          </p>
-          <ul className="text-gray-300 space-y-2">
-            <li><strong>Standardized grading and certification</strong> aligned with international Kyokushin standards</li>
-            <li><strong>National tournaments</strong> providing Indian fighters a platform to compete at the highest level</li>
-            <li><strong>CSR programs</strong> offering free or subsidized training to underprivileged youth</li>
-            <li><strong>Instructor development</strong> ensuring every KKFI dojo maintains the highest teaching standards</li>
-            <li><strong>Digital infrastructure</strong> for membership management, belt tracking, and tournament organization</li>
-          </ul>
+      <ArticleBody>
+        <h2>Shihan Vasant Kumar Singh &amp; KKFI&apos;s Mission</h2>
+        <p>
+          Under the leadership of <strong>Shihan Vasant Kumar Singh</strong>, the Kyokushin Karate Foundation
+          of India carries forward Sosai Oyama&apos;s vision with a distinctly Indian mission: to make
+          world-class, authentic Kyokushin training accessible to practitioners across the country —
+          regardless of economic background.
+        </p>
+        <p>KKFI&apos;s key initiatives include:</p>
+        <ul>
+          <li><strong>Standardized grading and certification</strong> aligned with international Kyokushin standards</li>
+          <li><strong>National tournaments</strong> providing Indian fighters a platform to compete at the highest level</li>
+          <li><strong>CSR programs</strong> offering free or subsidized training to underprivileged youth</li>
+          <li><strong>Instructor development</strong> ensuring every KKFI dojo maintains the highest teaching standards</li>
+          <li><strong>Digital infrastructure</strong> for membership management, belt tracking, and tournament organization</li>
+        </ul>
 
-          <blockquote className="border border-red-600/20 rounded-xl p-6 my-8 italic text-gray-400">
-            &quot;Kyokushin is not just a fighting style. It is a way of life. Our mission is to bring this
-            path of strength and character to every corner of India.&quot;
-            <br />— Shihan Vasant Kumar Singh, KKFI
-          </blockquote>
-        </div>
+        <PullQuote cite="Shihan Vasant Kumar Singh, KKFI">
+          &quot;Kyokushin is not just a fighting style. It is a way of life. Our mission is to bring this
+          path of strength and character to every corner of India.&quot;
+        </PullQuote>
+      </ArticleBody>
 
-        <div className="mt-12 p-8 bg-white/5 rounded-xl border border-white/10 text-center">
-          <h3 className="text-2xl font-bold text-white mb-3">Be Part of the Legacy</h3>
-          <p className="text-gray-400 mb-6">
-            Join thousands of practitioners continuing Sosai Oyama&apos;s legacy in India.
-            Train under certified KKFI instructors and earn internationally recognized belt grades.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/intro"
-              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-transparent hover:bg-white/10 text-white font-bold uppercase tracking-wider rounded-none transition-colors border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-            >
-              About KKFI
-            </Link>
-            <Link
-              href="/register"
-              className="inline-flex items-center justify-center px-8 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold uppercase tracking-wider rounded-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-            >
-              Register Now
-            </Link>
-          </div>
-        </div>
+      <ArticleCta
+        title="Be Part of the Legacy"
+        body="Join thousands of practitioners continuing Sosai Oyama's legacy in India. Train under certified KKFI instructors and earn internationally recognized belt grades."
+        actions={[
+          { href: '/register', label: 'Register Now', primary: true },
+          { href: '/intro', label: 'About KKFI' },
+        ]}
+      />
 
-        {/* Internal Links */}
-        <div className="mt-12 pt-8 border-t border-white/10">
-          <h3 className="text-lg font-bold text-white mb-4">Related Articles</h3>
-          <ul className="space-y-2">
-            <li>
-              <Link href="/blog/kyokushin-vs-shotokan" className="text-red-400 hover:text-red-300 transition-colors">
-                What Makes Kyokushin Different from Shotokan? →
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog/full-contact-training-youth-benefits" className="text-red-400 hover:text-red-300 transition-colors">
-                The Benefits of Full-Contact Training for Youth →
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog/kyokushin-grading-syllabus-2026" className="text-red-400 hover:text-red-300 transition-colors">
-                Kyokushin Grading Syllabus 2026: Complete Belt Guide →
-              </Link>
-            </li>
-            <li>
-              <Link href="/instructors" className="text-red-400 hover:text-red-300 transition-colors">
-                Meet Our Certified Instructors →
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
+      <KeepReading
+        links={[
+          { href: '/blog/kyokushin-vs-shotokan', title: 'What Makes Kyokushin Different from Shotokan?', note: 'Karate Knowledge' },
+          { href: '/blog/full-contact-training-youth-benefits', title: 'The Benefits of Full-Contact Training for Youth', note: 'Youth Development' },
+          { href: '/blog/kyokushin-grading-syllabus-2026', title: 'Kyokushin Grading Syllabus 2026: Complete Belt Guide', note: 'Official Syllabus' },
+          { href: '/instructors', title: 'Meet Our Certified Instructors', note: 'Instructors' },
+        ]}
+      />
     </article>
   );
 }

@@ -1,25 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trophy, Shield, Activity } from "lucide-react";
+import { ArrowLeft, Activity } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import BracketGenerator from "@/components/tournaments/BracketGenerator";
-import BracketTree from "@/components/tournaments/BracketTree";
+import BracketTree, { type BracketTreeMatch } from "@/components/tournaments/BracketTree";
 import LiveMatchControl from "@/components/tournaments/LiveMatchControl";
 import LiveMatchViewer from "@/components/tournaments/LiveMatchViewer";
 
 import KarateLoader from '@/components/KarateLoader';
+interface BracketData {
+    id: string;
+    categoryName: string;
+    matches: BracketTreeMatch[];
+}
+
 export default function TournamentBracketPage() {
     const { id } = useParams();
-    const router = useRouter();
     const { user } = useAuthStore();
     const [loading, setLoading] = useState(true);
-    const [event, setEvent] = useState<any>(null);
-    const [brackets, setBrackets] = useState<any[]>([]);
+    const [event, setEvent] = useState<{ id: string; name: string } | null>(null);
+    const [brackets, setBrackets] = useState<BracketData[]>([]);
     const [activeTab, setActiveTab] = useState<'brackets' | 'live' | 'admin'>('brackets');
     const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
 
@@ -41,85 +46,80 @@ export default function TournamentBracketPage() {
 
     useEffect(() => {
         if (id) fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
+            <div className="min-h-[70dvh] bg-black flex items-center justify-center">
                 <KarateLoader label="Loading bracket" />
             </div>
         );
     }
 
-    if (!event) return <div>Event not found</div>;
+    if (!event) {
+        return (
+            <div className="mx-auto flex min-h-[70dvh] max-w-xl flex-col items-start justify-center gap-6 px-4 text-white sm:px-6">
+                <h1 className="text-3xl font-black uppercase tracking-[-0.02em]">Event not found<span className="text-primary">.</span></h1>
+                <Link href="/events" className="inline-flex min-h-12 items-center border border-white/25 px-6 text-sm font-bold uppercase tracking-[0.1em] text-white hover:bg-white/10">All events</Link>
+            </div>
+        );
+    }
 
     const isAdmin = user?.role === 'ADMIN';
     const hasBrackets = brackets.length > 0;
+    const tabs: { key: 'brackets' | 'live' | 'admin'; label: string }[] = [
+        { key: 'brackets', label: 'Brackets' },
+        { key: 'live', label: 'Live matches' },
+        ...(isAdmin ? [{ key: 'admin' as const, label: 'Admin controls' }] : []),
+    ];
 
     return (
-        <div className="min-h-screen bg-black text-white p-6 pb-24">
-            <div className="max-w-7xl mx-auto">
-                <Link href={`/events/${id}`} className="inline-flex items-center text-zinc-400 hover:text-white mb-8 transition-colors">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Event
+        <div className="min-h-dvh bg-black text-white">
+            <div className="mx-auto max-w-[1400px] px-4 pb-24 pt-6 sm:px-6 md:pt-10 lg:px-8">
+                <Link href={`/events/${id}`} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white">
+                    <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Event details
                 </Link>
 
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div className="mt-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <h1 className="text-3xl font-black uppercase tracking-tighter mb-2">{event.name}</h1>
-                        <div className="flex items-center gap-2 text-zinc-400 text-sm">
-                            <Shield className="w-4 h-4" />
-                            <span>Tournament Bracket</span>
-                        </div>
+                        <p className="text-sm font-semibold text-white/60">Tournament bracket</p>
+                        <h1 className="mt-3 max-w-[20ch] text-balance text-[clamp(2rem,5vw,3.75rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">{event.name}</h1>
                     </div>
 
-                    {/* Tabs */}
-                    <div className="flex bg-zinc-900 p-1 rounded-none border border-zinc-800">
-                        <button
-                            onClick={() => setActiveTab('brackets')}
-                            className={`px-4 py-2 rounded-none uppercase tracking-wider text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${activeTab === 'brackets' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'
-                                }`}
-                        >
-                            Brackets
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('live')}
-                            className={`px-4 py-2 rounded-none uppercase tracking-wider text-sm font-bold transition-all flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${activeTab === 'live' ? 'bg-red-900/20 text-red-500' : 'text-zinc-500 hover:text-zinc-300'
-                                }`}
-                        >
-                            <Activity className="w-3 h-3" />
-                            Live Matches
-                        </button>
-                        {isAdmin && (
-                            <button
-                                onClick={() => setActiveTab('admin')}
-                                className={`px-4 py-2 rounded-none uppercase tracking-wider text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${activeTab === 'admin' ? 'bg-yellow-500/20 text-yellow-500' : 'text-zinc-500 hover:text-zinc-300'
-                                    }`}
-                            >
-                                Admin Controls
-                            </button>
-                        )}
+                    <div role="tablist" aria-label="View" className="flex border border-white/15">
+                        {tabs.map((t) => {
+                            const on = activeTab === t.key;
+                            return (
+                                <button
+                                    key={t.key}
+                                    role="tab"
+                                    aria-selected={on}
+                                    onClick={() => setActiveTab(t.key)}
+                                    className={`flex min-h-11 items-center gap-2 px-4 text-sm font-bold uppercase tracking-[0.08em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${on ? "bg-white text-black" : "text-white/65 hover:text-white"}`}
+                                >
+                                    {t.key === 'live' && <Activity className={`h-3.5 w-3.5 ${on ? "text-primary" : ""}`} aria-hidden="true" />}
+                                    {t.label}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
-                {/* Content */}
-                <div className="space-y-8">
+                <div className="mt-12 space-y-8">
                     {activeTab === 'admin' && isAdmin && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
                                 <div>
-                                    <h2 className="text-xl font-bold mb-4 text-zinc-300">Bracket Generation</h2>
+                                    <h2 className="mb-4 text-xl font-extrabold">Bracket generation</h2>
                                     <BracketGenerator eventId={id as string} onBracketsGenerated={fetchData} />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold mb-4 text-zinc-300">Live Match Management</h2>
+                                    <h2 className="mb-4 text-xl font-extrabold">Live match management</h2>
                                     {selectedMatchId ? (
                                         <LiveMatchControl matchId={selectedMatchId} onMatchUpdated={fetchData} />
                                     ) : (
-                                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-12 text-center text-gray-400">
-                                            <Trophy className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                                            <p>Select a match from the bracket to manage it.</p>
-                                        </div>
+                                        <p className="border-y border-white/10 py-12 text-white/65">Pick a match number under a bracket to manage it.</p>
                                     )}
                                 </div>
                             </div>
@@ -127,65 +127,41 @@ export default function TournamentBracketPage() {
                     )}
 
                     {activeTab === 'brackets' && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                            {!hasBrackets ? (
-                                <div className="text-center py-24 text-gray-400">
-                                    <Trophy className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                                    <h3 className="text-xl font-bold text-gray-300 mb-2">Brackets Not Generated</h3>
-                                    <p>The tournament brackets have not been finalized yet.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-12">
-                                    {brackets.map((bracket) => (
-                                        <div key={bracket.id} className="bg-zinc-950 border border-zinc-900 rounded-xl p-6 overflow-hidden">
-                                            <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                                                <span className="w-1 h-6 bg-yellow-500 rounded-full" />
-                                                {bracket.categoryName}
-                                            </h3>
-                                            <div className="overflow-x-auto">
-                                                {/* We need to pass matches to BracketTree. 
-                                                    Assuming bracket.matches is populated. */}
-                                                <div onClick={(e) => {
-                                                    // Hacky way to detect match click for Admin
-                                                    // Ideally BracketTree should accept onMatchClick
-                                                    // For now, we'll rely on a better implementation in BracketTree if we want interactivity
-                                                }}>
-                                                    <BracketTree matches={bracket.matches} />
+                        !hasBrackets ? (
+                            <div className="border-y border-white/10 py-16">
+                                <p className="text-2xl font-extrabold">Brackets not drawn yet.</p>
+                                <p className="mt-3 max-w-[46ch] leading-relaxed text-white/70">The draw has not been finalised. Brackets appear here as soon as it is.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-16">
+                                {brackets.map((bracket) => (
+                                    <section key={bracket.id} aria-label={bracket.categoryName}>
+                                        <h2 className="mb-6 border-b border-white/15 pb-3 text-xl font-extrabold md:text-2xl">{bracket.categoryName}</h2>
+                                        <BracketTree matches={bracket.matches} />
+
+                                        {isAdmin && (
+                                            <div className="mt-6 border-t border-white/10 pt-6">
+                                                <p className="mb-3 text-sm font-semibold text-white/60">Manage a match</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {bracket.matches.map((m) => (
+                                                        <button
+                                                            key={m.id}
+                                                            onClick={() => { setSelectedMatchId(m.id); setActiveTab('admin'); }}
+                                                            className={`min-h-10 border px-3 text-sm font-semibold tabular-nums ${m.status === 'LIVE' ? 'border-primary text-primary-light' : m.status === 'COMPLETED' ? 'border-white/10 text-white/45' : 'border-white/20 text-white/75 hover:bg-white/10'}`}
+                                                        >
+                                                            #{m.matchNumber}
+                                                        </button>
+                                                    ))}
                                                 </div>
                                             </div>
-
-                                            {/* Admin Match Selector (Temporary for MVP) */}
-                                            {isAdmin && (
-                                                <div className="mt-6 pt-6 border-t border-zinc-900">
-                                                    <p className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Admin Quick Select</p>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {bracket.matches.map((m: any) => (
-                                                            <button
-                                                                key={m.id}
-                                                                onClick={() => { setSelectedMatchId(m.id); setActiveTab('admin'); }}
-                                                                className={`px-3 py-1 text-xs rounded border ${m.status === 'LIVE' ? 'bg-red-900/20 border-red-500/50 text-red-400' :
-                                                                        m.status === 'COMPLETED' ? 'bg-green-900/20 border-green-500/50 text-green-400' :
-                                                                            'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
-                                                                    }`}
-                                                            >
-                                                                #{m.matchNumber}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </motion.div>
+                                        )}
+                                    </section>
+                                ))}
+                            </div>
+                        )
                     )}
 
-                    {activeTab === 'live' && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                            <LiveMatchViewer />
-                        </motion.div>
-                    )}
+                    {activeTab === 'live' && <LiveMatchViewer />}
                 </div>
             </div>
         </div>

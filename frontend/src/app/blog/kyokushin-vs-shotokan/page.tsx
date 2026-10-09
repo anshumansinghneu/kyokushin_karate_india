@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { ArticleBody, ArticleCta, ArticleHero, AUTHOR, GUIDES, KeepReading, Lede, PullQuote } from '../_components/article';
 
 export const metadata: Metadata = {
   title: 'What Makes Kyokushin Different from Shotokan? | Full Contact vs Traditional Karate',
@@ -26,156 +26,127 @@ export const metadata: Metadata = {
   },
 };
 
+const guide = GUIDES[0];
+
 export default function KyokushinVsShotokan() {
   return (
     <article className="min-h-screen bg-black text-white">
-      {/* Hero */}
-      <div className="relative bg-black py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <span className="inline-block px-4 py-1.5 bg-white/5 border border-white/10 rounded-none text-[#FF4D4D] text-xs font-bold uppercase tracking-widest mb-6">
-            Karate Knowledge
-          </span>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6">
-            What Makes <span className="text-red-500">Kyokushin</span> Different from <span className="text-red-500">Shotokan</span>?
-          </h1>
-          <p className="text-gray-400 text-lg">
-            Published February 13, 2026 · By Kyokushin Karate Foundation of India
-          </p>
-        </div>
-      </div>
+      <ArticleHero
+        category={guide.category}
+        title="What Makes Kyokushin Different from Shotokan?"
+        image={guide.image}
+        imageAlt={guide.imageAlt}
+        meta={
+          <>
+            <span>Published {guide.date}</span>
+            <span aria-hidden="true" className="text-white/30">/</span>
+            <span>By {AUTHOR}</span>
+          </>
+        }
+      />
 
-      {/* Content */}
-      <div className="max-w-3xl mx-auto px-4 py-16 prose prose-invert prose-lg prose-red">
-        <p className="text-xl text-gray-300 leading-relaxed">
+      <ArticleBody>
+        <Lede>
           If you&apos;ve ever searched for &quot;karate classes near me&quot; or &quot;best karate style for self-defense,&quot;
           you&apos;ve probably come across two dominant names: <strong>Kyokushin</strong> and <strong>Shotokan</strong>.
           Both are legitimate, respected styles of karate — but they are fundamentally different in philosophy,
           training, and combat application. Here&apos;s an honest, expert breakdown.
-        </p>
+        </Lede>
 
-        <h2 className="text-3xl font-bold text-white mt-12 mb-6">1. Contact: The Biggest Difference</h2>
-        <p className="text-gray-300">
+        <h2>1. Contact: The Biggest Difference</h2>
+        <p>
           <strong>Shotokan</strong> is a &quot;non-contact&quot; or &quot;light-contact&quot; style. In tournaments,
           fighters score points by executing techniques that stop just before impact. Judges watch for clean form,
           correct distancing, and speed. A punch that actually lands hard is typically penalized.
         </p>
-        <p className="text-gray-300">
+        <p>
           <strong>Kyokushin</strong>, founded by <strong>Sosai Masutatsu Oyama</strong>, is the original
           full-contact karate. Fighters strike with full power. Kicks to the body, legs, and head are delivered
           at 100% force. There are no points — a fight is won by knockout, decision, or the opponent&apos;s inability
           to continue. This is why Kyokushin practitioners call their art &quot;the strongest karate.&quot;
         </p>
 
-        <h2 className="text-3xl font-bold text-white mt-12 mb-6">2. Kata and Form</h2>
-        <p className="text-gray-300">
+        <h2>2. Kata and Form</h2>
+        <p>
           Both styles practice kata (pre-arranged patterns of techniques), but the emphasis differs.
           Shotokan kata tend to favor long, deep stances and aesthetic precision. Kyokushin kata —
           while still technically demanding — are practiced with a focus on practical application.
           Moves in Kyokushin kata translate directly into fighting techniques used in kumite (sparring).
         </p>
 
-        <h2 className="text-3xl font-bold text-white mt-12 mb-6">3. Physical Conditioning</h2>
-        <p className="text-gray-300">
-          Kyokushin training is renowned for its grueling physical conditioning. A typical class includes:
-        </p>
-        <ul className="text-gray-300 space-y-2">
+        <h2>3. Physical Conditioning</h2>
+        <p>Kyokushin training is renowned for its grueling physical conditioning. A typical class includes:</p>
+        <ul>
           <li><strong>100+ push-ups, sit-ups, and squats</strong> as warm-up</li>
           <li><strong>Shin conditioning</strong> by kicking heavy bags and pads</li>
           <li><strong>Body hardening drills</strong> to absorb full-contact strikes</li>
           <li><strong>The 100-man kumite</strong> — fighting 100 opponents in succession (the ultimate test)</li>
         </ul>
-        <p className="text-gray-300">
+        <p>
           Shotokan training, while athletic, places more emphasis on speed, timing, and technical accuracy
           rather than raw physical toughness.
         </p>
 
-        <h2 className="text-3xl font-bold text-white mt-12 mb-6">4. Tournament Rules</h2>
-        <div className="bg-white/5 rounded-xl p-6 border border-white/10 my-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-red-500 font-bold text-lg mb-3">Kyokushin Rules</h3>
-              <ul className="text-gray-300 text-sm space-y-1.5">
-                <li>Full-contact body & leg strikes</li>
-                <li>No punches to the face (kicks allowed)</li>
-                <li>Won by knockout, ippon, or decision</li>
-                <li>No protective gear (except groin guard)</li>
-                <li>Emphasis on fighting spirit & endurance</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-blue-400 font-bold text-lg mb-3">Shotokan (WKF) Rules</h3>
-              <ul className="text-gray-300 text-sm space-y-1.5">
-                <li>Controlled/no-contact strikes</li>
-                <li>Punches & kicks to head and body</li>
-                <li>Won by points (ippon, waza-ari)</li>
-                <li>Full protective gear required</li>
-                <li>Emphasis on speed & technique</li>
-              </ul>
-            </div>
+        <h2>4. Tournament Rules</h2>
+        {/* Side by side on wide screens: the comparison is the point. */}
+        <div className="!my-10 grid gap-x-10 gap-y-8 border-y border-white/15 py-8 md:grid-cols-2">
+          <div>
+            <h3 className="!mt-0">Kyokushin rules</h3>
+            <ul className="!my-0 !space-y-2 text-base">
+              <li>Full-contact body &amp; leg strikes</li>
+              <li>No punches to the face (kicks allowed)</li>
+              <li>Won by knockout, ippon, or decision</li>
+              <li>No protective gear (except groin guard)</li>
+              <li>Emphasis on fighting spirit &amp; endurance</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="!mt-0 !text-white/70">Shotokan (WKF) rules</h3>
+            <ul className="!my-0 !space-y-2 text-base text-white/70">
+              <li>Controlled/no-contact strikes</li>
+              <li>Punches &amp; kicks to head and body</li>
+              <li>Won by points (ippon, waza-ari)</li>
+              <li>Full protective gear required</li>
+              <li>Emphasis on speed &amp; technique</li>
+            </ul>
           </div>
         </div>
 
-        <h2 className="text-3xl font-bold text-white mt-12 mb-6">5. Philosophy & Spirit</h2>
-        <p className="text-gray-300">
+        <h2>5. Philosophy &amp; Spirit</h2>
+        <p>
           Both styles teach discipline, respect, and character development. But Kyokushin adds an extra
           dimension: <strong>perseverance under pressure</strong>. The motto is &quot;Osu!&quot; — a word that
           encapsulates patience, determination, and the willingness to push beyond your limits. Training is
           intentionally difficult because the goal is not just to learn techniques, but to forge an unbreakable spirit.
         </p>
-        <blockquote className="border border-red-600/20 rounded-xl p-6 my-8 italic text-gray-400">
+        <PullQuote cite="Sosai Masutatsu Oyama">
           &quot;One becomes a beginner after one thousand days of training and an expert after ten thousand days of practice.&quot;
-          <br />— Sosai Masutatsu Oyama
-        </blockquote>
+        </PullQuote>
 
-        <h2 className="text-3xl font-bold text-white mt-12 mb-6">Which Style Is Right for You?</h2>
-        <p className="text-gray-300">
+        <h2>Which Style Is Right for You?</h2>
+        <p>
           If you want precise, athletic martial arts with Olympic aspirations, Shotokan through WKF is a great path.
           If you want <strong>real fighting ability, extreme conditioning, and a warrior&apos;s mindset</strong>,
           Kyokushin is unmatched. For self-defense and practical combat readiness, full-contact training
           gives you something that point-sparring simply cannot — the ability to take and deliver real strikes under pressure.
         </p>
+      </ArticleBody>
 
-        <div className="mt-12 p-8 bg-white/5 rounded-xl border border-white/10 text-center">
-          <h3 className="text-2xl font-bold text-white mb-3">Ready to Train Full-Contact?</h3>
-          <p className="text-gray-400 mb-6">
-            Join the Kyokushin Karate Foundation of India and experience authentic full-contact karate training
-            under certified instructors. Dojos across India for kids and adults.
-          </p>
-          <Link
-            href="/register"
-            className="inline-flex items-center justify-center px-8 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white font-bold uppercase tracking-wider rounded-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-          >
-            Register Now — ₹295 Only
-          </Link>
-        </div>
+      <ArticleCta
+        title="Ready to Train Full-Contact?"
+        body="Join the Kyokushin Karate Foundation of India and experience authentic full-contact karate training under certified instructors. Dojos across India for kids and adults."
+        actions={[{ href: '/register', label: 'Register Now — ₹295 Only', primary: true }]}
+      />
 
-        {/* Internal Links for SEO */}
-        <div className="mt-12 pt-8 border-t border-white/10">
-          <h3 className="text-lg font-bold text-white mb-4">Related Articles</h3>
-          <ul className="space-y-2">
-            <li>
-              <Link href="/blog/full-contact-training-youth-benefits" className="text-red-400 hover:text-red-300 transition-colors">
-                The Benefits of Full-Contact Training for Youth →
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog/history-kyokushin-india" className="text-red-400 hover:text-red-300 transition-colors">
-                History of Kyokushin in India: From Sosai Oyama to Today →
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog/kyokushin-grading-syllabus-2026" className="text-red-400 hover:text-red-300 transition-colors">
-                Kyokushin Grading Syllabus 2026: Complete Belt Guide →
-              </Link>
-            </li>
-            <li>
-              <Link href="/syllabus" className="text-red-400 hover:text-red-300 transition-colors">
-                View the Full KKFI Training Syllabus →
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
+      {/* Internal links for SEO */}
+      <KeepReading
+        links={[
+          { href: '/blog/full-contact-training-youth-benefits', title: 'The Benefits of Full-Contact Training for Youth', note: 'Youth Development' },
+          { href: '/blog/history-kyokushin-india', title: 'History of Kyokushin in India: From Sosai Oyama to Today', note: 'Our Heritage' },
+          { href: '/blog/kyokushin-grading-syllabus-2026', title: 'Kyokushin Grading Syllabus 2026: Complete Belt Guide', note: 'Official Syllabus' },
+          { href: '/syllabus', title: 'View the Full KKFI Training Syllabus', note: 'Syllabus' },
+        ]}
+      />
     </article>
   );
 }
