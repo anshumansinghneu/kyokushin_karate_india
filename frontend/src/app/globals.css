@@ -5,9 +5,6 @@
 @layer base {
   /* ── Mobile-First Font Size (16px+ for readability) ── */
   html {
-    /* Reveal and scene transforms can briefly poke past the edge; clip (not
-       hidden) so sticky scroll scenes keep working and no sideways scroll appears. */
-    overflow-x: clip;
     font-size: 16px;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -88,7 +85,10 @@ body {
       transparent,
       rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
   font-family: var(--font-montserrat), sans-serif;
-  overflow-x: hidden;
+  /* clip, not hidden, and on body only: html stays overflow-visible so body's
+     overflow propagates to the viewport. Putting overflow on html instead made
+     body its own scroll container and silently broke every position: sticky. */
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeSpeed;
@@ -348,3 +348,96 @@ body {
 .kkfi-dark-map .leaflet-control-attribution a {
     color: rgba(255, 255, 255, 0.65) !important;
 }
+
+/* ---------------------------------------------------------------------------
+   Kanku loader (components/KarateLoader.tsx).
+   Each stroke is painted, held, then lifted, on a 2.4s loop; the red core
+   breathes once per cycle. pathLength=1 on the SVG makes the dash maths unitless.
+   --------------------------------------------------------------------------- */
+.kanku-loader .kl-stroke,
+.kanku-loader .kl-ring {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: kl-paint 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.kanku-loader .kl-ring { animation-duration: 2.4s; }
+.kanku-loader .kl-core {
+    transform-origin: 100px 100px;
+    animation: kl-core 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes kl-paint {
+    0% { stroke-dashoffset: 1; }
+    45%, 70% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -1; }
+}
+@keyframes kl-core {
+    0%, 100% { transform: scale(0.6); opacity: 0.5; }
+    50% { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .kanku-loader .kl-stroke,
+    .kanku-loader .kl-ring {
+        animation: none;
+        stroke-dashoffset: 0;
+    }
+    .kanku-loader .kl-core { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   First-visit intro (components/brand/InkSplash.tsx). Timeline, in seconds:
+   0.00 drop lands · 0.25–1.1 brush paints the Kanku · 0.9 極真 written ·
+   1.45–1.95 the emblem travels to the hero's emblem position ·
+   1.8–2.35 the ink opens around it and it dissolves into the hero's own mark.
+   --------------------------------------------------------------------------- */
+.ink-splash .sp-drop {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sp-drop 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.ink-splash .sp-ring {
+    stroke-dasharray: 1;
+    animation: sp-draw 0.8s cubic-bezier(0.65, 0, 0.35, 1) 0.25s both;
+}
+.ink-splash .sp-petal {
+    stroke-dasharray: 1;
+    animation:
+        sp-draw 0.45s cubic-bezier(0.65, 0, 0.35, 1) var(--d) both,
+        sp-fill 0.35s ease-out var(--f) both;
+}
+.ink-splash .sp-core {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sp-core 0.35s cubic-bezier(0.65, 0, 0.35, 1) 1.2s both;
+}
+.ink-splash .sp-emblem {
+    transform-origin: 50% 50%;
+    animation: sp-settle 0.9s cubic-bezier(0.65, 0, 0.35, 1) 1.45s both;
+}
+.ink-splash .sp-emblem--fade { animation-name: sp-settle-fade; }
+.ink-splash .sp-hole {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sp-open 0.6s cubic-bezier(0.7, 0, 0.25, 1) 1.8s both;
+}
+.ink-splash .sp-kanji { animation: sp-write 0.5s cubic-bezier(0.65, 0, 0.35, 1) 0.9s both; }
+.ink-splash .sp-name { animation: sp-in 0.4s ease-out 1.15s both; }
+.ink-splash .sp-words { animation: sp-lift 0.35s ease-in 1.4s both; }
+
+@keyframes sp-drop { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(0.86); opacity: 1; } }
+@keyframes sp-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes sp-fill { from { fill-opacity: 0; } to { fill-opacity: var(--fo); } }
+@keyframes sp-core { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes sp-settle {
+    0% { transform: translate(var(--x0), var(--y0)) scale(1); opacity: 1; }
+    55% { transform: translate(var(--x1), var(--y1)) scale(var(--s1)); opacity: 1; }
+    70% { opacity: 1; }
+    100% { transform: translate(var(--x1), var(--y1)) scale(var(--s1)); opacity: 0; }
+}
+@keyframes sp-settle-fade {
+    0% { transform: translate(var(--x0), var(--y0)) scale(1); opacity: 1; }
+    100% { transform: translate(var(--x0), var(--y0)) scale(var(--s1)); opacity: 0; }
+}
+@keyframes sp-open { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes sp-write { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes sp-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sp-lift { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-12px); } }
