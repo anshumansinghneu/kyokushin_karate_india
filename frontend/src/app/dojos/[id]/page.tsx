@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowUpRight, Mail, MapPin, Navigation, Phone, X } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +13,7 @@ import KarateLoader from "@/components/KarateLoader";
 import KankuMark from "@/components/KankuMark";
 import PageHero from "@/components/brand/PageHero";
 import BrandLink from "@/components/brand/BrandLink";
+import SceneSlot from "@/components/three/SceneSlot";
 import Reveal from "@/components/brand/Reveal";
 import Section, { Heading } from "@/components/brand/Section";
 import 'leaflet/dist/leaflet.css';
@@ -164,6 +165,13 @@ export default function DojoDetailPage() {
         if (params.id) fetchDojo();
     }, [params.id]);
 
+    // The hero map holds on this dojo's city, its beam red.
+    const mapScene = useMemo(() => {
+        const coords = dojo ? coordsOf(dojo) : null;
+        if (!coords) return null;
+        return { cities: [{ key: "here", lat: coords[0], lon: coords[1], count: 2 }], focus: "here", focusDistance: 1.8, drift: true };
+    }, [dojo]);
+
     useEffect(() => {
         if (!dojo || !mapRef.current || mapInstanceRef.current) return;
         const coords = coordsOf(dojo);
@@ -264,8 +272,23 @@ export default function DojoDetailPage() {
                 }
                 title={<span className="block max-w-[20ch] text-[clamp(2.25rem,5.5vw,4.5rem)] leading-[0.98]">{dojo.name}</span>}
                 lede={dojo.address || `Official KKFI registered branch in ${place}.`}
+                className="max-md:min-h-[100svh]"
                 media={
-                    <Image src="/dojo-bg.png" alt="" fill priority sizes="100vw" className="object-cover opacity-55 grayscale" />
+                    mapScene ? (
+                        <SceneSlot
+                            scene="india-map"
+                            sceneProps={mapScene}
+                            className="absolute inset-x-0 top-0 h-[42%] md:inset-0 md:h-auto"
+                            fallback={
+                                <div className="absolute inset-0 bg-black">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="/geo/india-poster.svg" alt="" className="absolute left-1/2 top-[6%] h-[88%] -translate-x-1/2 opacity-60 md:left-auto md:right-[8%] md:translate-x-0" />
+                                </div>
+                            }
+                        />
+                    ) : (
+                        <Image src="/history/solitude.jpg" alt="" fill priority sizes="100vw" className="object-cover opacity-55 grayscale" />
+                    )
                 }
                 actions={
                     <>

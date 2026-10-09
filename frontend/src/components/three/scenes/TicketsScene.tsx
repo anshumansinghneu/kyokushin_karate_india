@@ -7,7 +7,7 @@ import * as THREE from "three";
 import type { MotionValue } from "framer-motion";
 import InkBackdrop from "../materials/InkBackdrop";
 import { pointer } from "../pointer";
-import { useReadySignal } from "./sceneUtils";
+import { useLoadedTexture, useReadySignal } from "./sceneUtils";
 
 export interface Ticket {
     id: string;
@@ -27,6 +27,12 @@ interface TicketsSceneProps {
     tickets: Ticket[];
     /** 0 at the top of the hero, 1 once it has scrolled away: the stack fans open. */
     progress?: MotionValue<number>;
+    /** One event, not a stack: the first ticket alone, turning slowly (event detail pages). */
+    single?: boolean;
+    /** An image carried in the ink behind the ticket (e.g. the event poster). Must be CORS-readable. */
+    backdropImage?: string;
+    /** Centre the stack in its slot (used when the slot is a band above the copy on phones). */
+    centered?: boolean;
     onReady?: () => void;
 }
 
@@ -243,12 +249,15 @@ function useTicketTextures(tickets: Ticket[]) {
  * up, and fan open as the visitor scrolls past the hero. Past events print
  * dimmer and carry a COMPLETED stamp; only what is still to come uses red.
  */
-export default function TicketsScene({ tickets, progress, onReady }: TicketsSceneProps) {
+export default function TicketsScene({ tickets, progress, single = false, backdropImage, centered = false, onReady }: TicketsSceneProps) {
     // With nothing upcoming, an undated ticket sits on top of the stack: the next one is coming.
+    // A single event shows its own ticket, whatever its status.
     const list = useMemo(() => {
+        if (single) return tickets.slice(0, 1);
         const upcoming = tickets.some((t) => t.status !== "COMPLETED");
         return (upcoming ? tickets : [BLANK, ...tickets]).slice(0, 6);
-    }, [tickets]);
+    }, [tickets, single]);
+    const backdrop = useLoadedTexture(backdropImage);
     const shape = useMemo(() => ticketShape(), []);
     const geometry = useMemo(
         () =>
@@ -283,7 +292,21 @@ export default function TicketsScene({ tickets, progress, onReady }: TicketsScen
         fan.current += (target - fan.current) * (1 - Math.exp(-delta * 4));
         const f = fan.current;
 
-        groups.current.forEach((g, i) => {
+        if (single) {
+            const g = groups.current[0];
+            if (g) {
+                // Drops in once, then turns slowly on its own axis, never quite showing its back.
+                const local = THREE.MathUtils.clamp(t / 1.2, 0, 1);
+                const land = 1 - Math.pow(1 - local, 4);
+                g.position.set(0, (1 - land) * 2.2, 0);
+                // Cancel the stage's resting yaw so the ticket sways around facing the viewer,
+                // never far enough for the lacquer to mirror a softbox and wash out the print.
+                g.rotation.set(-0.06 + (1 - land) * 0.6 + Math.sin(t * 0.5) * 0.04, 0.32 + Math.sin(t * 0.32) * 0.3 * land, (1 - land) * 0.4 + Math.sin(t * 0.27) * 0.03);
+                g.visible = local > 0;
+            }
+        }
+
+        if (!single) groups.current.forEach((g, i) => {
             if (!g) return;
             // Staggered drop-in.
             const local = THREE.MathUtils.clamp((t - 0.15 * i) / 1.1, 0, 1);
@@ -312,7 +335,7 @@ export default function TicketsScene({ tickets, progress, onReady }: TicketsScen
     return (
         <>
             <PerspectiveCamera makeDefault position={portrait ? [0, 0, 7.4] : [0, 0, 6]} fov={34} />
-            <InkBackdrop red={0} density={0.4} octaves={5} />
+            <InkBackdrop red={0} density={0.4} octaves={5} texture={backdrop} />
             <Environment resolution={128} frames={1}>
                 <Lightformer form="rect" intensity={3} position={[0, 4, 4]} rotation-x={Math.PI / 3} scale={[8, 2, 1]} />
                 <Lightformer form="rect" intensity={1.5} position={[-5, 0, 2]} rotation-y={Math.PI / 2} scale={[4, 4, 1]} />
@@ -320,7 +343,7 @@ export default function TicketsScene({ tickets, progress, onReady }: TicketsScen
             <directionalLight position={[2, 3, 5]} intensity={1.4} />
             <ambientLight intensity={0.4} />
 
-            <group ref={stage} position={portrait ? [0, 1.25, 0] : [1.1, 0.05, 0]} scale={portrait ? 1 : 1.05}>
+            <group ref={stage} position={centered ? [0, 0.05, 0] : portrait ? [0, 1.25, 0] : [single ? 1.75 : 1.1, single ? 0.15 : 0.05, 0]} scale={centered ? 0.95 : portrait ? (single ? 0.9 : 1) : single ? 0.85 : 1.05}>
                 {list.map((ticket, i) => (
                     <group
                         key={ticket.id}

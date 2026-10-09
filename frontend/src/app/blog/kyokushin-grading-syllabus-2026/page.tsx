@@ -160,8 +160,9 @@ export default function GradingSyllabus2026() {
   ];
 
   return (
-    <article className="min-h-screen bg-black text-white">
+    <article className="min-h-screen text-white">
       <ArticleHero
+        kanji="帯"
         category={guide.category}
         title="Kyokushin Grading Syllabus 2026"
         subtitle="Complete Belt Rank Guide & Requirements"

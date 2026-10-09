@@ -5,6 +5,25 @@ import { ArrowUpRight } from "lucide-react";
 import Reveal from "@/components/brand/Reveal";
 import Section, { Heading } from "@/components/brand/Section";
 import BrandLink from "@/components/brand/BrandLink";
+import SceneSlot from "@/components/three/SceneSlot";
+
+// Stable props: the event's own logo, floating with depth over its own artwork.
+const LOGO_SCENE = { logo: "/low-kick-logo-v2.png", backdrop: "/low-kick-source-bg.jpg" };
+
+/** Still composition (reduced motion, slow devices, and before the canvas loads): artwork plus logo, flat. */
+function LowKickPoster() {
+    return (
+        <div className="absolute inset-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/low-kick-source-bg.jpg" alt="" className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.15),rgba(0,0,0,0.75)_75%)]" />
+            <div className="absolute inset-x-0 top-[13%] flex justify-center md:inset-y-0 md:left-auto md:right-[9vw] md:top-0 md:items-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/low-kick-logo-v2.png" alt="" className="w-[min(62vw,19rem)] md:w-[min(30vw,25rem)]" />
+            </div>
+        </div>
+    );
+}
 
 /*
  * Low Kick Championship is a partner event with its own brand: the red-and-blue
@@ -16,22 +35,14 @@ export default function LowKickPage() {
         <div className="min-h-screen text-white selection:bg-primary selection:text-white">
             {/* HERO: the event's own artwork and lockup. */}
             <header data-bleed className="relative flex min-h-[100svh] overflow-hidden">
-                <div className="absolute inset-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/low-kick-source-bg.jpg" alt="" className="h-full w-full object-cover" />
-                    <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.15),rgba(0,0,0,0.75)_75%)]" />
-                    <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent" />
-                </div>
+                {/* The official logo floats with real depth over the event artwork, both drawn in 3D;
+                    the flat poster underneath is the same artwork and logo, untouched. */}
+                <SceneSlot scene="showcase" sceneProps={LOGO_SCENE} className="absolute inset-0" fallback={<LowKickPoster />} />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent" />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/2 bg-gradient-to-r from-black/60 to-transparent md:block" />
 
-                <div className="relative z-10 mx-auto grid w-full max-w-[1400px] items-center gap-10 self-center px-4 pb-20 pt-32 sm:px-6 md:grid-cols-[minmax(0,1fr)_auto] md:pt-44 lg:px-8">
-                    {/* The official logo, given room rather than tucked in a corner. */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src="/low-kick-logo-v2.png"
-                        alt="Low Kick Championship"
-                        className="order-1 mx-auto w-[min(72vw,22rem)] md:order-2 md:w-[min(32vw,26rem)]"
-                    />
-                    <div className="order-2 md:order-1">
+                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-20 pt-[52svh] sm:px-6 md:justify-center md:pt-44 lg:px-8">
+                    <div className="max-w-[40rem]">
                         <h1 className="text-[clamp(2.1rem,8.6vw,6rem)] font-black uppercase leading-[0.9] tracking-[-0.03em] text-white">
                             Low kick
                             <span className="block text-primary">Championship</span>

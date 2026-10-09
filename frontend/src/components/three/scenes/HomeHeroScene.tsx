@@ -15,6 +15,11 @@ interface HomeHeroSceneProps {
     progress?: MotionValue<number>;
     imageUrl?: string;
     videoUrl?: string;
+    /**
+     * Framed for a panel rather than the full-width hero (the auth pages): the
+     * emblem centres in tall panels and sits right in short bands.
+     */
+    compact?: boolean;
     onReady?: () => void;
 }
 
@@ -26,7 +31,7 @@ const easeOutExpo = (t: number) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
  * the camera presses in while the emblem turns edge-on and the ink settles to
  * black, handing over to the page.
  */
-export default function HomeHeroScene({ progress, imageUrl, videoUrl, onReady }: HomeHeroSceneProps) {
+export default function HomeHeroScene({ progress, imageUrl, videoUrl, compact = false, onReady }: HomeHeroSceneProps) {
     const geo = useMemo(() => buildKanku(), []);
     const group = useRef<THREE.Group>(null);
     const cam = useRef<THREE.PerspectiveCamera>(null);
@@ -37,9 +42,27 @@ export default function HomeHeroScene({ progress, imageUrl, videoUrl, onReady }:
     const size = useThree((st) => st.size);
     // Keep the red heart behind the emblem: it sits right of centre on wide screens.
     const portrait = size.width < size.height * 0.9;
-    const coreUv: [number, number] = portrait ? [0.5, 0.74] : [0.73, 0.5];
-    const anchor: [number, number, number] = portrait ? [0, 1.12, 0] : [1.35, 0.05, 0];
-    const baseScale = portrait ? 0.48 : 1.1;
+    let coreUv: [number, number] = portrait ? [0.5, 0.74] : [0.73, 0.5];
+    let anchor: [number, number, number] = portrait ? [0, 1.12, 0] : [1.35, 0.05, 0];
+    let baseScale = portrait ? 0.48 : 1.1;
+    if (compact) {
+        // Visible half-height at the emblem's depth: tan(fov/2) * camera distance.
+        const halfH = Math.tan(THREE.MathUtils.degToRad(16)) * 6.2;
+        const aspect = size.width / Math.max(1, size.height);
+        if (aspect > 1.3) {
+            // Short band: emblem at the right, clear of the title on the left.
+            // Sits low enough to clear the fixed top bar that overlaps the band.
+            const x = halfH * aspect - 1.0;
+            anchor = [x, -0.25, 0];
+            baseScale = 0.55;
+            coreUv = [0.5 + x / (2 * halfH * aspect), 0.5 - 0.25 / (2 * halfH)];
+        } else {
+            // Tall panel: emblem high and centred, the brand copy sits beneath it.
+            anchor = [0, 0.5, 0];
+            baseScale = Math.min(0.9, 0.75 * halfH * aspect);
+            coreUv = [0.5, 0.5 + 0.5 / (2 * halfH)];
+        }
+    }
 
     useEffect(() => () => {
         geo.body.dispose();

@@ -7,6 +7,8 @@ import api from "@/lib/api";
 import KarateLoader from "@/components/KarateLoader";
 import PageHero from "@/components/brand/PageHero";
 import BrandLink from "@/components/brand/BrandLink";
+import SceneSlot from "@/components/three/SceneSlot";
+import { CITY_INDEX, normalizeCity } from "@/lib/cityCoords";
 
 interface DojoInstructor {
     name?: string;
@@ -20,6 +22,8 @@ interface Dojo {
     city: string;
     state?: string;
     address?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
     chiefInstructor?: string | null;
     instructors?: DojoInstructor[];
 }
@@ -111,11 +115,26 @@ export default function DojoListPage() {
     const groups = useMemo(() => byState(filtered), [filtered]);
     const cities = useMemo(() => new Set(dojos.map((d) => d.city.trim().toLowerCase())).size, [dojos]);
 
+    // One beam per city with a dojo; taller where there are more.
+    const mapScene = useMemo(() => {
+        const byCity = new Map<string, { key: string; lat: number; lon: number; count: number }>();
+        for (const d of dojos) {
+            const coords = d.latitude && d.longitude ? ([d.latitude, d.longitude] as [number, number]) : CITY_INDEX[normalizeCity(d.city)];
+            if (!coords) continue;
+            const key = normalizeCity(d.city) || coords.join(",");
+            const g = byCity.get(key);
+            if (g) g.count += 1;
+            else byCity.set(key, { key, lat: coords[0], lon: coords[1], count: 1 });
+        }
+        return { cities: [...byCity.values()], focus: null };
+    }, [dojos]);
+
     return (
         <div className="min-h-screen text-white selection:bg-primary selection:text-white">
             <PageHero
                 height="compact"
-                title={<>The dojo directory<span className="text-primary">.</span></>}
+                className="max-md:min-h-[88svh] md:min-h-[64svh]"
+                title={<>The dojo<br />directory<span className="text-primary">.</span></>}
                 lede={
                     isLoading
                         ? "Begin your journey. Locate the nearest Kyokushin Karate dojo and forge your spirit."
@@ -124,8 +143,17 @@ export default function DojoListPage() {
                           : `${dojos.length} official KKFI ${dojos.length === 1 ? "dojo" : "dojos"} in ${cities} ${cities === 1 ? "city" : "cities"}. Begin your journey: locate the nearest one and forge your spirit.`
                 }
                 media={
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src="/history/solitude.jpg" alt="" className="h-full w-full object-cover opacity-55 grayscale" />
+                    <SceneSlot
+                        scene="india-map"
+                        sceneProps={mapScene}
+                        className="absolute inset-x-0 top-0 h-[50%] md:inset-0 md:h-auto"
+                        fallback={
+                            <div className="absolute inset-0 bg-black">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="/geo/india-poster.svg" alt="" className="absolute left-1/2 top-[6%] h-[88%] -translate-x-1/2 opacity-60 md:left-auto md:right-[8%] md:translate-x-0" />
+                            </div>
+                        }
+                    />
                 }
                 actions={
                     <BrandLink href="/find-a-dojo" variant="outline">

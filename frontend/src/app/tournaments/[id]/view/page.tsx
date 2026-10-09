@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowUpRight, Crown, RefreshCw, Share2 } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 import BrandLink from "@/components/brand/BrandLink";
+import InkSlot from "@/components/three/InkSlot";
 import { formatDateOnly } from "@/lib/dateOnly";
 import axios from "axios";
 import { io, Socket } from "socket.io-client";
@@ -205,9 +206,15 @@ export default function PublicTournamentViewer() {
     const rounds = selectedBracket ? getMatchesByRound(selectedBracket) : {};
     const roundKeys = Object.keys(rounds).map(Number).sort((a, b) => a - b);
 
+    const anyLive = brackets.some((b) => b.matches?.some((m) => m.status === "LIVE"));
+
     return (
-        <div className="min-h-dvh bg-black text-white">
-            <header className="mx-auto max-w-[1400px] px-4 pb-10 pt-8 sm:px-6 md:pt-12 lg:px-8">
+        <div className="min-h-dvh text-white">
+            {/* Ink hero: 試合; the red heart only burns while a match is live. */}
+            <header data-bleed className="relative overflow-hidden">
+            <InkSlot kanji="試合" red={anyLive ? 0.7 : 0.08} />
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent md:bg-gradient-to-r md:from-black/85 md:via-black/35 md:to-transparent" />
+            <div className="relative z-10 mx-auto flex min-h-[66svh] max-w-[1400px] flex-col justify-end px-4 pb-10 pt-[36svh] sm:px-6 md:pt-44 lg:px-8">
                 <div className="flex flex-wrap items-center gap-3 text-sm font-semibold">
                     <span className={`inline-flex items-center gap-2 ${isConnected && liveUpdates ? "text-primary-light" : "text-white/60"}`}>
                         <span aria-hidden="true" className={`h-2 w-2 rounded-full ${isConnected && liveUpdates ? "bg-primary animate-pulse" : "bg-white/30"}`} />
@@ -255,6 +262,7 @@ export default function PublicTournamentViewer() {
                         Live updates
                     </label>
                 </div>
+            </div>
             </header>
 
             <div className="mx-auto max-w-[1400px] px-4 pb-24 sm:px-6 lg:px-8">

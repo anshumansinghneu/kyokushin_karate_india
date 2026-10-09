@@ -13,6 +13,7 @@ import LiveMatchControl from "@/components/tournaments/LiveMatchControl";
 import LiveMatchViewer from "@/components/tournaments/LiveMatchViewer";
 
 import KarateLoader from '@/components/KarateLoader';
+import InkSlot from "@/components/three/InkSlot";
 interface BracketData {
     id: string;
     categoryName: string;
@@ -67,6 +68,7 @@ export default function TournamentBracketPage() {
     }
 
     const isAdmin = user?.role === 'ADMIN';
+    const anyLive = brackets.some((b) => b.matches?.some((m) => m.status === "LIVE"));
     const hasBrackets = brackets.length > 0;
     const tabs: { key: 'brackets' | 'live' | 'admin'; label: string }[] = [
         { key: 'brackets', label: 'Brackets' },
@@ -75,8 +77,12 @@ export default function TournamentBracketPage() {
     ];
 
     return (
-        <div className="min-h-dvh bg-black text-white">
-            <div className="mx-auto max-w-[1400px] px-4 pb-24 pt-6 sm:px-6 md:pt-10 lg:px-8">
+        <div className="min-h-dvh text-white">
+            {/* Ink hero: 試合; red only while a match is live. */}
+            <header data-bleed className="relative overflow-hidden">
+                <InkSlot kanji="試合" red={anyLive ? 0.7 : 0.08} />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent md:bg-gradient-to-r md:from-black/85 md:via-black/35 md:to-transparent" />
+                <div className="relative z-10 mx-auto flex min-h-[58svh] max-w-[1400px] flex-col justify-end px-4 pb-10 pt-[30svh] sm:px-6 md:pt-40 lg:px-8">
                 <Link href={`/events/${id}`} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white">
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Event details
                 </Link>
@@ -106,7 +112,10 @@ export default function TournamentBracketPage() {
                     </div>
                 </div>
 
-                <div className="mt-12 space-y-8">
+                </div>
+            </header>
+            <div className="mx-auto max-w-[1400px] px-4 pb-24 sm:px-6 lg:px-8">
+                <div className="mt-4 space-y-8">
                     {activeTab === 'admin' && isAdmin && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                             <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">

@@ -6,6 +6,7 @@ import { RefreshCw, Crown } from "lucide-react";
 import { io } from "socket.io-client";
 import api from "@/lib/api";
 import BrandLink from "@/components/brand/BrandLink";
+import InkSlot from "@/components/three/InkSlot";
 import Reveal from "@/components/brand/Reveal";
 
 interface LiveMatch {
@@ -184,8 +185,12 @@ export default function LivePage() {
   const live = liveMatches.length > 0;
 
   return (
-    <div className="min-h-dvh bg-black text-white">
-      <header className="mx-auto max-w-[1400px] px-4 pb-12 pt-10 sm:px-6 md:pt-16 lg:px-8">
+    <div className="min-h-dvh text-white">
+      {/* Ink hero: 試合, with the red heart only while a match is actually on the mat. */}
+      <header data-bleed className="relative overflow-hidden">
+      <InkSlot kanji="試合" red={live ? 0.7 : 0.08} />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent md:bg-gradient-to-r md:from-black/85 md:via-black/35 md:to-transparent" />
+      <div className="relative z-10 mx-auto flex min-h-[64svh] max-w-[1400px] flex-col justify-end px-4 pb-12 pt-[40svh] sm:px-6 md:pt-44 lg:px-8">
         <p className={`flex items-center gap-2 text-sm font-semibold ${live ? "text-primary-light" : "text-white/60"}`}>
           <span aria-hidden="true" className={`h-2 w-2 rounded-full ${live ? "bg-primary animate-pulse" : "bg-white/30"}`} />
           {live ? `${liveMatches.length} ${liveMatches.length === 1 ? "match" : "matches"} on the mat` : "Nothing on the mat right now"}
@@ -205,6 +210,7 @@ export default function LivePage() {
           </button>
           {lastUpdate && <span className="text-sm text-white/50 tabular-nums">Updated {lastUpdate.toLocaleTimeString()}</span>}
         </div>
+      </div>
       </header>
 
       <div className="mx-auto max-w-[1400px] space-y-20 px-4 pb-24 sm:px-6 lg:px-8">

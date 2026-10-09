@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useScroll } from "framer-motion";
+import SceneSlot from "@/components/three/SceneSlot";
 import Link from "next/link";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import api from "@/lib/api";
@@ -39,23 +41,12 @@ export default function ResultsPage() {
   }, []);
 
   return (
-    <div className="min-h-dvh bg-black text-white">
-      {/* Opener: the crest beside the title, the way a certificate is headed. */}
-      <header className="mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-14 pt-10 sm:px-6 md:flex-row md:items-end md:justify-between md:pb-20 md:pt-16 lg:px-8">
-        <div>
-          <p className="text-sm font-semibold text-white/60">Kyokushin Karate Foundation of India</p>
-          <h1 className="mt-4 max-w-[14ch] text-balance text-[clamp(2.75rem,8vw,5.5rem)] font-black uppercase leading-[0.92] tracking-[-0.035em]">
-            Belt test results<span className="text-primary">.</span>
-          </h1>
-          <p className="mt-6 max-w-[48ch] text-pretty text-lg leading-relaxed text-white/75">
-            Official grading results. Find your name, confirm your rank, and open the certified result
-            sheet, straight from the dojo.
-          </p>
-        </div>
-        <KkfiCrest size={132} glow={false} className="hidden md:block" />
-      </header>
+    // Transparent: the podium scene shows through from the canvas behind <main>.
+    <div className="min-h-dvh text-white">
+      <ResultsHero />
 
-      <section aria-labelledby="results-heading" className="mx-auto max-w-6xl px-4 pb-24 sm:px-6 lg:px-8">
+      <section aria-labelledby="results-heading" className="bg-black">
+        <div className="mx-auto max-w-6xl px-4 pb-24 pt-4 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-end justify-between gap-4">
           <Heading size="title" className="text-white/80">
             <span id="results-heading">Published gradings</span>
@@ -111,7 +102,51 @@ export default function ResultsPage() {
             ))}
           </ul>
         )}
+        </div>
       </section>
     </div>
+  );
+}
+
+/** Static composition for the podium: the crest over a faint lit stage. */
+function PodiumPoster() {
+  return (
+    <div className="absolute inset-0 bg-black">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_72%_55%,rgba(212,160,23,0.14),transparent_55%)]" />
+      <div className="absolute right-[8%] top-1/2 hidden -translate-y-1/2 md:block">
+        <KkfiCrest size={220} glow={false} />
+      </div>
+      <div className="absolute left-1/2 top-[22%] -translate-x-1/2 md:hidden">
+        <KkfiCrest size={120} glow={false} />
+      </div>
+    </div>
+  );
+}
+
+/** Full-bleed opener: the podium in 3D, the title beside it. */
+function ResultsHero() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const sceneProps = useMemo(() => ({ progress: scrollYProgress }), [scrollYProgress]);
+  return (
+    <header ref={ref} data-bleed className="relative flex min-h-[86svh] overflow-hidden md:min-h-[80svh]">
+      <SceneSlot
+        scene="podium"
+        sceneProps={sceneProps}
+        className="absolute inset-x-0 top-0 h-[54svh] md:inset-0 md:h-auto"
+        fallback={<PodiumPoster />}
+      />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,black_40%,transparent_62%)] md:bg-gradient-to-r md:from-black/85 md:via-black/30 md:via-45% md:to-transparent" />
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-end px-4 pb-12 pt-[50svh] sm:px-6 md:justify-center md:pb-16 md:pt-40 lg:px-8">
+        <p className="text-sm font-semibold text-white/70">Kyokushin Karate Foundation of India</p>
+        <h1 className="mt-4 max-w-[12ch] text-balance text-[clamp(2.75rem,8vw,5.5rem)] font-black uppercase leading-[0.92] tracking-[-0.035em]">
+          Belt test results<span className="text-primary">.</span>
+        </h1>
+        <p className="mt-6 max-w-[44ch] text-pretty text-lg leading-relaxed text-white/80">
+          Official grading results. Find your name, confirm your rank, and open the certified result
+          sheet, straight from the dojo.
+        </p>
+      </div>
+    </header>
   );
 }

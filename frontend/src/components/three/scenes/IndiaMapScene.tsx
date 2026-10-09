@@ -7,6 +7,7 @@ import * as THREE from "three";
 import InkBackdrop from "../materials/InkBackdrop";
 import { pointer } from "../pointer";
 import { useReadySignal } from "./sceneUtils";
+import { buildKanku } from "./kankuGeometry";
 
 export interface MapCity {
     key: string;
@@ -19,6 +20,15 @@ interface IndiaMapSceneProps {
     cities: MapCity[];
     /** City key to fly to, or null for the whole country. */
     focus?: string | null;
+    /**
+     * How far the camera holds back when focused (1 = the finder's close dive).
+     * Page heroes use ~1.6 so the region around the city stays readable.
+     */
+    focusDistance?: number;
+    /** A slow sway while focused, for heroes that sit on one city for a long time. */
+    drift?: boolean;
+    /** A small lacquer Kanku hovering over the focused city's beam (the headquarters). */
+    emblem?: boolean;
     onReady?: () => void;
 }
 
@@ -89,7 +99,9 @@ function Pillar({ city, focused, dim }: { city: MapCity; focused: boolean; dim: 
     const ring = useRef<THREE.ShaderMaterial>(null);
     const grow = useRef(0);
     const group = useRef<THREE.Group>(null);
-    const uniforms = useMemo(() => ({ uTime: { value: Math.random() * 3 }, uColor: { value: new THREE.Color(1, 1, 1) }, uStrength: { value: 1 } }), []);
+    // Each city's ripples start at a different phase, derived from where it is (pure, unlike Math.random).
+    const phase = ((city.lat * 7.3 + city.lon * 3.1) % 3 + 3) % 3;
+    const uniforms = useMemo(() => ({ uTime: { value: phase }, uColor: { value: new THREE.Color(1, 1, 1) }, uStrength: { value: 1 } }), [phase]);
     const red = useMemo(() => new THREE.Color("#ff2020"), []);
     const white = useMemo(() => new THREE.Color("#ffffff"), []);
 
@@ -126,12 +138,55 @@ function Pillar({ city, focused, dim }: { city: MapCity; focused: boolean; dim: 
     );
 }
 
+/** The Kanku, small and slowly turning, standing over a city like a flag over a dojo. */
+function CityEmblem({ city }: { city: MapCity }) {
+    const geo = useMemo(() => buildKanku(), []);
+    const spin = useRef<THREE.Group>(null);
+    const clock = useRef(0);
+    const p = useMemo(() => project(city.lon, city.lat), [city.lon, city.lat]);
+    const beam = 0.22 + Math.sqrt(city.count) * 0.22;
+
+    useEffect(() => () => {
+        geo.body.dispose();
+        geo.diagonals.dispose();
+        geo.core.dispose();
+    }, [geo]);
+
+    useFrame((_, delta) => {
+        clock.current += Math.min(delta, 0.1);
+        const g = spin.current;
+        if (!g) return;
+        g.rotation.z = clock.current * 0.35;
+        g.position.z = DEPTH + beam + 0.42 + Math.sin(clock.current * 1.1) * 0.025;
+    });
+
+    return (
+        <group ref={spin} position={[p.x, p.y, DEPTH + beam + 0.42]}>
+            {/* Stand the disc upright so it faces the camera, which looks along +y. */}
+            {/* A warm rim from behind so the black lacquer separates from the dark map. */}
+            <pointLight position={[0, 0.35, 0.1]} intensity={1.6} distance={1.2} color="#ff2a2a" />
+            <pointLight position={[0, -0.6, 0.4]} intensity={0.9} distance={1.6} color="#ffffff" />
+            <group rotation={[Math.PI / 2, 0, 0]} scale={0.26}>
+                <mesh geometry={geo.body}>
+                    <meshPhysicalMaterial color="#2a2a2a" metalness={0.6} roughness={0.2} clearcoat={1} clearcoatRoughness={0.05} />
+                </mesh>
+                <mesh geometry={geo.diagonals} position-z={-0.02}>
+                    <meshPhysicalMaterial color="#1c1c1c" metalness={0.45} roughness={0.28} clearcoat={0.8} />
+                </mesh>
+                <mesh geometry={geo.core} position-z={0.02}>
+                    <meshPhysicalMaterial color="#c00000" emissive="#5a0000" emissiveIntensity={0.8} roughness={0.25} clearcoat={1} />
+                </mesh>
+            </group>
+        </group>
+    );
+}
+
 /**
  * India in black lacquer, a thread of light rising from every city with a dojo.
  * Taller beams mean more dojos. Choosing a city in the page flies the camera
  * down to it and turns its beam red; the others dim.
  */
-export default function IndiaMapScene({ cities, focus = null, onReady }: IndiaMapSceneProps) {
+export default function IndiaMapScene({ cities, focus = null, focusDistance = 1, drift = false, emblem = false, onReady }: IndiaMapSceneProps) {
     const india = useIndiaShapes();
     const cam = useRef<THREE.PerspectiveCamera>(null);
     const stage = useRef<THREE.Group>(null);
@@ -161,14 +216,21 @@ export default function IndiaMapScene({ cities, focus = null, onReady }: IndiaMa
         if (focused) {
             const p = project(focused.lon, focused.lat);
             // Close in on the city, keeping it right of the copy on wide screens.
-            const shift = portrait ? 0 : -0.75;
+            const d = focusDistance;
+            const shift = portrait ? 0 : -0.75 * d;
+            const sway = drift ? Math.sin(t * 0.15) * 0.25 + pointer.x * 0.2 : 0;
             target = new THREE.Vector3(p.x + shift, p.y + 0.2, 0.15);
-            from = new THREE.Vector3(p.x + shift + 0.3, p.y - (portrait ? 3.2 : 2.6), portrait ? 4.2 : 2.7);
+            from = new THREE.Vector3(p.x + shift + 0.3 + sway, p.y - (portrait ? 3.2 : 2.6) * d, (portrait ? 4.2 : 2.7) * d);
         } else {
             // Aim left of the country's centre so India sits in the right half, clear of the copy.
-            target = new THREE.Vector3(portrait ? 0.15 : -1.25, portrait ? 0.35 : 0.25, 0);
+            // Wide, short slots (compact page heroes) need to stand further back to fit
+            // the whole country, and push it further right to stay clear of the copy;
+            // full-viewport heroes (aspect ≤ 1.75) are unchanged.
+            const aspect = size.width / Math.max(1, size.height);
+            const back = !portrait && aspect > 1.75 ? aspect / 1.75 : 1;
+            target = new THREE.Vector3(portrait ? 0.15 : -1.25 - (back - 1) * 3.4, portrait ? 0.35 : 0.25, 0);
             const sway = Math.sin(t * 0.12) * 0.35;
-            from = new THREE.Vector3(target.x + sway + pointer.x * 0.35, target.y - (portrait ? 3.4 : 5.2) + pointer.y * 0.3, portrait ? 8.6 : 5.4);
+            from = new THREE.Vector3(target.x + sway + pointer.x * 0.35, target.y - (portrait ? 3.4 : 5.2) * back + pointer.y * 0.3, (portrait ? 8.6 : 5.4) * back);
         }
         c.position.lerp(from, k);
         look.current.lerp(target, k);
@@ -202,6 +264,7 @@ export default function IndiaMapScene({ cities, focus = null, onReady }: IndiaMa
                 {cities.map((city) => (
                     <Pillar key={city.key} city={city} focused={focused?.key === city.key} dim={!!focused && focused.key !== city.key} />
                 ))}
+                {emblem && focused && <CityEmblem city={focused} />}
             </group>
         </>
     );

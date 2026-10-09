@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Reveal from "@/components/brand/Reveal";
 import BrandLink from "@/components/brand/BrandLink";
+import SceneSlot from "@/components/three/SceneSlot";
 
 /*
  * Long-form reading kit for the Dojo Chronicles: the article opener, the prose
@@ -43,22 +44,34 @@ interface ArticleHeroProps {
     meta?: React.ReactNode;
     image?: string | null;
     imageAlt?: string;
+    /** Character brushed into the ink beside the title. */
+    kanji?: string;
 }
 
 /**
  * Article opener. Full bleed under the navbar (data-bleed). With a photograph
  * the title sits on it; without one, the title carries the page alone.
  */
-export function ArticleHero({ title, subtitle, category, meta, image, imageAlt = "" }: ArticleHeroProps) {
+export function ArticleHero({ title, subtitle, category, meta, image, imageAlt = "", kanji = "道" }: ArticleHeroProps) {
     return (
-        <header data-bleed className={cn("relative flex overflow-hidden bg-black", image ? "min-h-[82svh]" : "min-h-[58svh]")}>
-            {image && (
-                <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={image} alt={imageAlt} className="absolute inset-0 h-full w-full object-cover object-[50%_28%] grayscale-[0.3]" />
-                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20" />
-                </>
-            )}
+        <header data-bleed className={cn("relative flex overflow-hidden", image ? "min-h-[82svh]" : "min-h-[64svh]")}>
+            {/* Ink scene: the cover photo surfaces through the ink, the character floats beside the title.
+                The poster (photo, or plain black) is what static-tier and first-paint visitors see. */}
+            <SceneSlot
+                scene="ink"
+                sceneProps={{ imageUrl: image ?? undefined, kanji, red: 0.25 }}
+                className="absolute inset-0"
+                fallback={
+                    image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={image} alt={imageAlt} className="absolute inset-0 h-full w-full object-cover object-[50%_28%] grayscale-[0.3]" />
+                    ) : (
+                        <div className="absolute inset-0 bg-black" />
+                    )
+                }
+            />
+            {image && <span className="sr-only">{imageAlt}</span>}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
             <div className="relative z-10 mx-auto flex w-full max-w-[1100px] flex-col justify-end px-4 pb-[clamp(3rem,8vh,5rem)] pt-36 sm:px-6 md:pt-44 lg:px-8">
                 <p className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-semibold text-white/70">
                     <Link href="/blog" className="group inline-flex min-h-11 items-center gap-2 text-white/80 transition-colors hover:text-white">

@@ -30,8 +30,9 @@ const guide = GUIDES[0];
 
 export default function KyokushinVsShotokan() {
   return (
-    <article className="min-h-screen bg-black text-white">
+    <article className="min-h-screen text-white">
       <ArticleHero
+        kanji="組手"
         category={guide.category}
         title="What Makes Kyokushin Different from Shotokan?"
         image={guide.image}

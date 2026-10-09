@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, AlertCircle, ArrowLeft, ArrowUpRight, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -8,13 +8,15 @@ import KankuMark from "@/components/KankuMark";
 import KarateLoader from "@/components/KarateLoader";
 import BrandLink from "@/components/brand/BrandLink";
 import Reveal from "@/components/brand/Reveal";
+import SceneSlot from "@/components/three/SceneSlot";
+import type { Ticket } from "@/components/three/scenes/TicketsScene";
 import { useParams } from "next/navigation";
 import api from "@/lib/api";
 import { getEventStatus } from "@/lib/eventStatus";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 
-import { formatDateOnly } from '@/lib/dateOnly';
+import { dateOnlyParts, formatDateOnly } from '@/lib/dateOnly';
 
 interface EventCategory { name: string; age: string; weight: string }
 interface EventDetail {
@@ -60,6 +62,41 @@ function ActionButton({ children, onClick, disabled, variant = "primary", classN
         >
             {children}
         </button>
+    );
+}
+
+/** Still composition for reduced motion and slow devices: the event's ticket, squared up. */
+function TicketPoster({ ticket, imageUrl }: { ticket: Ticket; imageUrl?: string | null }) {
+    return (
+        <div className="absolute inset-0 bg-black">
+            {imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                    src={imageUrl}
+                    alt=""
+                    className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-md grayscale-[0.4]"
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                />
+            ) : (
+                <KankuMark className="absolute -right-[12vw] top-1/2 h-[90vh] w-[90vh] -translate-y-1/2 text-white/[0.05]" />
+            )}
+            <div className="absolute inset-x-0 top-[14%] flex justify-center md:inset-y-0 md:left-auto md:right-[7vw] md:top-0 md:items-center">
+                <div className="flex aspect-[2.3/1] w-[min(80vw,30rem)] -rotate-6 rounded-lg border border-white/20 bg-[#0c0c0c] text-white">
+                    <div className="flex flex-1 flex-col justify-between border-r border-dashed border-white/30 p-[5%]">
+                        <p className="text-[clamp(0.6rem,1.4vw,0.8rem)] font-bold text-primary-light">
+                            {ticket.type.toUpperCase()} · {ticket.status === "COMPLETED" ? "COMPLETED" : ticket.status === "ONGOING" ? "IN PROGRESS" : "ADMIT ONE"}
+                        </p>
+                        <p className="line-clamp-3 text-[clamp(0.9rem,2.2vw,1.45rem)] font-black uppercase leading-tight">{ticket.title}</p>
+                        <p className="truncate text-[clamp(0.6rem,1.3vw,0.8rem)] font-semibold text-white/60">{ticket.location}</p>
+                    </div>
+                    <div className="flex w-[27%] flex-col items-center justify-center">
+                        <span className="text-[clamp(0.6rem,1.3vw,0.8rem)] font-bold">{ticket.month}</span>
+                        <span className="text-[clamp(1.75rem,5vw,3.25rem)] font-black leading-none">{ticket.day}</span>
+                        <span className="text-[clamp(0.6rem,1.3vw,0.8rem)] font-bold text-white/60">{ticket.year}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 
@@ -222,6 +259,40 @@ export default function EventDetailPage() {
         }
     };
 
+    // The hero's 3D ticket. Built before the early returns so hook order never changes.
+    const ticket = useMemo<Ticket | null>(() => {
+        if (!event) return null;
+        const d = dateOnlyParts(event.startDate);
+        return {
+            id: event.id,
+            title: event.name,
+            type: typeLabel(event.type),
+            dates: "",
+            day: d.day,
+            month: d.month,
+            year: d.year,
+            location: event.location || event.dojo?.city || "",
+            status: getEventStatus(event),
+        };
+    }, [event]);
+    // Phones: the ticket gets its own band above the copy, centred (decided after mount; the
+    // scene only renders on the client, so this cannot cause a hydration mismatch).
+    const [narrow, setNarrow] = useState(false);
+    useEffect(() => {
+        const mq = window.matchMedia("(max-width: 767px)");
+        const sync = () => setNarrow(mq.matches);
+        const raf = requestAnimationFrame(sync);
+        mq.addEventListener("change", sync);
+        return () => {
+            cancelAnimationFrame(raf);
+            mq.removeEventListener("change", sync);
+        };
+    }, []);
+    const ticketSceneProps = useMemo(
+        () => ({ tickets: ticket ? [ticket] : [], single: true, centered: narrow, backdropImage: event?.imageUrl || undefined }),
+        [ticket, event?.imageUrl, narrow],
+    );
+
     if (loading) {
         return (
             <div className="flex min-h-[70dvh] items-center justify-center bg-black">
@@ -255,25 +326,24 @@ export default function EventDetailPage() {
     };
 
     return (
-        <div className="min-h-dvh w-full bg-black text-white">
-            {/* Opener: the event's own image when it has one, otherwise the Kanku in the dark. */}
-            <header data-bleed className="relative flex min-h-[72svh] overflow-hidden">
-                <div className="absolute inset-0" aria-hidden="true">
-                    {event.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                            src={event.imageUrl}
-                            alt=""
-                            className="h-full w-full scale-110 object-cover opacity-50 blur-md grayscale-[0.4]"
-                            onError={(e) => { e.currentTarget.style.display = "none"; }}
-                        />
-                    ) : (
-                        <KankuMark className="absolute -right-[12vw] top-1/2 h-[90vh] w-[90vh] -translate-y-1/2 text-white/[0.05]" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/75 to-black/45" />
-                </div>
+        // Transparent: the hero's 3D ticket is painted by the canvas behind <main>.
+        <div className="min-h-dvh w-full text-white">
+            {/* Opener: the event's own printed ticket turning in the dark, its poster carried in the ink. */}
+            <header data-bleed className="relative flex min-h-[78svh] overflow-hidden">
+                {ticket && (
+                    <SceneSlot
+                        scene="tickets"
+                        sceneProps={ticketSceneProps}
+                        className="absolute inset-x-0 top-0 h-[46svh] md:inset-0 md:h-auto"
+                        fallback={<TicketPoster ticket={ticket} imageUrl={event.imageUrl} />}
+                    />
+                )}
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,black_38%,rgba(0,0,0,0.6)_58%,transparent_78%)] md:bg-[linear-gradient(to_right,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.72)_45%,transparent_70%)]" />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black to-transparent" />
+                {/* Phones: feather the bottom edge of the ticket band into the page. */}
+                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-[calc(46svh-7rem)] h-28 bg-gradient-to-b from-transparent to-black md:hidden" />
 
-                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(2.5rem,7vh,5rem)] pt-32 sm:px-6 md:pt-40 lg:px-8">
+                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(2.5rem,7vh,5rem)] pt-[48svh] sm:px-6 md:pt-40 lg:px-8">
                     <Link href="/events" className="mb-8 inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white">
                         <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All events
                     </Link>
@@ -284,7 +354,7 @@ export default function EventDetailPage() {
                             {cancelled ? "Cancelled" : status === "ONGOING" ? "In progress" : finished ? "Completed" : "Upcoming"}
                         </span>
                     </p>
-                    <h1 className="mt-4 max-w-[22ch] text-balance text-[clamp(2.25rem,6vw,4.75rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
+                    <h1 className="mt-4 max-w-[22ch] text-balance md:max-w-[18ch] text-[clamp(2.25rem,6vw,4.75rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
                         {event.name}
                     </h1>
                     <dl className="mt-8 flex flex-wrap gap-x-10 gap-y-4 border-t border-white/15 pt-5 text-sm">

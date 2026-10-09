@@ -15,6 +15,8 @@ interface HistorySceneProps {
     images: string[];
     /** Framed for a smaller, centred window: prints hang closer to the middle. */
     compact?: boolean;
+    /** Shifts the whole corridor sideways (world units), e.g. into the right half of a hero. Wide screens only. */
+    offsetX?: number;
     onReady?: () => void;
 }
 
@@ -60,7 +62,7 @@ void main() {
 }
 `;
 
-function Print({ url, index, focus, spread }: { url: string; index: number; focus: { current: number[] }; spread: number }) {
+function Print({ url, index, focus, spread, offsetX = 0 }: { url: string; index: number; focus: { current: number[] }; spread: number; offsetX?: number }) {
     const tex = useLoadedTexture(url);
     const mat = useRef<THREE.ShaderMaterial>(null);
     const uniforms = useMemo(
@@ -83,7 +85,7 @@ function Print({ url, index, focus, spread }: { url: string; index: number; focu
     });
 
     return (
-        <mesh position={[side * spread, 0.1, -index * GAP]} rotation={[0, -side * 0.22, 0]}>
+        <mesh position={[side * spread + offsetX, 0.1, -index * GAP]} rotation={[0, -side * 0.22, 0]}>
             <planeGeometry args={[h * aspect, h]} />
             <shaderMaterial ref={mat} vertexShader={photoVertex} fragmentShader={photoFragment} uniforms={uniforms} transparent depthWrite={false} />
         </mesh>
@@ -95,7 +97,7 @@ function Print({ url, index, focus, spread }: { url: string; index: number; focu
  * per print; the print you are facing comes into colour, the rest stay grey
  * and recede into the dark.
  */
-export default function HistoryScene({ progress, images, compact = false, onReady }: HistorySceneProps) {
+export default function HistoryScene({ progress, images, compact = false, offsetX = 0, onReady }: HistorySceneProps) {
     const cam = useRef<THREE.PerspectiveCamera>(null);
     const shown = useRef(0);
     const focus = useRef<number[]>(images.map(() => 0));
@@ -116,11 +118,14 @@ export default function HistoryScene({ progress, images, compact = false, onRead
             // Drift towards the side the current print hangs on, so it sits off-centre opposite the copy.
             const i = Math.round(s);
             const side = i % 2 === 0 ? 1 : -1;
-            const lookX = compact ? side * 0.4 : portrait ? side * 1.25 : side * 0.2;
+            const shift = size.width < 768 ? 0 : offsetX;
+            // Hero corridors (offsetX set) on narrow screens hang their prints near the centre line.
+            const narrowHero = !!offsetX && size.width < 768;
+            const lookX = (compact ? side * 0.4 : narrowHero ? side * 0.1 : portrait ? side * 1.25 : side * 0.2) + shift;
             c.position.z = 5.2 - s * GAP;
             c.position.x += (lookX + pointer.x * 0.25 - c.position.x) * (1 - Math.exp(-delta * 2));
             c.position.y = 0.1 + pointer.y * 0.15;
-            c.lookAt(c.position.x * 0.6, 0.1, c.position.z - GAP);
+            c.lookAt(shift + (c.position.x - shift) * 0.6, 0.1, c.position.z - GAP);
         }
     });
 
@@ -130,7 +135,7 @@ export default function HistoryScene({ progress, images, compact = false, onRead
             <InkBackdrop red={0} density={0.45} octaves={5} />
             <fog attach="fog" args={["#000000", 4, GAP * 1.6]} />
             {images.map((url, i) => (
-                <Print key={url} url={url} index={i} focus={focus} spread={compact ? 0.55 : 1.5} />
+                <Print key={url} url={url} index={i} focus={focus} spread={compact ? 0.55 : offsetX && size.width < 768 ? 0.3 : 1.5} offsetX={size.width < 768 ? 0 : offsetX} />
             ))}
         </>
     );

@@ -124,7 +124,7 @@ export default function BlogPost() {
     const date = new Date(post.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 
     return (
-        <article className="min-h-screen bg-black text-white">
+        <article className="min-h-screen text-white">
             <ArticleHero
                 title={post.title}
                 subtitle={post.excerpt}

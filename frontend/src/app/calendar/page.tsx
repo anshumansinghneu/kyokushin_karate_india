@@ -7,6 +7,10 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { getEventStatus } from '@/lib/eventStatus';
 import Section from '@/components/brand/Section';
+import SceneSlot from '@/components/three/SceneSlot';
+
+// 暦 (koyomi): the calendar. Stable object so the slot is not re-synced every render.
+const INK_SCENE = { kanji: '暦', side: 'right' as const, red: 0.35 };
 
 import { dateOnlyParts, formatDateOnly } from '@/lib/dateOnly';
 interface Event {
@@ -163,16 +167,26 @@ export default function CalendarPage() {
     const panelEvents = selectedDate ? selectedEvents : monthEvents;
 
     return (
-        <div className="min-h-screen bg-black text-white">
-            <Section rhythm="tight" width="wide" className="pt-6 md:pt-10">
-                {/* Header */}
-                <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-                    <div>
-                        <h1 className="text-[clamp(2.75rem,7vw,5rem)] font-black uppercase leading-[0.92] tracking-[-0.035em] text-white">
-                            Calendar<span className="text-primary">.</span>
-                        </h1>
-                        <p className="mt-3 text-lg text-white/70">Tournaments, camps, seminars and gradings, month by month.</p>
-                    </div>
+        // Transparent so the ink hero shows through from the canvas behind <main>.
+        <div className="min-h-screen text-white">
+            <header data-bleed className="relative flex min-h-[46svh] overflow-hidden md:min-h-[50svh]">
+                <SceneSlot
+                    scene="ink"
+                    sceneProps={INK_SCENE}
+                    className="absolute inset-0"
+                    fallback={<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_75%_50%,rgba(139,0,0,0.3),black_60%)]" />}
+                />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-10 pt-32 sm:px-6 md:pt-44 lg:px-8">
+                    <h1 className="text-[clamp(2.75rem,7vw,5rem)] font-black uppercase leading-[0.92] tracking-[-0.035em] text-white">
+                        Calendar<span className="text-primary">.</span>
+                    </h1>
+                    <p className="mt-3 text-lg text-white/70">Tournaments, camps, seminars and gradings, month by month.</p>
+                </div>
+            </header>
+            <Section rhythm="tight" width="wide" className="bg-black pt-6 md:pt-8">
+                {/* Legend and view */}
+                <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-end">
 
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                         {/* Legend */}

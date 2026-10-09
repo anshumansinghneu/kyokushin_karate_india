@@ -65,8 +65,9 @@ export default function YouthBenefits() {
   ];
 
   return (
-    <article className="min-h-screen bg-black text-white">
+    <article className="min-h-screen text-white">
       <ArticleHero
+        kanji="育"
         category={guide.category}
         title="The Benefits of Full-Contact Training for Youth"
         image={guide.image}

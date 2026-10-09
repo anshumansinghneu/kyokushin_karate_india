@@ -12,4 +12,8 @@ export const SCENES: Record<SceneKey, ComponentType<any>> = {
     globe: lazy(() => import("./GlobeScene")),
     tickets: lazy(() => import("./TicketsScene")),
     "sponsor-ring": lazy(() => import("./SponsorRingScene")),
+    ink: lazy(() => import("./InkScene")),
+    podium: lazy(() => import("./PodiumScene")),
+    showcase: lazy(() => import("./ShowcaseScene")),
+    certificate: lazy(() => import("./CertificateScene")),
 };

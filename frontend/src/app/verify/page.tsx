@@ -6,6 +6,8 @@ import { ArrowRight, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 import Section from '@/components/brand/Section';
 import Reveal from '@/components/brand/Reveal';
+import SceneSlot from '@/components/three/SceneSlot';
+import KankuMark from '@/components/KankuMark';
 
 // An instructor's public record as the worked example; students are never showcased.
 const RECENT_FORMATS = ['KKFI-INS-0005'];
@@ -15,6 +17,25 @@ const STEPS = [
     { title: 'Checked against the register', desc: 'The number is looked up in the official KKFI membership database.' },
     { title: 'Read the record', desc: 'Belt rank, dojo, years of training and the full promotion history.' },
 ];
+
+/** The generic card: no holder yet. Stable object so the slot never re-registers. */
+const CARD_PROPS = {};
+
+/** Static stand-in for the 3D card: a flat black card with the gold Kanku. */
+function CardPoster() {
+    return (
+        <div className="absolute inset-0 bg-black">
+            <div className="absolute left-1/2 top-1/2 flex aspect-[1.6] w-[min(78vw,30rem)] -translate-x-1/2 -translate-y-1/2 -rotate-6 items-center gap-6 rounded-xl border border-secondary/50 bg-[#0b0b0b] p-6 md:left-auto md:right-[8%] md:translate-x-0">
+                <KankuMark className="h-2/3 w-auto text-secondary" />
+                <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-white/60">KYOKUSHIN KARATE FOUNDATION OF INDIA</p>
+                    <p className="mt-2 text-xl font-black text-white">KKFI MEMBER</p>
+                    <p className="mt-1 text-sm font-bold text-secondary">KKFI · MEMBERSHIP</p>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function VerifyIndexPage() {
     const router = useRouter();
@@ -29,8 +50,15 @@ export default function VerifyIndexPage() {
 
     return (
         <div className="min-h-screen text-white selection:bg-primary selection:text-white">
-            <header data-bleed className="relative flex min-h-[78svh] overflow-hidden bg-black">
-                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(3rem,8vh,5rem)] pt-36 sm:px-6 md:pt-44 lg:px-8">
+            <header data-bleed className="relative flex min-h-[86svh] overflow-hidden md:min-h-[82svh]">
+                <SceneSlot
+                    scene="certificate"
+                    sceneProps={CARD_PROPS}
+                    className="absolute inset-x-0 top-0 h-[40svh] md:inset-0 md:h-auto"
+                    fallback={<CardPoster />}
+                />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,black_52%,transparent_70%)] md:bg-gradient-to-r md:from-black/90 md:via-black/40 md:via-45% md:to-transparent" />
+                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(3rem,8vh,5rem)] pt-[36svh] sm:px-6 md:pt-44 lg:px-8">
                     <div className="mb-8 flex items-center gap-3 text-sm font-semibold text-white/75">
                         <Image src="/kkfi-logo.avif" alt="" width={36} height={36} className="h-9 w-9" />
                         <span>The official KKFI membership register</span>

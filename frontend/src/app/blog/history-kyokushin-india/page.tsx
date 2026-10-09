@@ -70,8 +70,9 @@ export default function HistoryKyokushinIndia() {
   ];
 
   return (
-    <article className="min-h-screen bg-black text-white">
+    <article className="min-h-screen text-white">
       <ArticleHero
+        kanji="歴史"
         category={guide.category}
         title="History of Kyokushin in India"
         subtitle="From Sosai Oyama to Today"

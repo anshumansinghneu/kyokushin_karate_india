@@ -9,7 +9,7 @@ import { create } from "zustand";
  * three keeps the 3D chunk out of every page's first-load JS.
  */
 
-export type SceneKey = "home-hero" | "belt" | "history" | "india-map" | "gallery-ring" | "globe" | "tickets" | "sponsor-ring";
+export type SceneKey = "home-hero" | "belt" | "history" | "india-map" | "gallery-ring" | "globe" | "tickets" | "sponsor-ring" | "ink" | "podium" | "showcase" | "certificate";
 
 /** full: everything. lite: lower DPR, no post. static: no canvas, posters only. */
 export type DeviceTier = "full" | "lite" | "static";

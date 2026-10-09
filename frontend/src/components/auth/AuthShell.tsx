@@ -1,5 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import SceneSlot from "@/components/three/SceneSlot";
+
+// Stable object: SceneSlot re-syncs props by identity.
+const SCENE_PROPS = { compact: true };
 
 interface AuthShellProps {
     /** Optimised photograph for the brand side (use /history/*.jpg, never the large PNGs). */
@@ -16,10 +22,11 @@ interface AuthShellProps {
 }
 
 /**
- * Shared frame for sign-in, registration and password recovery. Desktop: a
- * photograph with the brand line on the left, the form on the right. Mobile: a
- * short photographic band, then the form. Full-bleed under the navbar via
- * data-bleed (no negative margins); the form column restores the navbar space.
+ * Shared frame for sign-in, registration and password recovery. Desktop: the
+ * homepage's Kanku-in-ink scene with the brand line on the left, the form on
+ * the right. Mobile: a short band carrying the same scene, then the form. The
+ * photograph is the poster for the static tier and the moment before WebGL
+ * loads. Full-bleed under the navbar via data-bleed (no negative margins).
  */
 export default function AuthShell({
     image,
@@ -32,13 +39,22 @@ export default function AuthShell({
     children,
 }: AuthShellProps) {
     return (
-        <div data-bleed className="relative grid min-h-[100svh] bg-black text-white selection:bg-primary selection:text-white lg:grid-cols-[minmax(0,11fr)_minmax(0,9fr)]">
-            {/* Brand side (desktop): the photograph carries it; copy sits low and quiet. */}
+        // Transparent on purpose: the brand scene shows through from the canvas behind <main>.
+        <div data-bleed className="relative grid min-h-[100svh] text-white selection:bg-primary selection:text-white lg:grid-cols-[minmax(0,11fr)_minmax(0,9fr)]">
+            {/* Brand side (desktop): the Kanku in ink; copy sits low and quiet. */}
             <aside className="relative hidden overflow-hidden lg:block">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={image} alt={imageAlt} className="absolute inset-0 h-full w-full object-cover opacity-60 grayscale" />
-                <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/40 to-black" />
-                <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/50" />
+                <SceneSlot
+                    scene="home-hero"
+                    sceneProps={SCENE_PROPS}
+                    className="absolute inset-0"
+                    posterAlt={imageAlt}
+                    fallback={
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={image} alt="" className="absolute inset-0 h-full w-full bg-black object-cover opacity-60 grayscale" />
+                    }
+                />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/80" />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black via-black/60 to-transparent" />
                 <div className="relative flex h-full flex-col justify-end p-12 pb-16 xl:p-16">
                     <p className="mb-6 flex items-center gap-3 text-sm font-semibold text-white/75">
                         <span lang="ja" className="text-2xl font-black text-primary-light">極真</span>
@@ -53,11 +69,18 @@ export default function AuthShell({
 
             {/* Form side. */}
             <div className="relative flex flex-col">
-                {/* Mobile brand band: short, photographic, clears the fixed top bar. */}
+                {/* Mobile brand band: short, carrying the same scene, clears the fixed top bar. */}
                 <div className="relative h-52 overflow-hidden lg:hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-50 grayscale" />
-                    <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/60" />
+                    <SceneSlot
+                        scene="home-hero"
+                        sceneProps={SCENE_PROPS}
+                        className="absolute inset-0"
+                        fallback={
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={image} alt="" className="absolute inset-0 h-full w-full bg-black object-cover opacity-50 grayscale" />
+                        }
+                    />
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
                     <p className="absolute inset-x-4 bottom-5 text-[2rem] font-black uppercase leading-[0.95] tracking-[-0.03em] text-white sm:inset-x-8">
                         {title}
                     </p>

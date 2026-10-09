@@ -6,9 +6,21 @@ import Section from '@/components/brand/Section';
 import Reveal from '@/components/brand/Reveal';
 import KankuMark from '@/components/KankuMark';
 import api from '@/lib/api';
+import SceneSlot from '@/components/three/SceneSlot';
+import { CITY_COORDS } from '@/lib/cityCoords';
 
 const GOOGLE_MAPS_LINK = 'https://maps.app.goo.gl/o8ttnRaNuRAPqA3H9';
 const GOOGLE_MAPS_EMBED = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3558.5!2d80.78!3d26.84!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjbCsDUwJzI0LjAiTiA4MMKwNDYnNDguMCJF!5e0!3m2!1sen!2sin!4v1700000000000';
+
+// The headquarters as the map's one city: the scene flies to it and stands the Kanku over it.
+const HQ = CITY_COORDS.shuklaganj;
+const HQ_SCENE = {
+    cities: [{ key: 'hq', lat: HQ[0], lon: HQ[1], count: 3 }],
+    focus: 'hq',
+    focusDistance: 1.7,
+    drift: true,
+    emblem: true,
+};
 
 const HOURS = [
     { days: 'Monday to Friday', time: '6:00 AM – 8:00 PM' },
@@ -66,10 +78,22 @@ export default function ContactPage() {
 
     return (
         <div className="min-h-screen text-white selection:bg-primary selection:text-white">
-            {/* Opener: typographic, with the Kanku as a quiet watermark. */}
-            <header data-bleed className="relative flex min-h-[62svh] overflow-hidden bg-black">
-                <KankuMark className="pointer-events-none absolute -right-[12vw] top-1/2 h-[80vh] w-[80vh] -translate-y-1/2 text-white/[0.05]" />
-                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(3rem,8vh,5rem)] pt-36 sm:px-6 md:pt-44 lg:px-8">
+            {/* Opener: the map flies to the headquarters in Shuklaganj; the Kanku stands over it. */}
+            <header data-bleed className="relative flex min-h-[92svh] overflow-hidden md:min-h-[72svh]">
+                <SceneSlot
+                    scene="india-map"
+                    sceneProps={HQ_SCENE}
+                    className="absolute inset-x-0 top-0 h-[52%] md:inset-0 md:h-auto"
+                    fallback={
+                        <div className="absolute inset-0 bg-black">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/geo/india-poster.svg" alt="" className="absolute left-1/2 top-[6%] h-[88%] -translate-x-1/2 opacity-60 md:left-auto md:right-[8%] md:translate-x-0" />
+                            <KankuMark className="pointer-events-none absolute -right-[12vw] top-1/2 h-[80vh] w-[80vh] -translate-y-1/2 text-white/[0.05]" />
+                        </div>
+                    }
+                />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,black_42%,transparent_58%)] md:bg-gradient-to-r md:from-black/85 md:via-black/35 md:via-45% md:to-transparent" />
+                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(3rem,8vh,5rem)] pt-[50svh] sm:px-6 md:justify-center md:pt-44 lg:px-8">
                     <h1 className="max-w-[14ch] text-balance text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.92] tracking-[-0.035em]">
                         Talk to the dojo<span className="text-primary">.</span>
                     </h1>

@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import SceneSlot from "@/components/three/SceneSlot";
 import dynamic from "next/dynamic";
 import { ArrowLeft, Download } from "lucide-react";
 import Link from "next/link";
@@ -79,33 +80,48 @@ export default function ResultDetailPage({ params }: { params: Promise<{ id: str
   ].filter((m) => m.value);
 
   return (
-    <div className="min-h-dvh bg-black text-white">
-      <div className="mx-auto max-w-4xl px-4 pb-24 pt-6 sm:px-6 md:pt-10">
-        <Link href="/results" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white">
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All results
-        </Link>
+    // Transparent at the top: the podium scene shows through from the canvas behind <main>.
+    <div className="min-h-dvh text-white">
+      {/* Opener: the sheet's title and dates beside a podium in 3D. */}
+      <header data-bleed className="relative flex min-h-[84svh] overflow-hidden md:min-h-[76svh]">
+        <SceneSlot
+          scene="podium"
+          sceneProps={PODIUM_PROPS}
+          className="absolute inset-x-0 top-0 h-[46svh] md:inset-0 md:h-auto"
+          fallback={
+            <div className="absolute inset-0 bg-black">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_72%_55%,rgba(212,160,23,0.14),transparent_55%)]" />
+              <div className="absolute right-[10%] top-1/2 hidden -translate-y-1/2 md:block"><KkfiCrest size={200} glow={false} /></div>
+              <div className="absolute left-1/2 top-[20%] -translate-x-1/2 md:hidden"><KkfiCrest size={110} glow={false} /></div>
+            </div>
+          }
+        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,black_46%,transparent_64%)] md:bg-gradient-to-r md:from-black/90 md:via-black/40 md:via-45% md:to-transparent" />
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-end px-4 pb-12 pt-[42svh] sm:px-6 md:justify-center md:pb-14 md:pt-40 lg:px-8">
+          <Link href="/results" className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-white/75 transition-colors hover:text-white">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All results
+          </Link>
+          <p className="mt-6 text-sm font-semibold text-white/70">Official grading result</p>
+          <h1 className="mt-3 max-w-[15ch] text-balance text-[clamp(2rem,4.4vw,3.25rem)] font-black uppercase leading-[0.98] tracking-[-0.025em]">
+            {result.title}
+          </h1>
+          {meta.length > 0 && (
+            <dl className="mt-8 grid max-w-xl grid-cols-2 gap-x-10 gap-y-5 border-t border-white/15 pt-6 sm:flex sm:flex-wrap">
+              {meta.map((m) => (
+                <div key={m.label}>
+                  <dt className="text-sm text-white/60">{m.label}</dt>
+                  <dd className="mt-1 font-bold text-white tabular-nums">{m.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
+      </header>
 
-        <header className="mt-8 grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
-          <div>
-            <p className="text-sm font-semibold text-white/60">Official grading result</p>
-            <h1 className="mt-3 text-balance text-[clamp(2rem,5vw,3.5rem)] font-black uppercase leading-[0.98] tracking-[-0.025em]">
-              {result.title}
-            </h1>
-            {meta.length > 0 && (
-              <dl className="mt-8 grid grid-cols-2 gap-x-10 gap-y-5 border-t border-white/15 pt-6 sm:flex sm:flex-wrap">
-                {meta.map((m) => (
-                  <div key={m.label}>
-                    <dt className="text-sm text-white/60">{m.label}</dt>
-                    <dd className="mt-1 font-bold text-white tabular-nums">{m.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-          </div>
-          <KkfiCrest size={96} glow={false} className="hidden md:block" />
-        </header>
-
-        <div className="mt-10">
+      <div className="bg-black">
+      {/* Same column as the hero copy; the sheet itself keeps a readable width. */}
+      <div className="mx-auto max-w-6xl px-4 pb-24 pt-4 sm:px-6 lg:px-8">
+        <div>
           <a
             href={pdfHref}
             target="_blank"
@@ -118,13 +134,17 @@ export default function ResultDetailPage({ params }: { params: Promise<{ id: str
         </div>
 
         {/* The sheet itself, on a plain mount like a framed document. */}
-        <figure className="mt-12">
+        <figure className="mt-12 max-w-4xl">
           <figcaption className="mb-3 text-sm font-semibold text-white/60">Certified result sheet</figcaption>
           <div className="overflow-hidden rounded-xl border border-white/10 bg-surface p-2 sm:p-4">
             <ResultPdfViewer url={pdfHref} />
           </div>
         </figure>
       </div>
+      </div>
     </div>
   );
 }
+
+/** A grading sheet has no podium of names: the steps stay unlabelled. Stable object, so the slot never re-registers. */
+const PODIUM_PROPS = {};

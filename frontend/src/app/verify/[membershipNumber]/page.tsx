@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import SceneSlot from '@/components/three/SceneSlot';
+import KankuMark from '@/components/KankuMark';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, BadgeCheck, Printer } from 'lucide-react';
 import Image from 'next/image';
@@ -112,6 +114,21 @@ export default function VerifyPage() {
         doSearch(searchQuery);
     };
 
+    // The 3D card carries the record once it has loaded; until then (or if not found) it is the generic card.
+    const cardProps = useMemo(() => {
+        if (!member) return {};
+        const validUntil = member.membershipStatus === 'ACTIVE' && member.membershipEndDate
+            ? `Valid until ${formatDateOnly(member.membershipEndDate, { day: 'numeric', month: 'long', year: 'numeric' }, 'en-IN')}`
+            : undefined;
+        return {
+            name: member.name,
+            membershipNumber: member.membershipNumber,
+            rank: member.currentBeltRank,
+            role: roleLabel(member.role),
+            note: validUntil,
+        };
+    }, [member]);
+
     const status = member ? STATUS[member.membershipStatus] ?? { label: 'Membership pending approval', tone: 'text-white/75' } : null;
     const isActive = member?.membershipStatus === 'ACTIVE';
     const history = member?.beltHistory?.length
@@ -119,9 +136,37 @@ export default function VerifyPage() {
         : [];
 
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-white">
+        // Transparent at the top: the card scene shows through from the canvas behind <main>.
+        <div className="min-h-screen text-white selection:bg-primary selection:text-white">
             <style dangerouslySetInnerHTML={{ __html: PRINT_CSS }} />
 
+            {/* The membership card in 3D. Screen only: the printable record below is the document. */}
+            <header data-bleed data-print-hide className="relative flex h-[58svh] min-h-[26rem] overflow-hidden print:hidden md:h-[64svh]">
+                <SceneSlot
+                    scene="certificate"
+                    sceneProps={cardProps}
+                    className="absolute inset-0"
+                    fallback={
+                        <div className="absolute inset-0 flex items-center justify-center bg-black">
+                            <div className="flex aspect-[1.6] w-[min(80vw,30rem)] -rotate-3 items-center gap-6 rounded-xl border border-secondary/50 bg-[#0b0b0b] p-6">
+                                <KankuMark className="h-2/3 w-auto shrink-0 text-secondary" />
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-bold text-white/60">KYOKUSHIN KARATE FOUNDATION OF INDIA</p>
+                                    <p className="mt-2 truncate text-xl font-black uppercase text-white">{member?.name ?? 'KKFI member'}</p>
+                                    <p className="mt-1 text-sm font-bold tabular-nums text-secondary">{member?.membershipNumber ?? membershipNumberFromUrl ?? ''}</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black to-transparent" />
+                <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col justify-end px-4 pb-6 pt-28 sm:px-6">
+                    <p className="text-sm font-semibold text-white/70">Membership record</p>
+                    <p className="mt-1 text-2xl font-black uppercase tabular-nums tracking-[0.02em] text-white">{membershipNumberFromUrl ?? ''}</p>
+                </div>
+            </header>
+
+            <div className="bg-black">
             <div className="mx-auto max-w-4xl px-4 pb-24 pt-6 sm:px-6 sm:pt-10">
                 {/* Search another, quietly above the record. */}
                 <div data-print-hide className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
@@ -330,6 +375,7 @@ export default function VerifyPage() {
                         </div>
                     )}
                 </div>
+            </div>
             </div>
         </div>
     );

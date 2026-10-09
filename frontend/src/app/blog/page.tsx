@@ -8,6 +8,10 @@ import PageHero from "@/components/brand/PageHero";
 import Section, { Heading } from "@/components/brand/Section";
 import Reveal from "@/components/brand/Reveal";
 import { GUIDES } from "./_components/article";
+import HistoryHeroSlot from "@/components/three/HistoryHeroSlot";
+
+// Module scope so the scene's props stay stable: one print per guide.
+const GUIDE_PRINTS = GUIDES.map((g) => g.image);
 
 interface Post {
     id: string;
@@ -46,20 +50,38 @@ export default function BlogList() {
         return () => cancelAnimationFrame(id);
     }, []);
 
+    const [front, setFront] = useState(0);
     const [lead, ...rest] = GUIDES;
     const [latest, ...older] = posts;
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen text-white">
             <PageHero
                 height="tall"
                 title={<>Dojo chronicles<span className="text-primary">.</span></>}
                 lede="Expert articles on Kyokushin training, philosophy, youth development, and the martial arts journey in India."
                 media={
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src="/gallery/DSC08858.JPG" alt="" className="h-full w-full object-cover opacity-70 grayscale-[0.4]" />
+                    <HistoryHeroSlot
+                        className="absolute inset-x-0 top-0 h-[46svh] md:inset-0 md:h-auto"
+                        images={GUIDE_PRINTS}
+                        onIndex={setFront}
+                        poster={
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src="/gallery/DSC08858.JPG" alt="" className="h-full w-full object-cover opacity-70 grayscale-[0.4]" />
+                        }
+                    />
                 }
-            />
+            >
+                {/* Caption for the print in front of the camera: a way straight into that guide. */}
+                <Link
+                    href={`/blog/${GUIDES[front].slug}`}
+                    className="group mt-10 hidden max-w-sm items-center gap-3 self-end text-right text-sm font-semibold text-white/70 transition-colors hover:text-white md:flex"
+                >
+                    <span className="tabular-nums text-white/40">0{front + 1}</span>
+                    <span className="line-clamp-1">{GUIDES[front].title}</span>
+                    <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                </Link>
+            </PageHero>
 
             {/* GUIDES: one lead story, three to follow. */}
             <Section rhythm="base" width="wide">

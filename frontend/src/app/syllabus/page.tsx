@@ -1,7 +1,10 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
+import { animate, useMotionValue } from 'framer-motion';
 import { ArrowRight, Printer } from 'lucide-react';
 import PageHero from '@/components/brand/PageHero';
+import SceneSlot from '@/components/three/SceneSlot';
 import BrandLink from '@/components/brand/BrandLink';
 import Reveal from '@/components/brand/Reveal';
 
@@ -288,7 +291,54 @@ function BeltSection({ entry }: { entry: SyllabusEntry }) {
     );
 }
 
+/**
+ * The hero belt steps through the syllabus belts on its own: it holds each rank,
+ * then turns over to the next, the way a grading is a moment rather than a blend.
+ */
+function useBeltSteps(count: number, holdMs = 2600) {
+    const mv = useMotionValue(0);
+    useEffect(() => {
+        let i = 0;
+        let dir = 1;
+        let controls: ReturnType<typeof animate> | null = null;
+        const id = window.setInterval(() => {
+            if (i + dir < 0 || i + dir > count - 1) dir = -dir;
+            i += dir;
+            controls?.stop();
+            controls = animate(mv, i / (count - 1), { duration: 0.9, ease: [0.65, 0, 0.35, 1] });
+        }, holdMs);
+        return () => {
+            window.clearInterval(id);
+            controls?.stop();
+        };
+    }, [mv, count, holdMs]);
+    return mv;
+}
+
 export default function SyllabusPage() {
+    const drift = useBeltSteps(SYLLABUS.length);
+    // Phones: the belt gets its own band above the copy, framed centred (decided after mount;
+    // the scene itself only ever renders on the client, so this cannot cause a mismatch).
+    const [narrow, setNarrow] = useState(false);
+    useEffect(() => {
+        const mq = window.matchMedia('(max-width: 767px)');
+        const sync = () => setNarrow(mq.matches);
+        const id = requestAnimationFrame(sync);
+        mq.addEventListener('change', sync);
+        return () => {
+            cancelAnimationFrame(id);
+            mq.removeEventListener('change', sync);
+        };
+    }, []);
+    const beltProps = useMemo(
+        () => ({
+            progress: drift,
+            compact: narrow,
+            stops: SYLLABUS.map((e) => ({ color: SWATCH[e.belt] ?? '#ffffff', bars: e.belt === 'Black' ? 1 : 0 })),
+        }),
+        [drift, narrow],
+    );
+
     return (
         <div className="min-h-screen text-white print:bg-white print:text-black">
             {/* Printing: keep only the syllabus itself, black on white. */}
@@ -304,8 +354,15 @@ export default function SyllabusPage() {
                     title={<>Belt syllabus<span className="text-primary">.</span></>}
                     lede="Your complete guide to the Kyokushin Karate belt progression — from White to Black belt."
                     media={
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src="/history/belt-grip.jpg" alt="" className="h-full w-full object-cover object-center opacity-70 grayscale" />
+                        <SceneSlot
+                            scene="belt"
+                            sceneProps={beltProps}
+                            className="absolute inset-x-0 top-0 h-[44svh] md:inset-0 md:h-auto"
+                            fallback={
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src="/history/belt-grip.jpg" alt="" className="h-full w-full object-cover object-center opacity-70 grayscale" />
+                            }
+                        />
                     }
                     actions={
                         <>

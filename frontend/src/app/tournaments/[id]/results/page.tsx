@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import SceneSlot from "@/components/three/SceneSlot";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Download, Share2, FileCheck } from "lucide-react";
 import Link from "next/link";
@@ -88,6 +89,17 @@ export default function TournamentResultsPage() {
 
         if (id) fetchStatistics();
     }, [id]);
+
+    // Names for the 3D podium: the top three dojos when the board has them,
+    // otherwise the first category's medallists; unlabelled when nothing is scored.
+    const podiumProps = useMemo(() => {
+        if (!statistics) return {};
+        const dojos = statistics.dojoLeaderboard.slice(0, 3);
+        if (dojos.length >= 3) return { names: dojos.map((d) => d.dojoName) };
+        const cat = statistics.categoryWinners.find((c) => c.firstPlace);
+        if (cat) return { names: [cat.firstPlace?.name, cat.secondPlace?.name, cat.thirdPlace?.name] };
+        return {};
+    }, [statistics]);
 
     const handleShare = async () => {
         const url = window.location.href;
@@ -207,16 +219,25 @@ export default function TournamentResultsPage() {
     ];
 
     return (
-        <div className="min-h-dvh bg-black text-white">
-            <header className="mx-auto max-w-[1400px] px-4 pb-12 pt-6 sm:px-6 md:pt-10 lg:px-8">
-                <Link href={`/tournaments/${id}/view`} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white">
+        // Transparent at the top: the podium scene shows through from the canvas behind <main>.
+        <div className="min-h-dvh text-white">
+            <header data-bleed className="relative flex min-h-[88svh] overflow-hidden md:min-h-[80svh]">
+                <SceneSlot
+                    scene="podium"
+                    sceneProps={podiumProps}
+                    className="absolute inset-x-0 top-0 h-[42svh] md:inset-0 md:h-auto"
+                    fallback={<div className="absolute inset-0 bg-black bg-[radial-gradient(ellipse_at_72%_55%,rgba(212,160,23,0.16),transparent_55%)]" />}
+                />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,black_50%,transparent_68%)] md:bg-gradient-to-r md:from-black/90 md:via-black/40 md:via-45% md:to-transparent" />
+                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-12 pt-[38svh] sm:px-6 md:justify-center md:pb-14 md:pt-40 lg:px-8">
+                <Link href={`/tournaments/${id}/view`} className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white">
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Brackets
                 </Link>
                 <p className="mt-8 text-sm font-semibold text-secondary">Results</p>
-                <h1 className="mt-3 max-w-[20ch] text-balance text-[clamp(2.25rem,6vw,4.5rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
+                <h1 className="mt-3 max-w-[15ch] text-balance text-[clamp(2.25rem,4.6vw,3.5rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
                     {tournament.name}
                 </h1>
-                <p className="mt-6 max-w-[56ch] text-pretty text-lg leading-relaxed text-white/75">
+                <p className="mt-6 max-w-[48ch] text-pretty text-lg leading-relaxed text-white/80">
                     {tournament.date && <>{formatDateOnly(tournament.date, { day: "numeric", month: "long", year: "numeric" }, "en-IN")}{tournament.location ? `, ${tournament.location}` : ""}. </>}
                     {hasResults ? (
                         <>
@@ -242,7 +263,10 @@ export default function TournamentResultsPage() {
                         <Share2 className="h-4 w-4" aria-hidden="true" /> Share
                     </button>
                 </div>
+                </div>
             </header>
+
+            <div className="bg-black pt-4">
 
             {!hasResults ? (
                 <div className="mx-auto max-w-[1400px] px-4 pb-24 sm:px-6 lg:px-8">
@@ -369,6 +393,7 @@ export default function TournamentResultsPage() {
                 </section>
             </div>
             )}
+            </div>
         </div>
     );
 }

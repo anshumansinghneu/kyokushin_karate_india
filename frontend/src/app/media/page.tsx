@@ -7,6 +7,10 @@ import PageHero from "@/components/brand/PageHero";
 import Section from "@/components/brand/Section";
 import Reveal from "@/components/brand/Reveal";
 import BrandLink from "@/components/brand/BrandLink";
+import SceneSlot from "@/components/three/SceneSlot";
+
+// Stable scene props (module scope): 報, "to report".
+const INK = { kanji: "報", red: 0.2 };
 
 interface MediaPost {
     id: string;
@@ -37,9 +41,10 @@ export default function MediaPage() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen text-white">
             <PageHero
-                height="compact"
+                height="tall"
+                media={<SceneSlot scene="ink" sceneProps={INK} className="absolute inset-0" fallback={<div className="absolute inset-0 bg-black" />} />}
                 title={<>In the press<span className="text-primary">.</span></>}
                 lede="Kyokushin making headlines across the globe."
             />

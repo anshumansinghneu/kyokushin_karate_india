@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag,
@@ -15,6 +15,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
 import KankuMark from "@/components/KankuMark";
 import Portal from "@/components/ui/portal";
+import SceneSlot from "@/components/three/SceneSlot";
 
 interface Product {
   id: string;
@@ -91,9 +92,34 @@ function PriceLine({ product, large = false }: { product: Product; large?: boole
   );
 }
 
+/** Still composition for reduced motion and slow devices: the products as framed plates, at rest. */
+function StorePoster({ images }: { images: string[] }) {
+  return (
+    <div className="absolute inset-0 bg-black">
+      <KankuMark className="pointer-events-none absolute -right-[10vw] top-1/2 h-[78vh] w-[78vh] -translate-y-1/2 text-white/[0.05]" />
+      {images.length > 0 && (
+        <div className="absolute inset-x-0 top-[16%] flex justify-center gap-4 md:inset-y-0 md:left-auto md:right-[6vw] md:top-0 md:items-center">
+          {images.slice(0, 2).map((src, i) => (
+            <div
+              key={src}
+              className={`w-[min(34vw,13rem)] overflow-hidden rounded-md border-[6px] border-[#0b0b0b] bg-[#0b0b0b] ring-1 ring-white/10 ${i === 0 ? "-rotate-3" : "translate-y-6 rotate-2"}`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt="" className="aspect-[4/5] w-full object-cover" />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function StorePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  // The hero's showroom: the first image of every product, taken once from the unfiltered list
+  // so it does not reshuffle when a category tab is chosen.
+  const [heroImages, setHeroImages] = useState<string[]>([]);
   const [category, setCategory] = useState("ALL");
   const [search, setSearch] = useState("");
   // The cart lives in localStorage, which the server cannot see: start empty
@@ -168,6 +194,10 @@ export default function StorePage() {
         const params = category !== "ALL" ? `?category=${category}` : "";
         const res = await api.get(`/merch/products${params}`);
         setProducts(res.data.data.products);
+        if (category === "ALL") {
+          const firsts = (res.data.data.products as Product[]).map((p) => p.images[0]).filter(Boolean);
+          setHeroImages((prev) => (prev.length ? prev : firsts));
+        }
       } catch (err) {
         console.error("Failed to fetch products", err);
       } finally {
@@ -176,6 +206,8 @@ export default function StorePage() {
     };
     fetchProducts();
   }, [category]);
+
+  const showroomProps = useMemo(() => ({ images: heroImages }), [heroImages]);
 
   const filtered = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -293,14 +325,22 @@ export default function StorePage() {
   );
 
   return (
-    <div className="min-h-screen bg-black pb-24 text-white selection:bg-primary selection:text-white">
-      {/* Opener */}
-      <header data-bleed className="relative flex min-h-[58svh] overflow-hidden">
-        <KankuMark className="pointer-events-none absolute -right-[10vw] top-1/2 h-[78vh] w-[78vh] -translate-y-1/2 text-white/[0.05]" />
-        <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end gap-8 px-4 pb-[clamp(2.5rem,6vh,4rem)] pt-36 sm:px-6 md:flex-row md:items-end md:justify-between md:pt-44 lg:px-8">
+    // Transparent: the hero showroom is painted by the 3D canvas behind <main>.
+    <div className="min-h-screen pb-24 text-white selection:bg-primary selection:text-white">
+      {/* Opener: the real products on a turning lacquer plinth, lit like a studio. */}
+      <header data-bleed className="relative flex min-h-[78svh] overflow-hidden">
+        <SceneSlot
+          scene="showcase"
+          sceneProps={showroomProps}
+          className="absolute inset-0"
+          fallback={<StorePoster images={heroImages} />}
+        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,black_36%,rgba(0,0,0,0.55)_56%,transparent_76%)] md:bg-[linear-gradient(to_right,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.45)_40%,transparent_62%)]" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black to-transparent" />
+        <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end gap-8 px-4 pb-[clamp(2.5rem,6vh,4rem)] pt-[46svh] sm:px-6 md:flex-row md:items-end md:justify-between md:pt-44 lg:px-8">
           <div>
             <h1 className="text-balance text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.92] tracking-[-0.035em]">
-              The KKFI store<span className="text-primary">.</span>
+              The KKFI<br />store<span className="text-primary">.</span>
             </h1>
             <p className="mt-5 max-w-[46ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
               Official Kyokushin Karate Foundation of India gi, gear and apparel. Order online; we contact you for payment.

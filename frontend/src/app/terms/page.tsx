@@ -1,23 +1,34 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import SceneSlot from "@/components/three/SceneSlot";
+
+// Stable scene props: 約.
+const INK = { kanji: "約", red: 0.15 };
 
 /** Long-form legal reading: a readable measure, numbered sections (the document is numbered), and a contents list on wide screens. */
 export default function TermsPage() {
     return (
-        <div className="min-h-screen w-full bg-black text-white selection:bg-primary selection:text-white">
-            <div className="mx-auto max-w-[1200px] px-4 pb-24 pt-8 sm:px-6 lg:px-8">
+        <div className="min-h-screen w-full text-white selection:bg-primary selection:text-white">
+            {/* Hero: ink scene with 約 brushed in; the reading layout below is unchanged. */}
+            <header data-bleed className="relative flex min-h-[62svh] overflow-hidden">
+                <SceneSlot scene="ink" sceneProps={INK} className="absolute inset-0" fallback={<div className="absolute inset-0 bg-black" />} />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent md:bg-gradient-to-r md:from-black/80 md:via-black/30 md:to-transparent" />
+                <div className="relative z-10 mx-auto flex w-full max-w-[1200px] flex-col justify-end px-4 pb-14 pt-36 sm:px-6 md:pt-44 lg:px-8">
                 <Link href="/" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white/70 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                     Back to home
                 </Link>
 
-                <header className="mt-10 max-w-[44rem] border-b border-white/10 pb-10">
+                <div className="mt-10 max-w-[44rem]">
                     <h1 className="text-balance text-[clamp(2.5rem,6vw,4.5rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
                         Terms of service<span className="text-primary">.</span>
                     </h1>
                     <p className="mt-5 max-w-[56ch] text-lg leading-relaxed text-white/75">The rules for using the KKFI platform: accounts, roles, gradings, events, payments and conduct.</p>
                     <p className="mt-4 text-sm font-semibold text-white/55">Last updated: November 25, 2025</p>
-                </header>
+                </div>
+                </div>
+            </header>
+            <div className="mx-auto max-w-[1200px] px-4 pb-24 pt-4 sm:px-6 lg:px-8">
 
                 <div className="mt-12 grid gap-12 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-16">
                     <nav aria-label="Contents" className="hidden lg:block">

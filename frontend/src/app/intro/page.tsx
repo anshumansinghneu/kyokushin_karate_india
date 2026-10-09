@@ -8,6 +8,11 @@ import BrandLink from "@/components/brand/BrandLink";
 import Reveal from "@/components/brand/Reveal";
 import Section, { Heading } from "@/components/brand/Section";
 import KankuMark from "@/components/KankuMark";
+import HistoryHeroSlot from "@/components/three/HistoryHeroSlot";
+import { useState } from "react";
+
+// The lineage as a corridor of portraits, in order. Module scope keeps the scene's props stable.
+const LINEAGE_PRINTS = ["/history/oyama.jpg", "/history/ryuko-take.jpg", "/history/shihan-vasant.jpg"];
 // Imported so Next can size them and generate blur placeholders at build time.
 import ryukoTake from "../../../public/ryuko-take.png";
 import shihanVasant from "../../../public/shihan-vasant.png";
@@ -45,6 +50,8 @@ const WORK = [
 ];
 
 export default function IntroPage() {
+    const [front, setFront] = useState(0);
+    const now = LINEAGE[front];
     return (
         <div className="min-h-screen text-white selection:bg-primary selection:text-white">
             <PageHero
@@ -63,13 +70,21 @@ export default function IntroPage() {
                 }
                 lede="The Kyokushin Karate Foundation of India: the national home of full-contact Kyokushin, in the lineage of Sosai Mas Oyama."
                 media={
-                    <Image
-                        src="/history/grading-floor.jpg"
-                        alt="Karateka in white gi on the mats at a KKFI tournament"
-                        fill
-                        priority
-                        sizes="100vw"
-                        className="object-cover opacity-60 grayscale"
+                    <HistoryHeroSlot
+                        className="absolute inset-x-0 top-0 h-[46svh] md:inset-0 md:h-auto"
+                        images={LINEAGE_PRINTS}
+                        seconds={6}
+                        onIndex={setFront}
+                        poster={
+                            <Image
+                                src="/history/grading-floor.jpg"
+                                alt="Karateka in white gi on the mats at a KKFI tournament"
+                                fill
+                                priority
+                                sizes="100vw"
+                                className="object-cover opacity-60 grayscale"
+                            />
+                        }
                     />
                 }
                 actions={
@@ -80,7 +95,14 @@ export default function IntroPage() {
                         <BrandLink href="/what-is-kyokushin" variant="outline">What is Kyokushin?</BrandLink>
                     </>
                 }
-            />
+            >
+                {/* Caption for the portrait in front: the lineage, one generation at a time. */}
+                <p aria-live="polite" className="mt-10 hidden max-w-sm self-end text-right text-sm md:block">
+                    <span className="tabular-nums text-white/40">0{front + 1}</span>
+                    <span className="ml-3 font-semibold text-white">{now.name}</span>
+                    <span className="block text-white/60">{now.role} · {now.years}</span>
+                </p>
+            </PageHero>
 
             {/* Who we are: one confident statement, then the plain facts. */}
             <Section rhythm="open" width="wide" className="bg-black">
