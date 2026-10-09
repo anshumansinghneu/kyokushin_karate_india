@@ -4,9 +4,18 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, CheckCircle2, AlertCircle, User, GraduationCap, Eye, EyeOff, ChevronRight, ChevronLeft } from "lucide-react";
+import { Loader2, Check, ArrowRight, ArrowLeft } from "lucide-react";
+import AuthShell from "@/components/auth/AuthShell";
+import {
+    Field,
+    FormAlert,
+    PasswordInput,
+    describedBy,
+    inputClass,
+    selectClass,
+    primaryButtonClass,
+    outlineButtonClass,
+} from "@/components/auth/fields";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { INDIAN_STATES, CITIES, BELT_RANKS, COUNTRY_CODES } from "@/lib/constants";
@@ -15,8 +24,6 @@ const ADMIN_INSTRUCTOR_ID = "42b18481-85ee-49ed-8b3c-dc4f707fe29e"; // Sihan Vas
 
 export default function RegisterPage() {
     const [role, setRole] = useState<"STUDENT" | "INSTRUCTOR">("STUDENT");
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [submitState, setSubmitState] = useState<"form" | "verifying" | "done">("form");
     const [step, setStep] = useState(1);
     const TOTAL_STEPS = 6;
@@ -337,743 +344,363 @@ export default function RegisterPage() {
 
     const STEP_LABELS = ["You", "Contact", "Training", role === "STUDENT" ? "Guardian" : "Experience", "Dojo", "Account"];
 
+    type FieldName = keyof typeof formData;
+    /** Wires a control to the shared handlers, its error text and aria state. */
+    const bind = (name: FieldName, hint = false) => ({
+        id: `reg-${name}`,
+        name,
+        value: formData[name],
+        onChange: handleChange,
+        onBlur: handleBlur,
+        "aria-invalid": errors[name] ? true : undefined,
+        "aria-describedby": describedBy(`reg-${name}`, { hint, error: errors[name] }),
+    });
+
+    const stepNav = (
+        <div className="flex items-center justify-between gap-3 pt-4">
+            {step > 1 ? (
+                <button type="button" onClick={prevStep} className={outlineButtonClass}>
+                    <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back
+                </button>
+            ) : (
+                <span />
+            )}
+            <button type="button" onClick={nextStep} className={`${primaryButtonClass} group`}>
+                Next <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+            </button>
+        </div>
+    );
+
+    const sectionTitle = (title: string, lede?: string) => (
+        <div className="mb-8">
+            <h2 className="text-2xl font-extrabold tracking-[-0.01em] text-white">{title}</h2>
+            {lede && <p className="mt-2 text-white/65">{lede}</p>}
+        </div>
+    );
+
     return (
-        <div className="min-h-screen w-full flex relative overflow-hidden bg-black text-white font-sans selection:bg-red-500/30">
-            {/* Split Screen Container */}
-            <div className="w-full flex h-screen">
+        <AuthShell
+            image="/history/belt-grip.jpg"
+            imageAlt="Hands tightening a black belt at the waist"
+            title={<>Begin as a white belt<span className="text-primary">.</span></>}
+            lede="Six short steps to your KKFI membership. Your instructor approves it, and it runs for a year."
+            width="wide"
+        >
+            <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+                <h1 className="text-[clamp(2rem,4vw,2.75rem)] font-extrabold leading-[1.02] tracking-[-0.02em] text-white">Join KKFI</h1>
+                <p className="text-sm text-white/65">
+                    Already a member?{" "}
+                    <Link href="/login" className="font-semibold text-white underline decoration-primary decoration-2 underline-offset-4 transition-colors hover:text-primary-light">
+                        Sign in
+                    </Link>
+                </p>
+            </div>
 
-                {/* ── Left Side: The Visual Brand ─────────────── */}
-                <div className="hidden lg:flex w-[55%] relative flex-col justify-between overflow-hidden">
-                    {/* Background Image / Effects */}
-                    <div className="absolute inset-0 z-0">
-                        {/* Authentic Kyokushin Kanji watermark */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[30rem] font-black text-white/5 select-none pointer-events-none mix-blend-overlay">
-                            極真
-                        </div>
-                        <img 
-                            src="/training-bg.png" 
-                            alt="Karate training" 
-                            className="w-full h-full object-cover filter grayscale contrast-125 opacity-70"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-black/95 mix-blend-overlay" />
-                        <div className="absolute inset-0 bg-red-900/20 mix-blend-multiply" />
-                        <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-black to-transparent z-10" />
-                        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 pointer-events-none mix-blend-overlay" />
-                    </div>
+            {authError && <FormAlert>{authError}</FormAlert>}
 
-                    <div className="relative z-20 p-12 h-full flex flex-col justify-between">
-                        {/* Back Button & Logo */}
-                        <motion.div 
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6 }}
-                            className="flex justify-between items-center"
-                        >
-                            <Link href="/" className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md transition-all text-xs font-bold uppercase tracking-widest text-zinc-300 hover:text-white">
-                                <ArrowLeft className="w-4 h-4" /> Return Home
-                            </Link>
+            {/* Progress: a real sequence, so it is numbered. */}
+            <nav aria-label="Registration progress" className="mb-12">
+                <p className="mb-3 text-sm font-semibold text-white/80">
+                    Step {step} of {TOTAL_STEPS} <span className="text-white/45">·</span> {STEP_LABELS[step - 1]}
+                </p>
+                <ol className="grid grid-cols-6 gap-1.5">
+                    {STEP_LABELS.map((label, i) => {
+                        const n = i + 1;
+                        const state = step > n ? "done" : step === n ? "current" : "todo";
+                        return (
+                            <li key={label} aria-current={state === "current" ? "step" : undefined}>
+                                <span
+                                    className={`block h-1 transition-colors duration-300 ${state === "done" ? "bg-white" : state === "current" ? "bg-primary" : "bg-white/15"}`}
+                                    aria-hidden="true"
+                                />
+                                <span className={`mt-2 hidden text-xs font-semibold sm:block ${state === "current" ? "text-white" : state === "done" ? "text-white/70" : "text-white/40"}`}>
+                                    {n}. {label}
+                                </span>
+                                <span className="sr-only">
+                                    Step {n}, {label}: {state === "done" ? "complete" : state === "current" ? "current" : "not started"}
+                                </span>
+                            </li>
+                        );
+                    })}
+                </ol>
+            </nav>
 
-                            <div className="flex items-center gap-3">
-                                <img src="/kkfi-logo.png" alt="Kyokushin Karate India" className="w-12 h-12 object-contain" />
-                                <span className="font-black tracking-tighter text-xl border-l border-white/10 pl-3">O S U !</span>
-                            </div>
-                        </motion.div>
-
-                        {/* Title Context */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.2 }}
-                            className="max-w-xl"
-                        >
-                            <h1 className="text-5xl xl:text-7xl font-black leading-[0.9] tracking-tighter mb-6 text-white drop-shadow-2xl uppercase">
-                                FORGE YOUR<br/>
-                                <span className="text-red-600">LEGACY.</span>
-                            </h1>
-                            <p className="text-base text-gray-300 font-medium leading-relaxed max-w-md pl-4">
-                                Join the elite ranks. Discipline, strength, and spirit await those who dare to begin the path of Kyokushin Karate.
-                            </p>
-                        </motion.div>
-                    </div>
-                </div>
-
-                {/* ── Right Side: The Form ─────────────── */}
-                <div className="w-full lg:w-[45%] flex flex-col relative z-20 h-screen overflow-y-auto scrollbar-hide bg-black">
-                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 pointer-events-none z-0 mix-blend-overlay" />
-
-                    {/* Mobile Only Header */}
-                    <div className="lg:hidden absolute top-6 left-6 right-6 flex justify-between items-center z-50">
-                        <Link href="/" className="p-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-zinc-400 hover:text-white relative z-10">
-                            <ArrowLeft className="w-5 h-5" />
-                        </Link>
-                        <div className="flex items-center gap-2 relative z-10">
-                            <img src="/kkfi-logo.png" alt="KKFI" className="w-8 h-8 object-contain" />
-                            <span className="font-black tracking-tighter text-white uppercase">O S U !</span>
-                        </div>
-                    </div>
-
-                    <div className="min-h-full flex flex-col justify-start p-4 sm:p-12 lg:p-16 py-20 pb-32">
-                        <div className="max-w-xl w-full mx-auto">
-                            
-                            {/* Sign In Link Header */}
-                            <div className="flex items-center justify-end mb-8">
-                                <div className="text-right">
-                                    <p className="text-xs text-gray-400 font-medium">Already a member?</p>
-                                    <Link href="/login" className="text-white font-bold text-sm hover:text-red-400 transition-colors inline-block relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-red-500 after:scale-x-0 outline-none hover:after:scale-x-100 after:origin-left after:transition-transform">
-                                        Sign In Here
-                                    </Link>
-                                </div>
-                            </div>
-
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
-                                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                                transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-                                className="bg-black/40 backdrop-blur-3xl border border-white/10 p-6 sm:p-10 rounded-[2rem] shadow-2xl relative overflow-hidden"
-                            >
-                                {/* Subtle internal gradient glow */}
-                                <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-500/10 blur-[100px] rounded-full pointer-events-none" />
-                                
-                                <div className="mb-8 relative z-10">
-                                    <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">Join the Dojo</h2>
-                                    <p className="text-sm font-medium text-zinc-400">Begin your martial arts journey</p>
-                                </div>
-
-                                {authError && (
-                                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm font-medium flex items-center gap-3 relative z-10">
-                                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                                        {authError}
-                                    </div>
-                                )}
-
-                            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                                {/* Step Progress Bar */}
-                                <div className="flex items-center justify-between mb-2 gap-0.5">
-                                    {STEP_LABELS.map((label, i) => (
-                                        <div key={label} className="flex items-center flex-1">
-                                            <div className="flex flex-col items-center">
-                                                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all duration-300 ${
-                                                    step > i + 1 ? 'bg-[#FFD700] text-black' :
-                                                    step === i + 1 ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' :
-                                                    'bg-white/10 text-gray-400 border border-white/10'
-                                                }`}>
-                                                    {step > i + 1 ? <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : i + 1}
-                                                </div>
-                                                <span className={`text-[8px] sm:text-[10px] mt-1 font-bold uppercase tracking-wider ${
-                                                    step === i + 1 ? 'text-red-400' : 'text-gray-400'
-                                                }`}>{label}</span>
-                                            </div>
-                                            {i < STEP_LABELS.length - 1 && (
-                                                <div className={`flex-1 h-0.5 mx-2 mb-4 rounded transition-all duration-300 ${
-                                                    step > i + 1 ? 'bg-[#FFD700]' : 'bg-white/10'
-                                                }`} />
-                                            )}
-                                        </div>
+            <form onSubmit={handleSubmit}>
+                <AnimatePresence mode="wait" initial={false}>
+                    {/* STEP 1: Role + Name + Email */}
+                    {step === 1 && (
+                        <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-8">
+                            <fieldset>
+                                <legend className="mb-3 text-sm font-semibold text-white/80">I am joining as</legend>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {(["STUDENT", "INSTRUCTOR"] as const).map((r) => (
+                                        <button
+                                            key={r}
+                                            type="button"
+                                            onClick={() => setRole(r)}
+                                            aria-pressed={role === r}
+                                            className={`min-h-14 border px-4 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                                                role === r ? "border-primary bg-primary/10 text-white" : "border-white/20 text-white/70 hover:border-white/50 hover:text-white"
+                                            }`}
+                                        >
+                                            <span className="block font-bold">{r === "STUDENT" ? "Student" : "Instructor"}</span>
+                                            <span className="block text-sm text-white/60">{r === "STUDENT" ? "Training at a dojo" : "Teaching a class"}</span>
+                                        </button>
                                     ))}
                                 </div>
+                            </fieldset>
 
-                                <AnimatePresence mode="wait">
-                                {/* STEP 1: Role + Name + Email */}
-                                {step === 1 && (
-                                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
-                                {/* Role Selection Toggle */}
-                                <div className="space-y-3 pb-4 sm:pb-6 border-b border-white/10">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600 text-white font-bold text-sm">1</span>
-                                        <label className="text-sm font-bold text-white uppercase tracking-wider">Who are you?</label>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => setRole("STUDENT")}
-                                            className={`p-3 rounded-xl border transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-2 ${role === "STUDENT"
-                                                    ? "border-red-500 bg-red-500/10 text-white"
-                                                    : "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10"
-                                                }`}
-                                        >
-                                            <User className={`w-5 h-5 ${role === "STUDENT" ? "text-red-500" : ""}`} />
-                                            <span className="font-bold text-sm">Student</span>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setRole("INSTRUCTOR")}
-                                            className={`p-3 rounded-xl border transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-2 ${role === "INSTRUCTOR"
-                                                    ? "border-red-500 bg-red-500/10 text-white"
-                                                    : "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10"
-                                                }`}
-                                        >
-                                            <GraduationCap className={`w-5 h-5 ${role === "INSTRUCTOR" ? "text-red-500" : ""}`} />
-                                            <span className="font-bold text-sm">Instructor</span>
-                                        </button>
-                                    </div>
-                                </div>
+                            <Field id="reg-name" label="Full name" required error={errors.name}>
+                                <input {...bind("name")} autoComplete="name" placeholder="As it should appear on certificates" className={inputClass} />
+                            </Field>
+                            <Field id="reg-email" label="Email" required error={errors.email}>
+                                <input {...bind("email")} type="email" autoComplete="email" placeholder="you@example.com" className={inputClass} />
+                            </Field>
 
-                                <div className="space-y-3 sm:space-y-4">
-                                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                                        <div className="w-1 h-4 bg-red-500 rounded-full"></div>
-                                        Basic Details
-                                    </h3>
-                                    <div className="space-y-4">
-                                        <div className="space-y-1.5">
-                                            <label htmlFor="reg-name" className="text-sm sm:text-xs font-medium text-zinc-400">Full Name <span className="text-red-400">*</span></label>
-                                            <Input
-                                                id="reg-name"
-                                                name="name"
-                                                placeholder="Enter full name"
-                                                value={formData.name}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                                className={`bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white placeholder:text-gray-400 ${errors.name ? 'border-red-500/50' : ''}`}
-                                            />
-                                            {errors.name && <p className="text-xs text-red-400">{errors.name}</p>}
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label htmlFor="reg-email" className="text-xs font-medium text-zinc-400">Email Address <span className="text-red-400">*</span></label>
-                                            <Input
-                                                id="reg-email"
-                                                name="email"
-                                                type="email"
-                                                placeholder="your@email.com"
-                                                value={formData.email}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                                className={`bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white placeholder:text-gray-400 ${errors.email ? 'border-red-500/50' : ''}`}
-                                            />
-                                            {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-end pt-4">
-                                    <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
-                                        Next <ChevronRight className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                </motion.div>
-                                )}
-
-                                {/* STEP 2: Phone + DOB */}
-                                {step === 2 && (
-                                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
-                                <div className="space-y-3 sm:space-y-4">
-                                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                                        <div className="w-1 h-4 bg-red-500 rounded-full"></div>
-                                        Contact Details
-                                    </h3>
-                                    <div className="space-y-4">
-                                        <div className="space-y-1.5">
-                                            <label htmlFor="reg-phone" className="text-xs font-medium text-zinc-400">Phone Number <span className="text-red-400">*</span></label>
-                                            <Input
-                                                id="reg-phone"
-                                                name="phone"
-                                                placeholder="9876543210"
-                                                value={formData.phone}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                                className={`bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white placeholder:text-gray-400 ${errors.phone ? 'border-red-500/50' : ''}`}
-                                            />
-                                            {errors.phone && <p className="text-xs text-red-400">{errors.phone}</p>}
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label htmlFor="reg-dob" className="text-xs font-medium text-zinc-400">Date of Birth <span className="text-red-400">*</span></label>
-                                            <Input
-                                                id="reg-dob"
-                                                name="dob"
-                                                type="date"
-                                                value={formData.dob}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                                className={`bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white ${errors.dob ? 'border-red-500/50' : ''}`}
-                                            />
-                                            {errors.dob && <p className="text-xs text-red-400">{errors.dob}</p>}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between pt-4">
-                                    <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
-                                        <ChevronLeft className="w-4 h-4" /> Back
-                                    </button>
-                                    <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
-                                        Next <ChevronRight className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                </motion.div>
-                                )}
-
-                                {/* STEP 3: Training Details (Belt + Height + Weight) */}
-                                {step === 3 && (
-                                <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
-                                <div className="space-y-3 sm:space-y-4">
-                                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                                        <div className="w-1 h-4 bg-red-500 rounded-full"></div>
-                                        Training Details
-                                    </h3>
-
-                                    <div className="space-y-4">
-                                        {/* Belt Selection for Both Roles */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-zinc-400">
-                                                    {role === "INSTRUCTOR" ? "Current Belt" : "Starting Belt"} <span className="text-red-400">*</span>
-                                                </label>
-                                                <select
-                                                    name="currentBeltRank"
-                                                    value={formData.currentBeltRank}
-                                                    onChange={handleChange}
-                                                    onBlur={handleBlur}
-                                                    className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-[#FF0000] transition-colors touch-action-manipulation ${errors.currentBeltRank ? 'border-red-500/50' : 'border-white/10'}`}
-                                                >
-                                                    {BELT_RANKS.map(belt => (
-                                                        <option key={belt} value={belt} className="bg-zinc-900">{belt}</option>
-                                                    ))}
-                                                </select>
-                                                {errors.currentBeltRank && <p className="text-xs text-red-400">{errors.currentBeltRank}</p>}
-                                                {role === "STUDENT" && formData.currentBeltRank === "White" && (
-                                                    <p className="text-xs text-gray-400">✓ No verification needed</p>
-                                                )}
-                                                {role === "STUDENT" && formData.currentBeltRank !== "White" && (
-                                                    <p className="text-xs text-red-400">⚠ Instructor verification required</p>
-                                                )}
-                                            </div>
-
-                                            {/* Belt Exam Date - Only for Students claiming higher belts */}
-                                            {role === "STUDENT" && formData.currentBeltRank !== "White" && (
-                                                <div className="space-y-1.5">
-                                                    <label className="text-xs font-medium text-zinc-400">Belt Exam Date <span className="text-red-400">*</span></label>
-                                                    <Input
-                                                        name="beltExamDate"
-                                                        type="date"
-                                                        value={formData.beltExamDate}
-                                                        onChange={handleChange}
-                                                        onBlur={handleBlur}
-                                                        max={new Date().toISOString().split('T')[0]}
-                                                        className={`bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white ${errors.beltExamDate ? 'border-red-500/50' : ''}`}
-                                                    />
-                                                    {errors.beltExamDate && <p className="text-xs text-red-400">{errors.beltExamDate}</p>}
-                                                    <p className="text-xs text-gray-400">When did you earn this belt?</p>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-400">Height (cm) <span className="text-red-400">*</span></label>
-                                            <Input
-                                                name="height"
-                                                type="number"
-                                                placeholder="175"
-                                                value={formData.height}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                                className={`bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white placeholder:text-gray-400 ${errors.height ? 'border-red-500/50' : ''}`}
-                                            />
-                                            {errors.height && <p className="text-xs text-red-400">{errors.height}</p>}
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-400">Weight (kg) <span className="text-red-400">*</span></label>
-                                            <Input
-                                                name="weight"
-                                                type="number"
-                                                placeholder="70"
-                                                value={formData.weight}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                                className={`bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white placeholder:text-gray-400 ${errors.weight ? 'border-red-500/50' : ''}`}
-                                            />
-                                            {errors.weight && <p className="text-xs text-red-400">{errors.weight}</p>}
-                                        </div>
-                                    </div>
-
-                                    {/* Martial Arts Experience */}
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-medium text-zinc-400">Martial Arts Experience <span className="text-red-400">*</span></label>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-1">
-                                                <select
-                                                    name="experienceYears"
-                                                    value={formData.experienceYears}
-                                                    onChange={handleChange}
-                                                    onBlur={handleBlur}
-                                                    className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-[#FF0000] transition-colors ${errors.experienceYears ? 'border-red-500/50' : 'border-white/10'}`}
-                                                >
-                                                    {Array.from({ length: 51 }, (_, i) => (
-                                                        <option key={i} value={String(i)} className="bg-zinc-900">{i} {i === 1 ? 'Year' : 'Years'}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <select
-                                                    name="experienceMonths"
-                                                    value={formData.experienceMonths}
-                                                    onChange={handleChange}
-                                                    onBlur={handleBlur}
-                                                    className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-[#FF0000] transition-colors ${errors.experienceMonths ? 'border-red-500/50' : 'border-white/10'}`}
-                                                >
-                                                    {Array.from({ length: 12 }, (_, i) => (
-                                                        <option key={i} value={String(i)} className="bg-zinc-900">{i} {i === 1 ? 'Month' : 'Months'}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-gray-400">Total time training in any martial art</p>
-                                    </div>
-                                </div>
-
-                                {/* Step 3 Navigation */}
-                                <div className="flex justify-between pt-4">
-                                    <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
-                                        <ChevronLeft className="w-4 h-4" /> Back
-                                    </button>
-                                    <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
-                                        Next <ChevronRight className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                </motion.div>
-                                )}
-
-                                {/* STEP 4: Guardian (Students) or Experience (Instructors) */}
-                                {step === 4 && (
-                                <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
-                                <div className="space-y-3 sm:space-y-4">
-                                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                                        <div className="w-1 h-4 bg-red-500 rounded-full"></div>
-                                        {role === "STUDENT" ? "Guardian Information" : "Experience"}
-                                    </h3>
-
-                                    {/* Guardian Details - Only for Students */}
-                                    {role === "STUDENT" && (
-                                        <div className="space-y-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-zinc-400">Father&apos;s Name <span className="text-red-400">*</span></label>
-                                                <Input
-                                                    name="fatherName"
-                                                    placeholder="Enter father's name"
-                                                    value={formData.fatherName}
-                                                    onChange={handleChange}
-                                                    onBlur={handleBlur}
-                                                    className={`bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white placeholder:text-gray-400 ${errors.fatherName ? 'border-red-500/50' : ''}`}
-                                                />
-                                                {errors.fatherName && <p className="text-xs text-red-400">{errors.fatherName}</p>}
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-zinc-400">Father&apos;s Phone <span className="text-red-400">*</span></label>
-                                                <div className="flex gap-2">
-                                                    <select
-                                                        name="countryCode"
-                                                        value={formData.countryCode}
-                                                        onChange={handleChange}
-                                                        className="w-24 h-12 min-h-[44px] rounded-lg border border-white/10 bg-zinc-950/50 px-2 text-sm text-white focus:outline-none focus:border-[#FF0000] touch-action-manipulation"
-                                                    >
-                                                        {COUNTRY_CODES.map(c => (
-                                                            <option key={c.code} value={c.code} className="bg-zinc-900">{c.flag} {c.code}</option>
-                                                        ))}
-                                                    </select>
-                                                    <Input
-                                                        name="fatherPhone"
-                                                        placeholder="9876543210"
-                                                        value={formData.fatherPhone}
-                                                        onChange={handleChange}
-                                                        onBlur={handleBlur}
-                                                        className={`flex-1 bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white placeholder:text-gray-400 ${errors.fatherPhone ? 'border-red-500/50' : ''}`}
-                                                    />
-                                                </div>
-                                                {errors.fatherPhone && <p className="text-xs text-red-400">{errors.fatherPhone}</p>}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Experience - Only for Instructors */}
-                                    {role === "INSTRUCTOR" && (
-                                        <div className="space-y-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-zinc-400">Years of Experience <span className="text-red-400">*</span></label>
-                                                <Input
-                                                    name="yearsOfExperience"
-                                                    type="number"
-                                                    placeholder="5"
-                                                    value={formData.yearsOfExperience}
-                                                    onChange={handleChange}
-                                                    onBlur={handleBlur}
-                                                    className={`bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white placeholder:text-gray-400 ${errors.yearsOfExperience ? 'border-red-500/50' : ''}`}
-                                                />
-                                                {errors.yearsOfExperience && <p className="text-xs text-red-400">{errors.yearsOfExperience}</p>}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Step 4 Navigation */}
-                                <div className="flex justify-between pt-4">
-                                    <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
-                                        <ChevronLeft className="w-4 h-4" /> Back
-                                    </button>
-                                    <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
-                                        Next <ChevronRight className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                </motion.div>
-                                )}
-
-                                {/* STEP 5: Location & Dojo */}
-                                {step === 5 && (
-                                <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
-                                <div className="space-y-3 sm:space-y-4">
-                                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                                        <div className="w-1 h-4 bg-red-500 rounded-full"></div>
-                                        Location & Dojo
-                                    </h3>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-400">State <span className="text-red-400">*</span></label>
-                                            <select
-                                                name="state"
-                                                value={formData.state}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                                className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-[#FF0000] transition-colors touch-action-manipulation ${errors.state ? 'border-red-500/50' : 'border-white/10'}`}
-                                            >
-                                                <option value="" className="bg-zinc-900">Select State</option>
-                                                {INDIAN_STATES.map(s => (
-                                                    <option key={s} value={s} className="bg-zinc-900">{s}</option>
-                                                ))}
-                                            </select>
-                                            {errors.state && <p className="text-xs text-red-400">{errors.state}</p>}
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-400">City <span className="text-red-400">*</span></label>
-                                            <select
-                                                name="city"
-                                                value={formData.city}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                                disabled={!formData.state}
-                                                className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-[#FF0000] transition-colors disabled:opacity-50 touch-action-manipulation ${errors.city ? 'border-red-500/50' : 'border-white/10'}`}
-                                            >
-                                                <option value="" className="bg-zinc-900">Select City</option>
-                                                {availableCities.map((c: string) => (
-                                                    <option key={c} value={c} className="bg-zinc-900">{c}</option>
-                                                ))}
-                                            </select>
-                                            {errors.city && <p className="text-xs text-red-400">{errors.city}</p>}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-medium text-zinc-400">
-                                            Select Dojo {role === "STUDENT" && <span className="text-red-400">*</span>}
-                                            {role === "INSTRUCTOR" && <span className="text-gray-400">(Optional)</span>}
-                                        </label>
-                                        <select
-                                            name="dojoId"
-                                            value={formData.dojoId}
-                                            onChange={handleChange}
-                                            onBlur={handleBlur}
-                                            disabled={!formData.city || loadingDojos}
-                                            className={`w-full h-12 min-h-[44px] rounded-lg border bg-zinc-950/50 px-3 text-base text-white focus:outline-none focus:border-[#FF0000] transition-colors disabled:opacity-50 touch-action-manipulation ${errors.dojoId ? 'border-red-500/50' : 'border-white/10'}`}
-                                        >
-                                            <option value="" className="bg-zinc-900">{loadingDojos ? "Loading..." : "Choose your dojo"}</option>
-                                            {dojos.map(d => (
-                                                <option key={d.id} value={d.id} className="bg-zinc-900">{d.name} - {d.city}</option>
-                                            ))}
-                                            {formData.city && (
-                                                <option value="fallback" className="bg-zinc-900">
-                                                    🥋 No dojo nearby? Register directly
-                                                </option>
-                                            )}
-                                        </select>
-                                        {errors.dojoId && <p className="text-xs text-red-500 ml-1">{errors.dojoId}</p>}
-                                    </div>
-
-                                    {/* Instructor Display */}
-                                    <AnimatePresence>
-                                        {selectedDojo && selectedDojo.instructors && selectedDojo.instructors.length > 0 && (
-                                            <motion.div
-                                                initial={{ opacity: 0, height: 0 }}
-                                                animate={{ opacity: 1, height: 'auto' }}
-                                                exit={{ opacity: 0, height: 0 }}
-                                                className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4"
-                                            >
-                                                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white font-bold">
-                                                    {selectedDojo.instructors[0].name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs text-zinc-400 uppercase">Assigned Instructor</p>
-                                                    <p className="text-sm font-bold text-white">{selectedDojo.instructors[0].name}</p>
-                                                </div>
-                                                <CheckCircle2 className="w-5 h-5 text-[#FFD700] ml-auto" />
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-
-                                {/* Step 5 Navigation */}
-                                <div className="flex justify-between pt-4">
-                                    <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
-                                        <ChevronLeft className="w-4 h-4" /> Back
-                                    </button>
-                                    <button type="button" onClick={nextStep} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all btn-shine active:scale-[0.98]">
-                                        Next <ChevronRight className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                </motion.div>
-                                )}
-
-                                {/* STEP 6: Account security. No payment is taken here — the
-                                    "Payment" in the old label was left over from a removed step. */}
-                                {step === 6 && (
-                                <motion.div key="step6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-4 sm:space-y-6">
-                                {/* Security Section */}
-                                <div className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
-                                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                                        <div className="w-1 h-4 bg-red-500 rounded-full"></div>
-                                        Account Security
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <label htmlFor="reg-password" className="text-xs font-medium text-zinc-400">Password <span className="text-red-400">*</span></label>
-                                            <div className="relative">
-                                                <Input
-                                                    id="reg-password"
-                                                    name="password"
-                                                    type={showPassword ? "text" : "password"}
-                                                    placeholder="Min. 8 characters"
-                                                    value={formData.password}
-                                                    onChange={handleChange}
-                                                    onBlur={handleBlur}
-                                                    className={`bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white placeholder:text-gray-400 pr-11 ${errors.password ? 'border-red-500/50' : ''}`}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white transition-colors rounded"
-                                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                                >
-                                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                </button>
-                                            </div>
-                                            {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label htmlFor="reg-confirm-password" className="text-xs font-medium text-zinc-400">Confirm Password <span className="text-red-400">*</span></label>
-                                            <div className="relative">
-                                                <Input
-                                                    id="reg-confirm-password"
-                                                    name="confirmPassword"
-                                                    type={showConfirmPassword ? "text" : "password"}
-                                                    placeholder="Re-enter password"
-                                                    value={formData.confirmPassword}
-                                                    onChange={handleChange}
-                                                    onBlur={handleBlur}
-                                                    className={`bg-zinc-950/50 border-white/10 focus:border-[#FF0000] h-11 rounded-lg text-white placeholder:text-gray-400 pr-11 ${errors.confirmPassword ? 'border-red-500/50' : ''}`}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white transition-colors rounded"
-                                                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                                                >
-                                                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                </button>
-                                            </div>
-                                            {errors.confirmPassword && <p className="text-xs text-red-400">{errors.confirmPassword}</p>}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Desktop submit button */}
-                                <div className="hidden md:block">
-                                    <div className="flex gap-3 mt-8">
-                                        <button type="button" onClick={prevStep} className="flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 font-bold text-sm transition-all active:scale-[0.98]">
-                                            <ChevronLeft className="w-4 h-4" /> Back
-                                        </button>
-                                        <Button
-                                            type="submit"
-                                            className="flex-1 h-12 text-base font-bold uppercase tracking-wider transition-all duration-200 rounded-none btn-shine bg-[#FF0000] hover:bg-[#8B0000] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                                            disabled={isLoading || submitState !== "form"}
-                                        >
-                                            {submitState === "verifying" ? (
-                                                <>
-                                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                    Creating Account...
-                                                </>
-                                            ) : submitState === "done" ? (
-                                                <>
-                                                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                                                    Registration Complete!
-                                                </>
-                                            ) : isLoading ? (
-                                                <>
-                                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                    Processing...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                                                    Create Account
-                                                </>
-                                            )}
-                                        </Button>
-                                    </div>
-                                    {/* Public signup takes no payment and creates the account with
-                                        membershipStatus PENDING — the 1-year window and membership
-                                        number are issued by approveUser, on instructor approval. The
-                                        previous copy promised "valid for 1 year from the date of
-                                        registration", which was never true on this path. */}
-                                    <p className="text-center text-xs text-gray-400 mt-4">
-                                        By registering, you agree to our Terms of Service. Your account is created
-                                        straight away — your membership becomes active once your instructor approves
-                                        it, and then runs for one year.
-                                    </p>
-                                </div>
-
-                                {/* Mobile sticky submit button */}
-                                <div className="md:hidden sticky-action-bar">
-                                    <div className="flex gap-2">
-                                        <button type="button" onClick={prevStep} className="flex items-center justify-center p-3 rounded-xl border border-white/10 text-zinc-400 active:scale-[0.95]">
-                                            <ChevronLeft className="w-5 h-5" />
-                                        </button>
-                                        <Button
-                                            type="submit"
-                                            className="flex-1 h-14 text-base font-bold uppercase tracking-wider transition-all duration-200 rounded-none btn-shine bg-[#FF0000] hover:bg-[#8B0000] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                                            disabled={isLoading || submitState !== "form"}
-                                        >
-                                            {submitState === "verifying" ? (
-                                                <>
-                                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                    Creating...
-                                                </>
-                                            ) : submitState === "done" ? (
-                                                <>
-                                                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                                                    Done!
-                                                </>
-                                            ) : isLoading ? (
-                                                <>
-                                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                    Processing...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                                                    Create Account
-                                                </>
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
-                                </motion.div>
-                                )}
-                                </AnimatePresence>
-                            </form>
+                            {stepNav}
                         </motion.div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    )}
+
+                    {/* STEP 2: Phone + DOB */}
+                    {step === 2 && (
+                        <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-8">
+                            {sectionTitle("Contact details", "So your dojo can reach you about classes and gradings.")}
+                            <Field id="reg-phone" label="Phone number" required error={errors.phone}>
+                                <input {...bind("phone")} type="tel" inputMode="tel" autoComplete="tel-national" placeholder="10-digit mobile number" className={inputClass} />
+                            </Field>
+                            <Field id="reg-dob" label="Date of birth" required error={errors.dob}>
+                                <input {...bind("dob")} type="date" autoComplete="bday" className={inputClass} />
+                            </Field>
+                            {stepNav}
+                        </motion.div>
+                    )}
+
+                    {/* STEP 3: Training Details (Belt + Height + Weight) */}
+                    {step === 3 && (
+                        <motion.div key="step3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-8">
+                            {sectionTitle("Training", "Your belt today, and the measurements used for tournament categories.")}
+
+                            <div className="grid gap-8 md:grid-cols-2">
+                                <Field
+                                    id="reg-currentBeltRank"
+                                    label={role === "INSTRUCTOR" ? "Current belt" : "Starting belt"}
+                                    required
+                                    error={errors.currentBeltRank}
+                                    hint={
+                                        role === "STUDENT"
+                                            ? formData.currentBeltRank === "White"
+                                                ? "No verification needed."
+                                                : "Your instructor will verify this belt."
+                                            : undefined
+                                    }
+                                >
+                                    <select {...bind("currentBeltRank", role === "STUDENT")} className={selectClass}>
+                                        {BELT_RANKS.map((belt) => (
+                                            <option key={belt} value={belt}>{belt}</option>
+                                        ))}
+                                    </select>
+                                </Field>
+
+                                {/* Belt Exam Date - Only for Students claiming higher belts */}
+                                {role === "STUDENT" && formData.currentBeltRank !== "White" && (
+                                    <Field id="reg-beltExamDate" label="Belt exam date" required error={errors.beltExamDate} hint="When did you earn this belt?">
+                                        <input {...bind("beltExamDate", true)} type="date" max={new Date().toISOString().split("T")[0]} className={inputClass} />
+                                    </Field>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-8">
+                                <Field id="reg-height" label="Height (cm)" required error={errors.height}>
+                                    <input {...bind("height")} type="number" inputMode="numeric" placeholder="175" className={inputClass} />
+                                </Field>
+                                <Field id="reg-weight" label="Weight (kg)" required error={errors.weight}>
+                                    <input {...bind("weight")} type="number" inputMode="numeric" placeholder="70" className={inputClass} />
+                                </Field>
+                            </div>
+
+                            {/* Martial Arts Experience */}
+                            <fieldset>
+                                <legend className="mb-2 text-sm font-semibold text-white/80">
+                                    Martial arts experience<span className="text-primary-light" aria-hidden="true"> *</span>
+                                </legend>
+                                <div className="grid grid-cols-2 gap-8">
+                                    <div>
+                                        <label htmlFor="reg-experienceYears" className="sr-only">Years</label>
+                                        <select {...bind("experienceYears", true)} className={selectClass}>
+                                            {Array.from({ length: 51 }, (_, i) => (
+                                                <option key={i} value={String(i)}>{i} {i === 1 ? "Year" : "Years"}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="reg-experienceMonths" className="sr-only">Months</label>
+                                        <select {...bind("experienceMonths", true)} className={selectClass}>
+                                            {Array.from({ length: 12 }, (_, i) => (
+                                                <option key={i} value={String(i)}>{i} {i === 1 ? "Month" : "Months"}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <p id="reg-experienceYears-hint" className="mt-2 text-sm text-white/55">Total time training in any martial art.</p>
+                                <span id="reg-experienceMonths-hint" className="sr-only">Total time training in any martial art.</span>
+                            </fieldset>
+
+                            {stepNav}
+                        </motion.div>
+                    )}
+
+                    {/* STEP 4: Guardian (Students) or Experience (Instructors) */}
+                    {step === 4 && (
+                        <motion.div key="step4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-8">
+                            {role === "STUDENT"
+                                ? sectionTitle("Guardian", "A parent or guardian we can contact.")
+                                : sectionTitle("Teaching experience")}
+
+                            {role === "STUDENT" && (
+                                <>
+                                    <Field id="reg-fatherName" label="Father's name" required error={errors.fatherName}>
+                                        <input {...bind("fatherName")} autoComplete="off" placeholder="Full name" className={inputClass} />
+                                    </Field>
+                                    <div>
+                                        <label htmlFor="reg-fatherPhone" className="mb-2 block text-sm font-semibold text-white/80">
+                                            Father&apos;s phone<span className="text-primary-light" aria-hidden="true"> *</span>
+                                        </label>
+                                        <div className="flex gap-4">
+                                            <label htmlFor="reg-countryCode" className="sr-only">Country code</label>
+                                            <select id="reg-countryCode" name="countryCode" value={formData.countryCode} onChange={handleChange} className={`${selectClass} w-28 shrink-0`}>
+                                                {COUNTRY_CODES.map((c) => (
+                                                    <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                                                ))}
+                                            </select>
+                                            <input {...bind("fatherPhone")} type="tel" inputMode="tel" placeholder="10-digit mobile number" className={`${inputClass} flex-1`} />
+                                        </div>
+                                        {errors.fatherPhone && (
+                                            <p id="reg-fatherPhone-error" className="mt-2 text-sm font-medium text-primary-light">{errors.fatherPhone}</p>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+
+                            {role === "INSTRUCTOR" && (
+                                <Field id="reg-yearsOfExperience" label="Years of experience" required error={errors.yearsOfExperience}>
+                                    <input {...bind("yearsOfExperience")} type="number" inputMode="numeric" placeholder="5" className={inputClass} />
+                                </Field>
+                            )}
+
+                            {stepNav}
+                        </motion.div>
+                    )}
+
+                    {/* STEP 5: Location & Dojo */}
+                    {step === 5 && (
+                        <motion.div key="step5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-8">
+                            {sectionTitle("Your dojo", "Choose where you train. Your instructor approves your membership.")}
+
+                            <div className="grid gap-8 md:grid-cols-2">
+                                <Field id="reg-state" label="State" required error={errors.state}>
+                                    <select {...bind("state")} className={selectClass}>
+                                        <option value="">Select state</option>
+                                        {INDIAN_STATES.map((st) => (
+                                            <option key={st} value={st}>{st}</option>
+                                        ))}
+                                    </select>
+                                </Field>
+                                <Field id="reg-city" label="City" required error={errors.city}>
+                                    <select {...bind("city")} disabled={!formData.state} className={selectClass}>
+                                        <option value="">{formData.state ? "Select city" : "Choose a state first"}</option>
+                                        {availableCities.map((c: string) => (
+                                            <option key={c} value={c}>{c}</option>
+                                        ))}
+                                    </select>
+                                </Field>
+                            </div>
+
+                            <Field id="reg-dojoId" label="Dojo" required={role === "STUDENT"} optional={role === "INSTRUCTOR"} error={errors.dojoId}>
+                                <select {...bind("dojoId")} disabled={!formData.city || loadingDojos} className={selectClass}>
+                                    <option value="">{loadingDojos ? "Loading dojos…" : formData.city ? "Choose your dojo" : "Choose a city first"}</option>
+                                    {dojos.map((d) => (
+                                        <option key={d.id} value={d.id}>{d.name} - {d.city}</option>
+                                    ))}
+                                    {formData.city && (
+                                        <option value="fallback">No dojo nearby? Register directly</option>
+                                    )}
+                                </select>
+                            </Field>
+
+                            {/* Instructor Display */}
+                            {selectedDojo && selectedDojo.instructors && selectedDojo.instructors.length > 0 && (
+                                <div className="flex items-center gap-4 border border-white/15 p-4">
+                                    <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/25 text-lg font-black text-white" aria-hidden="true">
+                                        {selectedDojo.instructors[0].name.charAt(0)}
+                                    </span>
+                                    <div className="min-w-0">
+                                        <p className="text-sm text-white/60">Your instructor</p>
+                                        <p className="font-bold text-white">{selectedDojo.instructors[0].name}</p>
+                                    </div>
+                                    <Check className="ml-auto h-5 w-5 text-white" aria-hidden="true" />
+                                </div>
+                            )}
+
+                            {stepNav}
+                        </motion.div>
+                    )}
+
+                    {/* STEP 6: Account security. No payment is taken here — the
+                        "Payment" in the old label was left over from a removed step. */}
+                    {step === 6 && (
+                        <motion.div key="step6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-8">
+                            {sectionTitle("Your account", "The password you will sign in with.")}
+
+                            <div className="grid gap-8 md:grid-cols-2">
+                                <Field id="reg-password" label="Password" required error={errors.password} hint="At least 8 characters, with a special character.">
+                                    <PasswordInput {...bind("password", true)} autoComplete="new-password" placeholder="Create a password" />
+                                </Field>
+                                <Field id="reg-confirmPassword" label="Confirm password" required error={errors.confirmPassword}>
+                                    <PasswordInput {...bind("confirmPassword")} autoComplete="new-password" placeholder="Repeat it" />
+                                </Field>
+                            </div>
+
+                            {/* One action row: fixed above the bottom nav on phones, inline on wider screens. */}
+                            <div className="sticky-action-bar">
+                                <div className="flex gap-3">
+                                    <button type="button" onClick={prevStep} aria-label="Back" className={`${outlineButtonClass} px-4 md:px-6`}>
+                                        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                                        <span className="hidden md:inline">Back</span>
+                                    </button>
+                                    <button type="submit" disabled={isLoading || submitState !== "form"} className={`${primaryButtonClass} flex-1`}>
+                                        {submitState === "verifying" ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Creating account
+                                            </>
+                                        ) : submitState === "done" ? (
+                                            <>
+                                                <Check className="h-4 w-4" aria-hidden="true" /> Registration complete
+                                            </>
+                                        ) : isLoading ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Processing
+                                            </>
+                                        ) : (
+                                            "Create account"
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                            {/* Public signup takes no payment and creates the account with
+                                membershipStatus PENDING — the 1-year window and membership
+                                number are issued by approveUser, on instructor approval. The
+                                previous copy promised "valid for 1 year from the date of
+                                registration", which was never true on this path. */}
+                            <p className="text-sm leading-relaxed text-white/60">
+                                By registering, you agree to our{" "}
+                                <Link href="/terms" className="underline decoration-white/30 underline-offset-4 hover:text-white">Terms of Service</Link>. Your account is created
+                                straight away — your membership becomes active once your instructor approves
+                                it, and then runs for one year.
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </form>
+        </AuthShell>
     );
 }

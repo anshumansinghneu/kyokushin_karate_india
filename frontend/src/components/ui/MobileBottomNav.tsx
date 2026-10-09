@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Home, Calendar, CreditCard, User, LayoutDashboard, LogIn, UserPlus,
     ShieldCheck, Radio, MoreHorizontal, X, Shield,
-    ShoppingBag, Image, Users, BookOpen, Newspaper, Award, GraduationCap, Heart, HandHeart
+    ShoppingBag, Image, Users, BookOpen, Newspaper, Award, GraduationCap, Heart, HandHeart,
+    MapPin, Info, Mail, CalendarDays, Plane
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
@@ -34,12 +35,18 @@ const MORE_AUTH_ITEMS = [
     { href: '/live', icon: Radio, label: 'Live Matches', adminOnly: true },
     { href: '/instructors', icon: Users, label: 'Instructors' },
     { href: '/black-belts', icon: Award, label: 'Black Belts' },
-    { href: '/dojos', icon: GraduationCap, label: 'Find a Dojo' },
+    { href: '/find-a-dojo', icon: MapPin, label: 'Find a Dojo' },
     { href: '/blog', icon: BookOpen, label: 'Blog' },
     { href: '/media', icon: Newspaper, label: 'Media' },
     { href: '/syllabus', icon: Award, label: 'Syllabus' },
     { href: '/sponsors', icon: Heart, label: 'Sponsors' },
     { href: '/csr', icon: HandHeart, label: 'CSR' },
+    { href: '/team-india', icon: Plane, label: 'Team India' },
+    { href: '/calendar', icon: CalendarDays, label: 'Calendar' },
+    { href: '/what-is-kyokushin', icon: GraduationCap, label: 'Kyokushin' },
+    { href: '/belt-system', icon: Award, label: 'Belt System' },
+    { href: '/intro', icon: Info, label: 'About KKFI' },
+    { href: '/contact', icon: Mail, label: 'Contact' },
 ];
 
 const MORE_GUEST_ITEMS = [
@@ -49,12 +56,18 @@ const MORE_GUEST_ITEMS = [
     { href: '/verify', icon: ShieldCheck, label: 'Belt Verify' },
     { href: '/instructors', icon: Users, label: 'Instructors' },
     { href: '/black-belts', icon: Award, label: 'Black Belts' },
-    { href: '/dojos', icon: GraduationCap, label: 'Find a Dojo' },
+    { href: '/find-a-dojo', icon: MapPin, label: 'Find a Dojo' },
     { href: '/blog', icon: BookOpen, label: 'Blog' },
     { href: '/media', icon: Newspaper, label: 'Media' },
     { href: '/syllabus', icon: Award, label: 'Syllabus' },
     { href: '/sponsors', icon: Heart, label: 'Sponsors' },
     { href: '/csr', icon: HandHeart, label: 'CSR' },
+    { href: '/team-india', icon: Plane, label: 'Team India' },
+    { href: '/calendar', icon: CalendarDays, label: 'Calendar' },
+    { href: '/what-is-kyokushin', icon: GraduationCap, label: 'Kyokushin' },
+    { href: '/belt-system', icon: Award, label: 'Belt System' },
+    { href: '/intro', icon: Info, label: 'About KKFI' },
+    { href: '/contact', icon: Mail, label: 'Contact' },
 ];
 
 export default function MobileBottomNav() {

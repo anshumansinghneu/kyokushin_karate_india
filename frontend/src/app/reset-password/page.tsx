@@ -1,16 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Lock, CheckCircle, AlertTriangle, Eye, EyeOff } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/authStore";
+import { Check, Loader2 } from "lucide-react";
 import api from "@/lib/api";
 import { setTokens } from "@/lib/tokenStorage";
-import { Suspense } from "react";
+import AuthShell from "@/components/auth/AuthShell";
+import KarateLoader from "@/components/KarateLoader";
+import { Field, FormAlert, FormHeading, PasswordInput, describedBy, primaryButtonClass } from "@/components/auth/fields";
+
+function Requirement({ met, children }: { met: boolean; children: React.ReactNode }) {
+    return (
+        <li className={`flex items-center gap-2 text-sm transition-colors ${met ? "text-white" : "text-white/55"}`}>
+            <span className={`flex h-4 w-4 items-center justify-center border ${met ? "border-white bg-white text-black" : "border-white/30"}`} aria-hidden="true">
+                {met && <Check className="h-3 w-3" strokeWidth={3} />}
+            </span>
+            {children}
+            <span className="sr-only">{met ? "(met)" : "(not met)"}</span>
+        </li>
+    );
+}
 
 function ResetPasswordForm() {
     const router = useRouter();
@@ -19,7 +28,6 @@ function ResetPasswordForm() {
 
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
@@ -28,6 +36,7 @@ function ResetPasswordForm() {
     const hasMinLength = password.length >= 8;
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
+    const mismatch = confirmPassword.length > 0 && !passwordsMatch;
 
     useEffect(() => {
         if (!token) {
@@ -58,157 +67,90 @@ function ResetPasswordForm() {
             setSuccess(true);
             // Auto-redirect to dashboard after 2s
             setTimeout(() => router.push("/dashboard"), 2000);
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Reset failed. The link may have expired.");
+        } catch (err) {
+            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            setError(message || "Reset failed. The link may have expired.");
         } finally {
             setIsLoading(false);
         }
     };
 
+    if (success) {
+        return (
+            <div role="status">
+                <span className="mb-8 flex h-12 w-12 items-center justify-center border border-white/25">
+                    <Check className="h-6 w-6 text-white" aria-hidden="true" />
+                </span>
+                <FormHeading title="Password updated" lede="Your new password is set. Taking you to your dashboard…" />
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-black font-sans selection:bg-red-500/30">
-            {/* Background */}
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] z-0 mix-blend-overlay pointer-events-none" />
+        <>
+            <FormHeading title="Set a new password" lede="Choose a strong password for your account." />
 
-            <Link href="/login" className="absolute top-8 left-8 text-gray-400 hover:text-white flex items-center gap-2 transition-all group text-sm font-medium tracking-wide z-20">
-                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                BACK TO LOGIN
-            </Link>
+            {error && <FormAlert>{error}</FormAlert>}
 
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="w-full max-w-md px-8 relative z-10"
-            >
-                {success ? (
-                    <div className="text-center">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.3 }}
-                            className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center"
-                        >
-                            <CheckCircle className="w-10 h-10 text-green-500" />
-                        </motion.div>
-                        <h3 className="text-3xl font-bold text-white mb-3">Password Reset!</h3>
-                        <p className="text-gray-400 mb-6">
-                            Your password has been updated successfully. Redirecting to dashboard...
-                        </p>
-                        <div className="w-8 h-8 border-2 border-zinc-500/30 border-t-zinc-500 rounded-full animate-spin mx-auto" />
-                    </div>
-                ) : (
-                    <>
-                        <div className="mb-8">
-                            <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
-                                <Lock className="w-7 h-7 text-zinc-400" />
-                            </div>
-                            <h3 className="text-3xl font-bold text-white mb-2">Set New Password</h3>
-                            <p className="text-gray-400">Choose a strong password for your account.</p>
-                        </div>
+            <form onSubmit={handleSubmit} className="space-y-8">
+                <Field id="reset-password" label="New password" hint={password.length === 0 ? "At least 8 characters, including a special character." : undefined}>
+                    <PasswordInput
+                        id="reset-password"
+                        autoComplete="new-password"
+                        placeholder="New password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        aria-describedby={password.length > 0 ? "reset-password-reqs" : describedBy("reset-password", { hint: true })}
+                    />
+                    {password.length > 0 && (
+                        <ul id="reset-password-reqs" className="mt-3 space-y-1.5">
+                            <Requirement met={hasMinLength}>At least 8 characters</Requirement>
+                            <Requirement met={hasSpecialChar}>Contains a special character</Requirement>
+                        </ul>
+                    )}
+                </Field>
 
-                        {error && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium flex items-center gap-3"
-                            >
-                                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                                {error}
-                            </motion.div>
-                        )}
+                <Field id="reset-confirm-password" label="Confirm password" error={mismatch ? "Passwords do not match" : undefined}>
+                    <PasswordInput
+                        id="reset-confirm-password"
+                        autoComplete="new-password"
+                        placeholder="Repeat the password"
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        aria-invalid={mismatch || undefined}
+                        aria-describedby={describedBy("reset-confirm-password", { error: mismatch ? "mismatch" : undefined })}
+                    />
+                </Field>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="space-y-2 group">
-                                <label htmlFor="reset-password" className="text-xs font-bold text-gray-300 uppercase tracking-wider ml-1 group-focus-within:text-[#FF0000] transition-colors">
-                                    New Password
-                                </label>
-                                <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-white transition-colors" />
-                                    <Input
-                                        id="reset-password"
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="••••••••"
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="pl-12 pr-12 h-14 placeholder:text-gray-400 focus-visible:border-[#FF0000] transition-colors"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                                    >
-                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                    </button>
-                                </div>
-
-                                {/* Password Requirements */}
-                                {password.length > 0 && (
-                                    <div className="space-y-1 mt-2 ml-1">
-                                        <div className={`flex items-center gap-2 text-xs ${hasMinLength ? 'text-green-400' : 'text-gray-400'}`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${hasMinLength ? 'bg-green-400' : 'bg-gray-500'}`} />
-                                            At least 8 characters
-                                        </div>
-                                        <div className={`flex items-center gap-2 text-xs ${hasSpecialChar ? 'text-green-400' : 'text-gray-400'}`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${hasSpecialChar ? 'bg-green-400' : 'bg-gray-500'}`} />
-                                            Contains a special character
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="space-y-2 group">
-                                <label htmlFor="reset-confirm-password" className="text-xs font-bold text-gray-300 uppercase tracking-wider ml-1 group-focus-within:text-[#FF0000] transition-colors">
-                                    Confirm Password
-                                </label>
-                                <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-white transition-colors" />
-                                    <Input
-                                        id="reset-confirm-password"
-                                        type="password"
-                                        placeholder="••••••••"
-                                        required
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className={`pl-12 h-14 placeholder:text-gray-400 focus-visible:border-[#FF0000] transition-colors ${confirmPassword.length > 0 && !passwordsMatch ? 'border-red-500' : ''}`}
-                                    />
-                                </div>
-                                {confirmPassword.length > 0 && !passwordsMatch && (
-                                    <p className="text-red-400 text-xs ml-1">Passwords do not match</p>
-                                )}
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="w-full h-14 text-lg bg-[#FF0000] hover:bg-[#8B0000] text-white transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                                disabled={isLoading || !token}
-                            >
-                                {isLoading ? (
-                                    <span className="flex items-center gap-2">
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Resetting...
-                                    </span>
-                                ) : (
-                                    "Reset Password"
-                                )}
-                            </Button>
-                        </form>
-                    </>
-                )}
-            </motion.div>
-        </div>
+                <button type="submit" disabled={isLoading || !token} className={`${primaryButtonClass} w-full`}>
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Saving
+                        </>
+                    ) : (
+                        "Reset password"
+                    )}
+                </button>
+            </form>
+        </>
     );
 }
 
 export default function ResetPasswordPage() {
     return (
-        <Suspense fallback={
-            <div className="min-h-screen w-full bg-black flex items-center justify-center">
-                <div className="w-10 h-10 border-2 border-zinc-500/30 border-t-zinc-500 rounded-full animate-spin" />
-            </div>
-        }>
-            <ResetPasswordForm />
-        </Suspense>
+        <AuthShell
+            image="/history/belt-grip.jpg"
+            imageAlt="Hands tightening a black belt at the waist"
+            title={<>Back on the mat<span className="text-primary">.</span></>}
+            lede="Set a new password and pick up where you left off."
+            backHref="/login"
+            backLabel="Back to sign in"
+        >
+            <Suspense fallback={<div className="py-16"><KarateLoader /></div>}>
+                <ResetPasswordForm />
+            </Suspense>
+        </AuthShell>
     );
 }

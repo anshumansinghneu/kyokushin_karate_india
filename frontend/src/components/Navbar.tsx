@@ -6,7 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle, Receipt,
-    ShoppingBag, Calendar, MapPin, Users, Image as ImageIcon, Heart, HandHeart, ShieldCheck, Radio, Swords, Shield, BookOpen, Award, FileText, Plane
+    ShoppingBag, Calendar, MapPin, Users, Image as ImageIcon, Heart, HandHeart, ShieldCheck, Radio, Swords, Shield, BookOpen, Award, FileText, Plane,
+    CalendarDays, ListChecks, PenLine, Info, Newspaper, Mail
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
@@ -69,9 +70,13 @@ interface NavLink {
     accent?: boolean;
 }
 
+type DropdownItem = { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description?: string; live?: boolean; flagIcon?: string };
+
 interface NavDropdown {
     name: string;
-    items: { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description?: string; live?: boolean; flagIcon?: string }[];
+    items: DropdownItem[];
+    /** Optional labelled columns; when present the panel renders as a two-column menu. */
+    columns?: { label: string; items: DropdownItem[] }[];
 }
 
 type NavItem = NavLink | NavDropdown;
@@ -125,9 +130,12 @@ function DesktopDropdown({ dropdown, pathname }: { dropdown: NavDropdown; pathna
                         animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                         exit={{ opacity: 0, y: 10, scale: 0.95, filter: "blur(4px)" }}
                         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                        className="absolute top-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-64 bg-black/70 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl p-2 z-[60]"
+                        className={`absolute top-[calc(100%+10px)] left-1/2 -translate-x-1/2 bg-black/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl p-2 z-[60] ${dropdown.columns ? "grid w-[36rem] grid-cols-2 gap-2" : "w-64"}`}
                     >
-                        {dropdown.items.map((item) => {
+                        {(dropdown.columns ?? [{ label: "", items: dropdown.items }]).map((col) => (
+                            <div key={col.label || "items"}>
+                                {col.label && <p className="px-3 pb-1 pt-2 text-xs font-semibold text-zinc-500">{col.label}</p>}
+                                {col.items.map((item) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
                             return (
@@ -157,6 +165,8 @@ function DesktopDropdown({ dropdown, pathname }: { dropdown: NavDropdown; pathna
                                 </Link>
                             );
                         })}
+                            </div>
+                        ))}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -217,22 +227,38 @@ export default function Navbar() {
     const eventsDropdown: NavDropdown = {
         name: "Events",
         items: [
-            { name: "All Events", href: "/events", icon: Calendar, description: "Tournaments & seminars" },
+            { name: "All Events", href: "/events", icon: Calendar, description: "Tournaments, camps, gradings" },
+            { name: "Calendar", href: "/calendar", icon: CalendarDays, description: "Month by month" },
+            { name: "Seminars", href: "/seminars", icon: Shield, description: "Self-defence classes" },
+            { name: "Belt Test Results", href: "/results", icon: FileText, description: "Official result sheets" },
             { name: "Low Kick", href: "/low-kick", icon: Swords, flagIcon: "/india-flag.png" },
             ...(hasLiveMatches ? [{ name: "Live Matches", href: "/live", icon: Radio, live: true }] : []),
         ],
     };
 
+    // Two labelled columns: learning the art, and the foundation itself.
+    const learnItems: DropdownItem[] = [
+        { name: "What is Kyokushin?", href: "/what-is-kyokushin", icon: BookOpen, description: "History and principles" },
+        { name: "Belt System", href: "/belt-system", icon: Award, description: "Every rank, in 3D" },
+        { name: "Syllabus", href: "/syllabus", icon: ListChecks, description: "Grading requirements" },
+        { name: "Dojo Chronicles", href: "/blog", icon: PenLine, description: "Guides and stories" },
+    ];
+    const foundationItems: DropdownItem[] = [
+        { name: "About KKFI", href: "/intro", icon: Info, description: "Who we are" },
+        { name: "Instructors", href: "/instructors", icon: Users, description: "Our senseis" },
+        { name: "Black Belts", href: "/black-belts", icon: Award, description: "Dan holders" },
+        { name: "Gallery", href: "/gallery", icon: ImageIcon, description: "Photos and moments" },
+        { name: "In the Press", href: "/media", icon: Newspaper, description: "Media coverage" },
+        { name: "Sponsors", href: "/sponsors", icon: Heart, description: "Our partners" },
+        { name: "CSR", href: "/csr", icon: HandHeart, description: "Beyond the dojo" },
+        { name: "Contact", href: "/contact", icon: Mail, description: "Talk to us" },
+    ];
     const exploreDropdown: NavDropdown = {
         name: "Explore",
-        items: [
-            { name: "What is Kyokushin?", href: "/what-is-kyokushin", icon: BookOpen, description: "Learn the art" },
-            { name: "Belt System", href: "/belt-system", icon: Award, description: "Ranking guide" },
-            { name: "Belt Test Results", href: "/results", icon: FileText, description: "Official exam results" },
-            { name: "Seminars", href: "/seminars", icon: Shield, description: "Self-defense classes" },
-            { name: "Gallery", href: "/gallery", icon: ImageIcon, description: "Photos & moments" },
-            { name: "Instructors", href: "/instructors", icon: Users, description: "Our senseis" },
-            { name: "Black Belts", href: "/black-belts", icon: Award, description: "Dan holders" },
+        items: [...learnItems, ...foundationItems],
+        columns: [
+            { label: "Learn", items: learnItems },
+            { label: "The Foundation", items: foundationItems },
         ],
     };
 
@@ -253,28 +279,9 @@ export default function Navbar() {
             label: null,
             items: [{ name: "Find a Dojo", href: "/find-a-dojo", icon: MapPin }],
         },
-        {
-            label: "Events",
-            items: [
-                { name: "All Events", href: "/events", icon: Calendar },
-                { name: "Low Kick", href: "/low-kick", icon: Swords, flagIcon: "/india-flag.png" },
-                ...(hasLiveMatches ? [{ name: "Live Matches", href: "/live", icon: Radio, live: true }] : []),
-            ],
-        },
-        {
-            label: "Explore",
-            items: [
-                { name: "What is Kyokushin?", href: "/what-is-kyokushin", icon: BookOpen },
-                { name: "Belt System", href: "/belt-system", icon: Award },
-                { name: "Belt Test Results", href: "/results", icon: FileText },
-                { name: "Seminars", href: "/seminars", icon: Shield },
-                { name: "Gallery", href: "/gallery", icon: ImageIcon },
-                { name: "Instructors", href: "/instructors", icon: Users },
-                { name: "Black Belts", href: "/black-belts", icon: Award },
-                { name: "Sponsors", href: "/sponsors", icon: Heart },
-                { name: "CSR", href: "/csr", icon: HandHeart },
-            ],
-        },
+        { label: "Events", items: eventsDropdown.items },
+        { label: "Learn", items: learnItems },
+        { label: "The Foundation", items: foundationItems },
         {
             label: null,
             items: [
@@ -389,7 +396,7 @@ export default function Navbar() {
                                                 animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                                                 exit={{ opacity: 0, y: 10, scale: 0.95, filter: "blur(4px)" }}
                                                 transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                                                className="absolute right-0 top-full mt-3 w-60 bg-black/70 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl p-2 z-[60]"
+                                                className="absolute right-0 top-full mt-3 w-60 bg-black/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl p-2 z-[60]"
                                             >
                                                 <div className="px-3 py-3 mb-2 bg-gradient-to-br from-white/5 to-transparent rounded-xl border border-white/5">
                                                     <p className="text-sm font-bold text-white truncate">{user?.name}</p>

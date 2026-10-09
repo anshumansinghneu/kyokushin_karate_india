@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Mail, Send, CheckCircle } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Check, Loader2 } from "lucide-react";
 import api from "@/lib/api";
+import AuthShell from "@/components/auth/AuthShell";
+import { Field, FormAlert, FormHeading, inputClass, outlineButtonClass, primaryButtonClass } from "@/components/auth/fields";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -21,124 +20,80 @@ export default function ForgotPasswordPage() {
         try {
             await api.post("/auth/forgot-password", { email });
             setSent(true);
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Something went wrong. Please try again.");
+        } catch (err) {
+            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            setError(message || "Something went wrong. Please try again.");
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-black font-sans selection:bg-red-500/30">
-            {/* Background */}
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] z-0 mix-blend-overlay pointer-events-none" />
+        <AuthShell
+            image="/history/belt-grip.jpg"
+            imageAlt="Hands tightening a black belt at the waist"
+            title={<>Back on the mat<span className="text-primary">.</span></>}
+            lede="Forgotten passwords happen. We will send a link to set a new one."
+            backHref="/login"
+            backLabel="Back to sign in"
+        >
+            {sent ? (
+                <div role="status">
+                    <span className="mb-8 flex h-12 w-12 items-center justify-center border border-white/25">
+                        <Check className="h-6 w-6 text-white" aria-hidden="true" />
+                    </span>
+                    <FormHeading
+                        title="Check your email"
+                        lede={
+                            <>
+                                We have sent a password reset link to <span className="font-semibold text-white">{email}</span>.
+                                It expires in one hour; if you do not see it, check your spam folder.
+                            </>
+                        }
+                    />
+                    <Link href="/login" className={outlineButtonClass}>
+                        Return to sign in
+                    </Link>
+                </div>
+            ) : (
+                <>
+                    <FormHeading title="Reset your password" lede="Enter the email you registered with and we will send you a reset link." />
 
-            <Link href="/login" className="absolute top-8 left-8 text-gray-400 hover:text-white flex items-center gap-2 transition-all group text-sm font-medium tracking-wide z-20">
-                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                BACK TO LOGIN
-            </Link>
+                    {error && <FormAlert>{error}</FormAlert>}
 
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="w-full max-w-md px-8 relative z-10"
-            >
-                {sent ? (
-                    /* Success State */
-                    <div className="text-center">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.3 }}
-                            className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center"
-                        >
-                            <CheckCircle className="w-10 h-10 text-green-500" />
-                        </motion.div>
-                        <h3 className="text-3xl font-bold text-white mb-3">Check Your Email</h3>
-                        <p className="text-gray-400 mb-2">
-                            We've sent a password reset link to
-                        </p>
-                        <p className="text-white font-mono text-sm bg-white/5 px-4 py-2 rounded-lg inline-block mb-6">
-                            {email}
-                        </p>
-                        <p className="text-gray-400 text-sm mb-8">
-                            The link will expire in 1 hour. If you don't see the email, check your spam folder.
-                        </p>
-                        <Link href="/login">
-                            <Button variant="outline" className="focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-                                Return to Login
-                            </Button>
+                    <form onSubmit={handleSubmit} className="space-y-8">
+                        <Field id="forgot-email" label="Email">
+                            <input
+                                id="forgot-email"
+                                type="email"
+                                autoComplete="email"
+                                placeholder="you@example.com"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className={inputClass}
+                            />
+                        </Field>
+
+                        <button type="submit" disabled={isLoading} className={`${primaryButtonClass} w-full`}>
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Sending
+                                </>
+                            ) : (
+                                "Send reset link"
+                            )}
+                        </button>
+                    </form>
+
+                    <p className="mt-10 border-t border-white/10 pt-8 text-white/70">
+                        Remembered it?{" "}
+                        <Link href="/login" className="font-semibold text-white underline decoration-primary decoration-2 underline-offset-4 transition-colors hover:text-primary-light">
+                            Sign in
                         </Link>
-                    </div>
-                ) : (
-                    /* Form State */
-                    <>
-                        <div className="mb-8">
-                            <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
-                                <Mail className="w-7 h-7 text-zinc-400" />
-                            </div>
-                            <h3 className="text-3xl font-bold text-white mb-2">Forgot Password?</h3>
-                            <p className="text-gray-400">No worries. Enter your email and we'll send you a reset link.</p>
-                        </div>
-
-                        {error && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium flex items-center gap-3"
-                            >
-                                <div className="w-2 h-2 rounded-full bg-red-500" />
-                                {error}
-                            </motion.div>
-                        )}
-
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="space-y-2 group">
-                                <label htmlFor="forgot-email" className="text-xs font-bold text-gray-300 uppercase tracking-wider ml-1 group-focus-within:text-[#FF0000] transition-colors">
-                                    Email Address
-                                </label>
-                                <div className="relative">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-white transition-colors" />
-                                    <Input
-                                        id="forgot-email"
-                                        type="email"
-                                        placeholder="osu@kyokushin.in"
-                                        required
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="pl-12 h-14 placeholder:text-gray-400 focus-visible:border-[#FF0000] transition-colors"
-                                    />
-                                </div>
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="w-full h-14 text-lg bg-[#FF0000] hover:bg-[#8B0000] text-white transition-colors duration-300 flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? (
-                                    <span className="flex items-center gap-2">
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Sending...
-                                    </span>
-                                ) : (
-                                    <>
-                                        <Send className="w-5 h-5" /> Send Reset Link
-                                    </>
-                                )}
-                            </Button>
-                        </form>
-
-                        <p className="text-center text-gray-400 text-sm mt-8">
-                            Remember your password?{" "}
-                            <Link href="/login" className="text-white font-bold hover:text-[#FF0000] transition-colors">
-                                Sign In
-                            </Link>
-                        </p>
-                    </>
-                )}
-            </motion.div>
-        </div>
+                    </p>
+                </>
+            )}
+        </AuthShell>
     );
 }
