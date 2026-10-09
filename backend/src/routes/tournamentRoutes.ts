@@ -4,12 +4,14 @@ import {
     getTournamentStatistics, updateBracketStatus,
     getCategories, moveParticipantCategory, bulkMoveParticipants
 } from '../controllers/tournamentController';
-import { protect, restrictTo } from '../middleware/authMiddleware';
+import { protect, restrictTo, optionalAuth } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
-// Public route for statistics
+// Public reads: statistics, and published brackets (draft brackets stay admin-only
+// inside getBrackets; optionalAuth lets a signed-in admin still see them here).
 router.get('/:eventId/statistics', getTournamentStatistics);
+router.get('/:eventId', optionalAuth, getBrackets);
 
 router.use(protect);
 
@@ -21,6 +23,5 @@ router.post('/:eventId/categories/bulk-move', restrictTo('ADMIN'), bulkMoveParti
 router.post('/:eventId/generate', restrictTo('ADMIN'), generateBrackets);
 router.get('/:eventId/generate/stream', restrictTo('ADMIN'), generateBracketsStream);
 router.patch('/brackets/:bracketId/status', restrictTo('ADMIN'), updateBracketStatus);
-router.get('/:eventId', getBrackets);
 
 export default router;

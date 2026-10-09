@@ -72,3 +72,15 @@ export const voucherValidateLimiter = rateLimit({
     legacyHeaders: false,
     handler: rejection('Too many voucher checks. Please wait a few minutes and try again.'),
 });
+
+/**
+ * Public contact form: real people write a message or two; anything beyond
+ * that from one network in an hour is a bot.
+ */
+export const contactLimiter = rateLimit({
+    windowMs: minutes(60),
+    limit: 5,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    handler: rejection('Too many messages from this network. Please try again later, or call us.'),
+});

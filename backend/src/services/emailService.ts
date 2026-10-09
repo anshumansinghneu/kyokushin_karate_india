@@ -13,7 +13,7 @@ const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 let _smtpLogged = false;
 
 // ── Brevo HTTP API sender ───────────────────────────────────
-async function sendViaBrevo(to: string, subject: string, html: string, text: string): Promise<{ messageId: string }> {
+async function sendViaBrevo(to: string, subject: string, html: string, text: string, replyTo?: { email: string; name?: string }): Promise<{ messageId: string }> {
     const apiKey = process.env.BREVO_API_KEY;
     if (!apiKey) throw new Error('BREVO_API_KEY not set');
 
@@ -26,6 +26,7 @@ async function sendViaBrevo(to: string, subject: string, html: string, text: str
         subject,
         htmlContent: html,
         textContent: text,
+        ...(replyTo ? { replyTo } : {}),
     };
 
     console.log(`[EMAIL/BREVO] Sending "${subject}" to ${to} from ${senderName} <${senderEmail}>`);
@@ -859,3 +860,48 @@ ${outcome.errors.length ? `
 
     await sendStrict(to, subject, html, text);
 };
+
+// ── Public contact form ─────────────────────────────────────
+const escapeHtml = (v: string) =>
+    v.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+
+/**
+ * Where contact-form messages land. The address printed on the site
+ * (contact@kyokushin.in) has no mail server behind it, so this defaults to the
+ * mailbox the platform already sends from; set CONTACT_INBOX_EMAIL to change it.
+ */
+export const contactInbox = () =>
+    process.env.CONTACT_INBOX_EMAIL || process.env.SMTP_USER || process.env.BREVO_SENDER_EMAIL || '';
+
+/** Delivers a contact-form message to the foundation's inbox. Throws if it could not be sent. */
+export async function sendContactMessageEmail(msg: { name: string; email: string; phone?: string; subject: string; message: string }) {
+    const to = contactInbox();
+    if (!to) throw new Error('No contact inbox configured (CONTACT_INBOX_EMAIL / SMTP_USER)');
+
+    const subject = `Website enquiry: ${msg.subject}`.slice(0, 180);
+    const rows: [string, string][] = [
+        ['Name', msg.name],
+        ['Email', msg.email],
+        ...(msg.phone ? [['Phone', msg.phone] as [string, string]] : []),
+        ['Subject', msg.subject],
+    ];
+    const html = wrapHtml(subject, `
+<h2 style="color:#fff;margin:0 0 16px;font-size:20px;">New message from the website</h2>
+<table style="margin:0 0 20px;width:100%;border-collapse:collapse;">
+${rows.map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;color:#888;white-space:nowrap;vertical-align:top;">${k}</td><td style="padding:6px 0;color:#fff;">${escapeHtml(v)}</td></tr>`).join('')}
+</table>
+<div style="background:#222;border-radius:12px;padding:20px;color:#eee;white-space:pre-wrap;line-height:1.6;">${escapeHtml(msg.message)}</div>
+<p style="color:#888;font-size:13px;margin-top:20px;">Reply to this email to answer ${escapeHtml(msg.name)} directly.</p>
+`);
+    const text = `New message from the website\n\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\n${msg.message}`;
+    const replyTo = { email: msg.email, name: msg.name };
+
+    if (process.env.BREVO_API_KEY) {
+        await sendViaBrevo(to, subject, html, text, replyTo);
+        return;
+    }
+    if (process.env.RENDER || process.env.NODE_ENV === 'production') {
+        throw new Error('BREVO_API_KEY is not set: contact messages cannot be delivered from this platform.');
+    }
+    await getTransporter().sendMail({ from: getFrom(), to, subject, html, text, replyTo: `${msg.name} <${msg.email}>` });
+}

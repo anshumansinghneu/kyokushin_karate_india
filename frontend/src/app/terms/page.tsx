@@ -187,7 +187,7 @@ export default function TermsPage() {
                         <section className="border-t border-white/10 pt-10 first:border-t-0 first:pt-0">
                             <h2 id="section-12" className="scroll-mt-32 text-xl font-extrabold text-white md:text-2xl"><span className="mr-3 tabular-nums text-white/40">12.</span>Governing Law</h2>
                             <p>
-                                These terms are governed by the laws of India. Any legal action must be brought in the courts of [Your Jurisdiction].
+                                These terms are governed by the laws of India. Any legal action must be brought in the courts of Unnao, Uttar Pradesh.
                             </p>
                         </section>
 

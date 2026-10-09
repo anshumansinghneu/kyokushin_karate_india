@@ -5,6 +5,7 @@ import { ArrowUpRight, Check, Loader2 } from 'lucide-react';
 import Section from '@/components/brand/Section';
 import Reveal from '@/components/brand/Reveal';
 import KankuMark from '@/components/KankuMark';
+import api from '@/lib/api';
 
 const GOOGLE_MAPS_LINK = 'https://maps.app.goo.gl/o8ttnRaNuRAPqA3H9';
 const GOOGLE_MAPS_EMBED = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3558.5!2d80.78!3d26.84!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjbCsDUwJzI0LjAiTiA4MMKwNDYnNDguMCJF!5e0!3m2!1sen!2sin!4v1700000000000';
@@ -42,15 +43,25 @@ export default function ContactPage() {
     const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
     const [sending, setSending] = useState(false);
     const [sent, setSent] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    // Honeypot: hidden from people, filled by bots; the server drops those silently.
+    const [website, setWebsite] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSending(true);
-        await new Promise(r => setTimeout(r, 1500));
-        setSending(false);
-        setSent(true);
-        setFormData({ name: '', email: '', subject: '', message: '' });
-        setTimeout(() => setSent(false), 4000);
+        setError(null);
+        setSent(false);
+        try {
+            await api.post('/contact', { ...formData, website });
+            setSent(true);
+            setFormData({ name: '', email: '', subject: '', message: '' });
+        } catch (err) {
+            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            setError(message || 'We could not send your message just now. Please call us on +91 99567 45114.');
+        } finally {
+            setSending(false);
+        }
     };
 
     return (
@@ -207,6 +218,11 @@ export default function ContactPage() {
                                 />
                             </Field>
 
+                            <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+                                <label htmlFor="contact-website">Website</label>
+                                <input id="contact-website" name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={e => setWebsite(e.target.value)} />
+                            </div>
+
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                                 <button
                                     type="submit"
@@ -226,6 +242,7 @@ export default function ContactPage() {
                                             Message sent. Osu, we will be in touch.
                                         </span>
                                     )}
+                                    {error && <span className="text-primary-light">{error}</span>}
                                 </p>
                             </div>
                         </form>

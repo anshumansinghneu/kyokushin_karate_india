@@ -67,7 +67,7 @@ export const getBrackets = catchAsync(async (req: Request, res: Response, next: 
     // Visibility Check: If bracket is DRAFT, only Admin can see it
     if (brackets.length > 0) {
         const isDraft = brackets.some(b => b.status === 'DRAFT');
-        if (isDraft && currentUser.role !== 'ADMIN') {
+        if (isDraft && currentUser?.role !== 'ADMIN') {
             return next(new AppError('Tournament brackets are not yet published', 403));
         }
     }

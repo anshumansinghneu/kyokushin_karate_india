@@ -396,7 +396,7 @@ export default function GalleryPage() {
     const handleShare = async (item: GalleryItem) => {
         const shareData = {
             title: item.caption || "KKFI Gallery Photo",
-            text: `Check out this photo from Kyokushin Karate Federation of India${item.event ? ` — ${item.event.name}` : ""}`,
+            text: `Check out this photo from Kyokushin Karate Foundation of India${item.event ? ` — ${item.event.name}` : ""}`,
             url: item.imageUrl,
         };
         try {

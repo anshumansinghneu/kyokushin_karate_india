@@ -7,11 +7,8 @@ import Image from 'next/image';
 import Section from '@/components/brand/Section';
 import Reveal from '@/components/brand/Reveal';
 
-const RECENT_FORMATS = [
-    'KKI-2025-MUM-00001',
-    'KKI-2025-DEL-00042',
-    'KKI-2026-BLR-00103',
-];
+// An instructor's public record as the worked example; students are never showcased.
+const RECENT_FORMATS = ['KKFI-INS-0005'];
 
 const STEPS = [
     { title: 'Enter the ID', desc: 'Type the membership number exactly as it appears on the card or certificate.' },
@@ -55,7 +52,7 @@ export default function VerifyIndexPage() {
                                 type="text"
                                 value={query}
                                 onChange={e => setQuery(e.target.value)}
-                                placeholder="KKI-2025-MUM-00001"
+                                placeholder="KKFI-STD-00001"
                                 autoComplete="off"
                                 autoCapitalize="characters"
                                 spellCheck={false}
@@ -83,7 +80,7 @@ export default function VerifyIndexPage() {
                                 </button>
                             ))}
                         </div>
-                        <p className="mt-1 text-sm text-white/50">Pattern: KKI-YEAR-CITY-NUMBER</p>
+                        <p className="mt-1 text-sm text-white/50">Students: KKFI-STD-00001 · Instructors: KKFI-INS-0001</p>
                     </form>
                 </div>
             </header>

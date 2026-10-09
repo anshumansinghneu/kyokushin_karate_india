@@ -58,7 +58,7 @@ export default function HistoryKyokushinIndia() {
       description: 'Multiple Kyokushin organizations establish roots in India. Dojos open in Uttar Pradesh, Maharashtra, Delhi, West Bengal, and southern states. Indian fighters begin competing in Asian and World Kyokushin tournaments, earning respect on the international stage.',
     },
     {
-      year: '2020s',
+      year: '2013',
       title: 'KKFI Is Established',
       description: 'The Kyokushin Karate Foundation of India (KKFI) is founded under the leadership of Shihan Vasant Kumar Singh to unify and elevate Kyokushin training across India. KKFI focuses on standardized grading, certified instructors, youth development, and making world-class full-contact karate accessible to every Indian.',
     },

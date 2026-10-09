@@ -25,7 +25,7 @@ interface BeltLevel {
 const BELTS: BeltLevel[] = [
   {
     belt: 'White',
-    rank: '10th Kyu (Mukyu)',
+    rank: 'Mukyu (ungraded)',
     color: '#ffffff',
     bgClass: 'bg-white',
     borderClass: 'border-white/30',
@@ -37,7 +37,7 @@ const BELTS: BeltLevel[] = [
   },
   {
     belt: 'Orange',
-    rank: '9th Kyu',
+    rank: '10th–9th Kyu',
     color: '#f97316',
     bgClass: 'bg-orange-500',
     borderClass: 'border-orange-500/30',
@@ -49,7 +49,7 @@ const BELTS: BeltLevel[] = [
   },
   {
     belt: 'Blue',
-    rank: '8th Kyu',
+    rank: '8th–7th Kyu',
     color: '#3b82f6',
     bgClass: 'bg-blue-500',
     borderClass: 'border-blue-500/30',
@@ -61,7 +61,7 @@ const BELTS: BeltLevel[] = [
   },
   {
     belt: 'Yellow',
-    rank: '7th Kyu',
+    rank: '6th–5th Kyu',
     color: '#eab308',
     bgClass: 'bg-yellow-500',
     borderClass: 'border-yellow-500/30',
@@ -73,7 +73,7 @@ const BELTS: BeltLevel[] = [
   },
   {
     belt: 'Green',
-    rank: '6th–5th Kyu',
+    rank: '4th–3rd Kyu',
     color: '#22c55e',
     bgClass: 'bg-green-500',
     borderClass: 'border-green-500/30',
@@ -85,7 +85,7 @@ const BELTS: BeltLevel[] = [
   },
   {
     belt: 'Brown',
-    rank: '4th–1st Kyu',
+    rank: '2nd–1st Kyu',
     color: '#92400e',
     bgClass: 'bg-amber-700',
     borderClass: 'border-amber-700/30',
@@ -343,7 +343,7 @@ export default function BeltSystemPage() {
         <Reveal>
           <Heading>Every rank at a glance</Heading>
           <p className="mt-4 max-w-[56ch] text-lg leading-relaxed text-white/70">
-            {BELTS.length} kyu grades to black belt, then the dan degrees. Times are typical for steady
+            Ten kyu grades, worn as five coloured belts after white, lead to black belt and then the dan degrees. Times are typical for steady
             training three to four times a week.
           </p>
         </Reveal>

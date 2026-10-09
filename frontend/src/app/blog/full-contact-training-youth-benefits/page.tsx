@@ -160,7 +160,7 @@ export default function YouthBenefits() {
         body="Give your child the gift of discipline, confidence, and real self-defense skills. KKFI dojos across India welcome students from age 5 and up."
         actions={[
           { href: '/register', label: 'Register Now — ₹295 Only', primary: true },
-          { href: '/dojos', label: 'Find a Dojo Near You' },
+          { href: '/find-a-dojo', label: 'Find a Dojo Near You' },
         ]}
       />
 
@@ -169,7 +169,7 @@ export default function YouthBenefits() {
           { href: '/blog/kyokushin-vs-shotokan', title: 'What Makes Kyokushin Different from Shotokan?', note: 'Karate Knowledge' },
           { href: '/blog/history-kyokushin-india', title: 'History of Kyokushin in India: From Sosai Oyama to Today', note: 'Our Heritage' },
           { href: '/blog/kyokushin-grading-syllabus-2026', title: 'Kyokushin Grading Syllabus 2026: Complete Belt Guide', note: 'Official Syllabus' },
-          { href: '/dojos', title: 'Find a KKFI Dojo Near You', note: 'Dojos' },
+          { href: '/find-a-dojo', title: 'Find a KKFI Dojo Near You', note: 'Dojos' },
         ]}
       />
     </article>

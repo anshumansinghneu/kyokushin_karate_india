@@ -42,6 +42,24 @@ export const protect = catchAsync(async (req: Request, res: Response, next: Next
     next();
 });
 
+/**
+ * Like protect, but never rejects: attaches req.user when a valid token is
+ * present and carries on anonymously otherwise. For public reads that show
+ * admins a little more (e.g. draft brackets).
+ */
+export const optionalAuth = async (req: Request, _res: Response, next: NextFunction) => {
+    const header = req.headers.authorization;
+    if (!header || !header.startsWith('Bearer ')) return next();
+    try {
+        const decoded: any = jwt.verify(header.split(' ')[1], process.env.JWT_SECRET!);
+        const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+        if (user) req.user = user;
+    } catch {
+        // An expired or bad token on a public route just means "anonymous".
+    }
+    next();
+};
+
 // Middleware to require active membership (blocks expired users)
 export const requireActiveMembership = (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;

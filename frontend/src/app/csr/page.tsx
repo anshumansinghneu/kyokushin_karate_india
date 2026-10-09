@@ -388,7 +388,7 @@ export default function CSRPage() {
                             <Mail className="h-4 w-4" aria-hidden="true" /> Enquire for CSR
                         </a>
                         <a
-                            href="tel:+919876543210"
+                            href="tel:+919956745114"
                             className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/25 px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                         >
                             <Phone className="h-4 w-4" aria-hidden="true" /> Call us
@@ -396,7 +396,7 @@ export default function CSRPage() {
                     </div>
                 </Reveal>
                 <p className="mt-20 max-w-[62ch] text-sm leading-relaxed text-white/60">
-                    Kyokushin Karate Federation of India is committed to full transparency. All CSR contributions are
+                    Kyokushin Karate Foundation of India is committed to full transparency. All CSR contributions are
                     documented and detailed impact reports are shared with contributing organizations.
                 </p>
             </Section>
