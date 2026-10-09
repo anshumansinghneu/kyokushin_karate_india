@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function PageTransition({ children, pathname }: { children: React.ReactNode, pathname: string }) {
     return (
-        <AnimatePresence mode="wait">
+        // initial={false}: the first page paints straight from the server HTML
+        // instead of waiting for hydration to fade it in. Route changes still animate.
+        <AnimatePresence mode="wait" initial={false}>
             <motion.div
                 key={pathname}
                 initial={{ opacity: 0, y: 15, filter: "blur(4px)" }}

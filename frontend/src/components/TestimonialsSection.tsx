@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Quote, Star, ChevronLeft, ChevronRight, Users } from 'lucide-react';
-import Image from 'next/image';
-import api from '@/lib/api';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Section, { Heading } from '@/components/brand/Section';
 
 interface Testimonial {
     id: string;
@@ -86,106 +85,74 @@ export default function TestimonialsSection() {
         setCurrent(prev => (prev - 1 + testimonials.length) % testimonials.length);
     };
 
-    // Auto-advance
+    // Auto-advance, paused while someone is reading or interacting, and never under reduced motion.
+    const [paused, setPaused] = useState(false);
     useEffect(() => {
-        const timer = setInterval(next, 6000);
+        if (paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const timer = setInterval(next, 7000);
         return () => clearInterval(timer);
-    }, [current]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [current, paused]);
 
     const t = testimonials[current];
 
     return (
-        <section className="relative py-20 sm:py-28 overflow-hidden">
-            {/* Background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black via-zinc-950 to-black" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-900/10 via-transparent to-transparent" />
+        <Section rhythm="open" width="base" className="bg-black">
+            <div
+                onMouseEnter={() => setPaused(true)}
+                onMouseLeave={() => setPaused(false)}
+                onFocusCapture={() => setPaused(true)}
+                onBlurCapture={() => setPaused(false)}
+            >
+                <Heading size="title" className="text-white/70">From the dojo floor</Heading>
 
-            <div className="relative max-w-5xl mx-auto px-4 z-10">
-                {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="text-center mb-14"
-                >
-                    <h2 className="text-2xl sm:text-4xl font-black mb-4 tracking-tight text-white uppercase">
-                        What Our <span style={{
-                            background: 'linear-gradient(180deg, #ef4444, #991b1b)',
-                            WebkitBackgroundClip: 'text',
-                            backgroundClip: 'text',
-                            color: 'transparent',
-                        }}>Warriors</span> Say
-                    </h2>
-                    <p className="text-zinc-500 max-w-lg mx-auto text-sm">
-                        From students, instructors, and parents across India.
-                    </p>
-                </motion.div>
-
-                {/* Testimonial Card */}
-                <div className="relative max-w-3xl mx-auto">
+                <div className="relative mt-10 min-h-[18rem] sm:min-h-[16rem]" aria-live="polite">
                     <AnimatePresence mode="wait" custom={direction}>
-                        <motion.div
+                        <motion.figure
                             key={current}
                             custom={direction}
-                            initial={{ opacity: 0, x: direction * 80 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -direction * 80 }}
-                            transition={{ duration: 0.4, ease: 'easeInOut' }}
-                            className="glass-card p-8 sm:p-10"
+                            initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
+                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                            exit={{ opacity: 0, y: -16, filter: 'blur(6px)' }}
+                            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                         >
-                            <Quote className="w-10 h-10 text-red-500/30 mb-4" />
-
-                            <p className="text-lg sm:text-xl text-gray-200 font-medium leading-relaxed mb-8 italic">
+                            <blockquote className="max-w-[34ch] text-balance text-[clamp(1.5rem,3.4vw,2.6rem)] font-extrabold leading-[1.15] tracking-[-0.015em] text-white">
                                 &ldquo;{t.quote}&rdquo;
-                            </p>
-
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-lg font-black text-white">
-                                        {t.name.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-white">{t.name}</h4>
-                                        <p className="text-xs text-gray-400">{t.belt} • {t.dojo}</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-0.5">
-                                    {Array.from({ length: 5 }).map((_, i) => (
-                                        <Star key={i} className={`w-4 h-4 ${i < t.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} />
-                                    ))}
-                                </div>
-                            </div>
-                        </motion.div>
+                            </blockquote>
+                            <figcaption className="mt-8 text-white/70">
+                                <span className="font-bold text-white">{t.name}</span>
+                                <span className="mx-2 text-white/30" aria-hidden="true">/</span>
+                                {t.belt !== 'N/A' ? `${t.belt}, ` : `${t.role}, `}{t.dojo}
+                            </figcaption>
+                        </motion.figure>
                     </AnimatePresence>
-
-                    {/* Nav arrows */}
-                    <button
-                        onClick={prev}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-14 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-colors"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={next}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-14 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-colors"
-                    >
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
                 </div>
 
-                {/* Dots */}
-                <div className="flex justify-center gap-2 mt-8">
-                    {testimonials.map((_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => goTo(i)}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${
-                                i === current ? 'w-8 bg-red-500' : 'w-1.5 bg-white/20 hover:bg-white/40'
-                            }`}
-                        />
-                    ))}
+                <div className="mt-10 flex items-center gap-6">
+                    <div className="flex gap-2">
+                        <button onClick={prev} aria-label="Previous story" className="flex h-12 w-12 items-center justify-center border border-white/20 text-white transition-colors hover:bg-white/10">
+                            <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        <button onClick={next} aria-label="Next story" className="flex h-12 w-12 items-center justify-center border border-white/20 text-white transition-colors hover:bg-white/10">
+                            <ChevronRight className="h-5 w-5" />
+                        </button>
+                    </div>
+                    <div className="flex gap-1" role="tablist" aria-label="Stories">
+                        {testimonials.map((item, i) => (
+                            <button
+                                key={item.id}
+                                role="tab"
+                                aria-selected={i === current}
+                                aria-label={`Story ${i + 1} of ${testimonials.length}`}
+                                onClick={() => goTo(i)}
+                                className="flex h-11 w-8 items-center justify-center"
+                            >
+                                <span className={`h-0.5 w-full transition-colors duration-300 ${i === current ? 'bg-white' : 'bg-white/20'}`} />
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
-        </section>
+        </Section>
     );
 }

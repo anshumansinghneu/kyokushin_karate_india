@@ -71,7 +71,7 @@ interface NavLink {
 
 interface NavDropdown {
     name: string;
-    items: { name: string; href: string; icon: React.ElementType; description?: string; live?: boolean; flagIcon?: string }[];
+    items: { name: string; href: string; icon: React.ComponentType<{ className?: string }>; description?: string; live?: boolean; flagIcon?: string }[];
 }
 
 type NavItem = NavLink | NavDropdown;

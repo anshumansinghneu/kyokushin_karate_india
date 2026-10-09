@@ -1,9 +1,13 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { ArrowRight, ChevronRight, Award, Clock, BookOpen, Swords, Shield } from 'lucide-react';
-import Link from 'next/link';
+import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import Script from 'next/script';
+import { useMemo, useRef, useState } from 'react';
+import SceneSlot from '@/components/three/SceneSlot';
+import Reveal from '@/components/brand/Reveal';
+import Section, { Heading } from '@/components/brand/Section';
+import BrandLink from '@/components/brand/BrandLink';
 
 interface BeltLevel {
   belt: string;
@@ -114,14 +118,195 @@ const DAN_RANKS = [
   { dan: '6th–10th Dan', title: 'Rokudan+', years: '20+', note: 'Lifetime achievement. 10th Dan reserved for the founder.' },
 ];
 
-const fadeIn = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.5 },
-  }),
-};
+type Step =
+  | { kind: 'intro' }
+  | { kind: 'kyu'; belt: BeltLevel; index: number }
+  | { kind: 'dan'; rank: (typeof DAN_RANKS)[number]; degree: number };
+
+const STEPS: Step[] = [
+  { kind: 'intro' },
+  ...BELTS.map((belt, index) => ({ kind: 'kyu' as const, belt, index })),
+  ...DAN_RANKS.slice(1).map((rank, i) => ({ kind: 'dan' as const, rank, degree: i + 2 })),
+];
+
+/** What the 3D belt shows at each step. Black cloth is lifted off pure black so the weave reads. */
+const STOPS = STEPS.map((step) => {
+  if (step.kind === 'intro') return { color: BELTS[0].color, bars: 0 };
+  if (step.kind === 'kyu') return { color: step.belt.color === '#000000' ? '#161616' : step.belt.color, bars: step.index === BELTS.length - 1 ? 1 : 0 };
+  return { color: '#161616', bars: Math.min(6, step.degree) };
+});
+
+const swatch = (color: string) => (color === '#000000' ? '#161616' : color);
+
+const FAQS = [
+  {
+    q: 'How long does it take to get a black belt in Kyokushin?',
+    a: 'Typically 4–6 years of consistent training (3–4 sessions per week). Kyokushin is one of the hardest martial arts to earn a black belt in, requiring a 20-man kumite (fighting 20 opponents consecutively).',
+  },
+  {
+    q: 'Can you skip belt levels?',
+    a: 'No. In Kyokushin, every student progresses through each belt in order. There are no shortcuts — each level builds essential skills for the next.',
+  },
+  {
+    q: 'How often are belt gradings held?',
+    a: 'KKFI conducts gradings approximately every 3–6 months, depending on the dojo. Your instructor will recommend you for grading when ready.',
+  },
+  {
+    q: 'What is the 20-man kumite?',
+    a: 'The 20-man kumite (二十人組手) is the ultimate test for Shodan — you must fight 20 fresh opponents, one after another, in full-contact bouts. It tests endurance, spirit, and technical ability under extreme fatigue.',
+  },
+  {
+    q: 'Is Kyokushin safe for children?',
+    a: "Yes! Children's classes adapt training intensity to their age. Full-contact sparring is introduced gradually from ages 8–10 with protective gear and supervision.",
+  },
+];
+
+function StepCopy({ step }: { step: Step }) {
+  if (step.kind === 'intro') {
+    return (
+      <>
+        <h1 className="text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.92] tracking-[-0.035em] text-white">
+          The belt<br />system<span className="text-primary">.</span>
+        </h1>
+        <p className="mt-6 max-w-[40ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
+          From white belt to the dan grades. Scroll to dye the belt through every rank, and see what
+          each one asks of you.
+        </p>
+      </>
+    );
+  }
+  if (step.kind === 'kyu') {
+    const { belt } = step;
+    return (
+      <>
+        <p className="flex items-center gap-3 text-sm font-semibold text-white/75">
+          <span className="h-3 w-8 rounded-sm ring-1 ring-white/30" style={{ backgroundColor: swatch(belt.color) }} aria-hidden="true" />
+          {belt.rank}
+        </p>
+        <h2 className="mt-4 text-[clamp(2.5rem,6vw,4.5rem)] font-black uppercase leading-[0.95] tracking-[-0.03em] text-white">
+          {belt.belt === 'Black (Shodan)' ? <>Black belt<span className="text-secondary">.</span></> : <>{belt.belt} belt<span className="text-white/40">.</span></>}
+        </h2>
+        <p className="mt-5 max-w-[42ch] text-pretty text-lg leading-relaxed text-white/80">{belt.meaning}</p>
+        <dl className="mt-8 grid max-w-md grid-cols-2 gap-x-8 gap-y-5 border-t border-white/15 pt-6 text-sm">
+          <div>
+            <dt className="text-white/60">Typical time</dt>
+            <dd className="mt-1 text-base font-bold text-white">{belt.timeRequired}</dd>
+          </div>
+          <div>
+            <dt className="text-white/60">Kata</dt>
+            <dd className="mt-1 text-base font-bold text-white">{belt.kataCount}</dd>
+          </div>
+          <div className="col-span-2">
+            <dt className="text-white/60">Focus</dt>
+            <dd className="mt-1 text-base font-bold text-white">{belt.keyFocus}</dd>
+          </div>
+        </dl>
+      </>
+    );
+  }
+  const { rank } = step;
+  return (
+    <>
+      <p className="flex items-center gap-3 text-sm font-semibold text-secondary">
+        <span className="flex gap-1" aria-hidden="true">
+          {Array.from({ length: Math.min(6, step.degree) }).map((_, i) => (
+            <span key={i} className="h-3 w-1 bg-secondary" />
+          ))}
+        </span>
+        {rank.dan}
+      </p>
+      <h2 className="mt-4 text-[clamp(2.5rem,6vw,4.5rem)] font-black uppercase leading-[0.95] tracking-[-0.03em] text-white">
+        {rank.title}<span className="text-secondary">.</span>
+      </h2>
+      <p className="mt-5 max-w-[42ch] text-pretty text-lg leading-relaxed text-white/80">{rank.note}</p>
+      <p className="mt-8 border-t border-white/15 pt-6 text-sm text-white/60">
+        Around <span className="text-base font-bold text-white">{rank.years} years</span> of training in total
+      </p>
+    </>
+  );
+}
+
+/** The scroll-driven belt. Tall outer box, sticky stage, one step per ~70vh of scroll. */
+function BeltJourney() {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
+  const [active, setActive] = useState(0);
+  const sceneProps = useMemo(() => ({ progress: scrollYProgress, stops: STOPS }), [scrollYProgress]);
+
+  useMotionValueEvent(scrollYProgress, 'change', (v) => {
+    const i = Math.round(v * (STEPS.length - 1));
+    if (i !== active) setActive(i);
+  });
+
+  const goTo = (i: number) => {
+    const el = ref.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    const travel = el.offsetHeight - window.innerHeight;
+    window.scrollTo({ top: top + (travel * i) / (STEPS.length - 1), behavior: reduce ? 'auto' : 'smooth' });
+  };
+
+  return (
+    <div ref={ref} data-bleed className="relative" style={{ height: `${STEPS.length * 70 + 30}svh` }}>
+      <div className="sticky top-0 h-[100svh] overflow-hidden">
+        <SceneSlot
+          scene="belt"
+          sceneProps={sceneProps}
+          className="absolute inset-0"
+          fallback={
+            <div className="absolute inset-0 flex items-center justify-end bg-black pr-[8vw]">
+              <div className="h-6 w-[46vw] -rotate-12 rounded-sm ring-1 ring-white/20 transition-colors duration-700" style={{ backgroundColor: swatch(STOPS[active].color) }} />
+            </div>
+          }
+        />
+        {/* Copy legibility on narrow screens, where the belt sits above the text. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/60 via-40% to-transparent to-60% md:bg-gradient-to-r md:from-black/80 md:via-black/30 md:to-transparent" />
+
+        <div className="relative z-10 mx-auto flex h-full max-w-[1400px] flex-col justify-end px-4 pb-28 pt-32 sm:px-6 md:justify-center md:pb-0 lg:px-8">
+          <div className="max-w-xl md:min-h-[26rem]">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={active}
+                initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24, filter: 'blur(6px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0, y: -16, filter: 'blur(4px)' }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <StepCopy step={STEPS[active]} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Rank rail: where you are on the path, and a way to jump. */}
+        <nav aria-label="Ranks" className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 md:bottom-auto md:left-auto md:right-6 md:top-1/2 md:-translate-y-1/2 md:translate-x-0">
+          <ol className="flex gap-1 md:flex-col">
+            {STEPS.map((step, i) => {
+              const label = step.kind === 'intro' ? 'Introduction' : step.kind === 'kyu' ? `${step.belt.belt} belt` : step.rank.dan;
+              const color = step.kind === 'intro' ? '#ffffff' : step.kind === 'kyu' ? swatch(step.belt.color) : '#d4a017';
+              return (
+                <li key={i}>
+                  <button
+                    onClick={() => goTo(i)}
+                    aria-label={label}
+                    aria-current={i === active ? 'step' : undefined}
+                    className="group flex h-6 w-6 items-center justify-center md:h-6 md:w-11"
+                  >
+                    <span
+                      className={`block rounded-sm ring-1 ring-white/25 transition-all duration-300 ${i === active ? 'h-4 w-2 md:h-2 md:w-8' : 'h-2 w-1.5 opacity-60 group-hover:opacity-100 md:h-1.5 md:w-4'}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
+      </div>
+    </div>
+  );
+}
 
 export default function BeltSystemPage() {
   const beltSchema = {
@@ -141,281 +326,99 @@ export default function BeltSystemPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white">
+    // Transparent so the belt scene shows through from the canvas behind <main>.
+    <div className="min-h-screen text-white selection:bg-primary selection:text-white">
+
+      <BeltJourney />
+
+      {/* After the hero: an element ahead of it blocks the hero's negative margin from collapsing, which shifted the page on load. */}
       <Script
         id="belt-system-schema"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(beltSchema) }}
       />
 
-      {/* Hero */}
-      <section className="relative pt-8 pb-12 md:pt-16 md:pb-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-black pointer-events-none" />
-        <div className="container mx-auto max-w-4xl relative z-10 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-600/10 border border-red-600/20 text-red-400 text-xs font-bold uppercase tracking-widest mb-6">
-              <Award className="w-3.5 h-3.5" />
-              {BELTS.length} Kyu Levels + {DAN_RANKS.length} Dan Ranks
-            </div>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 leading-[0.9]">
-              THE{' '}
-              <span className="text-[#FF0000]">BELT</span>{' '}
-              SYSTEM
-            </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-              From White Belt to Black Belt — understand the Kyokushin ranking system, what each
-              color represents, and the journey to mastery.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Belt Color Description */}
-      <section className="px-4 pb-16 md:pb-24">
-        <div className="container mx-auto max-w-4xl">
-          <motion.h2
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeIn}
-            custom={0}
-            className="text-2xl md:text-3xl font-black tracking-tight mb-8 text-center"
-          >
-            KYU RANKS <span className="text-red-500">(COLOR BELTS)</span>
-          </motion.h2>
-
-          {/* Visual Timeline */}
-          <div className="relative">
-            {/* Vertical line */}
-            <div className="absolute left-6 md:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-white/20 via-red-500/30 to-black/0 hidden sm:block" />
-
-            <div className="space-y-6">
-              {BELTS.map((belt, i) => (
-                <motion.div
-                  key={belt.belt}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, amount: 0.3 }}
-                  variants={fadeIn}
-                  custom={i}
-                  className="relative"
-                >
-                  {/* Timeline dot */}
-                  <div
-                    className="absolute left-4 md:left-6 top-6 w-4 h-4 rounded-full border-2 border-zinc-800 z-10 hidden sm:block"
-                    style={{ backgroundColor: belt.color === '#000000' ? '#ef4444' : belt.color }}
-                  />
-
-                  {/* Card */}
-                  <div className={`sm:ml-16 md:ml-20 bg-white/5 border ${belt.borderClass} rounded-xl p-5 md:p-6 hover:border-opacity-60 hover:bg-white/[0.07] transition-all group`}>
-                    <div className="flex flex-wrap items-start gap-4">
-                      {/* Belt color swatch */}
-                      <div
-                        className={`w-14 h-14 rounded-xl ${belt.bgClass} shrink-0 flex items-center justify-center ${
-                          belt.belt === 'Black (Shodan)' ? 'border border-red-500/50' : ''
-                        } ${belt.belt === 'White' ? 'border border-gray-400/30' : ''}`}
-                      >
-                        <span className={`text-lg font-black ${belt.belt === 'White' ? 'text-black' : 'text-white'}`}>
-                          {i + 1}
-                        </span>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h3 className={`text-xl font-black ${belt.textClass}`}>{belt.belt} Belt</h3>
-                          <span className="text-xs text-gray-300 font-bold bg-white/5 px-2 py-0.5 rounded-full">
-                            {belt.rank}
-                          </span>
-                        </div>
-
-                        <p className="text-gray-400 text-sm leading-relaxed mb-3">
-                          {belt.meaning}
-                        </p>
-
-                        <div className="flex flex-wrap gap-3 text-xs">
-                          <span className="inline-flex items-center gap-1 text-gray-400 bg-white/5 px-2.5 py-1 rounded-full">
-                            <Clock className="w-3 h-3 text-red-500" />
-                            {belt.timeRequired}
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-gray-400 bg-white/5 px-2.5 py-1 rounded-full">
-                            <BookOpen className="w-3 h-3 text-red-500" />
-                            {belt.kataCount} Kata
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-gray-400 bg-white/5 px-2.5 py-1 rounded-full">
-                            <Swords className="w-3 h-3 text-red-500" />
-                            {belt.keyFocus}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Visual Belt Progression Bar */}
-      <section className="px-4 pb-16 md:pb-24">
-        <div className="container mx-auto max-w-4xl">
-          <h3 className="text-lg font-bold text-center text-gray-400 mb-6">Belt Progression at a Glance</h3>
-          <div className="flex items-center gap-1 h-8 rounded-full overflow-hidden border border-white/5">
-            {BELTS.map((belt, i) => (
-              <div
-                key={belt.belt}
-                className="h-full flex-1 relative group cursor-default"
-                style={{ backgroundColor: belt.color === '#000000' ? '#18181b' : belt.color }}
-                title={`${belt.belt} Belt — ${belt.rank}`}
-              >
-                {belt.belt === 'Black (Shodan)' && (
-                  <div className="absolute inset-0 border-2 border-red-500/50 rounded-r-full" />
-                )}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className={`text-[10px] font-bold ${belt.belt === 'White' || belt.belt === 'Yellow' ? 'text-black' : 'text-white'} drop-shadow`}>
-                    {belt.belt === 'Black (Shodan)' ? 'Black' : belt.belt}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between text-xs text-gray-400 mt-2 px-1">
-            <span>Beginner</span>
-            <span>4–6 years →</span>
-            <span>Black Belt</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Dan Ranks */}
-      <section className="px-4 pb-16 md:pb-24 bg-black">
-        <div className="container mx-auto max-w-4xl py-12 md:py-16">
-          <motion.h2
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeIn}
-            custom={0}
-            className="text-2xl md:text-3xl font-black tracking-tight mb-3 text-center"
-          >
-            DAN RANKS <span className="text-red-500">(BLACK BELT DEGREES)</span>
-          </motion.h2>
-          <p className="text-gray-400 text-center mb-8 max-w-lg mx-auto text-sm">
-            After achieving Shodan (1st Dan), the journey continues with increasingly demanding
-            requirements for each degree.
+      {/* The whole path on one page, for reading, printing, and screen readers. */}
+      <Section rhythm="open" width="base" className="bg-black">
+        <Reveal>
+          <Heading>Every rank at a glance</Heading>
+          <p className="mt-4 max-w-[56ch] text-lg leading-relaxed text-white/70">
+            {BELTS.length} kyu grades to black belt, then the dan degrees. Times are typical for steady
+            training three to four times a week.
           </p>
+        </Reveal>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {DAN_RANKS.map((rank, i) => (
-              <motion.div
-                key={rank.dan}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeIn}
-                custom={i}
-                className="bg-white/5 border border-red-500/10 rounded-xl p-5 hover:border-red-500/30 hover:bg-white/[0.07] transition-all"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-black border border-red-500/30 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-red-500" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-white text-sm">{rank.dan}</h3>
-                    <p className="text-xs text-red-400 font-semibold">{rank.title}</p>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-400 leading-relaxed mb-2">{rank.note}</p>
-                <span className="inline-flex items-center gap-1 text-[10px] text-gray-400 bg-white/5 px-2 py-0.5 rounded-full">
-                  <Clock className="w-2.5 h-2.5" />
-                  ~{rank.years} years total training
-                </span>
-              </motion.div>
-            ))}
-          </div>
+        <div className="mt-12 overflow-x-auto">
+          <table className="w-full min-w-[640px] text-left">
+            <caption className="sr-only">Kyokushin ranks, typical training time, and focus</caption>
+            <thead>
+              <tr className="border-b border-white/20 text-sm text-white/60">
+                <th scope="col" className="py-3 pr-6 font-semibold">Rank</th>
+                <th scope="col" className="py-3 pr-6 font-semibold">Grade</th>
+                <th scope="col" className="py-3 pr-6 font-semibold">Typical time</th>
+                <th scope="col" className="py-3 font-semibold">Focus</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10">
+              {BELTS.map((belt) => (
+                <tr key={belt.belt}>
+                  <th scope="row" className="py-4 pr-6">
+                    <span className="flex items-center gap-3 font-bold text-white">
+                      <span className="h-3 w-6 shrink-0 rounded-sm ring-1 ring-white/30" style={{ backgroundColor: swatch(belt.color) }} aria-hidden="true" />
+                      {belt.belt}
+                    </span>
+                  </th>
+                  <td className="py-4 pr-6 text-white/75">{belt.rank}</td>
+                  <td className="py-4 pr-6 text-white/75">{belt.timeRequired}</td>
+                  <td className="py-4 text-white/75">{belt.keyFocus}</td>
+                </tr>
+              ))}
+              {DAN_RANKS.slice(1).map((rank) => (
+                <tr key={rank.dan}>
+                  <th scope="row" className="py-4 pr-6">
+                    <span className="flex items-center gap-3 font-bold text-white">
+                      <span className="h-3 w-6 shrink-0 rounded-sm bg-[#161616] ring-1 ring-secondary/60" aria-hidden="true" />
+                      {rank.title}
+                    </span>
+                  </th>
+                  <td className="py-4 pr-6 text-white/75">{rank.dan}</td>
+                  <td className="py-4 pr-6 text-white/75">~{rank.years} years total</td>
+                  <td className="py-4 text-white/75">{rank.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </section>
+      </Section>
 
-      {/* FAQ */}
-      <section className="px-4 pb-16 md:pb-24">
-        <div className="container mx-auto max-w-3xl">
-          <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-8 text-center">
-            COMMON <span className="text-red-500">QUESTIONS</span>
-          </h2>
-
-          <div className="space-y-4">
-            {[
-              {
-                q: 'How long does it take to get a black belt in Kyokushin?',
-                a: 'Typically 4–6 years of consistent training (3–4 sessions per week). Kyokushin is one of the hardest martial arts to earn a black belt in, requiring a 20-man kumite (fighting 20 opponents consecutively).',
-              },
-              {
-                q: 'Can you skip belt levels?',
-                a: 'No. In Kyokushin, every student progresses through each belt in order. There are no shortcuts — each level builds essential skills for the next.',
-              },
-              {
-                q: 'How often are belt gradings held?',
-                a: 'KKFI conducts gradings approximately every 3–6 months, depending on the dojo. Your instructor will recommend you for grading when ready.',
-              },
-              {
-                q: 'What is the 20-man kumite?',
-                a: 'The 20-man kumite (二十人組手) is the ultimate test for Shodan — you must fight 20 fresh opponents, one after another, in full-contact bouts. It tests endurance, spirit, and technical ability under extreme fatigue.',
-              },
-              {
-                q: 'Is Kyokushin safe for children?',
-                a: 'Yes! Children\'s classes adapt training intensity to their age. Full-contact sparring is introduced gradually from ages 8–10 with protective gear and supervision.',
-              },
-            ].map((faq, i) => (
-              <motion.div
-                key={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeIn}
-                custom={i}
-                className="bg-white/5 border border-white/10 rounded-xl p-5"
-              >
-                <h3 className="font-bold text-white text-sm mb-2">{faq.q}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{faq.a}</p>
-              </motion.div>
-            ))}
-          </div>
+      <Section rhythm="base" width="narrow" className="bg-black">
+        <Reveal>
+          <Heading>Common questions</Heading>
+        </Reveal>
+        <div className="mt-10 divide-y divide-white/10 border-y border-white/10">
+          {FAQS.map((faq) => (
+            <details key={faq.q} className="group py-2">
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 py-3 text-lg font-bold text-white [&::-webkit-details-marker]:hidden">
+                {faq.q}
+                <span aria-hidden="true" className="text-2xl font-light text-white/60 transition-transform duration-300 group-open:rotate-45">+</span>
+              </summary>
+              <p className="max-w-[62ch] pb-5 text-pretty leading-relaxed text-white/75">{faq.a}</p>
+            </details>
+          ))}
         </div>
-      </section>
+      </Section>
 
-      {/* CTA */}
-      <section className="px-4 pb-16 md:pb-24">
-        <div className="container mx-auto max-w-3xl">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-8 md:p-12 text-center">
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
-              START YOUR BELT JOURNEY
-            </h2>
-            <p className="text-gray-400 mb-6 max-w-lg mx-auto">
-              Every black belt was once a white belt who never quit. Begin your journey today.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/syllabus"
-                className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black active:scale-95"
-              >
-                View Full Syllabus <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/find-a-dojo"
-                className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] bg-transparent hover:bg-white/10 text-white border border-white/20 rounded-none font-bold uppercase tracking-wider transition-all"
-              >
-                Find a Dojo <ChevronRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center gap-2 px-6 min-h-[44px] bg-transparent hover:bg-white/10 text-white border border-white/20 rounded-none font-bold uppercase tracking-wider transition-all"
-              >
-                Register Now
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Section rhythm="open" width="wide" className="bg-black">
+        <Reveal kind="mask">
+          <Heading size="display" className="max-w-[14ch] uppercase">
+            Every black belt was a white belt who never quit<span className="text-primary">.</span>
+          </Heading>
+        </Reveal>
+        <Reveal delay={0.15} className="mt-10 flex flex-col gap-3 sm:flex-row">
+          <BrandLink href="/find-a-dojo">Find a dojo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></BrandLink>
+          <BrandLink href="/syllabus" variant="outline">Read the syllabus</BrandLink>
+        </Reveal>
+      </Section>
     </div>
   );
 }

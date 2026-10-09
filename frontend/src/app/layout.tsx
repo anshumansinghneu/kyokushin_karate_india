@@ -10,7 +10,8 @@ import LayoutShell from "@/components/LayoutShell";
 const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-montserrat",
-  weight: ["400", "500", "600", "700", "800", "900"],
+  // Variable font: one file covers every weight, instead of six separate downloads.
+  display: "swap",
 });
 
 export const metadata: Metadata = {

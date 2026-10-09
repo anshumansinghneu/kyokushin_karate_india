@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import SceneSlot from '@/components/three/SceneSlot';
+import BrandLink from '@/components/brand/BrandLink';
 import 'leaflet/dist/leaflet.css';
 
 // Leaflet JS is loaded dynamically to avoid SSR "window is not defined" errors
@@ -818,6 +820,99 @@ function DojoDetailPanel({
 /*  Page Component                                                     */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/*  Network opener: the country in 3D, a beam per dojo city            */
+/* ------------------------------------------------------------------ */
+
+interface CityGroup {
+  key: string;
+  label: string;
+  lat: number;
+  lon: number;
+  count: number;
+}
+
+function NetworkHero({
+  cities,
+  total,
+  isLoading,
+  loadError,
+  focus,
+  onChooseCity,
+}: {
+  cities: CityGroup[];
+  total: number;
+  isLoading: boolean;
+  loadError: boolean;
+  focus: string | null;
+  onChooseCity: (city: CityGroup | null) => void;
+}) {
+  const sceneProps = useMemo(
+    () => ({ cities: cities.map(({ key, lat, lon, count }) => ({ key, lat, lon, count })), focus }),
+    [cities, focus],
+  );
+  const top = cities.slice(0, 10);
+
+  return (
+    <header data-bleed className="relative flex min-h-[100svh] overflow-hidden">
+      <SceneSlot
+        scene="india-map"
+        sceneProps={sceneProps}
+        className="absolute inset-x-0 top-0 h-[56svh] md:inset-0 md:h-auto"
+        fallback={
+          <div className="absolute inset-0 bg-black">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/geo/india-poster.svg" alt="" className="absolute right-[4%] top-1/2 h-[80%] -translate-y-1/2 opacity-60" />
+          </div>
+        }
+      />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,black_44%,transparent_62%)] md:bg-gradient-to-r md:from-black/85 md:via-black/30 md:via-45% md:to-transparent" />
+
+      <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-24 pt-[50svh] sm:px-6 md:justify-center md:pb-16 md:pt-40 lg:px-8">
+        <h1 className="text-[clamp(3rem,9vw,6rem)] font-black uppercase leading-[0.9] tracking-[-0.035em] text-white">
+          Find your<br />dojo<span className="text-primary">.</span>
+        </h1>
+        <p className="mt-6 max-w-[40ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
+          {isLoading
+            ? 'Locating dojos across India…'
+            : loadError
+              ? 'We could not load the dojo list just now. The map below will retry.'
+              : `${total} official ${total === 1 ? 'branch' : 'branches'} in ${cities.length} ${cities.length === 1 ? 'city' : 'cities'}. Each beam of light is a city where Kyokushin is taught.`}
+        </p>
+
+        {/* Space is reserved while loading so the copy above does not jump when cities arrive. */}
+        {(isLoading || top.length > 0) && (
+          <div className="mt-10 max-w-xl md:min-h-[10.5rem]">
+            <p className="text-sm font-semibold text-white/60">Choose a city</p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {top.map((city) => {
+                const active = focus === city.key;
+                return (
+                  <li key={city.key}>
+                    <button
+                      type="button"
+                      onClick={() => onChooseCity(active ? null : city)}
+                      aria-pressed={active}
+                      className={`inline-flex min-h-11 items-center gap-2 border px-4 text-sm font-bold transition-colors ${active ? 'border-primary bg-primary text-white' : 'border-white/20 text-white hover:border-white/50 hover:bg-white/10'}`}
+                    >
+                      {city.label}
+                      <span className={active ? 'text-white/80' : 'text-white/50'}>{city.count}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+          <BrandLink href="#finder">Search every dojo</BrandLink>
+        </div>
+      </div>
+    </header>
+  );
+}
+
 export default function FindADojoPage() {
   /* ---- State (all existing state preserved) ---- */
   const [dojos, setDojos] = useState<Dojo[]>([]);
@@ -885,6 +980,25 @@ export default function FindADojoPage() {
     () => filteredDojos.filter((d) => !getDojoCoords(d)).length,
     [filteredDojos, getDojoCoords],
   );
+
+  /* ---- Cities for the 3D opener (all dojos, independent of search) ---- */
+  const cityGroups = useMemo<CityGroup[]>(() => {
+    const groups = new Map<string, CityGroup>();
+    for (const dojo of dojos) {
+      const coords = getDojoCoords(dojo);
+      if (!coords) continue;
+      const key = normalizeCity(dojo.city) || `${coords[0]},${coords[1]}`;
+      const existing = groups.get(key);
+      if (existing) existing.count += 1;
+      else groups.set(key, { key, label: dojo.city.trim(), lat: coords[0], lon: coords[1], count: 1 });
+    }
+    return [...groups.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+  }, [dojos, getDojoCoords]);
+  const [focusCity, setFocusCity] = useState<string | null>(null);
+  const chooseCity = useCallback((city: CityGroup | null) => {
+    setFocusCity(city?.key ?? null);
+    setSearchQuery(city ? city.label : '');
+  }, []);
 
   /* ---- "Near me": the obvious answer to "find your dojo" ---- */
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
@@ -1261,13 +1375,18 @@ export default function FindADojoPage() {
 
   /* ---- Render ---- */
   return (
-    // The root layout wraps every page in <main class="pt-24 md:pt-32 pb-20
-    // md:pb-0">, so a plain h-screen here started 128px down the document and
-    // ran 128px past the fold: the map's zoom controls and the tile provider's
-    // required attribution sat below the viewport, and the page grew a
-    // scrollbar it should never have. Subtract the layout's own padding so the
-    // map fills exactly the space it is given.
-    <div className="relative w-full h-[calc(100svh-11rem)] md:h-[calc(100svh-8rem)] overflow-hidden text-white font-sans selection:bg-red-600">
+    <>
+    <NetworkHero
+      cities={cityGroups}
+      total={dojos.length}
+      isLoading={isLoading}
+      loadError={loadError}
+      focus={focusCity}
+      onChooseCity={chooseCity}
+    />
+    {/* The working finder: a full-viewport street map below the opener.
+        data-lenis-prevent keeps wheel and trackpad gestures on the map. */}
+    <div id="finder" data-lenis-prevent className="relative w-full h-[100svh] scroll-mt-0 overflow-hidden text-white font-sans selection:bg-primary bg-black">
       {/* ============================================================ */}
       {/*  FULL-VIEWPORT MAP                                           */}
       {/* ============================================================ */}
@@ -1316,34 +1435,9 @@ export default function FindADojoPage() {
           className="relative"
         >
           {/* Heading */}
-          <h1
-            className="font-black uppercase leading-[0.85]"
-            style={{
-              fontSize: 'clamp(2.2rem, 7vw, 5rem)',
-              letterSpacing: '-0.03em',
-            }}
-          >
-            <span className="text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">FIND</span><br />
-            <span className="text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">YOUR</span><br />
-            <span
-              className="text-[#FF0000] drop-shadow-[0_4px_25px_rgba(220,38,38,0.5)]"
-            >DOJO</span>
-          </h1>
-
-          {/* Red underglow behind DOJO */}
-          <div
-            aria-hidden="true"
-            className="absolute bottom-0 left-0 font-black uppercase leading-[0.85]"
-            style={{
-              fontSize: 'clamp(2.2rem, 7vw, 5rem)',
-              letterSpacing: '-0.03em',
-              color: 'rgba(220,38,38,0.1)',
-              filter: 'blur(30px)',
-              transform: 'translateY(5px)',
-            }}
-          >
-            DOJO
-          </div>
+          <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black uppercase leading-[0.9] tracking-[-0.03em] text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">
+            Every dojo<span className="text-primary">.</span>
+          </h2>
 
           {/* Tagline — zinc-400 over live map tiles failed contrast; zinc-200
               on the scrim above clears AA comfortably. Now also states the
@@ -1365,8 +1459,6 @@ export default function FindADojoPage() {
             )}
           </p>
 
-          {/* Red accent line */}
-          <div className="mt-3 w-10 h-[2px] rounded-full bg-gradient-to-r from-red-600 to-red-600/0" />
         </motion.div>
       </div>
 
@@ -1394,7 +1486,7 @@ export default function FindADojoPage() {
       {/* ============================================================ */}
       {/*  MOBILE BOTTOM SHEET — DOJO LIST                             */}
       {/* ============================================================ */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[20]">
+      <div className="md:hidden absolute bottom-0 left-0 right-0 z-[20]">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -1498,5 +1590,6 @@ export default function FindADojoPage() {
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 }
