@@ -2,10 +2,15 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { MapPin, Plane, Calendar, AlertTriangle, RefreshCw, Globe2, ChevronDown, Users } from "lucide-react";
 import api from "@/lib/api";
 import KarateLoader from "@/components/KarateLoader";
+import SceneSlot from "@/components/three/SceneSlot";
+import Reveal from "@/components/brand/Reveal";
+import Section from "@/components/brand/Section";
+import BrandLink from "@/components/brand/BrandLink";
+import { useTilt } from "@/hooks/useTilt";
 import { getImageUrl } from "@/lib/imageUtils";
 import {
     tripDates,
@@ -107,6 +112,42 @@ function HeroBackdrop({ cover, hostCode }: { cover: string | null; hostCode: str
     );
 }
 
+/* ─── Flag glows (globe mode) ───────────────────────────────
+   With the globe as the hero, the two nations' colours stay but only as faint
+   light at the edges: transparent, so the WebGL scene shows through, and kept
+   off the centre so neither the globe nor the type has to fight them.
+   ---------------------------------------------------------- */
+
+function FlagGlows({ hostCode }: { hostCode: string | null }) {
+    const [ind1, ind2] = INDIA_THEME.colors;
+    const [host1] = countryTheme(hostCode).colors;
+    return (
+        <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+            style={{
+                background: [
+                    `radial-gradient(40% 70% at -8% 20%, ${hexA(ind1, 0.28)} 0%, transparent 70%)`,
+                    `radial-gradient(34% 60% at -4% 100%, ${hexA(ind2, 0.22)} 0%, transparent 70%)`,
+                    `radial-gradient(38% 70% at 108% 50%, ${hexA(host1, 0.24)} 0%, transparent 70%)`,
+                ].join(","),
+            }}
+        />
+    );
+}
+
+/** Static stand-in for the globe: India's official outline, lit, on black. */
+function GlobePoster() {
+    return (
+        <div className="absolute inset-0 bg-black">
+            <div className="absolute right-[6%] top-1/2 aspect-square h-[78%] max-h-[640px] -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_35%_30%,#1a1a1a,#050505_60%)] ring-1 ring-white/10 max-md:left-1/2 max-md:right-auto max-md:top-[30%] max-md:h-[44%] max-md:-translate-x-1/2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/geo/india-poster.svg" alt="" className="absolute left-1/2 top-1/2 h-[46%] -translate-x-1/2 -translate-y-1/2 opacity-80" />
+            </div>
+        </div>
+    );
+}
+
 /** #RRGGBB + alpha -> rgba(), so flag hexes can be faded in a gradient. */
 function hexA(hex: string, alpha: number): string {
     const h = hex.replace("#", "");
@@ -192,10 +233,10 @@ function StatLine({ delegations }: { delegations: Delegation[] }) {
                     {i > 0 && (
                         <span aria-hidden="true" className="mr-3 hidden h-3 w-px bg-white/20 sm:block" />
                     )}
-                    <dd className="text-[17px] font-black tabular-nums leading-none text-white">
+                    <dd className="text-xl font-black tabular-nums leading-none text-white">
                         {value}
                     </dd>
-                    <dt className="text-[10px] font-bold uppercase tracking-[2px] text-zinc-400">
+                    <dt className="text-sm font-semibold text-white/60">
                         {label}
                     </dt>
                 </div>
@@ -208,91 +249,23 @@ function StatLine({ delegations }: { delegations: Delegation[] }) {
 
 function TripFacts({ delegation, className = "" }: { delegation: Delegation; className?: string }) {
     return (
-        <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-zinc-300 ${className}`}>
+        <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/75 ${className}`}>
             <span className="inline-flex items-center gap-1.5">
-                <Plane className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
+                <Plane className="h-3.5 w-3.5 text-primary-light" aria-hidden="true" />
                 {delegation.hostCity ? `${delegation.hostCity}, ` : ""}
                 {delegation.hostCountry}
             </span>
             <span aria-hidden="true" className="h-3 w-px bg-white/15" />
             <span className="inline-flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
+                <Calendar className="h-3.5 w-3.5 text-primary-light" aria-hidden="true" />
                 {tripDates(delegation.startDate, delegation.endDate)}
             </span>
             <span aria-hidden="true" className="h-3 w-px bg-white/15" />
             <span className="inline-flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
+                <Users className="h-3.5 w-3.5 text-primary-light" aria-hidden="true" />
                 {delegation.memberCount} representing India
             </span>
         </div>
-    );
-}
-
-/* ─── Leader (feature card) ─────────────────────────────────
-   The head of delegation gets a different composition, not just a gold border:
-   a wide landscape card with the portrait beside the copy. Breaking the grid is
-   what communicates rank.
-   ---------------------------------------------------------- */
-
-function LeaderCard({ member }: { member: SquadMember }) {
-    const reduceMotion = useReducedMotion();
-    const photo = getImageUrl(member.profilePhotoUrl || null);
-    const place = [member.city, member.state].filter(Boolean).join(", ");
-
-    return (
-        <motion.article
-            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            // Capped rather than full-bleed: the auto-generated bio is a single
-            // line, so a 1150px-wide card left a dead zone to the right of it.
-            className="group relative max-w-3xl overflow-hidden rounded-2xl border border-[#FFD700]/25 bg-white/[0.03] transition-colors hover:border-[#FFD700]/50"
-        >
-            <div className="flex flex-col sm:flex-row">
-                <div className="relative aspect-[4/5] w-full overflow-hidden bg-zinc-900 sm:aspect-auto sm:w-[40%] sm:min-h-[280px]">
-                    {photo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                            src={photo}
-                            alt={`${member.name}, ${member.rankLabel}`}
-                            loading="lazy"
-                            className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
-                        />
-                    ) : (
-                        <div className="flex h-full w-full items-center justify-center text-zinc-700">
-                            <Globe2 className="h-10 w-10" aria-hidden="true" />
-                        </div>
-                    )}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 to-transparent sm:bg-gradient-to-r" />
-                </div>
-
-                <div className="flex flex-1 flex-col justify-center gap-2 p-5 sm:p-6">
-                    <span className="inline-flex w-fit items-center rounded bg-[#FFD700] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[2px] text-black">
-                        Head of Delegation
-                    </span>
-                    {member.title && (
-                        <span className="text-[11px] font-extrabold uppercase tracking-[3px] text-red-500">
-                            {member.title}
-                        </span>
-                    )}
-                    <h3
-                        className="text-[22px] font-black leading-[1.1] text-white sm:text-[26px]"
-                        style={{ textWrap: "balance" }}
-                    >
-                        {member.name}
-                    </h3>
-                    <span className="text-[13px] font-semibold text-[#FFD700]">{member.rankLabel}</span>
-                    <p className="max-w-[60ch] text-[13px] leading-relaxed text-zinc-300">{member.bio}</p>
-                    {(member.dojo || place) && (
-                        <p className="mt-1 flex items-start gap-1.5 text-[11px] text-zinc-400">
-                            <MapPin className="mt-[2px] h-3 w-3 shrink-0" aria-hidden="true" />
-                            <span>{member.dojo || place}</span>
-                        </p>
-                    )}
-                </div>
-            </div>
-        </motion.article>
     );
 }
 
@@ -318,79 +291,125 @@ function ProfileLink({
         <Link
             href={`/verify/${encodeURIComponent(membershipNumber)}`}
             aria-label={`View ${name}'s profile`}
-            className={`${className} focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500`}
+            className={`${className} focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black`}
         >
             {children}
         </Link>
     );
 }
 
-/* ─── Member card ───────────────────────────────────────── */
+/* ─── Portrait ───────────────────────────────────────────────
+   One portrait treatment for everyone: the photo tilts toward the pointer like
+   a print held in the hand. Rank is shown by composition (the leader's
+   portrait is larger and stands apart), not by a different card skin.
+   ---------------------------------------------------------- */
 
-function MemberCard({ member, index }: { member: SquadMember; index: number }) {
-    const reduceMotion = useReducedMotion();
+function Portrait({ member, eager = false }: { member: SquadMember; eager?: boolean }) {
+    const { ref: tiltRef, handlers, style } = useTilt(7);
     const photo = getImageUrl(member.profilePhotoUrl || null);
-    const place = [member.city, member.state].filter(Boolean).join(", ");
-
     return (
-        <motion.article
-            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.45, delay: Math.min(index * 0.05, 0.3), ease: [0.22, 1, 0.36, 1] }}
-            className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02] transition-colors hover:border-red-600/40"
+        <motion.div
+            ref={tiltRef as React.Ref<HTMLDivElement>}
+            {...handlers}
+            style={style}
+            className="group relative aspect-[4/5] overflow-hidden rounded-xl bg-surface"
         >
-            <ProfileLink
-                membershipNumber={member.membershipNumber}
-                name={member.name}
-                className="relative block aspect-[4/5] overflow-hidden bg-zinc-900"
-            >
-                {photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                        src={photo}
-                        alt={`${member.name}, ${member.rankLabel}`}
-                        loading="lazy"
-                        className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.04]"
-                    />
-                ) : (
-                    // A photo is mandatory to be added, so this is only reachable
-                    // if the member's photo was removed afterwards.
-                    <div className="flex h-full w-full items-center justify-center text-zinc-700">
-                        <Globe2 className="h-10 w-10" aria-hidden="true" />
-                    </div>
-                )}
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent" />
-
-                {member.squadRole === "COACH" && (
-                    <span className="absolute left-3 top-3 rounded bg-white/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[2px] text-white backdrop-blur-sm">
-                        Coach
-                    </span>
-                )}
-
-                <div className="absolute inset-x-0 bottom-0 p-4">
-                    {member.title && (
-                        <span className="mb-1 block text-[10px] font-extrabold uppercase tracking-[3px] text-red-500">
-                            {member.title}
-                        </span>
-                    )}
-                    <h3 className="text-[16px] font-black leading-tight text-white">{member.name}</h3>
-                    <span className="mt-1 inline-flex items-center rounded border border-white/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[1.5px] text-zinc-200">
-                        {member.rankLabel}
-                    </span>
+            {photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                    src={photo}
+                    alt={`${member.name}, ${member.rankLabel}`}
+                    loading={eager ? "eager" : "lazy"}
+                    className="h-full w-full object-cover object-top grayscale-[0.35] transition-[filter,transform] duration-700 ease-out group-hover:scale-[1.03] group-hover:grayscale-0"
+                />
+            ) : (
+                // A photo is mandatory to be added, so this is only reachable
+                // if the member's photo was removed afterwards.
+                <div className="flex h-full w-full items-center justify-center text-white/25">
+                    <Globe2 className="h-10 w-10" aria-hidden="true" />
                 </div>
-            </ProfileLink>
+            )}
+            {/* Light catching the print's edge as it tilts. */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        </motion.div>
+    );
+}
 
-            <div className="p-4">
-                <p className="line-clamp-2 text-[12px] leading-relaxed text-zinc-300">{member.bio}</p>
+/* ─── Leader ─────────────────────────────────────────────────
+   The head of delegation stands apart: a large portrait beside the copy.
+   Gold is earned here — it marks the rank of the person who leads the team.
+   ---------------------------------------------------------- */
+
+function Leader({ member }: { member: SquadMember }) {
+    const place = [member.city, member.state].filter(Boolean).join(", ");
+    return (
+        <Reveal kind="depth" className="grid items-end gap-8 md:grid-cols-[minmax(0,22rem)_1fr] md:gap-12">
+            <ProfileLink membershipNumber={member.membershipNumber} name={member.name} className="block">
+                <Portrait member={member} eager />
+            </ProfileLink>
+            <div className="pb-2">
+                <p className="text-sm font-semibold text-secondary">Head of delegation</p>
+                <h3 className="mt-3 text-balance text-[clamp(2rem,4.5vw,3.25rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] text-white">
+                    {member.name}
+                </h3>
+                <p className="mt-3 text-lg font-bold text-white/85">
+                    {member.rankLabel}
+                    {member.title && <span className="font-semibold text-white/60"> · {member.title}</span>}
+                </p>
+                <p className="mt-5 max-w-[56ch] text-pretty leading-relaxed text-white/75">{member.bio}</p>
                 {(member.dojo || place) && (
-                    <p className="mt-2 flex items-start gap-1.5 text-[11px] text-zinc-400">
-                        <MapPin className="mt-[2px] h-3 w-3 shrink-0" aria-hidden="true" />
-                        <span className="line-clamp-1">{member.dojo || place}</span>
+                    <p className="mt-4 flex items-start gap-1.5 text-sm text-white/60">
+                        <MapPin className="mt-[3px] h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        <span>{member.dojo || place}</span>
                     </p>
                 )}
             </div>
-        </motion.article>
+        </Reveal>
+    );
+}
+
+/* ─── Member ────────────────────────────────────────────────
+   Portrait with the name set beneath it, not printed over a gradient: the
+   line-up reads like a team sheet.
+   ---------------------------------------------------------- */
+
+function Member({ member, index }: { member: SquadMember; index: number }) {
+    const place = [member.city, member.state].filter(Boolean).join(", ");
+    return (
+        <Reveal as="li" kind="depth" delay={Math.min(index * 0.05, 0.3)}>
+            <ProfileLink membershipNumber={member.membershipNumber} name={member.name} className="group block">
+                <Portrait member={member} />
+                <div className="mt-4">
+                    <p className="text-sm font-semibold text-white/60">
+                        {member.squadRole === "COACH" ? "Coach · " : ""}
+                        {member.rankLabel}
+                    </p>
+                    <h3 className="mt-1 text-lg font-extrabold leading-tight text-white transition-colors group-hover:text-primary-light">
+                        {member.name}
+                    </h3>
+                    {member.title && <p className="mt-1 text-sm font-semibold text-white/75">{member.title}</p>}
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/65">{member.bio}</p>
+                    {/* The generated bio usually names the dojo already; don't say it twice. */}
+                    {(member.dojo || place) && !member.bio.includes(member.dojo || place) && (
+                        <p className="mt-2 flex items-start gap-1.5 text-sm text-white/55">
+                            <MapPin className="mt-[3px] h-3 w-3 shrink-0" aria-hidden="true" />
+                            <span className="line-clamp-1">{member.dojo || place}</span>
+                        </p>
+                    )}
+                </div>
+            </ProfileLink>
+        </Reveal>
+    );
+}
+
+/** The line-up, in rank order. */
+function LineUp({ members }: { members: SquadMember[] }) {
+    return (
+        <ul className="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 sm:gap-x-6 xl:grid-cols-4">
+            {members.map((m, i) => (
+                <Member key={m.id} member={m} index={i} />
+            ))}
+        </ul>
     );
 }
 
@@ -402,57 +421,73 @@ function Squad({ delegation }: { delegation: Delegation }) {
         [delegation.members],
     );
 
+    const groupCount = bands.length + (coaches.length > 0 ? 1 : 0);
+    const sparse = groupCount > 2 && (coaches.length + bands.reduce((n, b) => n + b.members.length, 0)) / groupCount < 2;
+
     if (delegation.members.length === 0) {
         return (
-            <p className="border-y border-white/[0.07] py-6 text-center text-sm text-zinc-400">
+            <p className="border-y border-white/10 py-8 text-center text-white/70">
                 The squad for this trip has not been announced yet.
             </p>
         );
     }
 
     return (
-        <div className="space-y-12">
-            {/* Full width rather than a cell in the grid: the leader's card is
-                landscape, and a 2-of-4 span left half a row empty. */}
+        <div className="space-y-20">
             {leaders.map((m) => (
-                <LeaderCard key={m.id} member={m} />
+                <Leader key={m.id} member={m} />
             ))}
 
-            {coaches.length > 0 && (
-                <section>
-                    <BandHeading
+            {/* A ledger by rank: the grade sits in its own column, pinned while its
+                line-up scrolls past, so small bands don't leave rows of dead space. */}
+            <div className="divide-y divide-white/10 border-y border-white/10">
+                {sparse ? (
+                    // Mostly one-person grades: a single line-up in rank order reads
+                    // better than a ladder of near-empty rows. Each portrait carries its rank.
+                    <Band label="The squad" count={coaches.length + bands.reduce((n, b) => n + b.members.length, 0)} members={[...coaches, ...bands.flatMap((b) => b.members)]} />
+                ) : (
+                <>
+                {coaches.length > 0 && (
+                    <Band
                         label={coaches.length === 1 ? "Coach" : "Coaching staff"}
                         count={coaches.length > 1 ? coaches.length : undefined}
+                        members={coaches}
                     />
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                        {coaches.map((m, i) => (
-                            <MemberCard key={m.id} member={m} index={i} />
-                        ))}
-                    </div>
-                </section>
-            )}
-
-            {bands.map((band) => (
-                <section key={`${band.label}-${band.members[0]?.id}`}>
-                    <BandHeading label={band.label} count={band.members.length} />
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                        {band.members.map((m, i) => (
-                            <MemberCard key={m.id} member={m} index={i} />
-                        ))}
-                    </div>
-                </section>
-            ))}
+                )}
+                {bands.map((band) => (
+                    <Band key={`${band.label}-${band.members[0]?.id}`} label={band.label} count={band.members.length} members={band.members} />
+                ))}
+                </>
+                )}
+            </div>
         </div>
+    );
+}
+
+function Band({ label, count, members }: { label: string; count?: number; members: SquadMember[] }) {
+    return (
+        <section className="grid gap-6 py-12 md:grid-cols-[11rem_1fr] md:gap-10 lg:grid-cols-[14rem_1fr]">
+            <div>
+                <div className="md:sticky md:top-32">
+                    <h2 className="text-2xl font-extrabold text-white md:text-3xl">{label}</h2>
+                    {count !== undefined && (
+                        <p className="mt-1 text-sm font-semibold tabular-nums text-white/55">
+                            {count} karateka
+                        </p>
+                    )}
+                </div>
+            </div>
+            <LineUp members={members} />
+        </section>
     );
 }
 
 function BandHeading({ label, count }: { label: string; count?: number }) {
     return (
-        <div className="mb-5 flex items-center gap-3">
-            <div className="h-5 w-[3px] rounded-full bg-red-600" />
-            <h2 className="text-base font-black uppercase tracking-tight text-white">{label}</h2>
+        <div className="mb-8 flex items-baseline gap-4 border-b border-white/10 pb-4">
+            <h2 className="text-2xl font-extrabold text-white md:text-3xl">{label}</h2>
             {count !== undefined && (
-                <span className="text-[12px] font-semibold tabular-nums text-zinc-400">{count}</span>
+                <span className="text-lg font-semibold tabular-nums text-white/50">{count}</span>
             )}
         </div>
     );
@@ -476,7 +511,7 @@ function AvatarStrip({ members }: { members: SquadMember[] }) {
                         <span
                             key={m.id}
                             title={m.name}
-                            className="inline-block h-7 w-7 overflow-hidden rounded-full border border-black bg-zinc-800 ring-1 ring-white/10"
+                            className="inline-block h-8 w-8 overflow-hidden rounded-full border border-black bg-surface-active ring-1 ring-white/10"
                         >
                             {photo ? (
                                 // eslint-disable-next-line @next/next/no-img-element
@@ -487,7 +522,7 @@ function AvatarStrip({ members }: { members: SquadMember[] }) {
                 })}
             </div>
             {extra > 0 && (
-                <span className="ml-2 text-[11px] font-semibold tabular-nums text-zinc-400">+{extra}</span>
+                <span className="ml-2 text-sm font-semibold tabular-nums text-white/60">+{extra}</span>
             )}
         </div>
     );
@@ -502,14 +537,14 @@ function ArchiveRow({ delegation }: { delegation: Delegation }) {
                 type="button"
                 onClick={() => setOpen((v) => !v)}
                 aria-expanded={open}
-                className="flex w-full items-center justify-between gap-4 py-4 text-left transition-colors hover:bg-white/[0.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                className="flex min-h-16 w-full items-center justify-between gap-4 py-5 text-left transition-colors hover:bg-white/[0.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
                 <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14px] font-bold text-white">
+                    <span className="block truncate text-lg font-bold text-white">
                         {delegation.tournamentName}
                     </span>
-                    <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-zinc-400">
-                        <Flag code={delegation.hostCountryCode} w={16} />
+                    <span className="mt-1 flex items-center gap-2 text-sm text-white/65">
+                        <Flag code={delegation.hostCountryCode} w={18} />
                         <span className="truncate">
                             {delegation.hostCountry} · {tripDates(delegation.startDate, delegation.endDate)} ·{" "}
                             {delegation.memberCount} representing India
@@ -521,11 +556,11 @@ function ArchiveRow({ delegation }: { delegation: Delegation }) {
                 </span>
                 <ChevronDown
                     aria-hidden="true"
-                    className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform ${open ? "rotate-180" : ""}`}
+                    className={`h-5 w-5 shrink-0 text-white/60 transition-transform ${open ? "rotate-180" : ""}`}
                 />
             </button>
             {open && (
-                <div className="pb-8 pt-2">
+                <div className="pb-14 pt-6">
                     <Squad delegation={delegation} />
                 </div>
             )}
@@ -539,29 +574,17 @@ function ArchiveRow({ delegation }: { delegation: Delegation }) {
    ---------------------------------------------------------- */
 
 function EmptyState() {
+    // Shown inside the hero, so nobody has to scroll past a globe to learn there is no trip.
     return (
-        <div className="border-y border-white/[0.07] py-20 text-center">
-            <Plane className="mx-auto mb-4 h-9 w-9 text-red-600/70" aria-hidden="true" />
-            <p className="text-[17px] font-black uppercase tracking-tight text-white">
-                No international trip announced yet
+        <div className="mt-8 max-w-xl border-t border-white/15 pt-6">
+            <h2 className="text-2xl font-extrabold text-white">No international trip announced yet.</h2>
+            <p className="mt-3 max-w-[50ch] text-pretty leading-relaxed text-white/75">
+                When a federation abroad invites KKFI to compete, the travelling squad, and every
+                karateka in it, will be published here.
             </p>
-            <p className="mx-auto mt-2 max-w-[46ch] text-[13px] leading-relaxed text-zinc-400">
-                When a federation abroad invites KKFI to compete, the travelling squad — and every
-                karateka in it — will be published here.
-            </p>
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-                <Link
-                    href="/events"
-                    className="inline-flex h-11 items-center px-6 text-[12px] font-bold uppercase tracking-[1.5px] text-white transition-colors bg-red-600 hover:bg-[#8B0000] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-                >
-                    Upcoming events
-                </Link>
-                <Link
-                    href="/find-a-dojo"
-                    className="inline-flex h-11 items-center border border-white/20 px-6 text-[12px] font-bold uppercase tracking-[1.5px] text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-                >
-                    Find a dojo
-                </Link>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <BrandLink href="/events">Upcoming events</BrandLink>
+                <BrandLink href="/find-a-dojo" variant="outline">Find a dojo</BrandLink>
             </div>
         </div>
     );
@@ -570,7 +593,6 @@ function EmptyState() {
 /* ─── Page ──────────────────────────────────────────────── */
 
 export default function TeamIndiaPage() {
-    const reduceMotion = useReducedMotion();
     const [delegations, setDelegations] = useState<Delegation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState(false);
@@ -597,175 +619,131 @@ export default function TeamIndiaPage() {
     const [current, ...archive] = delegations;
     const hostCode = current?.hostCountryCode ?? null;
     const hostCountry = findCountry(hostCode);
+    // An admin's cover image is a deliberate art-directed choice, so it takes
+    // the hero; the globe then moves to its own band below.
+    const cover = current?.coverImageUrl ?? null;
+    const sceneProps = useMemo(() => ({ hostCode: isCountryCode(hostCode) ? hostCode : null }), [hostCode]);
 
-    // `animate` is unconditional on purpose. useReducedMotion() reports false
-    // on the first render and can flip to true straight after; if the reduced
-    // branch dropped `animate` entirely, framer had already applied
-    // `opacity: 0` and nothing was left to bring the type back — the hero
-    // heading stayed invisible for exactly the users who need it most.
-    const rise = {
-        initial: reduceMotion ? false : ({ opacity: 0, y: 18 } as const),
-        animate: { opacity: 1, y: 0 },
-    };
+    const globe = (
+        <SceneSlot scene="globe" sceneProps={sceneProps} className="absolute inset-0" fallback={<GlobePoster />} />
+    );
+
+    const heroCopy = (
+        <>
+            {/* The one kicker on the page: the journey itself, in flags. */}
+            <p className="mb-6 flex flex-wrap items-center gap-3 text-sm font-semibold text-white/80">
+                <span className="flex items-center gap-2">
+                    <Flag code="IN" w={28} /> India
+                </span>
+                {current && hostCountry && (
+                    <>
+                        <Plane className="h-4 w-4 text-primary-light" aria-hidden="true" />
+                        <span className="flex items-center gap-2">
+                            <Flag code={hostCountry.code} w={28} /> {hostCountry.name}
+                        </span>
+                    </>
+                )}
+            </p>
+
+            <h1 className="text-[clamp(3rem,9vw,6rem)] font-black uppercase leading-[0.9] tracking-[-0.035em] text-white">
+                Team<br />India<span className="text-primary">.</span>
+            </h1>
+
+            <p className="mt-6 max-w-[44ch] text-pretty text-lg leading-relaxed text-white/80">
+                When a federation abroad invites us to their tournament, these are the karateka who
+                travel to represent India on the international floor.
+            </p>
+
+            {current && (
+                <div className="mt-8 max-w-xl border-t border-white/15 pt-6">
+                    <h2 className="text-balance text-[clamp(1.35rem,2.6vw,2rem)] font-extrabold uppercase leading-[1.02] tracking-[-0.01em] text-white">
+                        {current.tournamentName}
+                    </h2>
+                    <TripFacts delegation={current} className="mt-4" />
+                </div>
+            )}
+
+            {delegations.length > 0 && (
+                <div className="mt-7">
+                    <StatLine delegations={delegations} />
+                </div>
+            )}
+
+            {!isLoading && !loadError && !current && <EmptyState />}
+        </>
+    );
 
     return (
-        <div className="min-h-screen bg-black text-white">
-            {/* ── Hero ──
-                Full height once there is a trip to dramatise; with nothing
-                published it collapses to the height of its own type rather
-                than leaving a viewport of dead black. */}
-            <section
-                className={`relative isolate flex items-end overflow-hidden pb-12 pt-32 sm:pb-16 ${
-                    current ? "min-h-[70vh] sm:min-h-[76vh]" : ""
-                }`}
-            >
-                <HeroBackdrop cover={current?.coverImageUrl ?? null} hostCode={hostCode} />
-                {current && !current.coverImageUrl && <HostWordmark hostCode={hostCode} />}
+        // Transparent so the globe shows through from the canvas behind <main>.
+        <div className="min-h-screen text-white">
+            {/* ── Hero ── */}
+            {cover ? (
+                <section data-bleed className="relative isolate flex min-h-[78svh] items-end overflow-hidden pb-16 pt-40">
+                    <HeroBackdrop cover={cover} hostCode={hostCode} />
+                    <HostWordmark hostCode={hostCode} />
+                    <div className="relative mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8">{heroCopy}</div>
+                    <FlagRule hostCode={hostCode} />
+                </section>
+            ) : (
+                <section data-bleed className="relative isolate flex min-h-[100svh] overflow-hidden">
+                    {/* Phones: the globe gets the top band and the copy sits beneath it. */}
+                    <div className="absolute inset-x-0 top-0 h-[52svh] md:inset-0 md:h-auto">{globe}</div>
+                    <FlagGlows hostCode={hostCode} />
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,black_40%,transparent_60%)] md:bg-[linear-gradient(to_right,rgba(0,0,0,0.85),rgba(0,0,0,0.35)_45%,transparent_65%)]" />
+                    <div className="relative mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-20 pt-[46svh] sm:px-6 md:justify-center md:pb-16 md:pt-40 lg:px-8">
+                        {heroCopy}
+                    </div>
+                    {current && <FlagRule hostCode={hostCode} />}
+                </section>
+            )}
 
-                <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-                    <motion.span
-                        {...rise}
-                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                        className="mb-3 block text-[11px] font-extrabold uppercase tracking-[4px] text-red-500"
-                    >
-                        Kyokushin Karate Foundation of India
-                    </motion.span>
+            {/* With a cover image in the hero, the journey gets its own band. */}
+            {cover && (
+                <section className="relative h-[70svh] overflow-hidden" aria-label={`From India to ${hostCountry?.name ?? "the host country"}`}>
+                    {globe}
+                </section>
+            )}
 
-                    <motion.h1
-                        {...rise}
-                        transition={{ duration: 0.6, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
-                        className="font-black uppercase leading-[0.9]"
-                        style={{
-                            fontSize: "clamp(2.5rem, 9vw, 5rem)",
-                            letterSpacing: "-0.03em",
-                            textWrap: "balance",
-                        }}
-                    >
-                        <span className="text-white">Team </span>
-                        <span className="text-[#FF0000]">India</span>
-                    </motion.h1>
-
-                    <motion.p
-                        {...rise}
-                        transition={{ duration: 0.6, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-                        className="mt-4 max-w-[58ch] text-[14px] leading-relaxed text-zinc-300 sm:text-[15px]"
-                    >
-                        When a federation abroad invites us to their tournament, these are the karateka
-                        who travel to represent India on the international floor.
-                    </motion.p>
-
-                    {current && (
-                        <motion.div
-                            {...rise}
-                            transition={{ duration: 0.6, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
-                            className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3"
-                        >
-                            <span className="flex items-center gap-2.5">
-                                <Flag code="IN" />
-                                <span className="text-[14px] font-black uppercase tracking-[0.13em] text-white">
-                                    India
-                                </span>
-                            </span>
-                            {hostCountry && (
-                                <>
-                                    <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-zinc-300">
-                                        travels to
-                                    </span>
-                                    <span className="flex items-center gap-2.5">
-                                        <Flag code={hostCountry.code} />
-                                        <span className="text-[14px] font-black uppercase tracking-[0.13em] text-white">
-                                            {hostCountry.name}
-                                        </span>
-                                    </span>
-                                </>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {current && (
-                        <motion.div
-                            {...rise}
-                            transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                            className="mt-7"
-                        >
-                            <h2
-                                className="font-black uppercase leading-[0.98] text-white"
-                                style={{
-                                    fontSize: "clamp(1.4rem, 3.2vw, 2.3rem)",
-                                    letterSpacing: "-0.02em",
-                                    textWrap: "balance",
-                                }}
-                            >
-                                {current.tournamentName}
-                            </h2>
-                            <TripFacts delegation={current} className="mt-3" />
-                        </motion.div>
-                    )}
-
-                    {delegations.length > 0 && (
-                        <motion.div
-                            {...rise}
-                            transition={{ duration: 0.6, delay: 0.26, ease: [0.22, 1, 0.36, 1] }}
-                            className="mt-8 border-t border-white/[0.12] pt-5"
-                        >
-                            <StatLine delegations={delegations} />
-                        </motion.div>
-                    )}
-                </div>
-
-                {current && <FlagRule hostCode={hostCode} />}
-            </section>
-
-            {/* ── Body ── */}
-            <div className="mx-auto max-w-6xl px-4 pb-24 sm:px-6 lg:px-8">
+            {/* ── Body ── (nothing to show below the hero when no trip is published) */}
+            {(isLoading || loadError || current) && (
+            <Section rhythm="base" width="wide" className="bg-black">
                 {isLoading ? (
                     <div className="py-24">
                         <KarateLoader />
                     </div>
                 ) : loadError ? (
-                    <div className="border-y border-white/[0.07] py-20 text-center">
-                        <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-amber-400" aria-hidden="true" />
-                        <p className="text-[16px] font-bold text-zinc-100">Couldn&apos;t load Team India</p>
-                        <p className="mx-auto mt-1 max-w-[42ch] text-[13px] text-zinc-400">
+                    <div className="border-y border-white/10 py-20 text-center">
+                        <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-secondary" aria-hidden="true" />
+                        <p className="text-lg font-bold text-white">Couldn&apos;t load Team India</p>
+                        <p className="mx-auto mt-2 max-w-[42ch] text-white/70">
                             The server didn&apos;t respond. It may be waking up — this usually takes a few
                             seconds.
                         </p>
                         <button
                             type="button"
                             onClick={fetchDelegations}
-                            className="mt-6 inline-flex h-11 items-center gap-2 bg-red-600 px-6 text-[12px] font-bold uppercase tracking-[1.5px] text-white transition-colors hover:bg-[#8B0000] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                            className="mt-6 inline-flex min-h-12 items-center gap-2 bg-primary px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                         >
-                            <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                            <RefreshCw className="h-4 w-4" aria-hidden="true" />
                             Try again
                         </button>
                     </div>
-                ) : !current ? (
-                    <EmptyState />
-                ) : (
+                ) : !current ? null : (
                     <>
-                        {/* Current trip. The tournament name and facts are the
-                            hero's subject, so this section carries the prose
-                            and the squad only. */}
-                        <section className="pt-14">
-                            {current.summary && (
-                                <p
-                                    className="mt-3 max-w-[68ch] text-[14px] leading-relaxed text-zinc-300"
-                                    style={{ textWrap: "pretty" }}
-                                >
+                        {current.summary && (
+                            <Reveal>
+                                <p className="mb-16 max-w-[62ch] text-pretty text-xl leading-relaxed text-white/80">
                                     {current.summary}
                                 </p>
-                            )}
+                            </Reveal>
+                        )}
 
-                            <div className="mt-10">
-                                <Squad delegation={current} />
-                            </div>
-                        </section>
+                        <Squad delegation={current} />
 
-                        {/* Archive */}
                         {archive.length > 0 && (
-                            <section className="mt-24">
+                            <section className="mt-32">
                                 <BandHeading label="Previous delegations" count={archive.length} />
-                                <ul className="divide-y divide-white/[0.07] border-y border-white/[0.07]">
+                                <ul className="divide-y divide-white/10 border-b border-white/10">
                                     {archive.map((d) => (
                                         <ArchiveRow key={d.id} delegation={d} />
                                     ))}
@@ -774,7 +752,8 @@ export default function TeamIndiaPage() {
                         )}
                     </>
                 )}
-            </div>
+            </Section>
+            )}
         </div>
     );
 }

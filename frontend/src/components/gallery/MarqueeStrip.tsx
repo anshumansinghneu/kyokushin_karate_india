@@ -16,16 +16,7 @@ export default function MarqueeStrip({ items, onTileClick }: MarqueeStripProps) 
     const doubled = [...items, ...items];
 
     return (
-        <section className="w-full mt-6 md:mt-8">
-            {/* Section label */}
-            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mb-3">
-                <div className="flex items-center gap-3">
-                    <div className="w-1 h-5 bg-red-500 rounded-full" />
-                    <span className="text-xs font-black text-white uppercase tracking-[0.25em]">
-                        Latest Uploads
-                    </span>
-                </div>
-            </div>
+        <section className="w-full mt-6 md:mt-8" aria-label="Latest uploads">
 
             {/* Strip */}
             <div className="relative w-full overflow-hidden" style={{ height: 'clamp(140px, 22vh, 240px)' }}>
@@ -40,7 +31,7 @@ export default function MarqueeStrip({ items, onTileClick }: MarqueeStripProps) 
                             <div
                                 key={`${photo.id}-${i}`}
                                 onClick={() => onTileClick(photo.id)}
-                                className="relative h-full aspect-[4/3] flex-shrink-0 rounded-xl overflow-hidden border border-white/10 cursor-pointer group"
+                                className="relative h-full aspect-[4/3] flex-shrink-0 rounded-lg overflow-hidden border border-white/10 cursor-pointer group"
                             >
                                 <img
                                     src={thumb}
@@ -50,7 +41,7 @@ export default function MarqueeStrip({ items, onTileClick }: MarqueeStripProps) 
                                     draggable={false}
                                 />
                                 {isVideo && (
-                                    <div className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-red-600/90 backdrop-blur-md flex items-center justify-center shadow-lg pointer-events-none">
+                                    <div className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-black/70 flex items-center justify-center shadow-lg pointer-events-none">
                                         <Play className="w-4 h-4 text-white ml-0.5" fill="currentColor" />
                                     </div>
                                 )}

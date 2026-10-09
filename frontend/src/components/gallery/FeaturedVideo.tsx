@@ -76,7 +76,7 @@ export default function FeaturedVideo({ photo, onClick }: FeaturedVideoProps) {
     <div
       ref={containerRef}
       onClick={onClick}
-      className="relative w-full h-full overflow-hidden rounded-2xl border border-red-500/30 cursor-pointer group bg-zinc-900 shadow-[0_0_40px_rgba(220,38,38,0.18)]"
+      className="relative w-full h-full overflow-hidden rounded-lg border border-white/10 cursor-pointer group bg-surface transition-colors duration-300 hover:border-white/40"
     >
       {/* Poster layer (always painted under the iframe). */}
       {thumb && (

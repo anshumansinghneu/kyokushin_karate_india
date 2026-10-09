@@ -2,20 +2,21 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-    Camera, Search, Loader2, ImageIcon, FolderOpen, Tent,
-    GraduationCap, Trophy, Swords, Dumbbell, Grid3X3,
-    ChevronRight, ChevronLeft, Sparkles, X, Maximize2, Download, Share2,
-    Image as ImageIconSVG, ExternalLink, Play
+    Search, ChevronRight, ChevronLeft, X, Download, Share2, ExternalLink, ArrowRight,
 } from "lucide-react";
 import api from "@/lib/api";
-import { useAuthStore } from "@/store/authStore";
 import { getImageUrl } from "@/lib/imageUtils";
 import VideoPlayer from "@/components/gallery/VideoPlayer";
 import DojoWall from "@/components/gallery/DojoWall";
 import MarqueeStrip from "@/components/gallery/MarqueeStrip";
-import Link from "next/link";
+import SceneSlot from "@/components/three/SceneSlot";
+import Section, { Heading } from "@/components/brand/Section";
+import Reveal from "@/components/brand/Reveal";
+import BrandLink from "@/components/brand/BrandLink";
+import { useDeviceTier } from "@/hooks/useDeviceTier";
 
 interface Album {
     id: string;
@@ -32,166 +33,18 @@ interface Album {
 
 type AlbumFilter = "ALL" | "CAMP" | "SEMINAR" | "TOURNAMENT" | "BELT_EXAM" | "TRAINING" | "GENERAL";
 
-const ALBUM_TYPE_CONFIG: Record<string, { label: string; icon: typeof Camera; color: string; gradient: string; glow: string }> = {
-    CAMP: { label: "Camp", icon: Tent, color: "text-emerald-400", gradient: "from-emerald-600 to-emerald-900", glow: "rgba(16,185,129,0.15)" },
-    SEMINAR: { label: "Seminar", icon: GraduationCap, color: "text-blue-400", gradient: "from-blue-600 to-blue-900", glow: "rgba(59,130,246,0.15)" },
-    TOURNAMENT: { label: "Tournament", icon: Trophy, color: "text-amber-400", gradient: "from-amber-500 to-amber-900", glow: "rgba(245,158,11,0.15)" },
-    BELT_EXAM: { label: "Grading", icon: Swords, color: "text-red-400", gradient: "from-red-600 to-red-900", glow: "rgba(220,38,38,0.15)" },
-    TRAINING: { label: "Training", icon: Dumbbell, color: "text-purple-400", gradient: "from-purple-600 to-purple-900", glow: "rgba(147,51,234,0.15)" },
-    GENERAL: { label: "General", icon: Camera, color: "text-zinc-400", gradient: "from-zinc-600 to-zinc-900", glow: "rgba(161,161,170,0.1)" },
+const ALBUM_TYPE_LABEL: Record<string, string> = {
+    CAMP: "Camp",
+    SEMINAR: "Seminar",
+    TOURNAMENT: "Tournament",
+    BELT_EXAM: "Grading",
+    TRAINING: "Training",
+    GENERAL: "General",
 };
 
-// Seeded random for consistent per-photo rotation
-function seededRandom(seed: number) {
-    const x = Math.sin(seed * 9301 + 49297) * 49297;
-    return x - Math.floor(x);
-}
-
-function formatDuration(seconds: number | null): string | null {
-    if (seconds == null || seconds < 0) return null;
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
-}
-
-// ----------------------------------------------------------------------
-// Hero background removed — no stock images
-
-// ----------------------------------------------------------------------
-// Floating Photo & Album Cards
-// ----------------------------------------------------------------------
-function AlbumCard3D({ album, index }: { album: Album; index: number }) {
-    const cardRef = useRef<HTMLDivElement>(null);
-    const [coverLoaded, setCoverLoaded] = useState(false);
-    const [inView, setInView] = useState(false);
-    const config = ALBUM_TYPE_CONFIG[album.type] || ALBUM_TYPE_CONFIG.GENERAL;
-    const IconComp = config.icon;
-    const coverUrl = album.coverImageUrl ? getImageUrl(album.coverImageUrl) : null;
-
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
-    const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [12, -12]), { stiffness: 200, damping: 20 });
-    const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-12, 12]), { stiffness: 200, damping: 20 });
-    const glowX = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 100]), { stiffness: 200, damping: 20 });
-    const glowY = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 100]), { stiffness: 200, damping: 20 });
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        const el = cardRef.current;
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
-        mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
-    };
-
-    const handleMouseLeave = () => { mouseX.set(0); mouseY.set(0); };
-
-    useEffect(() => {
-        const el = cardRef.current;
-        if (!el) return;
-        const observer = new IntersectionObserver(
-            ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
-            { rootMargin: "200px" }
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, []);
-
-    return (
-        <motion.div
-            ref={cardRef}
-            layout
-            initial={{ opacity: 0, y: 40, scale: 0.9 }}
-            animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-            exit={{ opacity: 0, scale: 0.8, y: 20, filter: "blur(10px)" }}
-            transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.3), type: "spring", stiffness: 100 }}
-            style={{ perspective: 800 }}
-        >
-            <Link href={`/gallery/albums/${album.id}`}>
-                <motion.div
-                    className="group cursor-pointer relative !transform-none"
-                    onMouseMove={handleMouseMove}
-                    onMouseLeave={handleMouseLeave}
-                    style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-                    whileHover={{ z: 30 }}
-                >
-                    <motion.div
-                        className="absolute -inset-4 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"
-                        style={{ background: `radial-gradient(circle at ${glowX}% ${glowY}%, ${config.glow}, transparent 70%)` }}
-                    />
-                    <div
-                        className="relative rounded-2xl overflow-hidden border border-white/[0.08] group-hover:border-white/[0.15] transition-all duration-500"
-                        style={{
-                            background: "linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
-                            backdropFilter: "blur(20px)",
-                            transformStyle: "preserve-3d",
-                        }}
-                    >
-                        <div className="relative aspect-[4/3] overflow-hidden">
-                            {coverUrl && inView ? (
-                                <>
-                                    <img
-                                        src={coverUrl}
-                                        alt={album.name}
-                                        className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${coverLoaded ? "opacity-100" : "opacity-0"}`}
-                                        onLoad={() => setCoverLoaded(true)}
-                                    />
-                                    {!coverLoaded && (
-                                        <div className={`absolute inset-0 bg-gradient-to-br ${config.gradient} animate-pulse`} />
-                                    )}
-                                </>
-                            ) : (
-                                <div className={`w-full h-full bg-gradient-to-br ${config.gradient}`}>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <IconComp className="w-12 h-12 text-white/20" />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#050507] via-[#050507]/40 to-transparent opacity-90" />
-
-                            <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 shadow-black/50 shadow-md"
-                                style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(12px)" }}>
-                                <IconComp className={`w-3 h-3 ${config.color}`} />
-                                <span className="text-[10px] font-semibold text-white/90">{config.label}</span>
-                            </div>
-
-                            <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full border border-white/10 shadow-black/50 shadow-md"
-                                style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(12px)" }}>
-                                <ImageIcon className="w-3 h-3 text-white/70" />
-                                <span className="text-[10px] font-bold text-white/80">{album.photoCount}</span>
-                            </div>
-
-                            {album.isPinned && (
-                                <div className="absolute bottom-4 right-4 flex items-center gap-1 px-2 py-1 rounded-md bg-red-500/20 border border-red-500/30">
-                                    <Sparkles className="w-3 h-3 text-red-400" />
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="absolute bottom-0 inset-x-0 p-5 transform translate-translate-z-6">
-                            <h3 className="text-base font-black text-white group-hover:text-red-400 transition-colors line-clamp-1 drop-shadow-md">
-                                {album.name}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-2">
-                                <span className="text-xs font-medium text-zinc-400">
-                                    {album.photoCount} photo{album.photoCount !== 1 ? "s" : ""}
-                                </span>
-                                {album.date && (
-                                    <>
-                                        <span className="w-1 h-1 rounded-full bg-zinc-500" />
-                                        <span className="text-xs text-gray-400">
-                                            {new Date(album.date).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-            </Link>
-        </motion.div>
-    );
-}
+/** Web-sized prints of real KKFI tournament photographs for the 3D ring (≈30 KB each). */
+const RING_IMAGES = Array.from({ length: 16 }, (_, i) => `/gallery-thumbs/ring-${String(i + 1).padStart(2, "0")}.jpg`);
+const RING_STEP = (Math.PI * 2) / RING_IMAGES.length;
 
 export type MediaType = 'IMAGE' | 'VIDEO';
 
@@ -211,113 +64,195 @@ export interface GalleryPhoto {
     duration: number | null;
 }
 
-function FloatingPhoto({ photo, index, onClick }: { photo: GalleryPhoto; index: number; onClick: () => void }) {
-    const [loaded, setLoaded] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
-    const [rowSpan, setRowSpan] = useState(20);
-    const ref = useRef<HTMLDivElement>(null);
-    const [inView, setInView] = useState(false);
-    const imgUrl = getImageUrl(photo.imageUrl);
-    const rotation = (seededRandom(index + 1) - 0.5) * 5;
-    const offsetY = (seededRandom(index + 50) - 0.5) * 10;
-    const isVideo = photo.mediaType === 'VIDEO';
-    const durationLabel = formatDuration(photo.duration);
+const formatAlbumDate = (date: string | null) =>
+    date ? new Date(date).toLocaleDateString("en-IN", { month: "long", year: "numeric" }) : null;
 
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const observer = new IntersectionObserver(
-            ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
-            { rootMargin: "200px" }
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, []);
+// ----------------------------------------------------------------------
+// Hero: a ring of photographs the visitor turns by dragging
+// ----------------------------------------------------------------------
 
-    const handleImageLoad = (img: HTMLImageElement) => {
-        setLoaded(true);
-        const rowHeight = 10;
-        const gap = 20;
-        const span = Math.ceil((img.getBoundingClientRect().height + gap) / (rowHeight + gap));
-        setRowSpan(span);
+/** Static-tier and pre-load composition: five prints fanned in perspective. */
+function RingPoster() {
+    const fan = [RING_IMAGES[3], RING_IMAGES[6], RING_IMAGES[0], RING_IMAGES[9], RING_IMAGES[12]];
+    return (
+        <div className="absolute inset-0 flex items-start justify-center overflow-hidden bg-black pt-[18svh] md:pt-[22svh]">
+            <div className="flex items-center gap-3" style={{ perspective: "1100px", transformStyle: "preserve-3d" }}>
+                {fan.map((src, i) => {
+                    const offset = i - 2;
+                    return (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            key={src}
+                            src={src}
+                            alt=""
+                            className={`aspect-[16/10] w-[36vw] max-w-[360px] rounded-sm object-cover md:w-[22vw] ${offset === 0 ? "" : "grayscale"}`}
+                            style={{
+                                transform: `rotateY(${-offset * 24}deg) translateZ(${-Math.abs(offset) * 90}px)`,
+                                opacity: offset === 0 ? 1 : 0.45 - Math.abs(offset) * 0.08,
+                            }}
+                        />
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+/** Target ring angle. The scene reads `current` every frame; changing it never re-renders. */
+class SpinTarget {
+    current = 0;
+    add(radians: number) {
+        this.current += radians;
+    }
+}
+
+function GalleryHero({ photoCount }: { photoCount: number }) {
+    // The ring only turns when the 3D scene runs; the still poster gets no drag affordance.
+    const tier = useDeviceTier();
+    const interactive = tier !== null && tier !== "static";
+    // A stable object the scene reads every frame; writing to it never re-renders.
+    const [spin] = useState(() => new SpinTarget());
+    const drag = useRef<{ x: number; t: number; v: number } | null>(null);
+    const sceneProps = useMemo(() => ({ images: RING_IMAGES, spin }), [spin]);
+
+    const onPointerDown = (e: React.PointerEvent) => {
+        drag.current = { x: e.clientX, t: performance.now(), v: 0 };
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    };
+    const onPointerMove = (e: React.PointerEvent) => {
+        const d = drag.current;
+        if (!d) return;
+        const now = performance.now();
+        const dx = e.clientX - d.x;
+        spin.add(dx * 0.006);
+        d.v = dx / Math.max(1, now - d.t);
+        d.x = e.clientX;
+        d.t = now;
+    };
+    const onPointerUp = () => {
+        const d = drag.current;
+        // A flick carries the ring on a little further.
+        if (d) spin.add(Math.max(-1.5, Math.min(1.5, d.v * 0.9)));
+        drag.current = null;
     };
 
     return (
-        <motion.div
-            ref={ref}
-            initial={{ opacity: 0, y: 30, rotate: rotation }}
-            animate={inView ? {
-                opacity: 1,
-                y: isHovered ? -8 : offsetY,
-                rotate: isHovered ? 0 : rotation,
-                scale: isHovered ? 1.04 : 1,
-            } : {}}
-            transition={{
-                opacity: { duration: 0.5, delay: Math.min((index % 10) * 0.05, 0.5) },
-                y: { type: "spring", stiffness: 200, damping: 20 },
-                rotate: { type: "spring", stiffness: 200, damping: 20 },
-                scale: { type: "spring", stiffness: 300, damping: 25 },
-            }}
-            className="group cursor-pointer"
-            style={{ gridRowEnd: `span ${rowSpan}`, gridColumn: isVideo ? 'span 2' : undefined }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            onClick={onClick}
+        <header data-bleed className="relative flex min-h-[100svh] overflow-hidden">
+            <SceneSlot scene="gallery-ring" sceneProps={sceneProps} className="absolute inset-0" fallback={<RingPoster />} />
+            {/* Drag surface. pan-y keeps vertical page scrolling on touch screens. */}
+            {interactive && <div
+                aria-hidden="true"
+                className="absolute inset-0 cursor-grab touch-pan-y active:cursor-grabbing"
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onPointerCancel={onPointerUp}
+            />}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black via-black/70 to-transparent" />
+            <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/80 to-transparent" />
+
+            <div className="pointer-events-none relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(3rem,9vh,6rem)] pt-40 sm:px-6 lg:px-8">
+                <h1 className="max-w-[12ch] text-balance text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.92] tracking-[-0.035em] text-white">
+                    The dojo, in pictures<span className="text-primary">.</span>
+                </h1>
+                <div className="mt-6 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+                    <p className="max-w-[44ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
+                        {photoCount > 0 ? `${photoCount} photographs` : "Photographs"} from camps, gradings and
+                        tournaments across India.{interactive && " Drag the ring to turn it."}
+                    </p>
+                    <div className="pointer-events-auto flex flex-wrap items-center gap-3">
+                        {interactive && (<>
+                        <button
+                            type="button"
+                            aria-label="Turn the ring left"
+                            onClick={() => spin.add(RING_STEP)}
+                            className="flex h-12 w-12 items-center justify-center border border-white/25 text-white transition-colors hover:bg-white/10"
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        <button
+                            type="button"
+                            aria-label="Turn the ring right"
+                            onClick={() => spin.add(-RING_STEP)}
+                            className="flex h-12 w-12 items-center justify-center border border-white/25 text-white transition-colors hover:bg-white/10"
+                        >
+                            <ChevronRight className="h-5 w-5" />
+                        </button>
+                        </>)}
+                        <BrandLink href="/gallery/all">
+                            Every photo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </BrandLink>
+                    </div>
+                </div>
+            </div>
+        </header>
+    );
+}
+
+// ----------------------------------------------------------------------
+// Albums: an editorial index, the first one given the room of a feature
+// ----------------------------------------------------------------------
+
+/**
+ * Opening an album: the cover grows to fill the screen before the route
+ * changes, and the album page opens on that same cover, so it reads as one
+ * continuous move. Reduced motion skips straight to navigation.
+ */
+function useAlbumOpen() {
+    const router = useRouter();
+    const [opening, setOpening] = useState<{ id: string; src: string; rect: DOMRect } | null>(null);
+    const open = useCallback(
+        (e: React.MouseEvent, album: Album, cover: HTMLElement | null) => {
+            const src = album.coverImageUrl ? getImageUrl(album.coverImageUrl) : null;
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+            if (!src || !cover || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+            e.preventDefault();
+            setOpening({ id: album.id, src, rect: cover.getBoundingClientRect() });
+            window.setTimeout(() => router.push(`/gallery/albums/${album.id}`), 520);
+        },
+        [router],
+    );
+    return { opening, open };
+}
+
+function AlbumEntry({ album, feature, onOpen }: { album: Album; feature: boolean; onOpen: (e: React.MouseEvent, album: Album, cover: HTMLElement | null) => void }) {
+    const cover = useRef<HTMLDivElement>(null);
+    const coverUrl = album.coverImageUrl ? getImageUrl(album.coverImageUrl) : null;
+    const date = formatAlbumDate(album.date);
+    const meta = [ALBUM_TYPE_LABEL[album.type] ?? "Album", date, `${album.photoCount} photo${album.photoCount !== 1 ? "s" : ""}`].filter(Boolean).join(" · ");
+
+    return (
+        <a
+            href={`/gallery/albums/${album.id}`}
+            onClick={(e) => onOpen(e, album, cover.current)}
+            className={`group block ${feature ? "lg:grid lg:grid-cols-[1.6fr_1fr] lg:items-end lg:gap-12" : ""}`}
         >
-            <div className={`relative rounded-xl overflow-hidden border transition-all duration-500 bg-white/5 ${
-                isVideo
-                  ? 'border-red-500/30 group-hover:border-red-500/60 shadow-[0_0_30px_rgba(220,38,38,0.25)] group-hover:shadow-[0_0_45px_rgba(220,38,38,0.45)]'
-                  : 'border-white/[0.08] group-hover:border-red-500/30'
-            }`}>
-                {!loaded && <div className="w-full aspect-[4/3] animate-pulse bg-white/5" />}
-                {inView && imgUrl && (
+            <div ref={cover} className={`relative overflow-hidden rounded-lg bg-surface ${feature ? "aspect-[16/9]" : "aspect-[4/3]"}`}>
+                {coverUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
-                        src={imgUrl}
-                        alt={photo.caption || "Photo"}
-                        className={`w-full transition-all duration-700 group-hover:scale-105 ${loaded ? "opacity-100" : "opacity-0 absolute"}`}
+                        src={coverUrl}
+                        alt=""
                         loading="lazy"
-                        onLoad={(e) => handleImageLoad(e.currentTarget)}
+                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                     />
                 )}
-
-                {isVideo && loaded && (
-                    <>
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <motion.div
-                                animate={isHovered ? { scale: [1, 1.1, 1] } : { scale: 1 }}
-                                transition={{ duration: 1.2, repeat: isHovered ? Infinity : 0 }}
-                                className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-md border border-white/30 shadow-2xl flex items-center justify-center"
-                            >
-                                <Play className="w-7 h-7 text-white ml-1" fill="currentColor" />
-                            </motion.div>
-                        </div>
-                        {durationLabel && (
-                            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-md border border-white/10 text-white text-xs font-bold pointer-events-none">
-                                {durationLabel}
-                            </div>
-                        )}
-                    </>
+            </div>
+            <div className={feature ? "mt-6 lg:mt-0" : "mt-4"}>
+                <p className="text-sm font-semibold text-white/60">{meta}</p>
+                <h3 className={`mt-2 text-balance font-extrabold leading-tight text-white transition-colors group-hover:text-primary-light ${feature ? "text-[clamp(1.75rem,3.4vw,2.75rem)]" : "text-xl"}`}>
+                    {album.name}
+                </h3>
+                {feature && album.description && (
+                    <p className="mt-4 max-w-[48ch] text-pretty leading-relaxed text-white/70 line-clamp-3">{album.description}</p>
                 )}
-
-                {loaded && !isVideo && (
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
-                        <motion.div
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: isHovered ? 1 : 0.8, opacity: isHovered ? 1 : 0 }}
-                            className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-2xl"
-                        >
-                            <Maximize2 className="w-5 h-5 text-white" />
-                        </motion.div>
-                    </div>
-                )}
-                {loaded && (
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#050507] via-[#050507]/60 to-transparent flex flex-col justify-end p-4 pt-16 pointer-events-none">
-                        {photo.caption && <p className="text-sm font-bold text-white mb-1 drop-shadow-md">{photo.caption}</p>}
-                        <p className="text-xs font-semibold text-zinc-400">by {photo.uploader.name}</p>
-                    </div>
+                {feature && (
+                    <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.1em] text-white">
+                        Open album <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </span>
                 )}
             </div>
-        </motion.div>
+        </a>
     );
 }
 
@@ -325,7 +260,6 @@ function FloatingPhoto({ photo, index, onClick }: { photo: GalleryPhoto; index: 
 // Main Gallery
 // ----------------------------------------------------------------------
 export default function GalleryPage() {
-    const { user } = useAuthStore();
     const [albums, setAlbums] = useState<Album[]>([]);
     const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -337,6 +271,7 @@ export default function GalleryPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [photoPage, setPhotoPage] = useState(1);
     const [photoTotalPages, setPhotoTotalPages] = useState(1);
+    const [photoTotal, setPhotoTotal] = useState(0);
     const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -384,6 +319,7 @@ export default function GalleryPage() {
                 });
             }
             setPhotoTotalPages(res.data.data.pagination.totalPages);
+            setPhotoTotal(res.data.data.pagination.total ?? res.data.data.items.length);
         } catch (error) { console.error("Failed to fetch photos", error); } 
         finally { setPhotosLoading(false); }
     }, [photoPage]);
@@ -416,134 +352,171 @@ export default function GalleryPage() {
         searchTimeout.current = setTimeout(() => setSearch(val), 400);
     };
 
-    const filters: { key: AlbumFilter; label: string; icon: typeof Camera }[] = [
-        { key: "ALL", label: "All", icon: Grid3X3 },
-        { key: "CAMP", label: "Camps", icon: Tent },
-        { key: "SEMINAR", label: "Seminars", icon: GraduationCap },
-        { key: "TOURNAMENT", label: "Tournaments", icon: Trophy },
-        { key: "BELT_EXAM", label: "Grading", icon: Swords },
-        { key: "TRAINING", label: "Training", icon: Dumbbell },
-        { key: "GENERAL", label: "General", icon: Camera },
+    const filters: { key: AlbumFilter; label: string }[] = [
+        { key: "ALL", label: "All" },
+        { key: "CAMP", label: "Camps" },
+        { key: "SEMINAR", label: "Seminars" },
+        { key: "TOURNAMENT", label: "Tournaments" },
+        { key: "BELT_EXAM", label: "Gradings" },
+        { key: "TRAINING", label: "Training" },
+        { key: "GENERAL", label: "General" },
     ];
 
-    return (
-        <div className="min-h-screen bg-black text-white selection:bg-red-500/30">
-            <DojoWall
-                pool={photos}
-                onTileClick={openLightboxById}
-                onTileIdsChange={handleHeroTileIdsChange}
-            />
-            <MarqueeStrip
-                items={marqueeItems}
-                onTileClick={openLightboxById}
-            />
+    const { opening, open } = useAlbumOpen();
+    const [leadAlbum, ...moreAlbums] = albums;
 
-            {/* Content Container */}
-            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-20 relative z-30">
-                {/* Search & Filters Dock */}
-                <div className="mb-12 flex flex-col items-center gap-6">
-                    {/* Background glow for the dock area */}
-                    <div className="absolute inset-0 bg-red-500/5 blur-[100px] pointer-events-none w-[60%] mx-auto h-[150px]" />
-                    
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                        className="relative w-full max-w-2xl shadow-2xl group"
-                    >
-                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors group-focus-within:text-red-500" />
+    return (
+        // Transparent so the ring scene shows through from the canvas behind <main>.
+        <div className="min-h-screen text-white selection:bg-primary selection:text-white">
+            <GalleryHero photoCount={photoTotal} />
+
+            {/* Latest from the dojo floor: the existing wall (with featured video) and marquee. */}
+            <Section rhythm="base" width="wide" className="bg-black pb-0">
+                <Reveal>
+                    <Heading>Latest from the dojo floor</Heading>
+                </Reveal>
+                <div className="mt-10">
+                    <DojoWall
+                        pool={photos}
+                        onTileClick={openLightboxById}
+                        onTileIdsChange={handleHeroTileIdsChange}
+                    />
+                </div>
+            </Section>
+            <div className="bg-black pb-[clamp(3rem,6vw,5rem)]" aria-busy={photosLoading}>
+                <MarqueeStrip
+                    items={marqueeItems}
+                    onTileClick={openLightboxById}
+                />
+                {photoPage < photoTotalPages && (
+                    <div className="mt-8 flex justify-center px-4">
+                        <button
+                            type="button"
+                            onClick={() => setPhotoPage((p) => p + 1)}
+                            disabled={photosLoading}
+                            className="min-h-12 border border-white/25 px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+                        >
+                            {photosLoading ? "Loading…" : "Load more photographs"}
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Albums */}
+            <Section id="albums" rhythm="base" width="wide" className="scroll-mt-24 bg-black">
+                <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+                    <Reveal>
+                        <Heading>Albums</Heading>
+                        <p className="mt-3 max-w-[48ch] text-lg text-white/70">Every camp, grading and tournament, kept together.</p>
+                    </Reveal>
+                    <div className="relative w-full lg:max-w-md">
+                        <Search className="pointer-events-none absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-white/60" aria-hidden="true" />
+                        <label htmlFor="album-search" className="sr-only">Search albums</label>
                         <input
-                            type="text"
-                            placeholder="Discover tournaments, camps, or dojo memories..."
+                            id="album-search"
+                            type="search"
+                            placeholder="Search albums"
                             value={searchInput}
                             onChange={(e) => handleSearchChange(e.target.value)}
-                            className="w-full pl-14 pr-6 py-4 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-xl text-base font-medium text-white placeholder-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black focus:border-red-500/30 focus:bg-white/10 transition-all"
+                            className="h-12 w-full border-b-2 border-white/20 bg-transparent pl-8 pr-2 text-base text-white placeholder:text-white/55 transition-colors focus:border-primary focus:outline-none"
                         />
-                        <div className="absolute inset-x-0 -bottom-[1px] h-[1px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent scale-x-0 group-focus-within:scale-x-100 transition-transform duration-700 ease-out" />
-                    </motion.div>
-
-                    {/* Highly Polished Filters Dock */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="flex overflow-x-auto w-full justify-start md:justify-center pb-4 hide-scrollbar"
-                    >
-                        <div className="flex bg-white/5 backdrop-blur-3xl border border-white/10 p-2 max-w-full relative gap-1">
-                            {filters.map(({ key, label, icon: Icon }) => {
-                                const isActive = filter === key;
-                                return (
-                                    <button
-                                        key={key}
-                                        onClick={() => setFilter(key)}
-                                        className={`relative flex items-center gap-2.5 px-6 py-3 rounded-none text-xs font-bold transition-colors duration-200 whitespace-nowrap min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
-                                            isActive ? "text-white" : "text-gray-300 hover:text-white hover:bg-white/10"
-                                        }`}
-                                    >
-                                        {isActive && (
-                                            <motion.div
-                                                layoutId="activeFilterBg"
-                                                className="absolute inset-0 bg-[#FF0000] z-0 shadow-[0_0_20px_-3px_rgba(220,38,38,0.4)]"
-                                                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                                            />
-                                        )}
-                                        <Icon className={`w-4 h-4 relative z-10 ${isActive ? 'text-white' : 'opacity-70'}`} />
-                                        <span className="relative z-10 tracking-widest uppercase text-[10px] sm:text-[11px]">{label}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </motion.div>
+                    </div>
                 </div>
 
-                {/* Browse by Event Divider */}
-                <div className="flex items-center justify-center gap-4 mb-10">
-                    <div className="h-px w-32 bg-gradient-to-r from-transparent to-white/10" />
-                    <span className="text-xs font-black text-white uppercase tracking-[0.2em] px-4 py-2 bg-white/5 border border-white/10 rounded-full">
-                        Browse by Event
-                    </span>
-                    <div className="h-px w-32 bg-gradient-to-l from-transparent to-white/10" />
+                <div role="tablist" aria-label="Album type" className="mt-8 flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
+                    {filters.map(({ key, label }) => {
+                        const isActive = filter === key;
+                        return (
+                            <button
+                                key={key}
+                                role="tab"
+                                aria-selected={isActive}
+                                onClick={() => setFilter(key)}
+                                className={`min-h-11 whitespace-nowrap border px-4 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                                    isActive ? "border-white bg-white text-black" : "border-white/15 text-white/75 hover:border-white/40 hover:text-white"
+                                }`}
+                            >
+                                {label}
+                            </button>
+                        );
+                    })}
                 </div>
 
-                {/* Albums Grid */}
-                <div className="min-h-[400px]">
+                <div className="mt-12 min-h-[320px]" aria-busy={isLoading}>
                     {isLoading ? (
-                        <div className="flex flex-col items-center justify-center py-32 gap-4">
-                            <div className="w-12 h-12 border-4 border-red-500/20 border-t-red-500 rounded-full animate-spin" />
-                            <span className="text-sm font-bold text-gray-300 tracking-widest uppercase">Fetching Albums</span>
+                        <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr]">
+                            <div className="aspect-[16/9] animate-pulse rounded-lg bg-white/5" />
+                            <div className="space-y-4 self-end">
+                                <div className="h-4 w-40 animate-pulse rounded bg-white/5" />
+                                <div className="h-10 w-full animate-pulse rounded bg-white/5" />
+                            </div>
                         </div>
-                    ) : albums.length > 0 ? (
+                    ) : leadAlbum ? (
                         <>
-                            <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
-                                <AnimatePresence mode="popLayout">
-                                    {albums.map((album, i) => (
-                                        <AlbumCard3D key={album.id} album={album} index={i} />
+                            <Reveal kind="depth">
+                                <AlbumEntry album={leadAlbum} feature onOpen={open} />
+                            </Reveal>
+                            {moreAlbums.length > 0 && (
+                                <div className="mt-16 grid gap-x-8 gap-y-12 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
+                                    {moreAlbums.map((album, i) => (
+                                        <Reveal key={album.id} delay={Math.min(i * 0.05, 0.3)}>
+                                            <AlbumEntry album={album} feature={false} onOpen={open} />
+                                        </Reveal>
                                     ))}
-                                </AnimatePresence>
-                            </motion.div>
+                                </div>
+                            )}
+                            {totalPages > 1 && (
+                                <div className="mt-14 flex items-center justify-center gap-3">
+                                    <button
+                                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                        disabled={page <= 1}
+                                        className="min-h-12 border border-white/20 px-5 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-white/10 disabled:opacity-30"
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="text-sm text-white/60">Page {page} of {totalPages}</span>
+                                    <button
+                                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                        disabled={page >= totalPages}
+                                        className="min-h-12 border border-white/20 px-5 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-white/10 disabled:opacity-30"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            )}
                         </>
                     ) : (
-                        /* Premium Empty State */
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex flex-col items-center justify-center py-20 px-4 text-center border border-white/10 bg-white/5 rounded-xl mt-12 overflow-hidden relative"
-                        >
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/5 blur-[120px] rounded-full pointer-events-none" />
-                            <div className="relative z-10">
-                                <div className="w-24 h-24 mb-6 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
-                                    <ImageIconSVG className="w-10 h-10 text-gray-400" />
-                                </div>
-                                <h3 className="text-2xl font-black text-white">No Albums Found in the Vault</h3>
-                                <p className="text-gray-300 mt-2 max-w-md mx-auto text-sm font-medium">
-                                    We couldn't find any albums matching "{filter === 'ALL' ? searchInput : filters.find(f=>f.key===filter)?.label}". Try broadening your search or modifying your filters.
-                                </p>
-                            </div>
-                        </motion.div>
+                        <div className="border-y border-white/10 py-16">
+                            <h3 className="text-2xl font-extrabold text-white">No albums match</h3>
+                            <p className="mt-2 max-w-md text-white/70">
+                                Nothing found for &ldquo;{filter === "ALL" ? searchInput : filters.find((f) => f.key === filter)?.label}&rdquo;. Try a different search or album type.
+                            </p>
+                        </div>
                     )}
                 </div>
+            </Section>
 
-            </div>
+            {/* The album cover growing to fill the screen as the album opens. */}
+            {mounted && createPortal(
+                <AnimatePresence>
+                    {opening && (
+                        <motion.div
+                            key={opening.id}
+                            aria-hidden="true"
+                            className="pointer-events-none fixed z-[90] overflow-hidden bg-black"
+                            initial={{ top: opening.rect.top, left: opening.rect.left, width: opening.rect.width, height: opening.rect.height, borderRadius: 8 }}
+                            animate={{ top: 0, left: 0, width: "100vw", height: "100vh", borderRadius: 0 }}
+                            exit={{ opacity: 0, transition: { duration: 0.3 } }}
+                            transition={{ duration: 0.5, ease: [0.7, 0, 0.2, 1] }}
+                        >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={opening.src} alt="" className="h-full w-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                        </motion.div>
+                    )}
+                </AnimatePresence>,
+                document.body,
+            )}
 
             {/* ── Lightbox with swipe + share ──────────────────────── */}
             {/* Portaled to document.body so it escapes PageTransition's containing block */}
@@ -555,7 +528,7 @@ export default function GalleryPage() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                        className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050507]/98 backdrop-blur-2xl"
+                        className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95"
                     >
                         <div className="absolute top-0 inset-x-0 p-4 sm:p-6 flex justify-between items-start z-50 bg-gradient-to-b from-black/80 to-transparent">
                             <div className="flex flex-col gap-1 max-w-[60%] sm:max-w-2xl px-3 sm:px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl">
@@ -614,7 +587,7 @@ export default function GalleryPage() {
                                 )}
                                 <button
                                     onClick={() => setLightboxIndex(null)}
-                                    className="p-3 bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400 rounded-xl transition-colors backdrop-blur-md"
+                                    className="p-3 bg-white/5 border border-white/10 hover:bg-white/15 rounded-xl transition-colors backdrop-blur-md"
                                 >
                                     <X className="w-5 h-5 text-white" />
                                 </button>

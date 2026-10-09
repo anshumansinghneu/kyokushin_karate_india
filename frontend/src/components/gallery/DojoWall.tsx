@@ -23,15 +23,15 @@ export default function DojoWall({ pool, onTileClick, onTileIdsChange }: DojoWal
 
   if (!featured) {
     return (
-      <div className="w-full h-[60vh] flex items-center justify-center bg-zinc-950 border-y border-white/5">
-        <p className="text-zinc-500 text-sm">No memories yet — be the first to upload.</p>
+      <div className="w-full h-[40vh] flex items-center justify-center border-y border-white/10">
+        <p className="text-white/60 text-sm">No photographs yet. Be the first to upload.</p>
       </div>
     );
   }
 
   return (
     <div className="relative w-full">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {/* Featured: full width on mobile (aspect-video), 3×2 span on desktop. */}
         <div className="col-span-2 md:col-span-3 md:row-span-2 aspect-video md:aspect-auto">
           <FeaturedVideo photo={featured} onClick={() => onTileClick(featured.id)} />
@@ -42,28 +42,6 @@ export default function DojoWall({ pool, onTileClick, onTileIdsChange }: DojoWal
         ))}
       </div>
 
-      {/* Title overlay — ported from HeroMosaic. */}
-      <div className="pointer-events-none absolute bottom-0 left-0 p-4 md:p-8 lg:p-12 max-w-4xl">
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/60 to-transparent rounded-tr-[100px] pointer-events-none" />
-        <h1
-          className="relative font-black tracking-tighter uppercase leading-[0.9] drop-shadow-2xl"
-          style={{ fontSize: "clamp(2.5rem, 8vw, 5rem)" }}
-        >
-          <span className="text-white">THE </span>
-          <span
-            className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
-            style={{
-              background: "linear-gradient(180deg, #ef4444, #991b1b)",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-            }}
-          >
-            DOJO
-          </span>
-          <span className="text-white"> WALL</span>
-        </h1>
-      </div>
     </div>
   );
 }

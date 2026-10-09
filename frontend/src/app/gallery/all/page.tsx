@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { Camera, X, ChevronLeft, ChevronRight, Upload, Star, Loader2, ImageIcon, Download, Share2, ZoomIn, ZoomOut, Info, Trophy, MapPin, Flame, Sparkles, Eye, Grid3X3, LayoutGrid, Trash2 } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Upload, Star, Loader2, ImageIcon, Download, Share2, ZoomIn, ZoomOut, Info, Trophy, MapPin, Eye, Grid3X3, LayoutGrid, Trash2 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
@@ -23,12 +23,12 @@ type FilterType = "all" | "featured" | "event" | "dojo";
 // Shimmer loading placeholder
 function ImageSkeleton() {
     return (
-        <div className="relative overflow-hidden rounded-2xl bg-zinc-900/80 border border-white/5">
+        <div className="relative overflow-hidden rounded-2xl bg-surface/80 border border-white/5">
             <div className="w-full aspect-[4/3]" />
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent animate-shimmer" />
             <div className="absolute bottom-0 left-0 right-0 p-4">
-                <div className="h-3 bg-zinc-800 rounded-full w-3/4 mb-2" />
-                <div className="h-2 bg-zinc-800/60 rounded-full w-1/2" />
+                <div className="h-3 bg-surface-hover rounded-full w-3/4 mb-2" />
+                <div className="h-2 bg-surface-hover/60 rounded-full w-1/2" />
             </div>
         </div>
     );
@@ -58,25 +58,25 @@ function GalleryImage({ item, index, onClick, onDelete }: { item: GalleryItem; i
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: Math.min(index * 0.04, 0.4) }}
-            className="break-inside-avoid group cursor-pointer relative overflow-hidden rounded-2xl mb-4"
+            className="break-inside-avoid group cursor-pointer relative overflow-hidden rounded-lg mb-4 border border-white/10 transition-colors duration-300 hover:border-white/40"
             onClick={onClick}
         >
             {/* Shimmer placeholder */}
             {!loaded && !error && (
-                <div className="w-full aspect-[4/3] bg-zinc-900/80 border border-white/5 rounded-2xl overflow-hidden">
+                <div className="w-full aspect-[4/3] bg-surface/80 border border-white/5 rounded-2xl overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent animate-shimmer" />
                 </div>
             )}
             {error && (
-                <div className="w-full aspect-[4/3] bg-zinc-900 rounded-2xl flex items-center justify-center">
-                    <ImageIcon className="w-8 h-8 text-zinc-700" />
+                <div className="w-full aspect-[4/3] bg-surface rounded-2xl flex items-center justify-center">
+                    <ImageIcon className="w-8 h-8 text-white/30" />
                 </div>
             )}
             {inView && (
                 <img
                     src={item.imageUrl}
                     alt={item.caption || "Gallery photo"}
-                    className={`w-full rounded-2xl transition-all duration-700 group-hover:scale-105 ${loaded ? 'opacity-100' : 'opacity-0 absolute'}`}
+                    className={`w-full transition-transform duration-700 ease-out group-hover:scale-[1.03] ${loaded ? 'opacity-100' : 'opacity-0 absolute'}`}
                     loading="lazy"
                     onLoad={() => setLoaded(true)}
                     onError={() => setError(true)}
@@ -89,9 +89,9 @@ function GalleryImage({ item, index, onClick, onDelete }: { item: GalleryItem; i
                         <p className="text-sm font-semibold text-white mb-1 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">{item.caption}</p>
                     )}
                     <div className="flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 delay-75">
-                        <p className="text-xs text-gray-400">by {item.uploader.name}</p>
+                        <p className="text-xs text-white/70">by {item.uploader.name}</p>
                         {item.event && (
-                            <span className="text-[10px] text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">{item.event.name}</span>
+                            <span className="text-[10px] text-primary-light bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">{item.event.name}</span>
                         )}
                     </div>
                     {/* Quick actions */}
@@ -102,7 +102,7 @@ function GalleryImage({ item, index, onClick, onDelete }: { item: GalleryItem; i
                         {onDelete && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); onDelete(item); }}
-                                className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400 backdrop-blur-sm transition-all hover:scale-110"
+                                className="p-2 rounded-full bg-primary/20 hover:bg-primary/40 text-primary-light backdrop-blur-sm transition-all hover:scale-110"
                                 title="Delete"
                             >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -113,14 +113,14 @@ function GalleryImage({ item, index, onClick, onDelete }: { item: GalleryItem; i
             )}
             {/* Featured badge */}
             {item.isPublicFeatured && loaded && (
-                <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-500 to-amber-500 text-black px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-lg shadow-yellow-500/25">
+                <div className="absolute top-3 right-3 bg-secondary text-black px-2.5 py-1 rounded-sm text-[11px] font-bold flex items-center gap-1">
                     <Star className="w-2.5 h-2.5 fill-current" /> Featured
                 </div>
             )}
             {/* Dojo badge */}
             {item.dojo && loaded && (
                 <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-[10px] font-medium flex items-center gap-1 border border-white/10">
-                    <MapPin className="w-2.5 h-2.5 text-red-400" /> {item.dojo.name.split(',')[0].replace('Mas Oyama Karate Academy', 'MOKA').replace('Mas Oyama Karate Academy,', 'MOKA')}
+                    <MapPin className="w-2.5 h-2.5 text-primary-light" /> {item.dojo.name.split(',')[0].replace('Mas Oyama Karate Academy', 'MOKA').replace('Mas Oyama Karate Academy,', 'MOKA')}
                 </div>
             )}
         </motion.div>
@@ -432,7 +432,8 @@ export default function GalleryPage() {
     };
 
     const currentItem = lightboxIndex !== null ? items[lightboxIndex] : null;
-    const currentHeroItem = featuredItems[heroIndex];
+    // With nothing featured yet, the newest photograph carries the hero instead of an empty black panel.
+    const currentHeroItem = featuredItems[heroIndex] ?? allItems[0];
 
     // Stats
     const stats = useMemo(() => ({
@@ -443,7 +444,7 @@ export default function GalleryPage() {
     }), [totalItems, uniqueEvents, uniqueDojos, featuredItems]);
 
     return (
-        <div className="min-h-screen bg-black text-white relative overflow-hidden selection:bg-red-500/30">
+        <div className="min-h-screen bg-black text-white relative overflow-x-clip selection:bg-primary selection:text-white">
             {/* ── DELETE CONFIRMATION MODAL ─────────────────────────────────── */}
             <AnimatePresence>
                 {deleteTarget && (
@@ -452,7 +453,7 @@ export default function GalleryPage() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                            className="bg-surface border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
                         >
                             {deleteTarget.imageUrl && (
                                 <div className="mb-4 rounded-xl overflow-hidden border border-white/5">
@@ -460,7 +461,7 @@ export default function GalleryPage() {
                                 </div>
                             )}
                             <h3 className="text-xl font-bold text-white mb-2">Delete Photo?</h3>
-                            <p className="text-gray-400 text-sm mb-6">
+                            <p className="text-white/70 text-sm mb-6">
                                 {deleteTarget.caption
                                     ? <>Are you sure you want to delete &ldquo;{deleteTarget.caption}&rdquo;? This action cannot be undone.</>
                                     : "Are you sure you want to delete this photo? This action cannot be undone."}
@@ -468,14 +469,14 @@ export default function GalleryPage() {
                             <div className="flex justify-end gap-3">
                                 <button
                                     onClick={() => setDeleteTarget(null)}
-                                    className="px-4 py-2 min-h-[44px] text-gray-300 hover:text-white border border-white/20 hover:bg-white/10 rounded-none uppercase tracking-wider transition-colors font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                    className="px-4 py-2 min-h-[44px] text-white/80 hover:text-white border border-white/20 hover:bg-white/10 rounded-none uppercase tracking-wider transition-colors font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                     disabled={isDeleting}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleDelete}
-                                    className="px-4 py-2 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none uppercase tracking-wider transition-colors font-bold flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                    className="px-4 py-2 min-h-[44px] bg-primary hover:bg-primary-dark text-white rounded-none uppercase tracking-wider transition-colors font-bold flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                     disabled={isDeleting}
                                 >
                                     {isDeleting ? <><Loader2 className="w-4 h-4 animate-spin" /> Deleting...</> : <><Trash2 className="w-4 h-4" /> Delete Photo</>}
@@ -486,130 +487,66 @@ export default function GalleryPage() {
                 )}
             </AnimatePresence>
 
-            {/* ── HERO SECTION with featured carousel ──────────────────────────── */}
-            <div ref={heroRef} className="relative h-[70vh] md:h-[80vh] overflow-hidden">
-                {/* Background images — crossfade carousel */}
+            {/* ── HERO: featured photographs crossfading, full-bleed under the navbar ── */}
+            <header data-bleed ref={heroRef} className="relative flex min-h-[64svh] overflow-hidden md:min-h-[72svh]">
                 <AnimatePresence mode="wait">
                     {currentHeroItem && (
                         <motion.div
                             key={currentHeroItem.id}
-                            initial={{ opacity: 0, scale: 1.1 }}
+                            initial={{ opacity: 0, scale: 1.06 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 1.2 }}
+                            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                             className="absolute inset-0"
                             style={{ y: heroY }}
                         >
-                            <img
-                                src={currentHeroItem.imageUrl}
-                                alt={currentHeroItem.caption || ""}
-                                className="w-full h-full object-cover"
-                            />
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={currentHeroItem.imageUrl} alt="" className="h-full w-full object-cover" />
                         </motion.div>
                     )}
                 </AnimatePresence>
-                {/* Fallback if no featured */}
-                {!currentHeroItem && (
-                    <div className="absolute inset-0 bg-black">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/10 blur-[120px] rounded-full pointer-events-none" />
-                    </div>
-                )}
+                {!currentHeroItem && <div className="absolute inset-0 bg-black" />}
+                <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/35" />
 
-                {/* Overlays */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40" />
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent" />
-
-                {/* Hero content */}
                 <motion.div
                     style={{ opacity: heroOpacity }}
-                    className="absolute inset-0 flex flex-col items-center justify-center z-10 px-4"
+                    className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(2.5rem,7vh,5rem)] pt-36 sm:px-6 lg:px-8"
                 >
-                    <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-bold uppercase tracking-[0.25em] mb-6 backdrop-blur-xl"
-                    >
-                        <Camera className="w-3.5 h-3.5" /> KKFI GALLERY
-                    </motion.div>
-
-                    <motion.h1
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.3 }}
-                        className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-center mb-4"
-                    >
-                        <span className="text-white drop-shadow-2xl">PHOTO </span>
-                        <span className="text-[#FF0000]">
-                            GALLERY
-                        </span>
-                    </motion.h1>
-
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="text-base md:text-lg text-gray-300/80 max-w-xl mx-auto text-center leading-relaxed mb-8"
-                    >
-                        Capturing the spirit of Kyokushin — training sessions, tournaments,
-                        belt ceremonies, and unforgettable moments.
-                    </motion.p>
-
-                    {/* Stats row */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.7 }}
-                        className="flex flex-wrap items-center justify-center gap-3 md:gap-6"
-                    >
-                        {[
-                            { label: "Photos", value: stats.total, icon: ImageIcon, color: "text-red-400" },
-                            { label: "Events", value: stats.events, icon: Trophy, color: "text-yellow-400" },
-                            { label: "Dojos", value: stats.dojos, icon: MapPin, color: "text-blue-400" },
-                            { label: "Featured", value: stats.featured, icon: Star, color: "text-amber-400" },
-                        ].map((s) => (
-                            <div key={s.label} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl">
-                                <s.icon className={`w-3.5 h-3.5 ${s.color}`} />
-                                <span className="text-sm font-bold text-white">{s.value}</span>
-                                <span className="text-xs text-gray-400">{s.label}</span>
-                            </div>
-                        ))}
-                    </motion.div>
-
-                    {/* Hero carousel caption */}
+                    <h1 className="max-w-[14ch] text-balance text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.92] tracking-[-0.035em] text-white">
+                        Every photograph<span className="text-primary">.</span>
+                    </h1>
+                    <p className="mt-6 max-w-[52ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
+                        {stats.total > 0 ? `${stats.total} photographs` : "Photographs"}
+                        {stats.events > 0 ? ` from ${stats.events} event${stats.events !== 1 ? "s" : ""}` : ""}
+                        {stats.dojos > 0 ? ` and ${stats.dojos} dojo${stats.dojos !== 1 ? "s" : ""}` : ""}: training, tournaments,
+                        gradings and the moments in between.
+                    </p>
                     {currentHeroItem?.caption && (
-                        <motion.p
-                            key={currentHeroItem.id + '-caption'}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="absolute bottom-20 text-sm text-gray-400 italic"
-                        >
-                            &ldquo;{currentHeroItem.caption}&rdquo;
-                        </motion.p>
+                        <p key={currentHeroItem.id + "-caption"} className="mt-6 text-sm font-semibold text-white/65">
+                            {currentHeroItem.isPublicFeatured ? "Featured: " : "Latest: "}{currentHeroItem.caption}
+                        </p>
+                    )}
+                    {featuredItems.length > 1 && (
+                        <div className="mt-5 flex gap-1" role="tablist" aria-label="Featured photographs">
+                            {featuredItems.map((item, i) => (
+                                <button
+                                    key={item.id}
+                                    role="tab"
+                                    aria-selected={i === heroIndex}
+                                    aria-label={`Featured photo ${i + 1} of ${featuredItems.length}`}
+                                    onClick={() => setHeroIndex(i)}
+                                    className="flex h-11 w-8 items-center justify-center"
+                                >
+                                    <span className={`h-0.5 w-full transition-colors duration-300 ${i === heroIndex ? "bg-white" : "bg-white/25"}`} />
+                                </button>
+                            ))}
+                        </div>
                     )}
                 </motion.div>
-
-                {/* Hero carousel dots */}
-                {featuredItems.length > 1 && (
-                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-                        {featuredItems.map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={() => setHeroIndex(i)}
-                                className={`transition-all duration-300 rounded-full ${
-                                    i === heroIndex
-                                        ? "w-8 h-2 bg-red-500"
-                                        : "w-2 h-2 bg-white/20 hover:bg-white/40"
-                                }`}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+            </header>
 
             {/* ── FILTERS & GALLERY ──────────────────────────────────────────── */}
-            <div className="container-responsive pt-8 pb-16 relative z-10">
+            <div className="mx-auto max-w-[1400px] px-4 pt-[clamp(2.5rem,5vw,4rem)] pb-20 sm:px-6 lg:px-8 relative z-10">
                 {/* Filter bar */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -627,10 +564,10 @@ export default function GalleryPage() {
                                 <button
                                     key={cat.id}
                                     onClick={() => setFilter(cat.id)}
-                                    className={`px-5 py-2.5 rounded-none text-sm font-bold uppercase tracking-wider transition-colors duration-200 min-h-[44px] flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                                    className={`px-5 py-2.5 rounded-none text-sm font-bold uppercase tracking-wider transition-colors duration-200 min-h-[44px] flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
                                         filter === cat.id
-                                            ? "bg-[#FF0000] hover:bg-[#8B0000] text-white"
-                                            : "bg-transparent text-gray-300 hover:bg-white/10 hover:text-white border border-white/20"
+                                            ? "bg-primary hover:bg-primary-dark text-white"
+                                            : "bg-transparent text-white/80 hover:bg-white/10 hover:text-white border border-white/20"
                                     }`}
                                 >
                                     <cat.icon className="w-3.5 h-3.5" />
@@ -641,19 +578,19 @@ export default function GalleryPage() {
                             {uniqueEvents.length > 0 && (
                                 <div className="relative group">
                                     <button
-                                        className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 min-h-[44px] flex items-center gap-2 ${
+                                        className={`px-5 py-2.5 rounded-none text-sm font-bold transition-all duration-200 min-h-[44px] flex items-center gap-2 ${
                                             selectedEvent
-                                                ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                                                : "bg-zinc-900/80 text-gray-400 hover:bg-zinc-800 hover:text-white border border-white/10 backdrop-blur-sm"
+                                                ? "bg-secondary/20 text-secondary border border-secondary/30"
+                                                : "bg-surface/80 text-white/70 hover:bg-surface-hover hover:text-white border border-white/10 backdrop-blur-sm"
                                         }`}
                                     >
                                         <Trophy className="w-3.5 h-3.5" />
                                         {selectedEvent ? uniqueEvents.find(e => e.id === selectedEvent)?.name.substring(0, 20) + '...' : "By Event"}
                                     </button>
-                                    <div className="absolute top-full left-0 mt-2 w-72 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl shadow-black/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-30">
+                                    <div className="absolute top-full left-0 mt-2 w-72 bg-surface border border-white/15 rounded-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-30">
                                         <button
                                             onClick={() => setSelectedEvent(null)}
-                                            className={`w-full px-4 py-3 text-left text-sm hover:bg-zinc-800 transition-colors ${!selectedEvent ? 'text-red-400' : 'text-gray-400'}`}
+                                            className={`w-full px-4 py-3 text-left text-sm hover:bg-surface-hover transition-colors ${!selectedEvent ? 'text-primary-light' : 'text-white/70'}`}
                                         >
                                             All Events
                                         </button>
@@ -661,11 +598,11 @@ export default function GalleryPage() {
                                             <button
                                                 key={ev.id}
                                                 onClick={() => { setFilter("all"); setSelectedEvent(ev.id); setSelectedDojo(null); }}
-                                                className={`w-full px-4 py-3 text-left text-sm hover:bg-zinc-800 transition-colors border-t border-white/5 ${
-                                                    selectedEvent === ev.id ? 'text-yellow-400 bg-yellow-500/5' : 'text-gray-300'
+                                                className={`w-full px-4 py-3 text-left text-sm hover:bg-surface-hover transition-colors border-t border-white/5 ${
+                                                    selectedEvent === ev.id ? 'text-secondary bg-secondary/5' : 'text-white/80'
                                                 }`}
                                             >
-                                                <Trophy className="w-3 h-3 inline mr-2 text-yellow-500/50" />
+                                                <Trophy className="w-3 h-3 inline mr-2 text-secondary/50" />
                                                 {ev.name}
                                             </button>
                                         ))}
@@ -676,19 +613,19 @@ export default function GalleryPage() {
                             {uniqueDojos.length > 0 && (
                                 <div className="relative group">
                                     <button
-                                        className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 min-h-[44px] flex items-center gap-2 ${
+                                        className={`px-5 py-2.5 rounded-none text-sm font-bold transition-all duration-200 min-h-[44px] flex items-center gap-2 ${
                                             selectedDojo
-                                                ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                                                : "bg-zinc-900/80 text-gray-400 hover:bg-zinc-800 hover:text-white border border-white/10 backdrop-blur-sm"
+                                                ? "bg-white/20 text-white border border-white/30"
+                                                : "bg-surface/80 text-white/70 hover:bg-surface-hover hover:text-white border border-white/10 backdrop-blur-sm"
                                         }`}
                                     >
                                         <MapPin className="w-3.5 h-3.5" />
                                         {selectedDojo ? uniqueDojos.find(d => d.id === selectedDojo)?.name.split(',')[0].substring(0, 20) : "By Dojo"}
                                     </button>
-                                    <div className="absolute top-full left-0 mt-2 w-72 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl shadow-black/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-30">
+                                    <div className="absolute top-full left-0 mt-2 w-72 bg-surface border border-white/15 rounded-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-30">
                                         <button
                                             onClick={() => setSelectedDojo(null)}
-                                            className={`w-full px-4 py-3 text-left text-sm hover:bg-zinc-800 transition-colors ${!selectedDojo ? 'text-red-400' : 'text-gray-400'}`}
+                                            className={`w-full px-4 py-3 text-left text-sm hover:bg-surface-hover transition-colors ${!selectedDojo ? 'text-primary-light' : 'text-white/70'}`}
                                         >
                                             All Dojos
                                         </button>
@@ -696,11 +633,11 @@ export default function GalleryPage() {
                                             <button
                                                 key={dojo.id}
                                                 onClick={() => { setFilter("all"); setSelectedDojo(dojo.id); setSelectedEvent(null); }}
-                                                className={`w-full px-4 py-3 text-left text-sm hover:bg-zinc-800 transition-colors border-t border-white/5 ${
-                                                    selectedDojo === dojo.id ? 'text-blue-400 bg-blue-500/5' : 'text-gray-300'
+                                                className={`w-full px-4 py-3 text-left text-sm hover:bg-surface-hover transition-colors border-t border-white/5 ${
+                                                    selectedDojo === dojo.id ? 'text-white bg-white/5' : 'text-white/80'
                                                 }`}
                                             >
-                                                <MapPin className="w-3 h-3 inline mr-2 text-blue-500/50" />
+                                                <MapPin className="w-3 h-3 inline mr-2 text-white/50" />
                                                 {dojo.name}
                                             </button>
                                         ))}
@@ -713,7 +650,7 @@ export default function GalleryPage() {
                             {(selectedEvent || selectedDojo) && (
                                 <button
                                     onClick={() => { setSelectedEvent(null); setSelectedDojo(null); setFilter("all"); }}
-                                    className="text-xs text-gray-400 hover:text-red-400 transition-colors flex items-center gap-1"
+                                    className="text-xs text-white/70 hover:text-primary-light transition-colors flex items-center gap-1"
                                 >
                                     <X className="w-3 h-3" /> Clear filters
                                 </button>
@@ -721,7 +658,7 @@ export default function GalleryPage() {
                             {token && (
                                 <button
                                     onClick={() => setShowUpload(true)}
-                                    className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none text-sm font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                    className="flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-primary hover:bg-primary-dark text-white rounded-none text-sm font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 >
                                     <Upload className="w-4 h-4" />
                                     Upload Photo
@@ -731,12 +668,12 @@ export default function GalleryPage() {
                     </div>
 
                     {/* Results summary */}
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <div className="flex items-center gap-2 text-xs text-white/70">
                         <LayoutGrid className="w-3.5 h-3.5" />
                         <span>
                             Showing {items.length} photo{items.length !== 1 ? 's' : ''}
-                            {selectedEvent && <> in <span className="text-yellow-400">{uniqueEvents.find(e => e.id === selectedEvent)?.name}</span></>}
-                            {selectedDojo && <> from <span className="text-blue-400">{uniqueDojos.find(d => d.id === selectedDojo)?.name}</span></>}
+                            {selectedEvent && <> in <span className="text-secondary">{uniqueEvents.find(e => e.id === selectedEvent)?.name}</span></>}
+                            {selectedDojo && <> from <span className="text-white">{uniqueDojos.find(d => d.id === selectedDojo)?.name}</span></>}
                         </span>
                     </div>
                 </motion.div>
@@ -756,11 +693,11 @@ export default function GalleryPage() {
                         animate={{ opacity: 1 }}
                         className="text-center py-32"
                     >
-                        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-zinc-900/80 border border-white/10 flex items-center justify-center">
-                            <ImageIcon className="w-10 h-10 text-zinc-600" />
+                        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-surface/80 border border-white/10 flex items-center justify-center">
+                            <ImageIcon className="w-10 h-10 text-white/40" />
                         </div>
                         <h3 className="text-xl font-bold text-white mb-2">No Photos Found</h3>
-                        <p className="text-gray-300 max-w-md mx-auto">
+                        <p className="text-white/80 max-w-md mx-auto">
                             {filter === "featured"
                                 ? "No featured photos yet. Check back soon!"
                                 : selectedEvent || selectedDojo
@@ -770,7 +707,7 @@ export default function GalleryPage() {
                         {(selectedEvent || selectedDojo) && (
                             <button
                                 onClick={() => { setSelectedEvent(null); setSelectedDojo(null); setFilter("all"); }}
-                                className="mt-6 inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-transparent border border-white/20 hover:bg-white/10 text-white rounded-none font-bold uppercase tracking-wider transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                className="mt-6 inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-transparent border border-white/20 hover:bg-white/10 text-white rounded-none font-bold uppercase tracking-wider transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 <X className="w-4 h-4" />
                                 Clear Filters
@@ -779,7 +716,7 @@ export default function GalleryPage() {
                         {token && !selectedEvent && !selectedDojo && (
                             <button
                                 onClick={() => setShowUpload(true)}
-                                className="mt-6 inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                className="mt-6 inline-flex items-center gap-2 px-6 py-3 min-h-[44px] bg-primary hover:bg-primary-dark text-white rounded-none font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 <Upload className="w-4 h-4" />
                                 Upload First Photo
@@ -806,7 +743,7 @@ export default function GalleryPage() {
                                 <button
                                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                                     disabled={page === 1}
-                                    className="px-5 py-2.5 bg-transparent border border-white/20 rounded-none text-sm font-bold uppercase tracking-wider disabled:opacity-30 hover:bg-white/10 transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                    className="px-5 py-2.5 bg-transparent border border-white/20 rounded-none text-sm font-bold uppercase tracking-wider disabled:opacity-30 hover:bg-white/10 transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 >
                                     <ChevronLeft className="w-4 h-4 inline mr-1" />
                                     Previous
@@ -818,10 +755,10 @@ export default function GalleryPage() {
                                             <button
                                                 key={pageNum}
                                                 onClick={() => setPage(pageNum)}
-                                                className={`w-11 h-11 rounded-none text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                                                className={`w-11 h-11 rounded-none text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
                                                     page === pageNum
-                                                        ? "bg-[#FF0000] hover:bg-[#8B0000] text-white"
-                                                        : "bg-transparent text-gray-300 hover:bg-white/10 border border-white/20"
+                                                        ? "bg-primary hover:bg-primary-dark text-white"
+                                                        : "bg-transparent text-white/80 hover:bg-white/10 border border-white/20"
                                                 }`}
                                             >
                                                 {pageNum}
@@ -832,7 +769,7 @@ export default function GalleryPage() {
                                 <button
                                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages}
-                                    className="px-5 py-2.5 bg-transparent border border-white/20 rounded-none text-sm font-bold uppercase tracking-wider disabled:opacity-30 hover:bg-white/10 transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                    className="px-5 py-2.5 bg-transparent border border-white/20 rounded-none text-sm font-bold uppercase tracking-wider disabled:opacity-30 hover:bg-white/10 transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 >
                                     Next
                                     <ChevronRight className="w-4 h-4 inline ml-1" />
@@ -858,16 +795,16 @@ export default function GalleryPage() {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 30 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[85vh] overflow-y-auto"
+                            className="bg-surface/95 backdrop-blur-xl border border-white/10 rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[85vh] overflow-y-auto"
                         >
                             <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <h3 className="text-xl font-bold">Upload Photos</h3>
-                                    <p className="text-xs text-gray-300 mt-1">Select multiple photos to upload at once</p>
+                                    <p className="text-xs text-white/80 mt-1">Select multiple photos to upload at once</p>
                                 </div>
                                 <button
                                     onClick={() => !uploading && clearAllUploads()}
-                                    className="text-gray-500 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
+                                    className="text-white/55 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -893,9 +830,9 @@ export default function GalleryPage() {
                                     {!uploading && (
                                         <button
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="aspect-square rounded-lg border-2 border-dashed border-white/10 hover:border-red-500/30 flex items-center justify-center transition-colors"
+                                            className="aspect-square rounded-lg border-2 border-dashed border-white/10 hover:border-primary/30 flex items-center justify-center transition-colors"
                                         >
-                                            <Upload className="w-5 h-5 text-zinc-600" />
+                                            <Upload className="w-5 h-5 text-white/40" />
                                         </button>
                                     )}
                                 </div>
@@ -911,17 +848,17 @@ export default function GalleryPage() {
                                     onDrop={handleDrop}
                                     className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 mb-4 ${
                                         isDragging
-                                            ? "border-red-500 bg-red-500/10 scale-[1.02]"
-                                            : "border-white/20 hover:border-red-500/50"
+                                            ? "border-primary bg-primary/10 scale-[1.02]"
+                                            : "border-white/20 hover:border-primary/50"
                                     }`}
                                 >
-                                    <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center transition-colors ${isDragging ? 'bg-red-500/20' : 'bg-white/5'}`}>
-                                        <Upload className={`w-7 h-7 ${isDragging ? 'text-red-400' : 'text-gray-500'}`} />
+                                    <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center transition-colors ${isDragging ? 'bg-primary/20' : 'bg-white/5'}`}>
+                                        <Upload className={`w-7 h-7 ${isDragging ? 'text-primary-light' : 'text-white/55'}`} />
                                     </div>
-                                    <p className="text-sm text-gray-300 font-medium mb-1">
+                                    <p className="text-sm text-white/80 font-medium mb-1">
                                         {isDragging ? "Drop your photos here" : "Drag & drop or click to select"}
                                     </p>
-                                    <p className="text-xs text-gray-400">Select multiple &middot; JPG, PNG, WebP &middot; Max 5MB each</p>
+                                    <p className="text-xs text-white/70">Select multiple &middot; JPG, PNG, WebP &middot; Max 5MB each</p>
                                 </div>
                             )}
 
@@ -935,9 +872,9 @@ export default function GalleryPage() {
                             />
 
                             {uploadFiles.length > 0 && (
-                                <p className="text-xs text-zinc-500 mb-3">
+                                <p className="text-xs text-white/55 mb-3">
                                     {uploadFiles.length} photo{uploadFiles.length > 1 ? "s" : ""} selected
-                                    {uploadProgress && <span className="ml-2 text-red-400">&middot; {uploadProgress}</span>}
+                                    {uploadProgress && <span className="ml-2 text-primary-light">&middot; {uploadProgress}</span>}
                                 </p>
                             )}
 
@@ -948,14 +885,14 @@ export default function GalleryPage() {
                                     placeholder="Add a caption (optional)"
                                     value={uploadCaption}
                                     onChange={(e) => setUploadCaption(e.target.value)}
-                                    className="w-full bg-zinc-800/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 mb-4 transition-all"
+                                    className="w-full bg-surface-hover/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/55 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 mb-4 transition-all"
                                     maxLength={200}
                                 />
                             )}
 
                             {user?.role === "STUDENT" && (
-                                <div className="flex items-center gap-2 text-xs text-gray-300 mb-4 bg-yellow-500/5 border border-yellow-500/10 rounded-lg px-3 py-2">
-                                    <Info className="w-3.5 h-3.5 text-yellow-500" />
+                                <div className="flex items-center gap-2 text-xs text-white/80 mb-4 bg-secondary/5 border border-secondary/10 rounded-lg px-3 py-2">
+                                    <Info className="w-3.5 h-3.5 text-secondary" />
                                     Your photos will be reviewed before appearing in the gallery.
                                 </div>
                             )}
@@ -963,7 +900,7 @@ export default function GalleryPage() {
                             <button
                                 onClick={handleUpload}
                                 disabled={uploadFiles.length === 0 || uploading}
-                                className="w-full py-3 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] disabled:bg-white/5 disabled:text-gray-400 text-white rounded-none font-bold uppercase tracking-wider text-sm transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                className="w-full py-3 min-h-[44px] bg-primary hover:bg-primary-dark disabled:bg-white/5 disabled:text-white/70 text-white rounded-none font-bold uppercase tracking-wider text-sm transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 {uploading ? (
                                     <><Loader2 className="w-4 h-4 animate-spin" /> {uploadProgress || "Uploading..."}</>
@@ -996,11 +933,11 @@ export default function GalleryPage() {
                             className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 md:px-6 py-4 z-20 bg-gradient-to-b from-black/80 to-transparent"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="text-sm text-gray-400 font-mono bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
+                                <div className="text-sm text-white/70 font-mono bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
                                     {lightboxIndex + 1} / {items.length}
                                 </div>
                                 {currentItem.isPublicFeatured && (
-                                    <div className="flex items-center gap-1 text-xs text-yellow-400 bg-yellow-500/10 px-2.5 py-1 rounded-full border border-yellow-500/20">
+                                    <div className="flex items-center gap-1 text-xs text-secondary bg-secondary/10 px-2.5 py-1 rounded-full border border-secondary/20">
                                         <Star className="w-3 h-3 fill-current" /> Featured
                                     </div>
                                 )}
@@ -1008,7 +945,7 @@ export default function GalleryPage() {
                             <div className="flex items-center gap-1">
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setShowLightboxInfo(prev => !prev); }}
-                                    className={`p-2.5 rounded-full transition-all ${showLightboxInfo ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'}`}
+                                    className={`p-2.5 rounded-full transition-all ${showLightboxInfo ? 'bg-primary/20 text-primary-light' : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'}`}
                                     title="Info (I)"
                                 >
                                     <Info className="w-5 h-5" />
@@ -1037,7 +974,7 @@ export default function GalleryPage() {
                                 {isAdmin && (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setDeleteTarget(currentItem); }}
-                                        className="p-2.5 rounded-full bg-white/5 text-red-400/60 hover:bg-red-500/20 hover:text-red-400 transition-all"
+                                        className="p-2.5 rounded-full bg-white/5 text-primary-light/60 hover:bg-primary/20 hover:text-primary-light transition-all"
                                         title="Delete"
                                     >
                                         <Trash2 className="w-5 h-5" />
@@ -1046,7 +983,7 @@ export default function GalleryPage() {
                                 <div className="w-px h-5 bg-white/10 mx-1" />
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setLightboxIndex(null); setZoomed(false); }}
-                                    className="p-2.5 rounded-full bg-white/5 text-white/60 hover:bg-red-500/20 hover:text-red-400 transition-all"
+                                    className="p-2.5 rounded-full bg-white/5 text-white/60 hover:bg-primary/20 hover:text-primary-light transition-all"
                                     title="Close (Esc)"
                                 >
                                     <X className="w-5 h-5" />
@@ -1103,29 +1040,29 @@ export default function GalleryPage() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 10 }}
-                                        className="mt-4 bg-zinc-900/80 backdrop-blur-xl rounded-xl px-6 py-4 text-center border border-white/10 max-w-lg"
+                                        className="mt-4 bg-surface/80 backdrop-blur-xl rounded-xl px-6 py-4 text-center border border-white/10 max-w-lg"
                                     >
                                         {currentItem.caption && (
                                             <p className="text-white font-semibold mb-2 text-lg">{currentItem.caption}</p>
                                         )}
                                         <div className="flex items-center justify-center gap-3 flex-wrap">
-                                            <span className="text-sm text-gray-400">
+                                            <span className="text-sm text-white/70">
                                                 by <span className="text-white">{currentItem.uploader.name}</span>
                                             </span>
                                             {currentItem.event && (
-                                                <span className="text-xs text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/20 flex items-center gap-1">
+                                                <span className="text-xs text-secondary bg-secondary/10 px-2 py-0.5 rounded-full border border-secondary/20 flex items-center gap-1">
                                                     <Trophy className="w-2.5 h-2.5" />
                                                     {currentItem.event.name}
                                                 </span>
                                             )}
                                             {currentItem.dojo && (
-                                                <span className="text-xs text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20 flex items-center gap-1">
+                                                <span className="text-xs text-white bg-white/10 px-2 py-0.5 rounded-full border border-white/20 flex items-center gap-1">
                                                     <MapPin className="w-2.5 h-2.5" />
                                                     {currentItem.dojo.name}
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-gray-400 mt-2">
+                                        <p className="text-xs text-white/70 mt-2">
                                             {new Date(currentItem.uploadedAt).toLocaleDateString("en-IN", {
                                                 day: "numeric", month: "long", year: "numeric",
                                             })}
@@ -1150,7 +1087,7 @@ export default function GalleryPage() {
                                         onClick={(e) => { e.stopPropagation(); setLightboxIndex(realIndex); }}
                                         className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all duration-200 ${
                                             realIndex === lightboxIndex
-                                                ? 'border-red-500 opacity-100 scale-110 shadow-lg shadow-red-500/25'
+                                                ? 'border-primary opacity-100 scale-110 shadow-lg shadow-primary/25'
                                                 : 'border-transparent opacity-30 hover:opacity-60 hover:border-white/20'
                                         }`}
                                     >

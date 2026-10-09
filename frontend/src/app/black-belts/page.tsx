@@ -1,13 +1,13 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { Award, MapPin, Building2, BadgeCheck, User } from "lucide-react";
-import Link from "next/link";
+import { Award } from "lucide-react";
 import api from "@/lib/api";
 import KarateLoader from "@/components/KarateLoader";
 import { getImageUrl } from "@/lib/imageUtils";
+import Reveal from "@/components/brand/Reveal";
+import Section from "@/components/brand/Section";
+import RankPortrait, { DanBars, danTitle, ordinal, parseDan } from "@/components/people/RankPortrait";
 
 // ─── Types ────────────────────────────────────────────────────────────
 interface BlackBelt {
@@ -23,177 +23,74 @@ interface BlackBelt {
     teachingDojos?: { id: string; name: string; city: string }[];
 }
 
-interface DanTier {
+interface Tier {
     dan: number;
-    label: string;
-    accent: string;
-    bgGlow: string;
-    borderHover: string;
+    members: BlackBelt[];
 }
 
-// ─── Dan Tiers ─────────────────────────────────────────────────────────
-const DAN_TIERS: DanTier[] = [
-    { dan: 10, label: "10th Dan", accent: "text-yellow-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(234,179,8,0.3)]", borderHover: "group-hover:border-yellow-500/50" },
-    { dan: 9,  label: "9th Dan",  accent: "text-yellow-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(234,179,8,0.3)]", borderHover: "group-hover:border-yellow-500/50" },
-    { dan: 8,  label: "8th Dan",  accent: "text-amber-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(245,158,11,0.3)]", borderHover: "group-hover:border-amber-500/50" },
-    { dan: 7,  label: "7th Dan",  accent: "text-red-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(239,68,68,0.3)]", borderHover: "group-hover:border-red-500/50" },
-    { dan: 6,  label: "6th Dan",  accent: "text-red-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(239,68,68,0.3)]", borderHover: "group-hover:border-red-500/50" },
-    { dan: 5,  label: "5th Dan",  accent: "text-red-500", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(239,68,68,0.3)]", borderHover: "group-hover:border-red-500/50" },
-    { dan: 4,  label: "4th Dan",  accent: "text-zinc-200", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(255,255,255,0.15)]", borderHover: "group-hover:border-white/30" },
-    { dan: 3,  label: "3rd Dan",  accent: "text-zinc-300", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(255,255,255,0.1)]", borderHover: "group-hover:border-white/20" },
-    { dan: 2,  label: "2nd Dan",  accent: "text-zinc-400", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(255,255,255,0.1)]", borderHover: "group-hover:border-white/20" },
-    { dan: 1,  label: "1st Dan",  accent: "text-zinc-400", bgGlow: "group-hover:shadow-[0_0_50px_-12px_rgba(255,255,255,0.05)]", borderHover: "group-hover:border-white/10" },
-];
+function dojosOf(member: BlackBelt) {
+    if (member.teachingDojos && member.teachingDojos.length > 0) return member.teachingDojos;
+    return member.dojo ? [{ id: "primary", name: member.dojo.name, city: member.dojo.city }] : [];
+}
 
-const getTitle = (dan: number, isPlural: boolean = false) => {
-    let title = "";
-    if (dan >= 5) title = "SHIHAN";
-    else if (dan >= 3) title = "SENSEI";
-    else title = "SENPAI";
-    
-    return isPlural ? title + "S" : title;
-};
-
-// ─── Fighter Card ───────────────────────────────────────────
-function FighterCard({ member, tier, index }: { member: BlackBelt; tier: DanTier; index: number }) {
-    const reduceMotion = useReducedMotion();
-    const photoUrl = getImageUrl(member.profilePhotoUrl || null);
-    const location = [member.city, member.state].filter(Boolean).join(", ");
-    const initials = member.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-
-    const dojos = member.teachingDojos && member.teachingDojos.length > 0
-        ? member.teachingDojos
-        : member.dojo ? [{ id: "primary", name: member.dojo.name, city: member.dojo.city }] : [];
-
-    // Link to dojo profile if available
+function Portrait({ member, size }: { member: BlackBelt; size: "lead" | "base" }) {
+    const dojos = dojosOf(member);
     const dojoId = dojos.length > 0 && dojos[0].id !== "primary" ? dojos[0].id : null;
-
-    const card = (
-        <motion.div
-            initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.1 }}
-            transition={reduceMotion ? { duration: 0 } : { delay: (index % 4) * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className={`group relative flex flex-col h-[360px] w-full rounded-2xl bg-white/[0.02] border border-white/[0.04] overflow-hidden transition-all duration-500 hover:border-red-600/15 hover:-translate-y-1 ${tier.bgGlow}`}
-        >
-            {/* Sweep light on hover */}
-            <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden rounded-2xl">
-                <div className="absolute top-0 left-[-100%] h-full w-1/2 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent skew-x-[-25deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out" />
-            </div>
-
-            {/* Photo */}
-            <div className="relative h-[55%] w-full overflow-hidden bg-black">
-                {photoUrl ? (
-                    <img
-                        src={photoUrl}
-                        alt={member.name}
-                        className="w-full h-full object-cover object-top filter grayscale contrast-[1.1] opacity-80 group-hover:scale-105 group-hover:grayscale-[30%] group-hover:opacity-100 transition-all duration-1000 ease-out"
-                    />
-                ) : (
-                    <div className="w-full h-full bg-[#080808] flex items-center justify-center">
-                        <div className="w-20 h-20 rounded-full bg-red-600/10 border border-red-600/20 flex items-center justify-center">
-                            <span className="text-2xl font-black text-red-500/60">{initials}</span>
-                        </div>
-                    </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/30 to-transparent" />
-
-                {member.membershipNumber && (
-                    <div className="absolute top-3 right-3 z-20">
-                        <div className="bg-black/50 backdrop-blur-xl p-1.5 rounded-full border border-white/10 text-white/40 group-hover:text-[#FFD700] group-hover:border-[#FFD700]/30 transition-all duration-500">
-                            <BadgeCheck className="w-3.5 h-3.5" />
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Info */}
-            <div className="relative -mt-6 px-5 pb-5 flex flex-col flex-1 z-10">
-                {/* Belt indicator */}
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="w-[2px] h-3.5 rounded-full bg-red-600" />
-                    <span className="text-[9px] font-extrabold text-red-500 uppercase tracking-[2px]">
-                        {tier.label} &middot; {getTitle(tier.dan)}
-                    </span>
-                </div>
-
-                <h3 className="text-lg font-extrabold text-white tracking-tight leading-snug mb-2">
-                    {member.name}
-                </h3>
-
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-auto text-[11px] text-gray-400">
-                    {dojos.slice(0,1).map((d) => (
-                        <span key={d.id} className="flex items-center gap-1.5">
-                            <Building2 className="w-3 h-3 opacity-40" />
-                            <span className="truncate">{d.name}</span>
-                        </span>
-                    ))}
-                    {dojos.length > 0 && location && <span className="w-1 h-1 rounded-full bg-white/20" />}
-                    {location && (
-                        <span className="flex items-center gap-1.5">
-                            <MapPin className="w-3 h-3 opacity-40" />
-                            <span className="truncate">{location}</span>
-                        </span>
-                    )}
-                </div>
-            </div>
-        </motion.div>
+    return (
+        <RankPortrait
+            name={member.name}
+            rank={member.currentBeltRank}
+            photoUrl={getImageUrl(member.profilePhotoUrl || null)}
+            detail={dojos[0]?.name}
+            location={[member.city, member.state].filter(Boolean).join(", ") || undefined}
+            href={dojoId ? `/dojos/${dojoId}` : undefined}
+            verifyHref={member.membershipNumber ? `/verify/${member.membershipNumber}` : undefined}
+            size={size}
+        />
     );
-
-    // Wrap in link if dojo exists
-    if (dojoId) {
-        return <Link href={`/dojos/${dojoId}`} className="block">{card}</Link>;
-    }
-    return card;
 }
 
-// ─── Tier Section ────────────────────────────────────────────
-function TierSection({ tier, members }: { tier: DanTier; members: BlackBelt[] }) {
+const DAN_NOTES: Record<number, string> = {
+    1: "Shodan. The 20-man kumite is behind them, and the real learning begins.",
+    2: "Nidan. At least two years beyond Shodan, refining technique.",
+    3: "Sandan. Expected to teach as well as train.",
+    4: "Yondan. Authorised to open and lead a dojo.",
+};
+const danNote = (dan: number) => DAN_NOTES[dan] ?? "Exceptional contribution to Kyokushin, recognised over decades.";
+
+/**
+ * One dan grade: the rank and what it asks of a karateka on the left, its
+ * members on the right. The senior-most grade on the page gets larger portraits.
+ */
+function TierSection({ tier, lead }: { tier: Tier; lead: boolean }) {
     return (
-        <section className="relative mb-20 pt-12">
-            <div className="container-responsive relative z-10">
-                {/* Tier Header — centered */}
-                <div className="flex flex-col items-center text-center pb-4 mb-10 relative">
-                    {/* Red gradient underline */}
-                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-600/30 to-transparent" />
-
-                    <div className="flex items-baseline gap-3 mb-2">
-                        <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
-                            {tier.label}
-                        </h2>
-                        <span className="px-2.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-[2px] bg-red-600/10 text-red-500 border border-red-600/15">
-                            {getTitle(tier.dan)}
-                        </span>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <div className="hidden md:flex gap-[3px]">
-                            {[...Array(tier.dan)].map((_, i) => (
-                                <div key={i} className={`w-[3px] h-4 rounded-sm opacity-40 ${tier.dan >= 8 ? 'bg-yellow-500' : tier.dan >= 5 ? 'bg-red-500' : 'bg-white'}`} />
-                            ))}
-                        </div>
-                        <span className="text-[10px] font-semibold text-gray-400">
-                            {members.length} {members.length === 1 ? 'Member' : 'Members'}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Card Grid — centered, fills from center outward */}
-                <div className="flex flex-wrap justify-center gap-5">
-                    {members.map((member, i) => (
-                        <div key={member.id} className="w-full sm:w-[calc(50%-10px)] lg:w-[calc(33.333%-14px)] xl:w-[calc(25%-15px)]">
-                            <FighterCard member={member} tier={tier} index={i} />
-                        </div>
+        <Section rhythm={lead ? "base" : "tight"} width="wide" aria-labelledby={`dan-${tier.dan}`}>
+            <div className="grid gap-10 border-t border-white/15 pt-10 lg:grid-cols-[18rem_1fr] lg:gap-14">
+                <Reveal className="lg:sticky lg:top-32 lg:self-start">
+                    <DanBars dan={tier.dan} className="mb-5" />
+                    <h2 id={`dan-${tier.dan}`} className="text-[clamp(2rem,4vw,3rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] text-white">
+                        {ordinal(tier.dan)} Dan
+                    </h2>
+                    <p className="mt-1 text-xl font-extrabold uppercase text-white/45">{danTitle(tier.dan)}</p>
+                    <p className="mt-5 max-w-[34ch] leading-relaxed text-white/70">{danNote(tier.dan)}</p>
+                    <p className="mt-4 text-sm font-semibold text-white/60">
+                        {tier.members.length} {tier.members.length === 1 ? "member" : "members"}
+                    </p>
+                </Reveal>
+                <ul className={lead ? "grid gap-x-8 gap-y-12 sm:grid-cols-2" : "grid gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-3"}>
+                    {tier.members.map((member, i) => (
+                        <Reveal as="li" key={member.id} kind="depth" delay={(i % 3) * 0.06} className={lead && tier.members.length === 1 ? "sm:col-span-2 sm:max-w-md" : undefined}>
+                            <Portrait member={member} size={lead ? "lead" : "base"} />
+                        </Reveal>
                     ))}
-                </div>
+                </ul>
             </div>
-        </section>
+        </Section>
     );
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────
 export default function BlackBeltsPage() {
-    const reduceMotion = useReducedMotion();
     const [blackBelts, setBlackBelts] = useState<BlackBelt[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -213,101 +110,77 @@ export default function BlackBeltsPage() {
         fetchBlackBelts();
     }, []);
 
-    const parseDan = (rank: string): number => {
-        if (!rank) return 0;
-        const match = String(rank).match(/(\d+)/);
-        if (match) return parseInt(match[1], 10);
-        if (String(rank).includes("Black")) return 1;
-        return 0;
-    };
-
-    const tiers = useMemo(() => {
-        return DAN_TIERS
-            .map((tier) => ({
-                ...tier,
-                members: blackBelts.filter((bb) => parseDan(bb.currentBeltRank) === tier.dan),
-            }))
-            .filter((tier) => tier.members.length > 0);
+    const tiers = useMemo<Tier[]>(() => {
+        const byDan = new Map<number, BlackBelt[]>();
+        for (const bb of blackBelts) {
+            const dan = parseDan(bb.currentBeltRank);
+            if (dan < 1 || dan > 10) continue;
+            byDan.set(dan, [...(byDan.get(dan) ?? []), bb]);
+        }
+        return [...byDan.entries()]
+            .sort((a, b) => b[0] - a[0])
+            .map(([dan, members]) => ({
+                dan,
+                // Photographed members first within a grade, then alphabetical.
+                members: members.sort((a, b) => Number(!!b.profilePhotoUrl) - Number(!!a.profilePhotoUrl) || a.name.localeCompare(b.name)),
+            }));
     }, [blackBelts]);
 
     const totalCount = blackBelts.length;
+    const senior = tiers[0]?.members.find((m) => m.profilePhotoUrl);
+    const seniorPhoto = senior ? getImageUrl(senior.profilePhotoUrl) : null;
 
     return (
-        <div className="min-h-screen bg-black text-white relative font-sans">
-            {/* Single deliberate red glow */}
-            <div className="absolute top-0 inset-x-0 h-[400px] bg-[radial-gradient(ellipse_at_top,rgba(255,0,0,0.06),transparent_70%)] pointer-events-none" />
-
-            {/* ── Hero ─── */}
-            <div className="relative pt-20 pb-6 md:pt-24 md:pb-8 overflow-hidden">
-                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
-
-                <div className="container-responsive relative z-10">
-                    <motion.div
-                        initial={reduceMotion ? false : { opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={reduceMotion ? { duration: 0 } : { duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                        className="text-center flex flex-col items-center"
-                    >
-                        {/* Title: BLACK [logo] BELT / REGISTRY */}
-                        <h1 className="font-black uppercase leading-[0.9] tracking-tighter mb-5" style={{ fontSize: 'clamp(2.5rem, 7vw, 4.5rem)' }}>
-                            <span className="inline-flex items-center gap-3 md:gap-4">
-                                <span className="text-white">BLACK</span>
-                                <img src="/kkfi-logo.png" alt="KKFI" className="w-10 h-10 md:w-14 md:h-14 inline-block rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(255,0,0,0.2)]" />
-                                <span className="text-white">BELT</span>
-                            </span>
-                            <br />
-                            <span className="text-[#FF0000] drop-shadow-[0_4px_25px_rgba(255,0,0,0.35)]">REGISTRY</span>
-                        </h1>
-
-                        {/* Divider line with stats inline */}
-                        <div className="flex items-center gap-4 md:gap-6 w-full max-w-2xl mb-5">
-                            <div className="flex-1 h-px bg-gradient-to-r from-transparent to-white/[0.06]" />
-                            {!loading && totalCount > 0 && (
-                                <>
-                                    <div className="flex items-baseline gap-1.5">
-                                        <span className="text-lg font-extrabold text-white">{totalCount}</span>
-                                        <span className="text-[8px] font-semibold text-gray-400 uppercase tracking-widest">Members</span>
-                                    </div>
-                                    <span className="w-1 h-1 rounded-full bg-white/20" />
-                                    <div className="flex items-baseline gap-1.5">
-                                        <span className="text-lg font-extrabold text-white">{tiers.length}</span>
-                                        <span className="text-[8px] font-semibold text-gray-400 uppercase tracking-widest">Dan Tiers</span>
-                                    </div>
-                                </>
-                            )}
-                            <div className="flex-1 h-px bg-gradient-to-l from-transparent to-white/[0.06]" />
-                        </div>
-
-                        <p className="text-xs md:text-sm text-gray-400 max-w-md leading-relaxed">
-                            The highest-ranked practitioners of Kyokushin Karate in India.
-                        </p>
-                    </motion.div>
+        <div className="min-h-screen text-white">
+            {/* ── Hero: the senior-most black belt, in shadow ── */}
+            <header data-bleed className="relative flex min-h-[72svh] overflow-hidden bg-black">
+                {seniorPhoto && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                        src={seniorPhoto}
+                        alt=""
+                        style={{
+                            maskImage: "linear-gradient(to right, transparent, black 35%), linear-gradient(to top, transparent, black 30%)",
+                            WebkitMaskImage: "linear-gradient(to right, transparent, black 35%), linear-gradient(to top, transparent, black 30%)",
+                            maskComposite: "intersect",
+                            WebkitMaskComposite: "source-in",
+                        }}
+                        className="absolute inset-y-0 right-0 h-full w-full object-cover object-top opacity-50 grayscale md:w-[60%]"
+                    />
+                )}
+                <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent md:bg-gradient-to-r md:from-black md:via-black/80 md:to-transparent" />
+                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(3rem,8vh,6rem)] pt-40 sm:px-6 lg:px-8">
+                    <h1 className="max-w-[12ch] text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.92] tracking-[-0.035em] text-white">
+                        Black belt registry<span className="text-secondary">.</span>
+                    </h1>
+                    <p className="mt-6 max-w-[44ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
+                        The highest-ranked practitioners of Kyokushin Karate in India.
+                        {!loading && totalCount > 0 && (
+                            <>
+                                {" "}
+                                {totalCount} black belts across {tiers.length} dan {tiers.length === 1 ? "grade" : "grades"}, senior-most first.
+                            </>
+                        )}
+                    </p>
                 </div>
-            </div>
+            </header>
 
-            {/* ── Tiers Pipeline ──────────────────────────────────────── */}
-            <div className="relative z-10 w-full bg-black pb-32">
+            {/* ── Grades, most senior first ── */}
+            <div className="bg-black pb-24">
                 {loading ? (
                     <div className="flex justify-center py-40">
                         <KarateLoader />
                     </div>
                 ) : tiers.length === 0 ? (
-                    <div className="container-responsive text-center py-40 flex flex-col items-center">
-                        <Award className="w-12 h-12 text-gray-500 mb-6 opacity-70" />
-                        <h3 className="text-2xl font-light text-white mb-3">No Profiles Found</h3>
-                        <p className="text-gray-400 font-light max-w-sm">
-                            The registry is currently empty.
-                        </p>
+                    <div className="flex flex-col items-center px-4 py-40 text-center">
+                        <Award className="mb-6 h-12 w-12 text-white/40" aria-hidden="true" />
+                        <h2 className="mb-3 text-2xl font-bold text-white">No profiles found</h2>
+                        <p className="max-w-sm text-white/70">The registry is currently empty.</p>
                     </div>
                 ) : (
-                    <div className="w-full">
-                        {tiers.map((tier) => (
-                            <TierSection key={tier.dan} tier={tier} members={tier.members} />
-                        ))}
-                    </div>
+                    tiers.map((tier, i) => <TierSection key={tier.dan} tier={tier} lead={i === 0} />)
                 )}
             </div>
         </div>
     );
 }
-

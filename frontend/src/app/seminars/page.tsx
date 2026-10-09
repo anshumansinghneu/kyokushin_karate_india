@@ -12,19 +12,17 @@ import {
     MapPin,
     Calendar,
     ChevronRight,
-    Shield,
-    Users,
-    Building2,
-    GraduationCap,
     X,
     ChevronLeft,
-    Stethoscope,
     Camera,
     Mail,
     Phone,
     Share2,
     Download,
+    ArrowUpRight,
 } from "lucide-react";
+import Reveal from "@/components/brand/Reveal";
+import Section, { Heading } from "@/components/brand/Section";
 
 /* ─── Past Seminar Data ─── */
 const PAST_SEMINARS = [
@@ -35,7 +33,6 @@ const PAST_SEMINARS = [
             "Self-Defense Training workshop for doctors in OPD at Neuropedicon 2023, Agra on 2nd September 2023. The workshop empowered medical professionals with practical self-defense techniques for their safety during clinical practice.",
         date: "2 September 2023",
         location: "Agra, Uttar Pradesh",
-        icon: Stethoscope,
         images: [
             "/seminars/doctors/1.jpg",
             "/seminars/doctors/2.jpg",
@@ -45,8 +42,6 @@ const PAST_SEMINARS = [
             "/seminars/doctors/6.jpg",
         ],
         highlight: "Neuropedicon 2023",
-        color: "from-blue-600/20 to-blue-900/40",
-        accent: "blue",
     },
     {
         id: "bmw",
@@ -55,7 +50,6 @@ const PAST_SEMINARS = [
             "One day employee self-defense training was organized on 29th January 2023, at Speed Motorwagen Showroom, Lucknow. BMW employees learned essential self-defense skills in an engaging corporate workshop setting.",
         date: "29 January 2023",
         location: "Lucknow, Uttar Pradesh",
-        icon: Building2,
         images: [
             "/seminars/bmw/1.jpg",
             "/seminars/bmw/2.jpg",
@@ -65,8 +59,6 @@ const PAST_SEMINARS = [
             "/seminars/bmw/6.jpg",
         ],
         highlight: "Corporate Workshop",
-        color: "from-emerald-600/20 to-emerald-900/40",
-        accent: "emerald",
     },
     {
         id: "bnsd",
@@ -75,15 +67,12 @@ const PAST_SEMINARS = [
             "Three Day Self Defence workshop was organised from 7 Oct 2024 to 10 Oct 2024. Young students were trained in practical self-defense techniques to ensure their personal safety.",
         date: "7\u201310 October 2024",
         location: "Uttar Pradesh",
-        icon: GraduationCap,
         images: [
             "/seminars/bnsd/1.jpg",
             "/seminars/bnsd/2.jpg",
             "/seminars/bnsd/3.jpg",
         ],
         highlight: "3-Day Workshop",
-        color: "from-amber-600/20 to-amber-900/40",
-        accent: "amber",
     },
 ];
 
@@ -265,6 +254,8 @@ function Lightbox({
                             className="relative max-w-[90vw] max-h-[78vh] w-full h-full flex items-center justify-center"
                             onClick={(e) => e.stopPropagation()}
                         >
+                            {/* Plain img: natural size inside a contain box, which next/image's fill can't do here. */}
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                                 src={images[current]}
                                 alt={`${title} — photo ${current + 1}`}
@@ -336,7 +327,7 @@ function MosaicGallery6({
         <div className="grid grid-cols-4 grid-rows-2 gap-2 md:gap-3 h-[400px] md:h-[500px] lg:h-[560px]">
             {/* Large left image */}
             <div
-                className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden cursor-pointer group"
+                className="col-span-2 row-span-2 relative rounded-lg overflow-hidden cursor-pointer group"
                 onClick={() => onImageClick(0)}
             >
                 <Image
@@ -356,7 +347,7 @@ function MosaicGallery6({
 
             {/* Top-right two images */}
             <div
-                className="relative rounded-2xl overflow-hidden cursor-pointer group"
+                className="relative rounded-lg overflow-hidden cursor-pointer group"
                 onClick={() => onImageClick(1)}
             >
                 <Image
@@ -369,7 +360,7 @@ function MosaicGallery6({
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
             </div>
             <div
-                className="relative rounded-2xl overflow-hidden cursor-pointer group"
+                className="relative rounded-lg overflow-hidden cursor-pointer group"
                 onClick={() => onImageClick(2)}
             >
                 <Image
@@ -384,7 +375,7 @@ function MosaicGallery6({
 
             {/* Bottom-right two images */}
             <div
-                className="relative rounded-2xl overflow-hidden cursor-pointer group"
+                className="relative rounded-lg overflow-hidden cursor-pointer group"
                 onClick={() => onImageClick(3)}
             >
                 <Image
@@ -397,7 +388,7 @@ function MosaicGallery6({
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
             </div>
             <div
-                className="relative rounded-2xl overflow-hidden cursor-pointer group"
+                className="relative rounded-lg overflow-hidden cursor-pointer group"
                 onClick={() => onImageClick(4)}
             >
                 <Image
@@ -428,7 +419,7 @@ function MosaicGallery3({
             {images.map((img, i) => (
                 <div
                     key={i}
-                    className="relative rounded-2xl overflow-hidden cursor-pointer group"
+                    className="relative rounded-lg overflow-hidden cursor-pointer group"
                     onClick={() => onImageClick(i)}
                 >
                     <Image
@@ -450,129 +441,25 @@ function MosaicGallery3({
     );
 }
 
-/* ─── Seminar Section Component ─── */
-function SeminarSection({
-    seminar,
-    index,
+/* ─── One seminar: meta and story side by side, the photographs below ─── */
+function SeminarStory({
+    title,
+    description,
+    highlight,
+    date,
+    location,
+    images,
+    mosaic,
 }: {
-    seminar: (typeof PAST_SEMINARS)[0];
-    index: number;
+    title: string;
+    description?: string;
+    highlight: string;
+    date: string;
+    location?: string;
+    images: string[];
+    mosaic: "six" | "three";
 }) {
     const [lightbox, setLightbox] = useState<number | null>(null);
-    const Icon = seminar.icon;
-
-    const accentClasses = {
-        blue: {
-            badge: "bg-blue-500/10 border-blue-500/20 text-blue-400",
-        },
-        emerald: {
-            badge: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-        },
-        amber: {
-            badge: "bg-amber-500/10 border-amber-500/20 text-amber-400",
-        },
-    }[seminar.accent] || {
-        badge: "bg-white/5 border-white/10 text-zinc-400",
-    };
-
-    return (
-        <>
-            <AnimatePresence>
-                {lightbox !== null && (
-                    <Lightbox
-                        images={seminar.images}
-                        index={lightbox}
-                        title={seminar.title}
-                        date={seminar.date}
-                        location={seminar.location}
-                        onClose={() => setLightbox(null)}
-                    />
-                )}
-            </AnimatePresence>
-
-            <motion.section
-                initial={{ opacity: 0, y: 60 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.7, delay: index * 0.1 }}
-                className="relative"
-            >
-                {/* Background glow */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${seminar.color} rounded-3xl blur-3xl opacity-30 -z-10`} />
-
-                <div className="bg-zinc-900/60 backdrop-blur-sm border border-white/[0.06] rounded-3xl overflow-hidden">
-                    {/* Header */}
-                    <div className="p-6 md:p-10 pb-0 md:pb-0">
-                        <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6 mb-6">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${accentClasses.badge} border shrink-0`}>
-                                <Icon size={22} />
-                            </div>
-                            <div className="flex-1 space-y-3">
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${accentClasses.badge} border uppercase tracking-wider`}>
-                                        {seminar.highlight}
-                                    </span>
-                                    <span className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
-                                        <Camera size={12} />
-                                        {seminar.images.length} Photos
-                                    </span>
-                                </div>
-                                <h3 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight">
-                                    {seminar.title}
-                                </h3>
-                                <p className="text-gray-400 text-sm md:text-base leading-relaxed max-w-3xl">
-                                    {seminar.description}
-                                </p>
-                                <div className="flex flex-wrap gap-4 text-sm pt-1">
-                                    <div className="flex items-center gap-2 text-gray-300 bg-white/5 rounded-full px-3 py-1.5">
-                                        <Calendar size={14} className="text-red-500" />
-                                        {seminar.date}
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-300 bg-white/5 rounded-full px-3 py-1.5">
-                                        <MapPin size={14} className="text-red-500" />
-                                        {seminar.location}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Gallery */}
-                    <div className="p-4 md:p-6 pt-4">
-                        {seminar.images.length >= 6 ? (
-                            <MosaicGallery6
-                                images={seminar.images}
-                                title={seminar.title}
-                                onImageClick={setLightbox}
-                            />
-                        ) : (
-                            <MosaicGallery3
-                                images={seminar.images}
-                                title={seminar.title}
-                                onImageClick={setLightbox}
-                            />
-                        )}
-                    </div>
-                </div>
-            </motion.section>
-        </>
-    );
-}
-
-/* ─── Stats ─── */
-const STATS = [
-    { label: "Seminars Conducted", value: "10+", icon: Shield },
-    { label: "Participants Trained", value: "500+", icon: Users },
-    { label: "Corporate Partners", value: "5+", icon: Building2 },
-    { label: "States Covered", value: "3+", icon: MapPin },
-];
-
-/* ─── DB Seminar Section (for seminars from database) ─── */
-function DBSeminarSection({ seminar, index }: { seminar: any; index: number }) {
-    const [lightbox, setLightbox] = useState<number | null>(null);
-    const images: string[] = seminar.galleryImages || [];
-
-    if (images.length === 0) return null;
 
     return (
         <>
@@ -581,110 +468,109 @@ function DBSeminarSection({ seminar, index }: { seminar: any; index: number }) {
                     <Lightbox
                         images={images}
                         index={lightbox}
-                        title={seminar.name}
-                        date={formatDateOnly(seminar.startDate, { day: "numeric", month: "long", year: "numeric" }, "en-IN")}
-                        location={seminar.location}
+                        title={title}
+                        date={date}
+                        location={location}
                         onClose={() => setLightbox(null)}
                     />
                 )}
             </AnimatePresence>
 
-            <motion.section
-                initial={{ opacity: 0, y: 60 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.7, delay: index * 0.1 }}
-                className="relative"
-            >
-                <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 to-red-900/40 rounded-3xl blur-3xl opacity-30 -z-10" />
-
-                <div className="bg-zinc-900/60 backdrop-blur-sm border border-white/[0.06] rounded-3xl overflow-hidden">
-                    <div className="p-6 md:p-10 pb-0 md:pb-0">
-                        <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6 mb-6">
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 text-zinc-400 shrink-0">
-                                <Shield size={22} />
-                            </div>
-                            <div className="flex-1 space-y-3">
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-400 uppercase tracking-wider">
-                                        Seminar
-                                    </span>
-                                    <span className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
-                                        <Camera size={12} />
-                                        {images.length} Photos
-                                    </span>
-                                </div>
-                                <h3 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight">
-                                    {seminar.name}
-                                </h3>
-                                {seminar.description && (
-                                    <p className="text-gray-400 text-sm md:text-base leading-relaxed max-w-3xl">
-                                        {seminar.description}
-                                    </p>
-                                )}
-                                <div className="flex flex-wrap gap-4 text-sm pt-1">
-                                    <div className="flex items-center gap-2 text-gray-300 bg-white/5 rounded-full px-3 py-1.5">
-                                        <Calendar size={14} className="text-red-500" />
-                                        {formatDateOnly(seminar.startDate, { day: "numeric", month: "long", year: "numeric" }, "en-IN")}
-                                    </div>
-                                    {seminar.location && (
-                                        <div className="flex items-center gap-2 text-gray-300 bg-white/5 rounded-full px-3 py-1.5">
-                                            <MapPin size={14} className="text-red-500" />
-                                            {seminar.location}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+            <article className="border-t border-white/15 pt-10 md:pt-14">
+                <Reveal className="grid gap-6 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] md:gap-12">
+                    <dl className="space-y-3 text-sm">
+                        <div>
+                            <dt className="sr-only">Format</dt>
+                            <dd className="font-bold text-white">{highlight}</dd>
                         </div>
-                    </div>
-
-                    <div className="p-4 md:p-6 pt-4">
-                        {images.length >= 5 ? (
-                            <MosaicGallery6
-                                images={images.slice(0, 6)}
-                                title={seminar.name}
-                                onImageClick={setLightbox}
-                            />
-                        ) : (
-                            <MosaicGallery3
-                                images={images.slice(0, 3)}
-                                title={seminar.name}
-                                onImageClick={setLightbox}
-                            />
+                        <div className="flex items-center gap-2 text-white/70">
+                            <dt className="sr-only">Date</dt>
+                            <Calendar className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            <dd>{date}</dd>
+                        </div>
+                        {location && (
+                            <div className="flex items-center gap-2 text-white/70">
+                                <dt className="sr-only">Place</dt>
+                                <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                <dd>{location}</dd>
+                            </div>
+                        )}
+                        <div className="flex items-center gap-2 text-white/50">
+                            <dt className="sr-only">Photographs</dt>
+                            <Camera className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            <dd>{images.length} photos</dd>
+                        </div>
+                    </dl>
+                    <div>
+                        <h3 className="max-w-[24ch] text-balance text-[clamp(1.6rem,3.2vw,2.5rem)] font-extrabold leading-[1.08] tracking-[-0.015em] text-white">
+                            {title}
+                        </h3>
+                        {description && (
+                            <p className="mt-4 max-w-[62ch] text-pretty text-lg leading-relaxed text-white/75">{description}</p>
                         )}
                     </div>
-                </div>
-            </motion.section>
+                </Reveal>
+
+                <Reveal kind="depth" delay={0.1} className="mt-8 md:mt-10">
+                    {mosaic === "six" ? (
+                        <MosaicGallery6 images={images} title={title} onImageClick={setLightbox} />
+                    ) : (
+                        <MosaicGallery3 images={images} title={title} onImageClick={setLightbox} />
+                    )}
+                </Reveal>
+            </article>
         </>
     );
 }
 
+/* ─── Stats ─── */
+const STATS = [
+    { label: "seminars conducted", value: "10+" },
+    { label: "participants trained", value: "500+" },
+    { label: "corporate partners", value: "5+" },
+    { label: "states covered", value: "3+" },
+];
+
+const ctaClass =
+    "group inline-flex min-h-12 items-center justify-center gap-2 rounded-none px-7 text-sm font-bold uppercase tracking-[0.1em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black active:scale-[0.98]";
+
+interface SeminarEvent {
+    id: string;
+    type: string;
+    name: string;
+    description?: string;
+    startDate: string;
+    endDate?: string | null;
+    location?: string;
+    galleryImages?: string[];
+}
+
 /* ─── Main Page ─── */
 export default function SeminarsPage() {
-    const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-    const [completedSeminars, setCompletedSeminars] = useState<any[]>([]);
+    const [upcomingEvents, setUpcomingEvents] = useState<SeminarEvent[]>([]);
+    const [completedSeminars, setCompletedSeminars] = useState<SeminarEvent[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchEvents = useCallback(async () => {
         setIsLoading(true);
         try {
             const res = await api.get("/events");
-            const seminars = (res.data.data.events || []).filter(
-                (e: any) => e.type === "SEMINAR"
+            const seminars: SeminarEvent[] = (res.data.data.events || []).filter(
+                (e: SeminarEvent) => e.type === "SEMINAR"
             );
 
             const now = new Date();
-            const upcoming = seminars.filter((s: any) => getEventStatus(s, now) !== "COMPLETED");
-            const completed = seminars.filter((s: any) => getEventStatus(s, now) === "COMPLETED");
+            const upcoming = seminars.filter((s) => getEventStatus(s, now) !== "COMPLETED");
+            const completed = seminars.filter((s) => getEventStatus(s, now) === "COMPLETED");
 
             // Fetch gallery images for completed seminars
             const completedWithGallery = await Promise.all(
-                completed.map(async (sem: any) => {
+                completed.map(async (sem) => {
                     try {
                         const galleryRes = await api.get(`/gallery?eventId=${sem.id}&limit=6`);
                         return {
                             ...sem,
-                            galleryImages: (galleryRes.data.data.items || []).map((i: any) => i.imageUrl),
+                            galleryImages: (galleryRes.data.data.items || []).map((i: { imageUrl: string }) => i.imageUrl),
                         };
                     } catch {
                         return { ...sem, galleryImages: [] };
@@ -707,210 +593,152 @@ export default function SeminarsPage() {
         fetchEvents();
     }, [fetchEvents]);
 
+    const dbStories = completedSeminars.filter((s) => (s.galleryImages?.length ?? 0) > 0);
+
     return (
         <div className="min-h-screen bg-black text-white">
-            {/* ─── Hero ─── */}
-            <section className="relative pt-28 pb-20 overflow-hidden">
-                {/* Background */}
-                <div className="absolute inset-0">
-                    <div className="absolute inset-0 bg-black" />
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-red-600/5 rounded-full blur-[120px]" />
-                </div>
-
-                <div className="container-responsive relative z-10">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7 }}
-                        className="text-center"
-                    >
-                        <h1 className="font-black tracking-tighter uppercase leading-[0.9] mb-5" style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)' }}>
-                            <span className="inline-flex items-center gap-3 md:gap-4">
-                                <span className="text-white">SELF</span>
-                                <img src="/kkfi-logo.png" alt="KKFI" className="w-10 h-10 md:w-14 md:h-14 rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.2)]" />
-                                <span className="text-white">DEFENSE</span>
-                            </span>
-                            <br />
-                            <span
-                                className="drop-shadow-[0_4px_25px_rgba(220,38,38,0.4)]"
-                                style={{
-                                    background: 'linear-gradient(180deg, #ef4444, #991b1b)',
-                                    WebkitBackgroundClip: 'text',
-                                    backgroundClip: 'text',
-                                    color: 'transparent',
-                                }}
-                            >SEMINARS</span>
+            {/* ─── Hero: the work itself ─── */}
+            <Section rhythm="tight" width="wide" className="pt-6 md:pt-10">
+                <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-16">
+                    <div className="lg:pb-6">
+                        <h1 className="text-[clamp(2.75rem,7.5vw,5.75rem)] font-black uppercase leading-[0.92] tracking-[-0.035em] text-white">
+                            Self-defence<br />seminars<span className="text-primary">.</span>
                         </h1>
-                        <p className="text-gray-400 text-sm max-w-lg mx-auto leading-relaxed">
-                            Practical self-defense training for schools, corporates, and communities across India.
+                        <p className="mt-6 max-w-[42ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
+                            Practical self-defence for schools, hospitals, workplaces and communities, taught by
+                            Kyokushin instructors across India.
                         </p>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* ─── Seminars Showcase ─── */}
-            <section className="py-6 md:py-10">
-                <div className="container-responsive">
-                    <div className="flex items-center justify-center gap-3 mb-12">
-                        <div className="flex-1 max-w-[100px] h-px bg-gradient-to-r from-transparent to-white/[0.06]" />
-                        <h2 className="text-lg font-black uppercase tracking-tight text-white">Past Seminars</h2>
-                        <div className="flex-1 max-w-[100px] h-px bg-gradient-to-l from-transparent to-white/[0.06]" />
-                    </div>
-
-                    <div className="space-y-12 md:space-y-16">
-                        {/* DB-fetched completed seminars (with gallery) */}
-                        {completedSeminars.filter((s: any) => s.galleryImages?.length > 0).map((sem: any, i: number) => (
-                            <DBSeminarSection key={sem.id} seminar={sem} index={i} />
-                        ))}
-
-                        {/* Original hardcoded showcase seminars (fallback) */}
-                        {PAST_SEMINARS.map((seminar, i) => (
-                            <SeminarSection key={seminar.id} seminar={seminar} index={completedSeminars.length + i} />
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ─── Stats ─── */}
-            <section className="py-12 md:py-16">
-                <div className="container-responsive">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.7 }}
-                        className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto"
-                    >
-                        {STATS.map((stat) => {
-                            const StatIcon = stat.icon;
-                            return (
-                                <div
-                                    key={stat.label}
-                                    className="text-center bg-white/[0.03] border border-white/[0.06] rounded-2xl py-6 px-4 hover:bg-white/[0.05] hover:border-white/[0.1] transition-all duration-300 group"
-                                >
-                                    <StatIcon size={20} className="mx-auto text-red-600/60 mb-2 group-hover:text-red-500 transition-colors" />
-                                    <div className="text-3xl md:text-4xl font-black text-white">
-                                        {stat.value}
-                                    </div>
-                                    <div className="text-xs text-gray-400 mt-1 font-medium uppercase tracking-wider">
-                                        {stat.label}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* ─── Upcoming Seminars ─── */}
-            <section className="py-16 md:py-24">
-                <div className="container-responsive">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-5xl font-black mb-4">
-                            UPCOMING{" "}
-                            <span className="text-[#FF0000]">
-                                SEMINARS
-                            </span>
-                        </h2>
-                        <div className="w-20 h-1 bg-gradient-to-r from-red-600 to-red-800 mx-auto rounded-full mb-5" />
-                        <p className="text-gray-400 max-w-2xl mx-auto">
-                            Register for our upcoming self-defense training seminars.
-                        </p>
-                    </div>
-
-                    {isLoading ? (
-                        <div className="flex justify-center py-16">
-                            <div className="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                        <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                            <a href="mailto:info@kyokushinfoundation.com" className={`${ctaClass} bg-primary text-white hover:bg-primary-dark`}>
+                                <Mail className="h-4 w-4" aria-hidden="true" /> Book a seminar
+                            </a>
+                            <a href="#past" className={`${ctaClass} border border-white/25 text-white hover:border-white/60 hover:bg-white/10`}>
+                                See past seminars
+                            </a>
                         </div>
-                    ) : upcomingEvents.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {upcomingEvents.map((event) => (
-                                <Link
-                                    href={`/events/${event.id}`}
-                                    key={event.id}
-                                    className="group"
-                                >
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true }}
-                                        className="bg-zinc-900/60 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/[0.06] hover:border-red-600/30 transition-all duration-300 h-full flex flex-col group-hover:shadow-lg group-hover:shadow-red-600/5"
-                                    >
-                                        <div className="h-48 bg-gradient-to-br from-red-950/30 to-zinc-900 relative flex items-center justify-center">
-                                            <Shield
-                                                size={56}
-                                                className="text-red-600/10"
-                                                strokeWidth={1}
-                                            />
-                                            <div className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                                                UPCOMING
-                                            </div>
-                                        </div>
-                                        <div className="p-6 flex-1 flex flex-col">
-                                            <div className="flex items-center gap-2 text-red-500 font-bold text-sm mb-2">
-                                                <Calendar size={14} />
-                                                {formatDateOnly(event.startDate, {
-                                                    day: "numeric",
-                                                    month: "long",
-                                                    year: "numeric",
-                                                }, "en-IN")}
-                                            </div>
-                                            <h2 className="text-xl font-bold mb-2 group-hover:text-red-500 transition-colors">
-                                                {event.name}
-                                            </h2>
-                                            <div className="flex items-center gap-2 text-gray-400 text-sm mb-6">
-                                                <MapPin size={14} />
-                                                {event.location || "TBA"}
-                                            </div>
-                                            <div className="mt-auto flex items-center gap-2 text-sm font-bold text-white group-hover:translate-x-2 transition-transform">
-                                                VIEW DETAILS
-                                                <ChevronRight size={14} className="text-red-500" />
-                                            </div>
-                                        </div>
-                                    </motion.div>
+                    </div>
+                    <Reveal kind="depth">
+                        <figure className="relative overflow-hidden rounded-xl bg-surface">
+                            <Image
+                                src="/seminars/bnsd/1.jpg"
+                                alt="A student blocks a grab during the three-day workshop at BNSD Shiksha Niketan Balika Inter College while her classmates watch"
+                                width={900}
+                                height={600}
+                                priority
+                                sizes="(max-width: 1024px) 100vw, 55vw"
+                                className="aspect-[3/2] w-full object-cover"
+                            />
+                            <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-5 pt-14 text-sm font-semibold text-white/85">
+                                BNSD Shiksha Niketan Balika Inter College, October 2024
+                            </figcaption>
+                        </figure>
+                    </Reveal>
+                </div>
+            </Section>
+
+            {/* ─── The reach, in one sentence ─── */}
+            <Section rhythm="tight" width="wide">
+                <Reveal kind="focus">
+                    <p className="max-w-[30ch] text-balance text-[clamp(1.6rem,3.6vw,2.75rem)] font-extrabold leading-[1.15] tracking-[-0.015em] text-white/45">
+                        <span className="text-white">{STATS[0].value} {STATS[0].label}</span>, with{" "}
+                        <span className="text-white">{STATS[1].value} {STATS[1].label}</span> and{" "}
+                        <span className="text-white">{STATS[2].value} {STATS[2].label}</span>, across{" "}
+                        <span className="text-white">{STATS[3].value} states</span>.
+                    </p>
+                </Reveal>
+            </Section>
+
+            {/* ─── Upcoming ─── */}
+            <Section rhythm="base" width="wide">
+                <Heading>Upcoming seminars</Heading>
+                {isLoading ? (
+                    <div aria-busy="true" className="mt-8 h-24 animate-pulse border-y border-white/10 bg-white/[0.03] motion-reduce:animate-none" />
+                ) : upcomingEvents.length > 0 ? (
+                    <ul className="mt-8 divide-y divide-white/10 border-y border-white/10">
+                        {upcomingEvents.map((event) => (
+                            <li key={event.id}>
+                                <Link href={`/events/${event.id}`} className="group grid items-center gap-2 py-6 sm:grid-cols-[12rem_1fr_auto] sm:gap-8">
+                                    <span className="font-bold text-white">
+                                        {formatDateOnly(event.startDate, { day: "numeric", month: "long", year: "numeric" }, "en-IN")}
+                                    </span>
+                                    <span>
+                                        <span className="block text-lg font-extrabold text-white transition-colors group-hover:text-primary-light md:text-xl">{event.name}</span>
+                                        <span className="mt-1 flex items-center gap-1.5 text-sm text-white/60">
+                                            <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> {event.location || "Venue to be announced"}
+                                        </span>
+                                    </span>
+                                    <ArrowUpRight className="hidden h-5 w-5 text-white/40 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white sm:block" aria-hidden="true" />
                                 </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-10">
-                            <p className="text-sm text-gray-400">No upcoming seminars scheduled</p>
-                        </div>
-                    )}
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="mt-6 max-w-[56ch] text-lg leading-relaxed text-white/70">
+                        No open seminars are scheduled right now. Most are arranged directly with a school or
+                        organisation; write to us to set one up.
+                    </p>
+                )}
+            </Section>
+
+            {/* ─── Past seminars ─── */}
+            <Section id="past" rhythm="base" width="wide" className="scroll-mt-24">
+                <Heading>Past seminars</Heading>
+                <div className="mt-10 space-y-16 md:space-y-24">
+                    {/* DB-fetched completed seminars (with gallery) */}
+                    {dbStories.map((sem) => {
+                        const images: string[] = sem.galleryImages || [];
+                        return (
+                            <SeminarStory
+                                key={sem.id}
+                                title={sem.name}
+                                description={sem.description}
+                                highlight="Seminar"
+                                date={formatDateOnly(sem.startDate, { day: "numeric", month: "long", year: "numeric" }, "en-IN")}
+                                location={sem.location}
+                                images={images.length >= 5 ? images.slice(0, 6) : images.slice(0, 3)}
+                                mosaic={images.length >= 5 ? "six" : "three"}
+                            />
+                        );
+                    })}
+
+                    {/* Original hardcoded showcase seminars */}
+                    {PAST_SEMINARS.map((seminar) => (
+                        <SeminarStory
+                            key={seminar.id}
+                            title={seminar.title}
+                            description={seminar.description}
+                            highlight={seminar.highlight}
+                            date={seminar.date}
+                            location={seminar.location}
+                            images={seminar.images}
+                            mosaic={seminar.images.length >= 6 ? "six" : "three"}
+                        />
+                    ))}
                 </div>
-            </section>
+            </Section>
 
-            {/* ─── CTA ─── */}
-            <section className="py-8 md:py-12">
-                <div className="container-responsive">
-                    <div className="relative border border-white/[0.06] rounded-2xl overflow-hidden text-center p-8 md:p-14">
-                        {/* Red gradient top accent */}
-                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-600/40 to-transparent" />
-
-                        <img src="/kkfi-logo.png" alt="KKFI" className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-white/10 shadow-[0_0_20px_rgba(220,38,38,0.15)] mx-auto mb-5 opacity-60" />
-
-                        <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-3 leading-tight">
-                            Want a seminar at your <span className="text-[#FF0000]">organization?</span>
-                        </h2>
-                        <p className="text-sm text-gray-400 max-w-md mx-auto leading-relaxed mb-8">
-                            KKFI conducts self-defense workshops for schools, colleges, corporates, and community groups.
-                        </p>
-                        <div className="flex flex-wrap gap-3 justify-center">
-                            <a
-                                href="mailto:info@kyokushinfoundation.com"
-                                className="inline-flex items-center gap-2 px-6 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] text-white rounded-none text-xs font-bold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                            >
-                                <Mail size={14} /> Get In Touch
-                            </a>
-                            <a
-                                href="tel:+919956745114"
-                                className="inline-flex items-center gap-2 px-6 min-h-[44px] bg-transparent border border-white/20 text-white rounded-none text-xs font-bold uppercase tracking-wider hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                            >
-                                <Phone size={14} /> +91-9956745114
-                            </a>
-                        </div>
+            {/* ─── Closing ─── */}
+            <Section rhythm="open" width="wide">
+                <Reveal kind="mask">
+                    <Heading size="display" className="max-w-[16ch] uppercase">
+                        Bring a seminar to your organisation<span className="text-primary">.</span>
+                    </Heading>
+                </Reveal>
+                <Reveal delay={0.1}>
+                    <p className="mt-6 max-w-[52ch] text-lg leading-relaxed text-white/75">
+                        KKFI runs self-defence workshops for schools, colleges, hospitals, corporates and
+                        community groups, from a single session to several days.
+                    </p>
+                    <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                        <a href="mailto:info@kyokushinfoundation.com" className={`${ctaClass} bg-primary text-white hover:bg-primary-dark`}>
+                            <Mail className="h-4 w-4" aria-hidden="true" /> Get in touch
+                        </a>
+                        <a href="tel:+919956745114" className={`${ctaClass} border border-white/25 text-white hover:border-white/60 hover:bg-white/10`}>
+                            <Phone className="h-4 w-4" aria-hidden="true" /> +91 99567 45114
+                        </a>
                     </div>
-                </div>
-            </section>
+                </Reveal>
+            </Section>
         </div>
     );
 }

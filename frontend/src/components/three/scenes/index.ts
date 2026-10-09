@@ -8,4 +8,8 @@ export const SCENES: Record<SceneKey, ComponentType<any>> = {
     belt: lazy(() => import("./BeltScene")),
     history: lazy(() => import("./HistoryScene")),
     "india-map": lazy(() => import("./IndiaMapScene")),
+    "gallery-ring": lazy(() => import("./GalleryRingScene")),
+    globe: lazy(() => import("./GlobeScene")),
+    tickets: lazy(() => import("./TicketsScene")),
+    "sponsor-ring": lazy(() => import("./SponsorRingScene")),
 };

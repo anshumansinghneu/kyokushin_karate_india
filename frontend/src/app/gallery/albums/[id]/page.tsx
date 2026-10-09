@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     Camera, X, ChevronLeft, ChevronRight, Upload, Loader2, ImageIcon,
-    Download, Share2, ZoomIn, ZoomOut, Info, Eye, Trash2, ArrowLeft,
-    Tent, GraduationCap, Trophy, Swords, Dumbbell, Calendar, ExternalLink, Play,
+    Download, ZoomIn, ZoomOut, Info, Trash2, ArrowLeft,
+    Tent, GraduationCap, Trophy, Swords, Dumbbell, ExternalLink, Play,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -47,18 +47,12 @@ interface AlbumDetail {
 
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Camera; color: string }> = {
     CAMP: { label: "Camp", icon: Tent, color: "text-emerald-400" },
-    SEMINAR: { label: "Seminar", icon: GraduationCap, color: "text-blue-400" },
+    SEMINAR: { label: "Seminar", icon: GraduationCap, color: "text-white" },
     TOURNAMENT: { label: "Tournament", icon: Trophy, color: "text-amber-400" },
-    BELT_EXAM: { label: "Grading", icon: Swords, color: "text-red-400" },
+    BELT_EXAM: { label: "Grading", icon: Swords, color: "text-primary-light" },
     TRAINING: { label: "Training", icon: Dumbbell, color: "text-purple-400" },
-    GENERAL: { label: "General", icon: Camera, color: "text-zinc-400" },
+    GENERAL: { label: "General", icon: Camera, color: "text-white/70" },
 };
-
-// Seeded random for consistent per-photo rotation/offset
-function seededRandom(seed: number) {
-    const x = Math.sin(seed * 9301 + 49297) * 49297;
-    return x - Math.floor(x);
-}
 
 function formatDuration(seconds: number | null): string | null {
     if (seconds == null || seconds < 0) return null;
@@ -70,7 +64,6 @@ function formatDuration(seconds: number | null): string | null {
 function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; index: number; onClick: () => void; onDelete?: () => void }) {
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
     const [rowSpan, setRowSpan] = useState(20);
     const cardRef = useRef<HTMLDivElement>(null);
     const [inView, setInView] = useState(false);
@@ -84,30 +77,6 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
         const gap = 20;
         const span = Math.ceil((img.getBoundingClientRect().height + gap) / (rowHeight + gap));
         setRowSpan(span);
-    };
-
-    // Per-card random rotation and offset (stable across re-renders)
-    const rotation = useMemo(() => (seededRandom(index + 1) - 0.5) * 6, [index]); // -3 to +3 deg
-    const offsetY = useMemo(() => (seededRandom(index + 100) - 0.5) * 12, [index]); // -6 to +6 px
-
-    // 3D tilt
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
-    const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [8, -8]), { stiffness: 300, damping: 25 });
-    const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-8, 8]), { stiffness: 300, damping: 25 });
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        const el = cardRef.current;
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
-        mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
-    };
-
-    const handleMouseLeave = () => {
-        mouseX.set(0);
-        mouseY.set(0);
-        setIsHovered(false);
     };
 
     useEffect(() => {
@@ -124,113 +93,64 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
     return (
         <motion.div
             ref={cardRef}
-            initial={{ opacity: 0, y: 30, rotate: rotation }}
-            animate={inView ? {
-                opacity: 1,
-                y: isHovered ? -8 : offsetY,
-                rotate: isHovered ? 0 : rotation,
-                scale: isHovered ? 1.05 : 1,
-            } : {}}
-            transition={{
-                opacity: { duration: 0.5, delay: Math.min(index * 0.05, 0.5) },
-                y: { type: "spring", stiffness: 200, damping: 20 },
-                rotate: { type: "spring", stiffness: 200, damping: 20 },
-                scale: { type: "spring", stiffness: 300, damping: 25 },
-            }}
-            className="cursor-pointer"
-            style={{ perspective: 600, gridRowEnd: `span ${rowSpan}`, gridColumn: isVideo ? 'span 2' : undefined }}
+            initial={false}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: Math.min((index % 12) * 0.03, 0.3), ease: [0.16, 1, 0.3, 1] }}
+            className="group relative cursor-pointer"
+            style={{ gridRowEnd: `span ${rowSpan}`, gridColumn: isVideo ? 'span 2' : undefined }}
             onClick={onClick}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
         >
-            <motion.div
-                className={`relative rounded-2xl overflow-hidden border group transition-all duration-500 ${
-                    isVideo
-                      ? 'border-[#FF0000]/30 group-hover:border-[#FF0000]/60 shadow-[0_0_30px_rgba(255,0,0,0.25)] group-hover:shadow-[0_0_45px_rgba(255,0,0,0.45)]'
-                      : 'border-white/[0.08]'
-                }`}
-                style={{
-                    rotateX: isHovered ? rotateX : 0,
-                    rotateY: isHovered ? rotateY : 0,
-                    transformStyle: "preserve-3d",
-                    boxShadow: isVideo
-                        ? (isHovered
-                            ? "0 0 45px rgba(255,0,0,0.45)"
-                            : "0 0 30px rgba(255,0,0,0.25)")
-                        : (isHovered
-                            ? "0 0 40px rgba(255,0,0,0.10)"
-                            : "none"),
-                }}
-            >
-                {/* Loading shimmer */}
-                {!loaded && !error && (
-                    <div className="w-full aspect-[4/3] bg-zinc-900/80 rounded-2xl overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent animate-shimmer" />
-                    </div>
-                )}
+            <div className="relative overflow-hidden rounded-lg border border-white/10 bg-surface transition-colors duration-300 group-hover:border-white/40">
+                {!loaded && !error && <div className="w-full aspect-[4/3] animate-pulse bg-white/5" />}
                 {error && (
-                    <div className="w-full aspect-[4/3] bg-zinc-900 rounded-2xl flex items-center justify-center">
-                        <ImageIcon className="w-8 h-8 text-zinc-800" />
+                    <div className="w-full aspect-[4/3] flex items-center justify-center">
+                        <ImageIcon className="w-8 h-8 text-white/30" />
                     </div>
                 )}
                 {inView && imgUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                         src={imgUrl}
                         alt={photo.caption || "Photo"}
-                        className={`w-full rounded-2xl transition-all duration-700 group-hover:scale-110 ${loaded ? "opacity-100" : "opacity-0 absolute"}`}
+                        className={`w-full transition-transform duration-700 ease-out group-hover:scale-[1.03] ${loaded ? "opacity-100" : "opacity-0 absolute"}`}
                         loading="lazy"
                         onLoad={(e) => handleImageLoad(e.currentTarget)}
                         onError={() => setError(true)}
                     />
                 )}
-                {/* Video play badge + duration pill */}
                 {isVideo && loaded && (
                     <>
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <motion.div
-                                animate={isHovered ? { scale: [1, 1.1, 1] } : { scale: 1 }}
-                                transition={{ duration: 1.2, repeat: isHovered ? Infinity : 0 }}
-                                className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-md border border-white/30 shadow-2xl flex items-center justify-center"
-                            >
-                                <Play className="w-7 h-7 text-white ml-1" fill="currentColor" />
-                            </motion.div>
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/40 bg-black/50">
+                                <Play className="ml-1 h-7 w-7 text-white" fill="currentColor" />
+                            </div>
                         </div>
                         {durationLabel && (
-                            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-md border border-white/10 text-white text-xs font-bold pointer-events-none">
+                            <div className="absolute bottom-3 right-3 rounded bg-black/75 px-2 py-0.5 text-xs font-bold text-white pointer-events-none">
                                 {durationLabel}
                             </div>
                         )}
                     </>
                 )}
-                {/* Hover overlay — frosted glass (images only) */}
                 {loaded && !isVideo && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl flex flex-col justify-end p-5">
-                        <div style={{ backdropFilter: "blur(6px)" }} className="absolute inset-x-0 bottom-0 h-24 rounded-b-2xl" />
-                        <div className="relative z-10">
-                            {photo.caption && (
-                                <p className="text-sm font-semibold text-white mb-1 drop-shadow-lg">{photo.caption}</p>
-                            )}
-                            <p className="text-xs text-gray-400">by {photo.uploader.name}</p>
-                            <div className="flex gap-2 mt-3">
-                                <button className="p-2 rounded-full border border-white/10 hover:bg-white/15 text-white transition-all hover:scale-110" style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(8px)" }} title="View">
-                                    <Eye className="w-3.5 h-3.5" />
+                    <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/85 via-black/10 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
+                        {photo.caption && <p className="text-sm font-semibold text-white">{photo.caption}</p>}
+                        <div className="mt-1 flex items-center justify-between gap-3">
+                            <p className="text-xs text-white/70">by {photo.uploader.name}</p>
+                            {onDelete && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white transition-colors hover:bg-primary-dark"
+                                    aria-label="Delete photo"
+                                    title="Delete"
+                                >
+                                    <Trash2 className="h-4 w-4" />
                                 </button>
-                                {onDelete && (
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                                        className="p-2 rounded-full border border-red-500/20 hover:bg-red-500/30 text-red-400 transition-all hover:scale-110"
-                                        style={{ background: "rgba(255,0,0,0.1)", backdropFilter: "blur(8px)" }}
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                )}
-                            </div>
+                            )}
                         </div>
                     </div>
                 )}
-            </motion.div>
+            </div>
         </motion.div>
     );
 }
@@ -407,13 +327,12 @@ export default function AlbumDetailPage() {
     const currentPhoto = lightboxIndex !== null ? photos[lightboxIndex] : null;
     const currentPhotoUrl = currentPhoto ? getImageUrl(currentPhoto.imageUrl) : null;
     const config = album ? (TYPE_CONFIG[album.type] || TYPE_CONFIG.GENERAL) : TYPE_CONFIG.GENERAL;
-    const TypeIcon = config.icon;
     const coverUrl = album?.coverImageUrl ? getImageUrl(album.coverImageUrl) : null;
 
     if (isLoading && !album) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+                <Loader2 className="w-8 h-8 text-white/70 animate-spin" />
             </div>
         );
     }
@@ -421,86 +340,62 @@ export default function AlbumDetailPage() {
     if (!album) {
         return (
             <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
-                <p className="text-gray-300 text-lg">Album not found</p>
-                <Link href="/gallery" className="text-red-400 hover:text-red-300 text-sm">Back to Gallery</Link>
+                <p className="text-white/80 text-lg">Album not found</p>
+                <Link href="/gallery" className="text-sm font-semibold text-white underline decoration-primary decoration-2 underline-offset-4 hover:text-primary-light">Back to the gallery</Link>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-black text-white">
-            {/* Album Header */}
-            <div className="relative overflow-hidden">
+        <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-white">
+            {/* Album opener: the cover, full-bleed. The gallery's album link grows into this same frame. */}
+            <header data-bleed className="relative flex min-h-[72svh] overflow-hidden">
                 {coverUrl ? (
-                    <div className="absolute inset-0">
-                        <img src={coverUrl} alt="" className="w-full h-full object-cover opacity-20 blur-2xl scale-125" />
-                    </div>
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
                 ) : (
-                    <div className="absolute inset-0 bg-red-600/[0.06] blur-[120px]" />
+                    <div className="absolute inset-0 bg-surface" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/70 to-black" />
+                <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/30" />
 
-                <div className="relative max-w-7xl mx-auto px-4 pt-24 pb-10 sm:pt-28 sm:pb-14">
-                    {/* Breadcrumb */}
+                <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-[clamp(2.5rem,7vh,5rem)] pt-36 sm:px-6 lg:px-8">
                     <Link
                         href="/gallery"
-                        className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors mb-6"
+                        className="mb-8 inline-flex min-h-11 w-fit items-center gap-2 text-sm font-semibold text-white/80 transition-colors hover:text-white"
                     >
-                        <ArrowLeft className="w-3.5 h-3.5" />
-                        Back to Gallery
+                        <ArrowLeft className="h-4 w-4" />
+                        All albums
                     </Link>
-
-                    <div className="flex flex-col sm:flex-row items-start gap-6">
-                        {/* Cover thumbnail */}
-                        {coverUrl && (
-                            <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border border-white/10 shadow-2xl flex-shrink-0">
-                                <img src={coverUrl} alt={album.name} className="w-full h-full object-cover" />
-                            </div>
-                        )}
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-3">
-                                <div className={`flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1`}>
-                                    <TypeIcon className={`w-3.5 h-3.5 ${config.color}`} />
-                                    <span className="text-xs font-semibold text-zinc-300">{config.label}</span>
-                                </div>
-                                {album.date && (
-                                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                                        <Calendar className="w-3.5 h-3.5" />
-                                        {new Date(album.date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
-                                    </div>
-                                )}
-                            </div>
-                            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">{album.name}</h1>
-                            {album.description && (
-                                <p className="mt-2 text-zinc-400 text-sm max-w-2xl">{album.description}</p>
-                            )}
-                            <p className="mt-3 text-xs text-gray-400">
-                                {album.photoCount} photo{album.photoCount !== 1 ? "s" : ""} &middot; Created by {album.creator.name}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Upload button */}
-                    {canUpload && (
-                        <div className="mt-6">
+                    <p className="text-sm font-semibold text-white/75">
+                        {[config.label, album.date ? new Date(album.date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : null, `${album.photoCount} photo${album.photoCount !== 1 ? "s" : ""}`].filter(Boolean).join(" · ")}
+                    </p>
+                    <h1 className="mt-3 max-w-[18ch] text-balance text-[clamp(2.5rem,6.5vw,5.5rem)] font-black uppercase leading-[0.92] tracking-[-0.03em] text-white">
+                        {album.name}
+                    </h1>
+                    {album.description && (
+                        <p className="mt-5 max-w-[56ch] text-pretty text-lg leading-relaxed text-white/80">{album.description}</p>
+                    )}
+                    <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+                        <p className="text-sm text-white/60">Created by {album.creator.name}</p>
+                        {canUpload && (
                             <button
                                 onClick={() => setShowUpload(true)}
-                                className="inline-flex items-center gap-2 px-6 min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] rounded-none text-sm font-bold uppercase tracking-wider text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                className="inline-flex min-h-12 items-center gap-2 rounded-none bg-primary px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
-                                <Upload className="w-4 h-4" />
-                                Upload Photo
+                                <Upload className="h-4 w-4" />
+                                Upload photo
                             </button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
-            </div>
+            </header>
 
             {/* Photos Grid — Floating Gallery */}
-            <div className="max-w-7xl mx-auto px-4 pb-16">
+            <div className="mx-auto max-w-[1400px] px-4 pb-20 pt-[clamp(2.5rem,5vw,4rem)] sm:px-6 lg:px-8">
                 {photos.length === 0 ? (
                     <div className="text-center py-24">
-                        <ImageIcon className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
-                        <p className="text-gray-400">No photos in this album yet</p>
+                        <ImageIcon className="w-12 h-12 text-white/30 mx-auto mb-4" />
+                        <p className="text-white/70">No photos in this album yet.</p>
                     </div>
                 ) : (
                     <div
@@ -530,8 +425,9 @@ export default function AlbumDetailPage() {
                             <button
                                 key={p}
                                 onClick={() => setPage(p)}
-                                className={`w-10 min-h-[44px] rounded-none text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
-                                    p === page ? "bg-[#FF0000] text-white" : "bg-zinc-900 text-zinc-400 border border-white/5 hover:bg-zinc-800"
+                                aria-current={p === page ? "page" : undefined}
+                                className={`w-11 min-h-11 rounded-none text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                                    p === page ? "bg-white text-black" : "border border-white/20 text-white/75 hover:bg-white/10 hover:text-white"
                                 }`}
                             >
                                 {p}
@@ -551,7 +447,7 @@ export default function AlbumDetailPage() {
                     >
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-lg w-full max-h-[85vh] overflow-y-auto"
+                            className="bg-surface border border-white/10 rounded-2xl p-6 max-w-lg w-full max-h-[85vh] overflow-y-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-4">
@@ -579,9 +475,9 @@ export default function AlbumDetailPage() {
                                     {!uploading && (
                                         <button
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="aspect-square rounded-lg border-2 border-dashed border-white/10 hover:border-red-500/30 flex items-center justify-center transition-colors"
+                                            className="aspect-square rounded-lg border-2 border-dashed border-white/10 hover:border-primary/30 flex items-center justify-center transition-colors"
                                         >
-                                            <Upload className="w-5 h-5 text-zinc-600" />
+                                            <Upload className="w-5 h-5 text-white/40" />
                                         </button>
                                     )}
                                 </div>
@@ -591,11 +487,11 @@ export default function AlbumDetailPage() {
                             {uploadPreviews.length === 0 && (
                                 <div
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center cursor-pointer hover:border-red-500/30 transition-colors mb-4"
+                                    className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center cursor-pointer hover:border-primary/30 transition-colors mb-4"
                                 >
-                                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                    <p className="text-sm text-gray-300">Click to select photos</p>
-                                    <p className="text-xs text-gray-400 mt-1">Select multiple &middot; Max 5MB each &middot; JPG, PNG, WebP</p>
+                                    <Upload className="w-8 h-8 text-white/70 mx-auto mb-2" />
+                                    <p className="text-sm text-white/80">Click to select photos</p>
+                                    <p className="text-xs text-white/70 mt-1">Select multiple &middot; Max 5MB each &middot; JPG, PNG, WebP</p>
                                 </div>
                             )}
 
@@ -612,16 +508,16 @@ export default function AlbumDetailPage() {
                             />
 
                             {uploadFiles.length > 0 && (
-                                <p className="text-xs text-gray-400 mb-4">
+                                <p className="text-xs text-white/70 mb-4">
                                     {uploadFiles.length} photo{uploadFiles.length > 1 ? "s" : ""} selected
-                                    {uploadProgress && <span className="ml-2 text-red-400">&middot; {uploadProgress}</span>}
+                                    {uploadProgress && <span className="ml-2 text-primary-light">&middot; {uploadProgress}</span>}
                                 </p>
                             )}
 
                             <button
                                 onClick={handleUpload}
                                 disabled={uploadFiles.length === 0 || uploading}
-                                className="w-full min-h-[44px] bg-[#FF0000] hover:bg-[#8B0000] disabled:opacity-50 disabled:cursor-not-allowed rounded-none text-sm font-bold uppercase tracking-wider text-white transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                className="w-full min-h-[44px] bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed rounded-none text-sm font-bold uppercase tracking-wider text-white transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                             >
                                 {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                                 {uploading ? uploadProgress || "Uploading..." : `Upload ${uploadFiles.length > 1 ? `${uploadFiles.length} Photos` : "Photo"}`}
@@ -690,7 +586,7 @@ export default function AlbumDetailPage() {
                                     {showInfo && (
                                         <>
                                             {currentPhoto.caption && <p className="text-sm font-semibold">{currentPhoto.caption}</p>}
-                                            <p className="text-xs text-zinc-400">by {currentPhoto.uploader.name} &middot; {new Date(currentPhoto.uploadedAt).toLocaleDateString()}</p>
+                                            <p className="text-xs text-white/70">by {currentPhoto.uploader.name} &middot; {new Date(currentPhoto.uploadedAt).toLocaleDateString()}</p>
                                         </>
                                     )}
                                 </div>
@@ -720,7 +616,7 @@ export default function AlbumDetailPage() {
                                         </button>
                                     )}
                                     {(isAdmin || currentPhoto.uploader.id === user?.id) && (
-                                        <button onClick={(e) => { e.stopPropagation(); handleDeletePhoto(currentPhoto.id); }} className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400" title="Delete">
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeletePhoto(currentPhoto.id); }} className="p-2 rounded-full bg-primary/20 hover:bg-primary/40 text-primary-light" title="Delete">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     )}
@@ -728,7 +624,7 @@ export default function AlbumDetailPage() {
                             </div>
                             {/* Counter */}
                             <div className="text-center mt-2">
-                                <span className="text-xs text-gray-400">{lightboxIndex + 1} / {photos.length}</span>
+                                <span className="text-xs text-white/70">{lightboxIndex + 1} / {photos.length}</span>
                             </div>
                         </div>
                     </motion.div>

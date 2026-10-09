@@ -5,6 +5,9 @@
 @layer base {
   /* ── Mobile-First Font Size (16px+ for readability) ── */
   html {
+    /* Reveal and scene transforms can briefly poke past the edge; clip (not
+       hidden) so sticky scroll scenes keep working and no sideways scroll appears. */
+    overflow-x: clip;
     font-size: 16px;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;

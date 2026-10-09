@@ -45,11 +45,7 @@ export default function WallTile({ photo, onClick }: WallTileProps) {
     <div
       ref={ref}
       onClick={onClick}
-      className={`group relative w-full h-full aspect-square overflow-hidden rounded-xl border cursor-pointer bg-zinc-900 transition-all duration-500 ${
-        isVideo
-          ? "border-red-500/30 hover:border-red-500/60 shadow-[0_0_25px_rgba(220,38,38,0.2)] hover:shadow-[0_0_40px_rgba(220,38,38,0.4)]"
-          : "border-white/[0.08] hover:border-red-500/30"
-      }`}
+      className="group relative w-full h-full aspect-square overflow-hidden rounded-lg border border-white/10 cursor-pointer bg-surface transition-colors duration-300 hover:border-white/40"
     >
       {!loaded && <div className="absolute inset-0 animate-pulse bg-white/5" />}
       {inView && imgUrl && (
