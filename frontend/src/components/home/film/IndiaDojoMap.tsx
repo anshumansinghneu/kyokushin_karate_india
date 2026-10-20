@@ -1,15 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/api";
 import { CITY_COORDS } from "@/lib/cityCoords";
+import { loadDojos, type PublicDojo } from "./dojos";
 
 type Ring = [number, number][];
-interface Dojo {
-    city?: string | null;
-    latitude?: number | null;
-    longitude?: number | null;
-}
 
 /**
  * India with a dan-gold dot for each city that has a KKFI dojo, larger where
@@ -29,11 +24,11 @@ export default function IndiaDojoMap({ fallback }: { fallback: React.ReactNode }
             .then((r) => r.json() as Promise<{ rings: Ring[] }>)
             .then((geo) => alive && setRings(geo.rings))
             .catch(() => alive && setFailed(true));
-        api.get("/dojos", { params: { limit: 500 } })
-            .then((res) => {
+        loadDojos()
+            .then((dojos) => {
                 if (!alive) return;
                 const byCity = new Map<string, { name: string; lat: number; lon: number; n: number }>();
-                for (const d of (res.data.data.dojos ?? []) as Dojo[]) {
+                for (const d of dojos as PublicDojo[]) {
                     const key = (d.city ?? "").trim().toLowerCase();
                     const at = d.latitude && d.longitude ? [d.latitude, d.longitude] : CITY_COORDS[key];
                     if (!at) continue;

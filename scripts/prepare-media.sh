@@ -13,7 +13,7 @@ SRC="media-src"
 OUT="frontend/public/media"   # this repo keeps the Next.js app in frontend/
 FILMS=(karateka kumite osu eyes)
 LOOPS=(arena)
-STILLS=(mountain belts hands-white hands-black)
+STILLS=(mountain belts hands-white hands-black statue weapon-fist weapon-shin weapon-eyes weapon-knot)
 TRIM="${TRIM:-1}"
 NORM="crop=iw*${TRIM}:ih*${TRIM},scale=1920:1080:flags=lanczos"
 
