@@ -81,8 +81,8 @@ export default function MobileBottomNav() {
         moreItems = moreItems.filter(item => !('adminOnly' in item && item.adminOnly));
     }
 
-    // Hide on management pages and forgot/reset password
-    const hiddenPaths = ['/management', '/forgot-password', '/reset-password'];
+    // Hidden where it would sit over a form: the auth pages have their own way back.
+    const hiddenPaths = ['/management', '/login', '/register', '/forgot-password', '/reset-password'];
     if (hiddenPaths.some(p => pathname.startsWith(p))) return null;
 
     const isMoreActive = moreItems.some(

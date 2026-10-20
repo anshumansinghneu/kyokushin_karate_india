@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "lenis";
+import { setLenis } from "@/lib/lenis";
 
 /**
  * Weighted scrolling on desktop mice only. Touch devices keep native momentum,
@@ -18,12 +19,14 @@ export default function SmoothScroll() {
         if (!fine || reduce) return;
 
         const lenis = new Lenis({ lerp: 0.11, wheelMultiplier: 0.95, smoothWheel: true });
+        setLenis(lenis);
         let raf = requestAnimationFrame(function loop(time) {
             lenis.raf(time);
             raf = requestAnimationFrame(loop);
         });
         return () => {
             cancelAnimationFrame(raf);
+            setLenis(null);
             lenis.destroy();
         };
     }, []);

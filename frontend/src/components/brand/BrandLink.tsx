@@ -2,8 +2,9 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * The one CTA shape for brand pages: sharp, uppercase, 48px. Red is the primary
- * action only; everything else is the outline.
+ * The one CTA shape for public pages, in the dojo system: primary is unbleached
+ * canvas on black, the secondary is quiet text that takes a dan-gold underline.
+ * Sentence case, 48px tall. Matches the homepage FilmLink.
  */
 export default function BrandLink({
     href,
@@ -20,11 +21,11 @@ export default function BrandLink({
         <Link
             href={href}
             className={cn(
-                "group inline-flex min-h-12 items-center justify-center gap-2 rounded-none px-7 text-sm font-bold uppercase tracking-[0.1em] transition-colors duration-200",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black active:scale-[0.98]",
+                "group inline-flex min-h-12 items-center justify-center gap-2 rounded-none font-gothic text-base font-bold transition-colors duration-500 ease-dojo",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dan-gold",
                 variant === "primary"
-                    ? "bg-primary text-white hover:bg-primary-dark"
-                    : "border border-white/25 text-white hover:border-white/60 hover:bg-white/10",
+                    ? "bg-canvas px-7 text-night hover:bg-dan-gold"
+                    : "px-1 text-canvas underline decoration-transparent decoration-1 underline-offset-[6px] hover:decoration-dan-gold",
                 className,
             )}
         >

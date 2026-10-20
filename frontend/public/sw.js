@@ -46,6 +46,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Homepage film frames run to 100 MB; the HTTP cache handles them, not this one.
+  if (new URL(request.url).pathname.startsWith('/media/')) return;
+
   event.respondWith(
     fetch(request)
       .then((response) => {

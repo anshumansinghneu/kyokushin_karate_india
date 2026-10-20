@@ -9,18 +9,33 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                // Aggressive Black Theme
+                // Legacy palette, now CSS variables (globals.css): the member app keeps its red on
+                // black (.skin-app), the public site maps the same classes onto the dojo palette.
                 background: "#000000",
-                foreground: "#FFFFFF",
+                foreground: "rgb(var(--c-white) / <alpha-value>)",
+                white: "rgb(var(--c-white) / <alpha-value>)",
                 primary: {
-                    DEFAULT: "#FF0000", // Kyokushin Red
-                    dark: "#8B0000",
-                    light: "#FF4D4D",
+                    DEFAULT: "rgb(var(--c-primary) / <alpha-value>)",
+                    dark: "rgb(var(--c-primary-dark) / <alpha-value>)",
+                    light: "rgb(var(--c-primary-light) / <alpha-value>)",
                 },
                 secondary: {
-                    DEFAULT: "#FFD700", // Gold
-                    dark: "#B8860B",
-                    light: "#FFE44D",
+                    DEFAULT: "rgb(var(--c-secondary) / <alpha-value>)",
+                    dark: "rgb(var(--c-secondary-dark) / <alpha-value>)",
+                    light: "rgb(var(--c-secondary-light) / <alpha-value>)",
+                },
+                red: {
+                    50: "#fef2f2",
+                    100: "#fee2e2",
+                    200: "#fecaca",
+                    300: "rgb(var(--c-red-300) / <alpha-value>)",
+                    400: "rgb(var(--c-red-400) / <alpha-value>)",
+                    500: "rgb(var(--c-red-500) / <alpha-value>)",
+                    600: "rgb(var(--c-red-600) / <alpha-value>)",
+                    700: "rgb(var(--c-red-700) / <alpha-value>)",
+                    800: "rgb(var(--c-red-800) / <alpha-value>)",
+                    900: "rgb(var(--c-red-900) / <alpha-value>)",
+                    950: "#450a0a",
                 },
                 surface: {
                     DEFAULT: "#111111",
@@ -29,9 +44,21 @@ const config: Config = {
                 },
                 muted: "#666666",
                 border: "#333333",
+                // Homepage scroll film: the dojo before dawn (KKFI_REDESIGN.md, 4.3)
+                night: "#000000",
+                canvas: "#E8E2D4",
+                ash: "#8F887B",
+                "worn-belt": "#26221E",
+                "dan-gold": "#B89A5A",
+                "kyokushin-red": "#B3261E",
             },
             fontFamily: {
-                sans: ['var(--font-montserrat)', 'sans-serif'],
+                sans: ['var(--font-body)', 'sans-serif'],
+                mincho: ['var(--font-mincho)', 'serif'],
+                gothic: ['var(--font-gothic)', 'sans-serif'],
+            },
+            transitionTimingFunction: {
+                dojo: 'cubic-bezier(0.2, 0.7, 0.1, 1)',
             },
             backgroundImage: {
                 "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { getUserProfileImage } from "@/lib/imageUtils";
 import api from "@/lib/api";
 import NotificationCenter from "@/components/NotificationCenter";
+import { isMemberApp } from "@/lib/routes";
 
 /* Animated KKFI Brand — cycles: logo spin → KKFI text */
 function AnimatedBrand() {
@@ -57,6 +58,16 @@ function AnimatedBrand() {
     );
 }
 
+/* The homepage's brand mark: the logo, still. */
+function StillBrand() {
+    return (
+        <div className="relative w-12 h-10 flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/kkfi-logo.png" alt="KKFI" className="w-9 h-9 rounded-full object-contain" />
+        </div>
+    );
+}
+
 interface NavLink {
     name: string;
     href: string;
@@ -85,7 +96,7 @@ function isDropdown(item: NavItem): item is NavDropdown {
     return 'items' in item;
 }
 
-function DesktopDropdown({ dropdown, pathname }: { dropdown: NavDropdown; pathname: string }) {
+function DesktopDropdown({ dropdown, pathname, film = false }: { dropdown: NavDropdown; pathname: string; film?: boolean }) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
     const timeoutRef = useRef<NodeJS.Timeout>(undefined);
@@ -112,13 +123,15 @@ function DesktopDropdown({ dropdown, pathname }: { dropdown: NavDropdown; pathna
             onMouseLeave={handleLeave}
         >
             <button
-                className={`text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-1.5 px-4 h-full relative ${
+                className={film
+                    ? `font-gothic text-sm font-bold text-canvas flex items-center gap-1.5 px-4 h-full relative underline underline-offset-[6px] decoration-1 transition-colors duration-500 ${open || isAnyActive ? "decoration-dan-gold" : "decoration-transparent hover:decoration-dan-gold"} focus-visible:outline focus-visible:outline-2 focus-visible:outline-dan-gold`
+                    : `text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-1.5 px-4 h-full relative ${
                     isAnyActive ? "text-white" : "text-zinc-400 hover:text-white group"
                 }`}
             >
-                {dropdown.name}
-                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-180 text-white' : ''}`} />
-                {open && (
+                {film ? dropdown.name.charAt(0) + dropdown.name.slice(1).toLowerCase() : dropdown.name}
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-180' : ''} ${open && !film ? 'text-white' : ''}`} />
+                {open && !film && (
                     <motion.div layoutId="navIndicator" className="absolute inset-0 bg-white/5 rounded-full" transition={{ duration: 0.2 }} />
                 )}
             </button>
@@ -184,6 +197,34 @@ export default function Navbar() {
     const pathname = usePathname();
     const router = useRouter();
     const { user, logout, isAuthenticated, checkAuth } = useAuthStore();
+    // The public site's bar (every route outside the member app): transparent over a page's opening
+    // film or hero, solid once it has passed. Pages mark where that is with [data-nav-solid-after];
+    // without a marker the bar turns solid as soon as the page scrolls.
+    const film = !isMemberApp(pathname);
+    const [solid, setSolid] = useState(false);
+
+    useEffect(() => {
+        if (!film) return;
+        let raf = 0;
+        const update = () => {
+            cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(() => {
+                const marker = document.querySelector("[data-nav-solid-after]");
+                setSolid(marker ? marker.getBoundingClientRect().bottom <= 80 : window.scrollY > 40);
+            });
+        };
+        update();
+        window.addEventListener("scroll", update, { passive: true });
+        // Re-measure whenever the page's layout settles or changes, not only on scroll:
+        // a measurement taken mid-hydration would otherwise stick until the first scroll.
+        const ro = new ResizeObserver(update);
+        ro.observe(document.body);
+        return () => {
+            cancelAnimationFrame(raf);
+            ro.disconnect();
+            window.removeEventListener("scroll", update);
+        };
+    }, [film, pathname]);
 
     useEffect(() => {
         if (!user && isAuthenticated) checkAuth();
@@ -295,15 +336,23 @@ export default function Navbar() {
     return (
         <>
             {/* Mobile Top Bar */}
-            <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#050507]/90 backdrop-blur-2xl border-b border-white/5">
+            <div className={film
+                ? `md:hidden fixed top-0 left-0 right-0 z-50 border-b transition-colors duration-500 ${solid ? "bg-night border-worn-belt" : "bg-transparent border-transparent"}`
+                : "md:hidden fixed top-0 left-0 right-0 z-50 bg-[#050507]/90 backdrop-blur-2xl border-b border-white/5"}>
+                {film && !solid && (
+                    <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-24 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.65),transparent)]" />
+                )}
                 <div className="flex items-center justify-between px-5 h-16">
                     <Link href="/" className="flex items-center">
-                        <AnimatedBrand />
+                        {film ? <StillBrand /> : <AnimatedBrand />}
                     </Link>
                     <div className="flex items-center gap-2">
                         {isAuthenticated && <NotificationCenter />}
                         <button
-                            className="z-50 text-white p-2 flex items-center justify-center -mr-2 bg-white/5 rounded-full border border-white/10"
+                            className={film
+                                ? "z-50 text-canvas p-2 flex items-center justify-center -mr-2 rounded-full border border-worn-belt bg-night/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-dan-gold"
+                                : "z-50 text-white p-2 flex items-center justify-center -mr-2 bg-white/5 rounded-full border border-white/10"}
+                            aria-label={isOpen ? "Close menu" : "Open menu"}
                             onClick={() => setIsOpen(!isOpen)}
                         >
                             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -318,22 +367,27 @@ export default function Navbar() {
                 animate={{ y: 0 }}
                 transition={{ type: "spring", stiffness: 100, damping: 20 }}
                 className={`hidden md:flex fixed top-0 left-0 right-0 z-50 w-full justify-center transition-all duration-500 ease-in-out pointer-events-none ${
-                    scrolled ? "pt-4 px-4" : "pt-8 px-8"
+                    film ? "" : scrolled ? "pt-4 px-4" : "pt-8 px-8"
                 }`}
             >
-                <div className={`flex items-center justify-between border border-white/[0.08] shadow-2xl backdrop-blur-3xl transition-all duration-500 ease-in-out pointer-events-auto ${
+                {film && !solid && (
+                    <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-32 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.65),transparent)]" />
+                )}
+                <div className={film
+                    ? `flex w-full items-center justify-between border-b px-10 py-4 transition-colors duration-500 pointer-events-auto ${solid ? "bg-night border-worn-belt" : "bg-transparent border-transparent"}`
+                    : `flex items-center justify-between border border-white/[0.08] shadow-2xl backdrop-blur-3xl transition-all duration-500 ease-in-out pointer-events-auto ${
                     scrolled ? "bg-black/60 rounded-full px-5 py-2.5 max-w-[1000px] w-full" : "bg-black/30 rounded-3xl px-8 py-4 max-w-[1200px] w-full"
                 }`}>
                     {/* Brand */}
                     <Link href="/" className="flex flex-shrink-0 items-center justify-center">
-                        <AnimatedBrand />
+                        {film ? <StillBrand /> : <AnimatedBrand />}
                     </Link>
 
                     {/* Links */}
                     <div className="flex items-center justify-center h-10 ml-8 flex-1">
                         {navItems.map((item) => {
                             if (isDropdown(item)) {
-                                return <DesktopDropdown key={item.name} dropdown={item} pathname={pathname} />;
+                                return <DesktopDropdown key={item.name} dropdown={item} pathname={pathname} film={film} />;
                             }
 
                             const active = pathname === item.href;
@@ -348,6 +402,19 @@ export default function Navbar() {
                                 : active
                                     ? "text-white"
                                     : "text-zinc-400 hover:text-white";
+
+                            if (film) {
+                                return (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        className="relative font-gothic text-sm font-bold text-canvas px-4 h-full flex items-center gap-1.5 underline decoration-transparent decoration-1 underline-offset-[6px] transition-colors duration-500 hover:decoration-dan-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-dan-gold"
+                                    >
+                                        {item.accent && <span aria-hidden="true" className="h-1 w-1 rounded-full bg-dan-gold" />}
+                                        {item.name.charAt(0) + item.name.slice(1).toLowerCase()}
+                                    </Link>
+                                );
+                            }
 
                             return (
                                 <Link
@@ -427,12 +494,25 @@ export default function Navbar() {
                             </div>
                         ) : (
                             <div className="flex items-center gap-3">
-                                <Link href="/login" className="text-xs font-bold text-zinc-300 hover:text-white uppercase tracking-widest px-3 py-2 rounded-full hover:bg-white/5 transition-colors">
-                                    Sign In
-                                </Link>
-                                <Link href="/register" className="text-xs font-bold text-black bg-white hover:bg-red-500 hover:text-white hover:shadow-[0_0_20px_rgba(220,38,38,0.4)] uppercase tracking-widest px-5 py-2.5 rounded-full transition-all">
-                                    Join Now
-                                </Link>
+                                {film ? (
+                                    <>
+                                        <Link href="/login" className="font-gothic text-sm font-bold text-canvas px-3 py-2 underline decoration-transparent decoration-1 underline-offset-[6px] transition-colors duration-500 hover:decoration-dan-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-dan-gold">
+                                            Sign in
+                                        </Link>
+                                        <Link href="/register" className="font-gothic text-sm font-bold text-night bg-canvas px-5 py-2.5 transition-colors duration-500 hover:bg-dan-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dan-gold">
+                                            Join now
+                                        </Link>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Link href="/login" className="text-xs font-bold text-zinc-300 hover:text-white uppercase tracking-widest px-3 py-2 rounded-full hover:bg-white/5 transition-colors">
+                                            Sign In
+                                        </Link>
+                                        <Link href="/register" className="text-xs font-bold text-black bg-white hover:bg-red-500 hover:text-white hover:shadow-[0_0_20px_rgba(220,38,38,0.4)] uppercase tracking-widest px-5 py-2.5 rounded-full transition-all">
+                                            Join Now
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>

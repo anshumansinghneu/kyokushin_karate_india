@@ -42,9 +42,9 @@ export function Heading({
 }) {
     const Tag = `h${level}` as const;
     const sizes = {
-        display: "text-[clamp(2.75rem,8vw,6rem)] leading-[0.95] tracking-[-0.03em] font-black",
-        headline: "text-[clamp(2rem,4.5vw,3.25rem)] leading-[1.02] tracking-[-0.02em] font-extrabold",
-        title: "text-xl md:text-2xl leading-tight font-bold",
+        display: "text-[clamp(2.75rem,8vw,6rem)] leading-[0.95] tracking-[-0.02em] font-extrabold",
+        headline: "text-[clamp(2rem,4vw,3.052rem)] leading-[1.1] tracking-[-0.01em] font-extrabold",
+        title: "text-[1.563rem] md:text-[1.953rem] leading-tight font-extrabold",
     };
-    return <Tag className={cn("text-balance text-white", sizes[size], className)}>{children}</Tag>;
+    return <Tag className={cn("text-balance font-mincho text-canvas", sizes[size], className)}>{children}</Tag>;
 }

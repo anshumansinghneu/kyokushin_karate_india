@@ -6,6 +6,8 @@ import StructuredData from "@/components/StructuredData";
 import { ToastProvider } from "@/contexts/ToastContext";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import LayoutShell from "@/components/LayoutShell";
+import { gothic, mincho } from "@/components/home/film/fonts";
+import { SKIN_SCRIPT } from "@/lib/routes";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -99,14 +101,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning className={cn(montserrat.variable, mincho.variable, gothic.variable)}>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="KKFI" />
         <link rel="apple-touch-icon" href="/kkfi-logo.avif" />
+        {/* Picks the member-app palette before first paint (see lib/routes). */}
+        <script dangerouslySetInnerHTML={{ __html: SKIN_SCRIPT }} />
       </head>
-      <body className={cn(montserrat.variable, "min-h-screen bg-black font-sans antialiased")}>
+      <body className="min-h-screen bg-black font-sans antialiased">
         <StructuredData />
         <ServiceWorkerRegistrar />
         <ToastProvider>
