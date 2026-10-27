@@ -10,6 +10,7 @@ import SceneSlot from "@/components/three/SceneSlot";
 import Reveal from "@/components/brand/Reveal";
 import Section, { Heading } from "@/components/brand/Section";
 import BrandLink from "@/components/brand/BrandLink";
+import RoundClock from "@/components/events/RoundClock";
 import type { Ticket } from "@/components/three/scenes/TicketsScene";
 
 import { dateOnlyParts, formatDateOnlyRange } from '@/lib/dateOnly';
@@ -36,41 +37,6 @@ const FILTERS: { value: Filter; label: string }[] = [
 
 const typeLabel = (type: string) =>
     type === "BELT_EXAM" ? "Grading" : type.charAt(0) + type.slice(1).toLowerCase().replace("_", " ");
-
-/* ------------------------------------------------------------------ */
-/*  The next event's countdown, set in ink                             */
-/* ------------------------------------------------------------------ */
-
-function useCountdown(target: string | null) {
-    const [left, setLeft] = useState<{ d: number; h: number; m: number } | null>(null);
-    useEffect(() => {
-        if (!target) return;
-        const end = new Date(target).getTime();
-        const tick = () => {
-            const diff = Math.max(0, end - Date.now());
-            setLeft({ d: Math.floor(diff / 86400000), h: Math.floor((diff % 86400000) / 3600000), m: Math.floor((diff % 3600000) / 60000) });
-        };
-        const first = requestAnimationFrame(tick);
-        const id = setInterval(tick, 30000);
-        return () => {
-            cancelAnimationFrame(first);
-            clearInterval(id);
-        };
-    }, [target]);
-    return target ? left : null;
-}
-
-/** Numerals with a faint ink bleed at the edges: an SVG displacement, static and cheap. */
-function InkNumeral({ value, label }: { value: number; label: string }) {
-    return (
-        <div>
-            <div className="text-[clamp(3rem,8vw,5.5rem)] font-black leading-none tracking-[-0.04em] text-white tabular-nums [filter:url(#ink-bleed)]">
-                {String(value).padStart(2, "0")}
-            </div>
-            <div className="mt-2 text-sm font-semibold text-white/60">{label}</div>
-        </div>
-    );
-}
 
 /* ------------------------------------------------------------------ */
 /*  One row of the calendar                                            */
@@ -137,7 +103,6 @@ function TicketsHero({
     const ref = useRef<HTMLElement>(null);
     const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
     const sceneProps = useMemo(() => ({ tickets, progress: scrollYProgress }), [tickets, scrollYProgress]);
-    const left = useCountdown(next ? next.startDate : null);
 
     return (
         <header ref={ref} data-bleed className="relative flex min-h-[100svh] overflow-hidden">
@@ -169,13 +134,7 @@ function TicketsHero({
                             {formatDateOnlyRange(next.startDate, next.endDate)}
                             {next.location ? ` · ${next.location}` : ""}
                         </p>
-                        {left && getEventStatus(next) === "UPCOMING" && (
-                            <div role="timer" aria-label="Time until the next event" className="mt-8 flex gap-8 sm:gap-12">
-                                <InkNumeral value={left.d} label="days" />
-                                <InkNumeral value={left.h} label="hours" />
-                                <InkNumeral value={left.m} label="minutes" />
-                            </div>
-                        )}
+                        {getEventStatus(next) === "UPCOMING" && <RoundClock target={next.startDate} progress={scrollYProgress} />}
                         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                             <BrandLink href={`/events/${next.id}`}>
                                 Register <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -197,13 +156,6 @@ function TicketsHero({
                 )}
             </div>
 
-            {/* Ink bleed for the countdown numerals. */}
-            <svg aria-hidden="true" className="absolute h-0 w-0">
-                <filter id="ink-bleed" x="-5%" y="-5%" width="110%" height="110%">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" />
-                    <feDisplacementMap in="SourceGraphic" scale="2.2" />
-                </filter>
-            </svg>
         </header>
     );
 }
