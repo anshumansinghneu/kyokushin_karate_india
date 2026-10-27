@@ -338,7 +338,7 @@ export const generateBeltCertificate = async (data: BeltCertificateData): Promis
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(6);
     pdf.setTextColor(...GREY);
-    pdf.text('Kyokushin Karate Federation of India  |  www.kyokushinkarate.in', W / 2, H - 18, { align: 'center' });
+    pdf.text('Kyokushin Karate Foundation of India  |  kyokushinfoundation.com', W / 2, H - 18, { align: 'center' });
     pdf.text('Certificate ID: ' + certId, W / 2, H - 14, { align: 'center' });
 
     return pdf;

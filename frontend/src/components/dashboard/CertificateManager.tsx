@@ -209,7 +209,7 @@ export default function CertificateManager() {
                                     {/* Footer */}
                                     <div className="text-center">
                                         <div className="w-40 h-[1px] bg-amber-500/40 mx-auto mb-1" />
-                                        <p className="text-[5px] text-gray-400">Kyokushin Karate Federation of India | www.kyokushinkarate.in</p>
+                                        <p className="text-[5px] text-gray-400">Kyokushin Karate Foundation of India | kyokushinfoundation.com</p>
                                     </div>
                                 </div>
                             </div>
