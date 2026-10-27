@@ -8,7 +8,14 @@ export interface KataInfo {
     name: string;
     japanese?: string;
     description?: string;
+    /** Floor pattern in kata steps (y toward the front), only where it is well documented. */
+    embusen?: [number, number][];
 }
+
+/** The Taikyoku kata share one I-shaped (工) floor pattern: the bottom bar, up the centre, the top bar, back down. */
+const TAIKYOKU_EMBUSEN: [number, number][] = [
+    [0, 0], [-1, 0], [1, 0], [0, 0], [0, -2], [-1, -2], [1, -2], [0, -2], [0, 0],
+];
 
 export interface SyllabusEntry {
     belt: string;
@@ -40,8 +47,8 @@ export const SYLLABUS: SyllabusEntry[] = [
             'Kin Geri (Groin kick)',
         ],
         kata: [
-            { name: 'Taikyoku Sono Ichi', japanese: '太極その一', description: 'First basic kata — straight punches in Zenkutsu Dachi' },
-            { name: 'Taikyoku Sono Ni', japanese: '太極その二', description: 'Second basic kata — upper blocks and punches' },
+            { name: 'Taikyoku Sono Ichi', japanese: '太極その一', description: 'First basic kata — straight punches in Zenkutsu Dachi', embusen: TAIKYOKU_EMBUSEN },
+            { name: 'Taikyoku Sono Ni', japanese: '太極その二', description: 'Second basic kata — upper blocks and punches', embusen: TAIKYOKU_EMBUSEN },
         ],
         kumite: ['Basic 3-step sparring (Sanbon Kumite)', 'Distance and timing basics'],
         fitness: ['50 push-ups', '30 sit-ups', '20 squats', '1-minute plank'],
@@ -64,7 +71,7 @@ export const SYLLABUS: SyllabusEntry[] = [
             'Gedan Barai (Low sweep block)',
         ],
         kata: [
-            { name: 'Taikyoku Sono San', japanese: '太極その三', description: 'Third basic kata — inside blocks' },
+            { name: 'Taikyoku Sono San', japanese: '太極その三', description: 'Third basic kata — inside blocks', embusen: TAIKYOKU_EMBUSEN },
             { name: 'Pinan Sono Ichi', japanese: 'ピナンその一', description: 'First Pinan kata — introduces turning and combinations' },
         ],
         kumite: ['5-step sparring', 'Introduction to free sparring (Jiyu Kumite)', 'Basic combinations'],

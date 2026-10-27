@@ -1,6 +1,6 @@
 "use client";
 
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import PageHero from "@/components/brand/PageHero";
@@ -9,6 +9,7 @@ import Reveal from "@/components/brand/Reveal";
 import Section, { Heading } from "@/components/brand/Section";
 import KankuMark from "@/components/KankuMark";
 import HistoryHeroSlot from "@/components/three/HistoryHeroSlot";
+import LineageLine, { type Generation } from "@/components/learn/LineageLine";
 import { useState } from "react";
 
 // The lineage as a corridor of portraits, in order. Module scope keeps the scene's props stable.
@@ -18,7 +19,7 @@ import ryukoTake from "../../../public/ryuko-take.png";
 import shihanVasant from "../../../public/shihan-vasant.png";
 
 /* The line of authority, in order. A real sequence, so it is numbered. */
-const LINEAGE: { years: string; name: string; role: string; body: string; image: string | StaticImageData }[] = [
+const LINEAGE: Generation[] = [
     {
         years: "1923–1994",
         name: "Sosai Masutatsu Oyama",
@@ -122,33 +123,11 @@ export default function IntroPage() {
             </Section>
 
             {/* Lineage */}
-            <Section rhythm="base" width="wide" className="bg-black">
+            <Section rhythm="base" width="base" className="bg-black">
                 <Reveal>
                     <Heading className="max-w-[18ch]">From the founder to India.</Heading>
                 </Reveal>
-                <ol className="mt-14 grid gap-14 md:grid-cols-3 md:gap-8">
-                    {LINEAGE.map((p, i) => (
-                        <Reveal as="li" key={p.name} kind="depth" delay={i * 0.1}>
-                            <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-surface">
-                                <Image
-                                    src={p.image}
-                                    alt={`${p.name}, ${p.role}`}
-                                    fill
-                                    sizes="(max-width: 768px) 100vw, 33vw"
-                                    placeholder={typeof p.image === "string" ? "empty" : "blur"}
-                                    className="object-cover object-top grayscale"
-                                />
-                            </div>
-                            <p className="mt-6 flex items-baseline gap-3 text-sm font-semibold">
-                                <span className="font-bold tabular-nums text-primary-light">0{i + 1}</span>
-                                <span className="text-secondary">{p.years}</span>
-                            </p>
-                            <h3 className="mt-2 text-2xl font-extrabold leading-tight text-white">{p.name}</h3>
-                            <p className="mt-1 text-sm text-white/65">{p.role}</p>
-                            <p className="mt-4 max-w-[42ch] leading-relaxed text-white/75">{p.body}</p>
-                        </Reveal>
-                    ))}
-                </ol>
+                <LineageLine generations={LINEAGE} />
             </Section>
 
             {/* What KKFI does: four rows that lead into the site. */}

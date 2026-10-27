@@ -7,9 +7,8 @@ import PageHero from '@/components/brand/PageHero';
 import SceneSlot from '@/components/three/SceneSlot';
 import BrandLink from '@/components/brand/BrandLink';
 import Reveal from '@/components/brand/Reveal';
+import Embusen from '@/components/learn/Embusen';
 import { SYLLABUS, type SyllabusEntry } from '@/lib/syllabus';
-
-
 
 /** The belt's own colour, used only as a swatch: it means the rank, so it is the one colour on each section. */
 const SWATCH: Record<string, string> = {
@@ -42,6 +41,7 @@ function Swatch({ belt, className = 'h-3 w-8' }: { belt: string; className?: str
 }
 
 function BeltSection({ entry }: { entry: SyllabusEntry }) {
+    const patterns = entry.kata.some((k) => k.embusen);
     return (
         <section
             id={anchor(entry.belt)}
@@ -75,7 +75,8 @@ function BeltSection({ entry }: { entry: SyllabusEntry }) {
                             <tr className="border-b border-white/20 text-sm text-white/55 print:border-black/30 print:text-black/60">
                                 <th scope="col" className="py-2 pr-6 font-semibold">Kata</th>
                                 <th scope="col" className="py-2 pr-6 font-semibold">Japanese</th>
-                                <th scope="col" className="py-2 font-semibold">Focus</th>
+                                <th scope="col" className="py-2 pr-6 font-semibold">Focus</th>
+                                {patterns && <th scope="col" className="py-2 font-semibold">Embusen</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/10 print:divide-black/15">
@@ -83,7 +84,12 @@ function BeltSection({ entry }: { entry: SyllabusEntry }) {
                                 <tr key={k.name}>
                                     <th scope="row" className="py-3 pr-6 font-bold text-white print:text-black">{k.name}</th>
                                     <td lang="ja" className="py-3 pr-6 text-white/75 print:text-black">{k.japanese}</td>
-                                    <td className="py-3 text-white/75 print:text-black">{k.description}</td>
+                                    <td className="py-3 pr-6 text-white/75 print:text-black">{k.description}</td>
+                                    {patterns && (
+                                        <td className="py-3">
+                                            {k.embusen && <Embusen points={k.embusen} label={`Floor pattern of ${k.name}`} />}
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
@@ -220,7 +226,6 @@ export default function SyllabusPage() {
                                 >
                                     <Swatch belt={entry.belt} className="h-2.5 w-6" />
                                     {entry.belt}
-                                    
                                 </a>
                             </li>
                         ))}
