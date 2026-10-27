@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
+import type { MotionValue } from "framer-motion";
 import InkBackdrop from "../materials/InkBackdrop";
 import { pointer } from "../pointer";
 import { useReadySignal } from "./sceneUtils";
@@ -11,6 +12,8 @@ import { useReadySignal } from "./sceneUtils";
 interface GlobeSceneProps {
     /** ISO alpha-2 of the host country, or null for India alone. */
     hostCode?: string | null;
+    /** When given, the flight draws with it (0..1) instead of on its own. */
+    progress?: MotionValue<number>;
     onReady?: () => void;
 }
 
@@ -119,7 +122,7 @@ void main() {
 }
 `;
 
-function Arc({ from, to }: { from: [number, number]; to: [number, number] }) {
+function Arc({ from, to, progress }: { from: [number, number]; to: [number, number]; progress?: MotionValue<number> }) {
     const mat = useRef<THREE.ShaderMaterial>(null);
     const draw = useRef(0);
     const head = useRef(0);
@@ -145,8 +148,8 @@ function Arc({ from, to }: { from: [number, number]; to: [number, number] }) {
     useFrame((_, delta) => {
         const u = mat.current?.uniforms;
         if (!u) return;
-        draw.current = Math.min(1, draw.current + delta * 0.45);
-        const e = 1 - Math.pow(1 - draw.current, 3);
+        draw.current = progress ? THREE.MathUtils.clamp(progress.get(), 0, 1) : Math.min(1, draw.current + delta * 0.45);
+        const e = progress ? draw.current : 1 - Math.pow(1 - draw.current, 3);
         u.uDraw.value = e;
         head.current = (head.current + delta * 0.28) % 1.4;
         u.uHead.value = head.current;
@@ -224,7 +227,7 @@ void main() {
  * boundary, brighter than the rest; a red flight arc rises from it to the host
  * country, and the globe turns to frame the journey.
  */
-export default function GlobeScene({ hostCode = null, onReady }: GlobeSceneProps) {
+export default function GlobeScene({ hostCode = null, progress, onReady }: GlobeSceneProps) {
     const { world, india } = useGeo();
     const spin = useRef<THREE.Group>(null);
     const tilt = useRef<THREE.Group>(null);
@@ -340,7 +343,7 @@ export default function GlobeScene({ hostCode = null, onReady }: GlobeSceneProps
                     <Pulse at={INDIA} color="#ffffff" size={0.2} />
                     {host && (
                         <>
-                            <Arc from={INDIA} to={host} />
+                            <Arc from={INDIA} to={host} progress={progress} />
                             <Pulse at={host} color="#ff2a2a" size={0.36} />
                         </>
                     )}

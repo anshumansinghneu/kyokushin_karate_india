@@ -63,6 +63,10 @@ export interface RankPortraitProps {
     href?: string;
     /** "Verify membership" link, on the back of the card. */
     verifyHref?: string;
+    /** A role above the rank on the back, e.g. "Coach". */
+    role?: string;
+    /** A short bio on the back. */
+    note?: string;
     size?: "lead" | "base";
 }
 
@@ -98,7 +102,7 @@ function RankLine({ rank, dan }: { rank: string; dan: number }) {
  * works by keyboard and touch; the hidden face is inert. Reduced motion swaps faces
  * without the turn. With no photo, the initials are set large over a faint Kanku.
  */
-export default function RankPortrait({ name, rank, photoUrl, detail, location, href, verifyHref, size = "base" }: RankPortraitProps) {
+export default function RankPortrait({ name, rank, photoUrl, detail, location, href, verifyHref, role, note, size = "base" }: RankPortraitProps) {
     const [flipped, setFlipped] = useState(false);
     const front = useRef<HTMLButtonElement>(null);
     const back = useRef<HTMLButtonElement>(null);
@@ -171,11 +175,13 @@ export default function RankPortrait({ name, rank, photoUrl, detail, location, h
                 {/* Back: the record. */}
                 <div className={cn(face, "flex flex-col bg-[#0b0b0b] p-5 [transform:rotateY(180deg)] md:p-6")} inert={!flipped}>
                     <KankuMark aria-hidden="true" className="pointer-events-none absolute -right-[20%] -top-[10%] h-[80%] w-[80%] text-white/[0.04]" />
+                    {role && <p className="mb-2 text-sm font-semibold text-white/60">{role}</p>}
                     <RankLine rank={rank} dan={dan} />
                     <p className={cn("mt-3 text-balance font-black uppercase leading-[0.98] tracking-[-0.01em] text-white", size === "lead" ? "text-[clamp(1.75rem,3.2vw,2.75rem)]" : "text-xl md:text-2xl")}>
                         {clean}
                     </p>
-                    <dl className="mt-6 space-y-3 text-sm">
+                    {note && <p className="mt-4 line-clamp-3 shrink-0 text-sm leading-relaxed text-white/70">{note}</p>}
+                    <dl className="mt-5 space-y-3 text-sm">
                         {detail && (
                             <div>
                                 <dt className="text-white/50">Dojo</dt>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, type MotionValue } from "framer-motion";
 import { MapPin, Plane, Calendar, AlertTriangle, RefreshCw, Globe2, ChevronDown, Users } from "lucide-react";
 import api from "@/lib/api";
 import KarateLoader from "@/components/KarateLoader";
@@ -10,6 +10,8 @@ import SceneSlot from "@/components/three/SceneSlot";
 import Reveal from "@/components/brand/Reveal";
 import Section from "@/components/brand/Section";
 import BrandLink from "@/components/brand/BrandLink";
+import RankPortrait from "@/components/people/RankPortrait";
+import Journey from "@/components/people/Journey";
 import { useTilt } from "@/hooks/useTilt";
 import { getImageUrl } from "@/lib/imageUtils";
 import {
@@ -354,7 +356,6 @@ function Leader({ member }: { member: SquadMember }) {
                 </h3>
                 <p className="mt-3 text-lg font-bold text-white/85">
                     {member.rankLabel}
-                    {member.title && <span className="font-semibold text-white/60"> · {member.title}</span>}
                 </p>
                 <p className="mt-5 max-w-[56ch] text-pretty leading-relaxed text-white/75">{member.bio}</p>
                 {(member.dojo || place) && (
@@ -369,35 +370,26 @@ function Leader({ member }: { member: SquadMember }) {
 }
 
 /* ─── Member ────────────────────────────────────────────────
-   Portrait with the name set beneath it, not printed over a gradient: the
-   line-up reads like a team sheet.
+   The line-up as flip cards: the print and name on the front, rank, dojo,
+   bio and the way to verify on the back.
    ---------------------------------------------------------- */
 
 function Member({ member, index }: { member: SquadMember; index: number }) {
     const place = [member.city, member.state].filter(Boolean).join(", ");
+    // The generated bio usually names the dojo and city already; don't say them twice.
+    const unsaid = (s: string | null) => (s && !member.bio.includes(s) ? s : undefined);
     return (
         <Reveal as="li" kind="depth" delay={Math.min(index * 0.05, 0.3)}>
-            <ProfileLink membershipNumber={member.membershipNumber} name={member.name} className="group block">
-                <Portrait member={member} />
-                <div className="mt-4">
-                    <p className="text-sm font-semibold text-white/60">
-                        {member.squadRole === "COACH" ? "Coach · " : ""}
-                        {member.rankLabel}
-                    </p>
-                    <h3 className="mt-1 text-lg font-extrabold leading-tight text-white transition-colors group-hover:text-primary-light">
-                        {member.name}
-                    </h3>
-                    {member.title && <p className="mt-1 text-sm font-semibold text-white/75">{member.title}</p>}
-                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/65">{member.bio}</p>
-                    {/* The generated bio usually names the dojo already; don't say it twice. */}
-                    {(member.dojo || place) && !member.bio.includes(member.dojo || place) && (
-                        <p className="mt-2 flex items-start gap-1.5 text-sm text-white/55">
-                            <MapPin className="mt-[3px] h-3 w-3 shrink-0" aria-hidden="true" />
-                            <span className="line-clamp-1">{member.dojo || place}</span>
-                        </p>
-                    )}
-                </div>
-            </ProfileLink>
+            <RankPortrait
+                name={member.name}
+                rank={member.rankLabel || member.rank}
+                photoUrl={getImageUrl(member.profilePhotoUrl || null)}
+                detail={unsaid(member.dojo)}
+                location={place && unsaid(member.city ?? place) ? place : undefined}
+                verifyHref={member.membershipNumber ? `/verify/${encodeURIComponent(member.membershipNumber)}` : undefined}
+                role={member.squadRole === "COACH" ? "Coach" : undefined}
+                note={member.bio}
+            />
         </Reveal>
     );
 }
@@ -592,6 +584,12 @@ function EmptyState() {
 
 /* ─── Page ──────────────────────────────────────────────── */
 
+/** The globe, with the flight following `progress` when the journey is scroll-driven. */
+function Globe({ hostCode, progress }: { hostCode: string | null; progress?: MotionValue<number> }) {
+    const sceneProps = useMemo(() => ({ hostCode: isCountryCode(hostCode) ? hostCode : null, progress }), [hostCode, progress]);
+    return <SceneSlot scene="globe" sceneProps={sceneProps} className="absolute inset-0" fallback={<GlobePoster />} />;
+}
+
 export default function TeamIndiaPage() {
     const [delegations, setDelegations] = useState<Delegation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -622,11 +620,7 @@ export default function TeamIndiaPage() {
     // An admin's cover image is a deliberate art-directed choice, so it takes
     // the hero; the globe then moves to its own band below.
     const cover = current?.coverImageUrl ?? null;
-    const sceneProps = useMemo(() => ({ hostCode: isCountryCode(hostCode) ? hostCode : null }), [hostCode]);
-
-    const globe = (
-        <SceneSlot scene="globe" sceneProps={sceneProps} className="absolute inset-0" fallback={<GlobePoster />} />
-    );
+    const globe = (progress?: MotionValue<number>) => <Globe hostCode={hostCode} progress={progress} />;
 
     const heroCopy = (
         <>
@@ -685,23 +679,27 @@ export default function TeamIndiaPage() {
                     <FlagRule hostCode={hostCode} />
                 </section>
             ) : (
-                <section data-bleed className="relative isolate flex min-h-[100svh] overflow-hidden">
-                    {/* Phones: the globe gets the top band and the copy sits beneath it. */}
-                    <div className="absolute inset-x-0 top-0 h-[52svh] md:inset-0 md:h-auto">{globe}</div>
-                    <FlagGlows hostCode={hostCode} />
-                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,black_40%,transparent_60%)] md:bg-[linear-gradient(to_right,rgba(0,0,0,0.85),rgba(0,0,0,0.35)_45%,transparent_65%)]" />
-                    <div className="relative mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-20 pt-[46svh] sm:px-6 md:justify-center md:pb-16 md:pt-40 lg:px-8">
-                        {heroCopy}
-                    </div>
-                    {current && <FlagRule hostCode={hostCode} />}
-                </section>
+                <Journey hostCode={hostCode} hostName={hostCountry?.name} bleed className="isolate" stageClassName="flex min-h-[100svh]">
+                    {(progress) => (
+                        <>
+                            {/* Phones: the globe gets the top band and the copy sits beneath it. */}
+                            <div className="absolute inset-x-0 top-0 h-[52svh] md:inset-0 md:h-auto">{globe(progress)}</div>
+                            <FlagGlows hostCode={hostCode} />
+                            <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,black_40%,transparent_60%)] md:bg-[linear-gradient(to_right,rgba(0,0,0,0.85),rgba(0,0,0,0.35)_45%,transparent_65%)]" />
+                            <div className="relative mx-auto flex w-full max-w-[1400px] flex-col justify-end px-4 pb-20 pt-[46svh] sm:px-6 md:justify-center md:pb-16 md:pt-40 lg:px-8">
+                                {heroCopy}
+                            </div>
+                            {current && <FlagRule hostCode={hostCode} />}
+                        </>
+                    )}
+                </Journey>
             )}
 
             {/* With a cover image in the hero, the journey gets its own band. */}
             {cover && (
-                <section className="relative h-[70svh] overflow-hidden" aria-label={`From India to ${hostCountry?.name ?? "the host country"}`}>
-                    {globe}
-                </section>
+                <Journey hostCode={hostCode} hostName={hostCountry?.name} stageClassName="h-[70svh]">
+                    {(progress) => globe(progress)}
+                </Journey>
             )}
 
             {/* ── Body ── (nothing to show below the hero when no trip is published) */}
