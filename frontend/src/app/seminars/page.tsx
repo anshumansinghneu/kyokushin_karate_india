@@ -523,14 +523,6 @@ function SeminarStory({
     );
 }
 
-/* ─── Stats ─── */
-const STATS = [
-    { label: "seminars conducted", value: "10+" },
-    { label: "participants trained", value: "500+" },
-    { label: "corporate partners", value: "5+" },
-    { label: "states covered", value: "3+" },
-];
-
 const ctaClass =
     "group inline-flex min-h-12 items-center justify-center gap-2 rounded-none px-7 text-sm font-bold uppercase tracking-[0.1em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black active:scale-[0.98]";
 
@@ -634,18 +626,6 @@ export default function SeminarsPage() {
                         </figure>
                     </Reveal>
                 </div>
-            </Section>
-
-            {/* ─── The reach, in one sentence ─── */}
-            <Section rhythm="tight" width="wide">
-                <Reveal kind="focus">
-                    <p className="max-w-[30ch] text-balance text-[clamp(1.6rem,3.6vw,2.75rem)] font-extrabold leading-[1.15] tracking-[-0.015em] text-white/45">
-                        <span className="text-white">{STATS[0].value} {STATS[0].label}</span>, with{" "}
-                        <span className="text-white">{STATS[1].value} {STATS[1].label}</span> and{" "}
-                        <span className="text-white">{STATS[2].value} {STATS[2].label}</span>, across{" "}
-                        <span className="text-white">{STATS[3].value} states</span>.
-                    </p>
-                </Reveal>
             </Section>
 
             {/* ─── Upcoming ─── */}

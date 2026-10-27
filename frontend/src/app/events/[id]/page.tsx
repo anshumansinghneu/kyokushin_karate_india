@@ -574,12 +574,6 @@ export default function EventDetailPage() {
                             <>
                                 <p className="text-sm font-semibold text-white/60">Registration fee</p>
                                 <p className="mt-1 text-4xl font-black tabular-nums">{event.memberFee > 0 ? `₹${event.memberFee}` : "Free"}</p>
-                                {isTournament && (
-                                    <ul className="mt-5 space-y-2 border-t border-white/10 pt-5 text-sm text-white/75">
-                                        <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 shrink-0 text-white/60" aria-hidden="true" /> Official tournament T-shirt</li>
-                                        <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 shrink-0 text-white/60" aria-hidden="true" /> Participation certificate</li>
-                                    </ul>
-                                )}
                                 <ActionButton onClick={handleRegister} className="mt-6">Register now</ActionButton>
                                 {event.registrationDeadline && (
                                     <p className="mt-4 text-center text-sm text-white/60">Closes {formatDateOnly(event.registrationDeadline)}</p>
