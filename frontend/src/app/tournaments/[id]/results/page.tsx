@@ -5,8 +5,8 @@ import SceneSlot from "@/components/three/SceneSlot";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Download, Share2, FileCheck } from "lucide-react";
 import Link from "next/link";
-import Reveal from "@/components/brand/Reveal";
 import BrandLink from "@/components/brand/BrandLink";
+import { Unveil, CountUp, Gauge } from "@/components/results/Unveil";
 import { formatDateOnly } from "@/lib/dateOnly";
 import { useToast } from "@/contexts/ToastContext";
 import axios from "axios";
@@ -285,7 +285,8 @@ export default function TournamentResultsPage() {
                 {podium.length >= 3 && (
                     <section aria-labelledby="podium-heading">
                         <h2 id="podium-heading" className="mb-10 text-2xl font-extrabold md:text-3xl">Top dojos</h2>
-                        <ol className="mx-auto grid max-w-3xl grid-cols-3 items-end gap-3 sm:gap-5">
+                        <Unveil>
+                        <ol className="mx-auto grid max-w-3xl grid-cols-3 items-end gap-3 pt-2 sm:gap-5">
                             {[1, 0, 2].map((i) => {
                                 const d = podium[i];
                                 const first = i === 0;
@@ -293,18 +294,19 @@ export default function TournamentResultsPage() {
                                 return (
                                     <li key={d.dojoName} className="flex flex-col items-center text-center">
                                         <p className={`mb-3 line-clamp-2 text-sm font-bold sm:text-base ${first ? "text-white" : "text-white/80"}`}>{d.dojoName}</p>
-                                        <Reveal kind="rise" delay={first ? 0.1 : i === 1 ? 0.2 : 0.3} className="w-full">
+                                        <div className="w-full">
                                             <div className={`flex w-full flex-col items-center justify-start rounded-t-md pt-4 ${height} ${first ? "bg-secondary text-black" : "bg-white/10 text-white"}`}>
                                                 <span className="text-4xl font-black tabular-nums sm:text-5xl">{i + 1}</span>
                                                 <span className={`mt-2 text-xs font-semibold tabular-nums ${first ? "text-black/70" : "text-white/60"}`}>
                                                     {d.gold}G · {d.silver}S · {d.bronze}B
                                                 </span>
                                             </div>
-                                        </Reveal>
+                                        </div>
                                     </li>
                                 );
                             })}
                         </ol>
+                        </Unveil>
                     </section>
                 )}
 
@@ -373,7 +375,8 @@ export default function TournamentResultsPage() {
                                     <th scope="col" className="py-3 pr-4 text-right font-semibold">Gold</th>
                                     <th scope="col" className="py-3 pr-4 text-right font-semibold">Silver</th>
                                     <th scope="col" className="py-3 pr-4 text-right font-semibold">Bronze</th>
-                                    <th scope="col" className="py-3 text-right font-semibold">Total</th>
+                                    <th scope="col" className="py-3 pr-6 text-right font-semibold">Total</th>
+                                    <th scope="col" className="w-[22%] py-3 font-semibold"><span className="sr-only">Share of the leader&apos;s total</span></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/10 tabular-nums">
@@ -381,10 +384,11 @@ export default function TournamentResultsPage() {
                                     <tr key={dojo.dojoName}>
                                         <td className={`py-4 pr-4 text-lg font-black ${idx === 0 ? "text-secondary" : "text-white/70"}`}>{idx + 1}</td>
                                         <th scope="row" className="py-4 pr-4 font-bold">{dojo.dojoName}</th>
-                                        <td className="py-4 pr-4 text-right font-bold text-secondary">{dojo.gold}</td>
-                                        <td className="py-4 pr-4 text-right font-bold text-white/80">{dojo.silver}</td>
-                                        <td className="py-4 pr-4 text-right font-bold text-white/60">{dojo.bronze}</td>
-                                        <td className="py-4 text-right text-lg font-black">{dojo.total}</td>
+                                        <td className="py-4 pr-4 text-right font-bold text-secondary"><CountUp value={dojo.gold} /></td>
+                                        <td className="py-4 pr-4 text-right font-bold text-white/80"><CountUp value={dojo.silver} /></td>
+                                        <td className="py-4 pr-4 text-right font-bold text-white/60"><CountUp value={dojo.bronze} /></td>
+                                        <td className="py-4 pr-6 text-right text-lg font-black"><CountUp value={dojo.total} /></td>
+                                        <td className="py-4"><Gauge value={dojo.total} max={dojoLeaderboard[0]?.total ?? 0} /></td>
                                     </tr>
                                 ))}
                             </tbody>

@@ -33,7 +33,7 @@ export default function ResultPdfViewer({ url }: { url: string }) {
   if (failed) {
     return (
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-8 text-center">
-        <p className="text-sm text-gray-400">Couldn't render the PDF in your browser.</p>
+        <p className="text-sm text-gray-400">Couldn&apos;t render the PDF in your browser.</p>
         <a href={url} target="_blank" rel="noopener noreferrer"
            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500">
           <Download className="h-4 w-4" /> Download PDF
