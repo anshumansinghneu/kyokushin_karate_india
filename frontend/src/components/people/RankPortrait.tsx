@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useTransform } from "framer-motion";
-import { MapPin } from "lucide-react";
+import { useRef, useState } from "react";
+import { MapPin, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTilt } from "@/hooks/useTilt";
 import KankuMark from "@/components/KankuMark";
 
 /* ------------------------------------------------------------------ */
@@ -38,10 +37,10 @@ export function rankWeight(rank?: string): number {
     return kyu;
 }
 
-export function danTitle(dan: number): string {
-    if (dan >= 5) return "Shihan";
-    if (dan >= 3) return "Sensei";
-    return "Senpai";
+/** The Japanese name of each dan grade. Titles (Senpai, Sensei, Shihan) wait on KKFI's rule. */
+const DAN_NAMES = ["", "Shodan", "Nidan", "Sandan", "Yondan", "Godan", "Rokudan", "Nanadan", "Hachidan", "Kudan", "Judan"];
+export function danName(dan: number): string {
+    return DAN_NAMES[dan] ?? `${dan}th Dan`;
 }
 
 export function ordinal(n: number): string {
@@ -62,7 +61,7 @@ export interface RankPortraitProps {
     detail?: string;
     location?: string;
     href?: string;
-    /** "Verify" link, shown under the card. */
+    /** "Verify membership" link, on the back of the card. */
     verifyHref?: string;
     size?: "lead" | "base";
 }
@@ -78,22 +77,39 @@ export function DanBars({ dan, className }: { dan: number; className?: string })
     );
 }
 
+function RankLine({ rank, dan }: { rank: string; dan: number }) {
+    const kyuColor = dan === 0 ? KYU_SWATCH[Object.keys(KYU_SWATCH).find((k) => rank.startsWith(k)) ?? ""] : undefined;
+    return dan > 0 ? (
+        <p className="flex items-center gap-2.5 text-sm font-semibold text-secondary">
+            <DanBars dan={dan} />
+            {ordinal(dan)} Dan · {danName(dan)}
+        </p>
+    ) : (
+        <p className="flex items-center gap-2.5 text-sm font-semibold text-white/75">
+            <span className="h-3 w-6 rounded-sm ring-1 ring-white/30" style={{ backgroundColor: kyuColor ?? "#444" }} aria-hidden="true" />
+            {rank} belt
+        </p>
+    );
+}
+
 /**
- * A portrait print that leans toward the pointer. The photo sits deep in the
- * frame and the name floats in front, so the tilt reads as real depth. With no
- * photo, the member's initials are set large over a faint Kanku instead of a
- * stock avatar.
+ * A flip card (Oddball): the front is a grayscale print with the name set vertically,
+ * the back carries rank, dojo and the way to verify. A real button flips it, so it
+ * works by keyboard and touch; the hidden face is inert. Reduced motion swaps faces
+ * without the turn. With no photo, the initials are set large over a faint Kanku.
  */
 export default function RankPortrait({ name, rank, photoUrl, detail, location, href, verifyHref, size = "base" }: RankPortraitProps) {
-    const { ref, handlers, style } = useTilt(size === "lead" ? 5 : 8);
-    // The frame clips (overflow hidden flattens 3D), so depth is faked the honest way:
-    // the photo slides against the tilt and the caption with it.
-    const deepX = useTransform(style.rotateY, (v) => v * -1.6);
-    const deepY = useTransform(style.rotateX, (v) => v * 1.6);
-    const nearX = useTransform(style.rotateY, (v) => v * 0.9);
-    const nearY = useTransform(style.rotateX, (v) => v * -0.9);
+    const [flipped, setFlipped] = useState(false);
+    const front = useRef<HTMLButtonElement>(null);
+    const back = useRef<HTMLButtonElement>(null);
+    // The face being left goes inert, so focus moves with the card to the face now showing.
+    const flip = (to: boolean) => {
+        setFlipped(to);
+        requestAnimationFrame(() => (to ? back : front).current?.focus());
+    };
     const dan = parseDan(rank);
-    const initials = name
+    const clean = name.trim();
+    const initials = clean
         .replace(/^(sensei|shihan|senpai)\s+/i, "")
         .split(/\s+/)
         .filter(Boolean)
@@ -101,79 +117,110 @@ export default function RankPortrait({ name, rank, photoUrl, detail, location, h
         .slice(0, 2)
         .join("")
         .toUpperCase();
-    const kyuColor = dan === 0 ? KYU_SWATCH[Object.keys(KYU_SWATCH).find((k) => rank.startsWith(k)) ?? ""] : undefined;
-
-    const card = (
-        <motion.div
-            ref={ref as React.Ref<HTMLDivElement>}
-            {...handlers}
-            style={style}
-            className={cn(
-                "group relative overflow-hidden rounded-xl bg-surface ring-1 ring-white/10 transition-shadow duration-500 hover:ring-white/25",
-                size === "lead" ? "aspect-[4/5] md:aspect-[5/6]" : "aspect-[4/5]",
-            )}
-        >
-            {photoUrl ? (
-                <motion.img
-                    src={photoUrl}
-                    alt={name}
-                    loading="lazy"
-                    style={{ x: deepX, y: deepY, scale: 1.1 }}
-                    className="absolute inset-0 h-full w-full object-cover object-top grayscale transition-[filter] duration-700 group-hover:grayscale-0"
-                />
-            ) : (
-                <motion.div aria-hidden="true" className="absolute inset-0 flex items-center justify-center bg-[#0b0b0b]" style={{ x: deepX, y: deepY, scale: 1.1 }}>
-                    <KankuMark className="absolute h-[85%] w-[85%] text-white/[0.04]" />
-                    <span className={cn("font-black leading-none tracking-[-0.04em] text-white/20", size === "lead" ? "text-[clamp(6rem,14vw,11rem)]" : "text-[clamp(4.5rem,9vw,6.5rem)]")}>
-                        {initials}
-                    </span>
-                </motion.div>
-            )}
-            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-
-            <motion.div className="absolute inset-x-0 bottom-0 p-5 md:p-6" style={{ x: nearX, y: nearY }}>
-                <p className="flex items-center gap-2.5 text-sm font-semibold text-secondary">
-                    {dan > 0 ? (
-                        <>
-                            <DanBars dan={dan} />
-                            {ordinal(dan)} Dan · {danTitle(dan)}
-                        </>
-                    ) : (
-                        <span className="flex items-center gap-2.5 text-white/75">
-                            <span className="h-3 w-6 rounded-sm ring-1 ring-white/30" style={{ backgroundColor: kyuColor ?? "#444" }} aria-hidden="true" />
-                            {rank} belt
-                        </span>
-                    )}
-                </p>
-                {/* Line height comes after the size: tailwind-merge drops a leading-* that precedes a text-* size. */}
-                <h3 className={cn("mt-2 text-balance font-black uppercase tracking-[-0.01em] text-white", size === "lead" ? "text-[clamp(1.75rem,3.2vw,2.75rem)]" : "text-xl md:text-2xl", "leading-[0.98]")}>
-                    {name.trim()}
-                </h3>
-                {detail && <p className="mt-2 text-sm text-white/75">{detail}</p>}
-                {location && (
-                    <p className="mt-1 inline-flex items-center gap-1 text-sm text-white/60">
-                        <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-                        {location}
-                    </p>
-                )}
-            </motion.div>
-        </motion.div>
-    );
+    const face = "absolute inset-0 overflow-hidden rounded-xl ring-1 ring-white/10 [backface-visibility:hidden]";
 
     return (
-        <div>
-            {href ? (
-                <Link href={href} className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-                    {card}
-                </Link>
-            ) : (
-                card
-            )}
-            {verifyHref && (
-                <Link href={verifyHref} className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-white/70 transition-colors hover:text-white">
-                    Verify membership <span aria-hidden="true">→</span>
-                </Link>
-            )}
+        <div className="[perspective:1400px]">
+            <div
+                className={cn(
+                    "relative transition-transform duration-700 ease-[cubic-bezier(0.65,0,0.35,1)] [transform-style:preserve-3d] motion-reduce:transition-none",
+                    size === "lead" ? "aspect-[4/5] md:aspect-[5/6]" : "aspect-[4/5]",
+                    flipped && "[transform:rotateY(180deg)]",
+                )}
+            >
+                {/* Front: the print. */}
+                <div className={cn(face, "group bg-surface")} inert={flipped}>
+                    {photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={photoUrl}
+                            alt=""
+                            loading="lazy"
+                            className="absolute inset-0 h-full w-full object-cover object-top grayscale transition-transform duration-700 group-hover:scale-[1.03]"
+                        />
+                    ) : (
+                        <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center bg-[#0b0b0b]">
+                            <KankuMark className="absolute h-[85%] w-[85%] text-white/[0.04]" />
+                            <span className={cn("font-black leading-none tracking-[-0.04em] text-white/20", size === "lead" ? "text-[clamp(6rem,14vw,11rem)]" : "text-[clamp(4.5rem,9vw,6.5rem)]")}>
+                                {initials}
+                            </span>
+                        </div>
+                    )}
+                    <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/10 to-transparent" />
+                    <h3
+                        className={cn(
+                            "absolute bottom-5 left-4 max-h-[calc(100%-2.5rem)] overflow-hidden text-ellipsis whitespace-nowrap font-black uppercase leading-none tracking-[0.02em] text-white [writing-mode:vertical-rl] rotate-180 md:left-5",
+                            size === "lead" ? "text-[clamp(1.5rem,2.6vw,2.25rem)]" : "text-xl md:text-2xl",
+                        )}
+                    >
+                        {clean}
+                    </h3>
+                    <div className="absolute bottom-5 right-5">
+                        {dan > 0 ? <DanBars dan={dan} /> : <RankLine rank={rank} dan={dan} />}
+                    </div>
+                    <button
+                        type="button"
+                        aria-pressed={flipped}
+                        aria-label={`Show details for ${clean}`}
+                        ref={front}
+                        onClick={() => flip(true)}
+                        className="absolute inset-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+                    />
+                </div>
+
+                {/* Back: the record. */}
+                <div className={cn(face, "flex flex-col bg-[#0b0b0b] p-5 [transform:rotateY(180deg)] md:p-6")} inert={!flipped}>
+                    <KankuMark aria-hidden="true" className="pointer-events-none absolute -right-[20%] -top-[10%] h-[80%] w-[80%] text-white/[0.04]" />
+                    <RankLine rank={rank} dan={dan} />
+                    <p className={cn("mt-3 text-balance font-black uppercase leading-[0.98] tracking-[-0.01em] text-white", size === "lead" ? "text-[clamp(1.75rem,3.2vw,2.75rem)]" : "text-xl md:text-2xl")}>
+                        {clean}
+                    </p>
+                    <dl className="mt-6 space-y-3 text-sm">
+                        {detail && (
+                            <div>
+                                <dt className="text-white/50">Dojo</dt>
+                                <dd className="mt-0.5 font-semibold text-white">
+                                    {href ? (
+                                        <Link href={href} className="underline decoration-white/30 underline-offset-4 hover:decoration-white">
+                                            {detail}
+                                        </Link>
+                                    ) : (
+                                        detail
+                                    )}
+                                </dd>
+                            </div>
+                        )}
+                        {location && (
+                            <div>
+                                <dt className="sr-only">Location</dt>
+                                <dd className="inline-flex items-center gap-1 text-white/70">
+                                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                                    {location}
+                                </dd>
+                            </div>
+                        )}
+                    </dl>
+                    <div className="mt-auto flex items-center justify-between gap-4 pt-6">
+                        {verifyHref ? (
+                            <Link href={verifyHref} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-white transition-colors hover:text-primary-light">
+                                Verify membership <span aria-hidden="true">→</span>
+                            </Link>
+                        ) : (
+                            <span />
+                        )}
+                        <button
+                            type="button"
+                            aria-pressed={flipped}
+                            ref={back}
+                            onClick={() => flip(false)}
+                            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-full text-sm font-semibold text-white/70 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        >
+                            <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                            <span className="sr-only">Show portrait of {clean}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

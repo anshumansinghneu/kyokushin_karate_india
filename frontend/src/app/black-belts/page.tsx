@@ -7,7 +7,7 @@ import KarateLoader from "@/components/KarateLoader";
 import { getImageUrl } from "@/lib/imageUtils";
 import Reveal from "@/components/brand/Reveal";
 import Section from "@/components/brand/Section";
-import RankPortrait, { DanBars, danTitle, ordinal, parseDan } from "@/components/people/RankPortrait";
+import RankPortrait, { DanBars, danName, ordinal, parseDan } from "@/components/people/RankPortrait";
 
 // ─── Types ────────────────────────────────────────────────────────────
 interface BlackBelt {
@@ -50,13 +50,6 @@ function Portrait({ member, size }: { member: BlackBelt; size: "lead" | "base" }
     );
 }
 
-const DAN_NOTES: Record<number, string> = {
-    1: "Shodan. The 20-man kumite is behind them, and the real learning begins.",
-    2: "Nidan. At least two years beyond Shodan, refining technique.",
-    3: "Sandan. Expected to teach as well as train.",
-    4: "Yondan. Authorised to open and lead a dojo.",
-};
-const danNote = (dan: number) => DAN_NOTES[dan] ?? "Exceptional contribution to Kyokushin, recognised over decades.";
 
 /**
  * One dan grade: the rank and what it asks of a karateka on the left, its
@@ -71,8 +64,7 @@ function TierSection({ tier, lead }: { tier: Tier; lead: boolean }) {
                     <h2 id={`dan-${tier.dan}`} className="text-[clamp(2rem,4vw,3rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] text-white">
                         {ordinal(tier.dan)} Dan
                     </h2>
-                    <p className="mt-1 text-xl font-extrabold uppercase text-white/45">{danTitle(tier.dan)}</p>
-                    <p className="mt-5 max-w-[34ch] leading-relaxed text-white/70">{danNote(tier.dan)}</p>
+                    <p className="mt-1 text-xl font-extrabold uppercase text-white/45">{danName(tier.dan)}</p>
                     <p className="mt-4 text-sm font-semibold text-white/60">
                         {tier.members.length} {tier.members.length === 1 ? "member" : "members"}
                     </p>
