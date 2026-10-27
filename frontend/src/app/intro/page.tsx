@@ -23,21 +23,21 @@ const LINEAGE: { years: string; name: string; role: string; body: string; image:
         years: "1923–1994",
         name: "Sosai Masutatsu Oyama",
         role: "Founder of Kyokushin",
-        body: "Founded the International Karate Organization Kyokushinkaikan in Tokyo in 1964: full-contact fighting, extreme conditioning, and the Osu spirit.",
+        body: "Founded the International Karate Organization Kyokushinkaikan in Tokyo in 1964: full-contact karate, hard training, and the Osu spirit.",
         image: "/history/oyama.jpg",
     },
     {
         years: "8th Dan",
         name: "Daihyo Ryuko Take",
-        role: "President, IKO World Kyokushin Kaikan",
-        body: "Trained directly under Sosai Oyama from the age of 18, founded the Kagoshima branch in 1981, and today leads the world organisation KKFI belongs to.",
+        role: "Head of World Kyokushin Kaikan",
+        body: "Based in Kagoshima, Japan, he founded and leads World Kyokushin Kaikan, the international organisation KKFI belongs to.",
         image: ryukoTake,
     },
     {
         years: "Since 2013",
         name: "Shihan Vasant Kumar Singh",
-        role: "Country Director, India",
-        body: "Training since 1987, he founded the Kyokushin Karate Foundation of India in 2013 to bring authentic Kyokushin to the country.",
+        role: "Country Director, World Kyokushin Kaikan India",
+        body: "Founded the Kyokushin Karate Foundation of India in 2013, with its headquarters in Shuklaganj, Uttar Pradesh.",
         image: shihanVasant,
     },
 ];
@@ -57,15 +57,10 @@ export default function IntroPage() {
             <PageHero
                 height="screen"
                 align="bottom-left"
-                kicker={
-                    <span className="flex items-center gap-3">
-                        <span lang="ja" className="text-2xl font-black text-primary-light">極真</span>
-                        <span>The Ultimate Truth</span>
-                    </span>
-                }
+                mark="極真"
                 title={
-                    <span className="uppercase">
-                        Kyokushin<br />India<span className="text-primary">.</span>
+                    <span>
+                        Kyokushin<br />India.
                     </span>
                 }
                 lede="The Kyokushin Karate Foundation of India: the national home of full-contact Kyokushin, in the lineage of Sosai Mas Oyama."
@@ -108,8 +103,8 @@ export default function IntroPage() {
             <Section rhythm="open" width="wide" className="bg-black">
                 <div className="grid gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-20">
                     <Reveal kind="mask" duration={1.1}>
-                        <p className="max-w-[20ch] text-balance text-[clamp(2rem,4.8vw,4rem)] font-black leading-[1.02] tracking-[-0.03em] text-white">
-                            One syllabus, one standard, one lineage, in every dojo in India<span className="text-primary">.</span>
+                        <p className="max-w-[20ch] text-balance font-mincho text-[clamp(2rem,4.8vw,4rem)] font-extrabold leading-[1.02] tracking-[-0.03em] text-white">
+                            One syllabus, one standard, one lineage, in every dojo in India.
                         </p>
                     </Reveal>
                     <Reveal delay={0.1} className="space-y-6 self-end text-pretty text-lg leading-relaxed text-white/75">
@@ -119,7 +114,7 @@ export default function IntroPage() {
                             and legs, demanding conditioning, and a spirit that does not quit.
                         </p>
                         <p>
-                            KKFI is how that karate is taught in India. Led by Shihan Vasant Kumar Singh and part of IKO World
+                            KKFI is how that karate is taught in India. Led by Shihan Vasant Kumar Singh and part of World
                             Kyokushin Kaikan, it runs the dojos, gradings, tournaments and national team under one roof.
                         </p>
                     </Reveal>
@@ -129,7 +124,7 @@ export default function IntroPage() {
             {/* Lineage */}
             <Section rhythm="base" width="wide" className="bg-black">
                 <Reveal>
-                    <Heading className="max-w-[18ch]">From the founder to India<span className="text-primary">.</span></Heading>
+                    <Heading className="max-w-[18ch]">From the founder to India.</Heading>
                 </Reveal>
                 <ol className="mt-14 grid gap-14 md:grid-cols-3 md:gap-8">
                     {LINEAGE.map((p, i) => (
@@ -148,7 +143,7 @@ export default function IntroPage() {
                                 <span className="font-bold tabular-nums text-primary-light">0{i + 1}</span>
                                 <span className="text-secondary">{p.years}</span>
                             </p>
-                            <h3 className="mt-2 text-2xl font-black uppercase leading-tight text-white">{p.name}</h3>
+                            <h3 className="mt-2 text-2xl font-extrabold leading-tight text-white">{p.name}</h3>
                             <p className="mt-1 text-sm text-white/65">{p.role}</p>
                             <p className="mt-4 max-w-[42ch] leading-relaxed text-white/75">{p.body}</p>
                         </Reveal>
@@ -165,11 +160,11 @@ export default function IntroPage() {
                     {WORK.map((w, i) => (
                         <Reveal as="li" key={w.title} delay={i * 0.05}>
                             <Link href={w.href} className="group grid items-baseline gap-2 py-7 md:grid-cols-[15rem_minmax(0,1fr)_auto] md:gap-10">
-                                <span className="text-[clamp(1.75rem,3vw,2.25rem)] font-black uppercase leading-none tracking-[-0.02em] text-white transition-colors group-hover:text-primary-light">
+                                <span className="font-mincho text-[clamp(1.75rem,3vw,2.25rem)] font-extrabold leading-none tracking-[-0.02em] text-white transition-colors group-hover:text-primary-light">
                                     {w.title}
                                 </span>
                                 <span className="max-w-[52ch] text-lg leading-relaxed text-white/75">{w.body}</span>
-                                <span className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.1em] text-white/70 transition-colors group-hover:text-white">
+                                <span className="inline-flex items-center gap-2 text-sm font-bold text-white/70 transition-colors group-hover:text-white">
                                     {w.cta} <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                                 </span>
                             </Link>
@@ -182,8 +177,8 @@ export default function IntroPage() {
             <Section rhythm="open" width="wide" className="overflow-hidden bg-black">
                 <KankuMark className="pointer-events-none absolute -right-[10vw] top-1/2 h-[70vw] max-h-[720px] w-[70vw] max-w-[720px] -translate-y-1/2 text-white/[0.04]" />
                 <Reveal kind="mask" duration={1.1}>
-                    <p className="text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.95] tracking-[-0.03em] text-white">
-                        The ultimate<br />truth<span className="text-primary">.</span>
+                    <p className="font-mincho text-[clamp(2.75rem,8vw,6rem)] font-extrabold leading-[0.95] tracking-[-0.03em] text-white">
+                        The ultimate<br />truth.
                     </p>
                 </Reveal>
                 <Reveal delay={0.15} className="mt-10 flex flex-col gap-3 sm:flex-row">

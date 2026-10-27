@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'What is Kyokushin Karate? | Full-Contact Karate Explained',
   description:
-    'Learn about Kyokushin Karate — the world\'s strongest full-contact karate style founded by Mas Oyama. History, philosophy, training methods, benefits for kids & adults, and how to get started in India.',
+    'Kyokushin, the full-contact karate founded by Sosai Mas Oyama: its history, principles, training methods and the Dojo Kun, and how to start in India.',
   keywords: [
     'what is Kyokushin Karate',
     'Kyokushin Karate explained',
@@ -11,7 +11,6 @@ export const metadata: Metadata = {
     'Mas Oyama karate',
     'Kyokushin vs Shotokan',
     'Kyokushin philosophy',
-    'strongest karate style',
     'karate for beginners India',
     'martial arts benefits',
     'full contact karate training',
@@ -20,7 +19,7 @@ export const metadata: Metadata = {
     canonical: 'https://kyokushinfoundation.com/what-is-kyokushin',
   },
   openGraph: {
-    title: 'What is Kyokushin Karate? | The Strongest Karate Style Explained',
+    title: 'What is Kyokushin Karate? | Full-Contact Karate Explained',
     description:
       'Everything you need to know about Kyokushin Karate — history, training, philosophy, and how to start in India.',
     url: 'https://kyokushinfoundation.com/what-is-kyokushin',

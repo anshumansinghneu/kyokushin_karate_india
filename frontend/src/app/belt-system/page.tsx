@@ -1,13 +1,13 @@
 'use client';
 
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
 import Script from 'next/script';
 import { useMemo, useRef, useState } from 'react';
 import SceneSlot from '@/components/three/SceneSlot';
 import Reveal from '@/components/brand/Reveal';
 import Section, { Heading } from '@/components/brand/Section';
 import BrandLink from '@/components/brand/BrandLink';
+import { SYLLABUS } from '@/lib/syllabus';
 
 interface BeltLevel {
   belt: string;
@@ -16,9 +16,7 @@ interface BeltLevel {
   bgClass: string;
   borderClass: string;
   textClass: string;
-  timeRequired: string;
   meaning: string;
-  kataCount: number;
   keyFocus: string;
 }
 
@@ -30,9 +28,7 @@ const BELTS: BeltLevel[] = [
     bgClass: 'bg-white',
     borderClass: 'border-white/30',
     textClass: 'text-gray-200',
-    timeRequired: 'Beginner',
     meaning: 'Purity and innocence — the blank slate of a new student, ready to absorb knowledge.',
-    kataCount: 2,
     keyFocus: 'Basic stances, punches, kicks, dojo etiquette',
   },
   {
@@ -42,9 +38,7 @@ const BELTS: BeltLevel[] = [
     bgClass: 'bg-orange-500',
     borderClass: 'border-orange-500/30',
     textClass: 'text-orange-400',
-    timeRequired: '3–6 months',
     meaning: 'The rising sun — the student begins to see the light of knowledge and training.',
-    kataCount: 2,
     keyFocus: 'Combination techniques, first sparring experience',
   },
   {
@@ -54,9 +48,7 @@ const BELTS: BeltLevel[] = [
     bgClass: 'bg-blue-500',
     borderClass: 'border-blue-500/30',
     textClass: 'text-blue-400',
-    timeRequired: '6–12 months',
     meaning: 'The sky — as the student looks up to higher goals and deeper understanding.',
-    kataCount: 2,
     keyFocus: 'Advanced kicks, improved speed and power',
   },
   {
@@ -66,9 +58,7 @@ const BELTS: BeltLevel[] = [
     bgClass: 'bg-yellow-500',
     borderClass: 'border-yellow-500/30',
     textClass: 'text-yellow-400',
-    timeRequired: '1–1.5 years',
     meaning: 'The sun at its peak — growing strength and developing solid technique.',
-    kataCount: 2,
     keyFocus: 'Complex combinations, controlled sparring',
   },
   {
@@ -78,9 +68,7 @@ const BELTS: BeltLevel[] = [
     bgClass: 'bg-green-500',
     borderClass: 'border-green-500/30',
     textClass: 'text-green-400',
-    timeRequired: '1.5–2.5 years',
     meaning: 'Growth — like a plant maturing, the student develops deeper roots in the art.',
-    kataCount: 3,
     keyFocus: 'Intermediate kata, real fighting strategy',
   },
   {
@@ -90,9 +78,7 @@ const BELTS: BeltLevel[] = [
     bgClass: 'bg-amber-700',
     borderClass: 'border-amber-700/30',
     textClass: 'text-amber-500',
-    timeRequired: '2.5–4 years',
     meaning: 'Maturity — the seed has fully grown. The student refines technique and prepares for black belt.',
-    kataCount: 4,
     keyFocus: 'Advanced kata, Sanchin breathing, mental fortitude',
   },
   {
@@ -102,20 +88,19 @@ const BELTS: BeltLevel[] = [
     bgClass: 'bg-black',
     borderClass: 'border-red-500/30',
     textClass: 'text-red-500',
-    timeRequired: '4–6+ years',
     meaning: 'The beginning of true mastery. In Kyokushin, black belt means "serious student" — the real learning begins here.',
-    kataCount: 5,
-    keyFocus: '20-man kumite, complete technical mastery, teaching ability',
+    keyFocus: 'Full-contact kumite under grading conditions, command of every kata, readiness to help teach',
   },
 ];
 
+// Names only: KKFI's requirements and titles for each dan are not published here until KKFI confirms them.
 const DAN_RANKS = [
-  { dan: '1st Dan', title: 'Shodan', years: '4–6', note: 'Complete the 20-man kumite. You are now a serious student.' },
-  { dan: '2nd Dan', title: 'Nidan', years: '6–8', note: 'Minimum 2 years after Shodan. Deeper technical refinement.' },
-  { dan: '3rd Dan', title: 'Sandan', years: '9–12', note: 'Teaching proficiency expected. Title: Senpai (senior student).' },
-  { dan: '4th Dan', title: 'Yondan', years: '12–16', note: 'Title: Sensei (teacher). Authorized to open own dojo.' },
-  { dan: '5th Dan', title: 'Godan', years: '17+', note: 'Title: Shihan (master). Exceptional contribution to Kyokushin.' },
-  { dan: '6th–10th Dan', title: 'Rokudan+', years: '20+', note: 'Lifetime achievement. 10th Dan reserved for the founder.' },
+  { dan: '1st Dan', title: 'Shodan', note: 'The first black belt grade. In Kyokushin it is the start of serious training, not the end.' },
+  { dan: '2nd Dan', title: 'Nidan', note: 'Awarded after further years of training beyond Shodan.' },
+  { dan: '3rd Dan', title: 'Sandan', note: 'Awarded after further years of training and teaching.' },
+  { dan: '4th Dan', title: 'Yondan', note: 'Awarded after further years of training and teaching.' },
+  { dan: '5th Dan', title: 'Godan', note: 'A senior grade, recognising long service to Kyokushin.' },
+  { dan: '6th–10th Dan', title: 'Rokudan to Judan', note: 'The highest grades, awarded for a lifetime in Kyokushin.' },
 ];
 
 type Step =
@@ -137,27 +122,24 @@ const STOPS = STEPS.map((step) => {
 });
 
 const swatch = (color: string) => (color === '#000000' ? '#161616' : color);
+const kataFor = (belt: string) => SYLLABUS.find((e) => belt.startsWith(e.belt))?.kata ?? [];
 
 const FAQS = [
   {
     q: 'How long does it take to get a black belt in Kyokushin?',
-    a: 'Typically 4–6 years of consistent training (3–4 sessions per week). Kyokushin is one of the hardest martial arts to earn a black belt in, requiring a 20-man kumite (fighting 20 opponents consecutively).',
+    a: 'It depends on how often you train and on your instructor, who puts you forward for each grading when you are ready. There is no fixed timetable and no fast track.',
   },
   {
     q: 'Can you skip belt levels?',
-    a: 'No. In Kyokushin, every student progresses through each belt in order. There are no shortcuts — each level builds essential skills for the next.',
+    a: 'No. Every student moves through each belt in order; each one builds what the next needs.',
   },
   {
-    q: 'How often are belt gradings held?',
-    a: 'KKFI conducts gradings approximately every 3–6 months, depending on the dojo. Your instructor will recommend you for grading when ready.',
-  },
-  {
-    q: 'What is the 20-man kumite?',
-    a: 'The 20-man kumite (二十人組手) is the ultimate test for Shodan — you must fight 20 fresh opponents, one after another, in full-contact bouts. It tests endurance, spirit, and technical ability under extreme fatigue.',
+    q: 'How are gradings held?',
+    a: 'Gradings are announced on the KKFI calendar. Your instructor recommends you when you are ready, and results are published on the belt test results page.',
   },
   {
     q: 'Is Kyokushin safe for children?',
-    a: "Yes! Children's classes adapt training intensity to their age. Full-contact sparring is introduced gradually from ages 8–10 with protective gear and supervision.",
+    a: "Children's classes are adapted to age, and contact is introduced gradually under an instructor's supervision. Ask your dojo how it runs its children's classes.",
   },
 ];
 
@@ -165,8 +147,8 @@ function StepCopy({ step }: { step: Step }) {
   if (step.kind === 'intro') {
     return (
       <>
-        <h1 className="text-[clamp(2.75rem,8vw,6rem)] font-black uppercase leading-[0.92] tracking-[-0.035em] text-white">
-          The belt<br />system<span className="text-primary">.</span>
+        <h1 className="text-[clamp(2.75rem,8vw,6rem)] font-extrabold leading-[0.92] tracking-[-0.035em] text-white">
+          The belt<br />system.
         </h1>
         <p className="mt-6 max-w-[40ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
           From white belt to the dan grades. Scroll to dye the belt through every rank, and see what
@@ -183,18 +165,14 @@ function StepCopy({ step }: { step: Step }) {
           <span className="h-3 w-8 rounded-sm ring-1 ring-white/30" style={{ backgroundColor: swatch(belt.color) }} aria-hidden="true" />
           {belt.rank}
         </p>
-        <h2 className="mt-4 text-[clamp(2.5rem,6vw,4.5rem)] font-black uppercase leading-[0.95] tracking-[-0.03em] text-white">
-          {belt.belt === 'Black (Shodan)' ? <>Black belt<span className="text-secondary">.</span></> : <>{belt.belt} belt<span className="text-white/40">.</span></>}
+        <h2 className="mt-4 text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold leading-[0.95] tracking-[-0.03em] text-white">
+          {belt.belt === 'Black (Shodan)' ? <>Black belt.</> : <>{belt.belt} belt.</>}
         </h2>
         <p className="mt-5 max-w-[42ch] text-pretty text-lg leading-relaxed text-white/80">{belt.meaning}</p>
         <dl className="mt-8 grid max-w-md grid-cols-2 gap-x-8 gap-y-5 border-t border-white/15 pt-6 text-sm">
-          <div>
-            <dt className="text-white/60">Typical time</dt>
-            <dd className="mt-1 text-base font-bold text-white">{belt.timeRequired}</dd>
-          </div>
-          <div>
+          <div className="col-span-2">
             <dt className="text-white/60">Kata</dt>
-            <dd className="mt-1 text-base font-bold text-white">{belt.kataCount}</dd>
+            <dd className="mt-1 text-base font-bold text-white">{kataFor(belt.belt).map((k) => k.name).join(', ')}</dd>
           </div>
           <div className="col-span-2">
             <dt className="text-white/60">Focus</dt>
@@ -215,13 +193,10 @@ function StepCopy({ step }: { step: Step }) {
         </span>
         {rank.dan}
       </p>
-      <h2 className="mt-4 text-[clamp(2.5rem,6vw,4.5rem)] font-black uppercase leading-[0.95] tracking-[-0.03em] text-white">
-        {rank.title}<span className="text-secondary">.</span>
+      <h2 className="mt-4 text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold leading-[0.95] tracking-[-0.03em] text-white">
+        {rank.title}.
       </h2>
       <p className="mt-5 max-w-[42ch] text-pretty text-lg leading-relaxed text-white/80">{rank.note}</p>
-      <p className="mt-8 border-t border-white/15 pt-6 text-sm text-white/60">
-        Around <span className="text-base font-bold text-white">{rank.years} years</span> of training in total
-      </p>
     </>
   );
 }
@@ -321,7 +296,7 @@ export default function BeltSystemPage() {
       logo: { '@type': 'ImageObject', url: 'https://kyokushinfoundation.com/kkfi-logo.avif' },
     },
     datePublished: '2025-01-01',
-    dateModified: '2026-02-15',
+    dateModified: '2026-10-19',
     mainEntityOfPage: 'https://kyokushinfoundation.com/belt-system',
   };
 
@@ -343,19 +318,19 @@ export default function BeltSystemPage() {
         <Reveal>
           <Heading>Every rank at a glance</Heading>
           <p className="mt-4 max-w-[56ch] text-lg leading-relaxed text-white/70">
-            Ten kyu grades, worn as five coloured belts after white, lead to black belt and then the dan degrees. Times are typical for steady
-            training three to four times a week.
+            Ten kyu grades, worn as five coloured belts after white, lead to black belt and then the dan degrees. Kata follow the KKFI
+            syllabus.
           </p>
         </Reveal>
 
         <div className="mt-12 overflow-x-auto">
           <table className="w-full min-w-[640px] text-left">
-            <caption className="sr-only">Kyokushin ranks, typical training time, and focus</caption>
+            <caption className="sr-only">Kyokushin ranks, kata, and focus</caption>
             <thead>
               <tr className="border-b border-white/20 text-sm text-white/60">
                 <th scope="col" className="py-3 pr-6 font-semibold">Rank</th>
                 <th scope="col" className="py-3 pr-6 font-semibold">Grade</th>
-                <th scope="col" className="py-3 pr-6 font-semibold">Typical time</th>
+                <th scope="col" className="py-3 pr-6 font-semibold">Kata</th>
                 <th scope="col" className="py-3 font-semibold">Focus</th>
               </tr>
             </thead>
@@ -369,7 +344,7 @@ export default function BeltSystemPage() {
                     </span>
                   </th>
                   <td className="py-4 pr-6 text-white/75">{belt.rank}</td>
-                  <td className="py-4 pr-6 text-white/75">{belt.timeRequired}</td>
+                  <td className="py-4 pr-6 text-white/75">{kataFor(belt.belt).map((k) => k.name).join(', ')}</td>
                   <td className="py-4 text-white/75">{belt.keyFocus}</td>
                 </tr>
               ))}
@@ -382,7 +357,7 @@ export default function BeltSystemPage() {
                     </span>
                   </th>
                   <td className="py-4 pr-6 text-white/75">{rank.dan}</td>
-                  <td className="py-4 pr-6 text-white/75">~{rank.years} years total</td>
+                  <td className="py-4 pr-6 text-white/75">&mdash;</td>
                   <td className="py-4 text-white/75">{rank.note}</td>
                 </tr>
               ))}
@@ -410,12 +385,12 @@ export default function BeltSystemPage() {
 
       <Section rhythm="open" width="wide" className="bg-black">
         <Reveal kind="mask">
-          <Heading size="display" className="max-w-[14ch] uppercase">
-            Every black belt was a white belt who never quit<span className="text-primary">.</span>
+          <Heading size="display" className="max-w-[14ch]">
+            Every black belt was a white belt who never quit.
           </Heading>
         </Reveal>
         <Reveal delay={0.15} className="mt-10 flex flex-col gap-3 sm:flex-row">
-          <BrandLink href="/find-a-dojo">Find a dojo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></BrandLink>
+          <BrandLink href="/find-a-dojo">Find a dojo</BrandLink>
           <BrandLink href="/syllabus" variant="outline">Read the syllabus</BrandLink>
         </Reveal>
       </Section>

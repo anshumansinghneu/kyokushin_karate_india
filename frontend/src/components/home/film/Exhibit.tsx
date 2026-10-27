@@ -9,36 +9,40 @@ import { loadDojos, type PublicDojo } from "./dojos";
 import { focusRing } from "./ui";
 
 /*
- * The exhibit (docs/superpowers/specs/2026-10-19-full-site-redesign-design.md, Home): one
- * karateka on a black stage, lit like a statue, and one pinned scroll in four acts.
+ * The exhibit (docs/superpowers/specs/2026-10-19-full-site-redesign-design.md, Home): Sosai
+ * Masutatsu Oyama on a black stage, like a portrait in a gallery, and one pinned scroll in four acts.
  *   I    0.00–0.20  極真 rises behind him; the hero copy.
- *   II   0.20–0.50  where Kyokushin hits: leader lines draw from his body to the knockdown rules.
- *   III  0.50–0.78  the four weapons burst from behind him and lock into a diamond.
+ *   II   0.20–0.50  the founder: leader lines draw from his portrait to sourced facts about him.
+ *   III  0.50–0.78  the four weapons burst from behind him and lock in either side.
  *   IV   0.78–1.00  he steps aside and the first step opens: start at white belt.
+ * The knockdown rules live in the kumite film chapter, not on the founder.
  * Phones and reduced motion get the same content as a plain stacked page.
  */
 
-const SRC = { w: 1088, h: 1456 }; // stills/statue.jpg
+// The portrait of Sosai. Swap in a licensed archival photograph at this path (same framing) when KKFI has one.
+const PORTRAIT = "/history/oyama.jpg";
+const PORTRAIT_ALT = "Sosai Masutatsu Oyama, founder of Kyokushin, in his gi";
+const SRC = { w: 1024, h: 1024 };
 const STAGE_VH = 520;
 
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
 const range = (v: number, a: number, b: number) => clamp((v - a) / (b - a));
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 
-/** Knockdown rules, pinned to his body (source px on the statue still). */
+/** Sourced facts about the founder, pinned to his portrait (source px on the portrait). */
 const RULES = [
-    { id: "head-kick", kanji: "上段蹴り", name: "Jodan geri", text: "Kicks to the head are allowed.", legal: true, side: "right" as const, x: 612, y: 128 },
-    { id: "face", kanji: "顔面", name: "Ganmen", text: "No punches or hand strikes to the head or face.", legal: false, side: "left" as const, x: 532, y: 160 },
-    { id: "body", kanji: "中段突き", name: "Chudan tsuki", text: "Bare-knuckle punches to the body.", legal: true, side: "right" as const, x: 560, y: 520 },
-    { id: "thigh", kanji: "下段回し蹴り", name: "Gedan mawashi geri", text: "Low roundhouse kicks to the thigh.", legal: true, side: "left" as const, x: 470, y: 1000 },
+    { id: "sosai", kanji: "総裁", name: "Sosai, 1923–1994", text: "Masutatsu Oyama, the founder. Sosai, president, is the title Kyokushin gives him.", side: "right" as const, x: 520, y: 150 },
+    { id: "eyes", kanji: "目", name: "Head low, eyes high", text: "His motto: keep your head low and your eyes high.", side: "left" as const, x: 470, y: 268 },
+    { id: "kanji", kanji: "極真", name: "The ultimate truth", text: "Kyokushin, the name he gave his karate.", side: "right" as const, x: 693, y: 757 },
+    { id: "1964", kanji: "会館", name: "Kyokushinkaikan, 1964", text: "He founded the International Karate Organization Kyokushinkaikan in Tokyo.", side: "left" as const, x: 470, y: 720 },
 ];
 
 /** The four weapons, and where each locks in around him (fractions of the stage, from its centre). */
 const WEAPONS = [
-    { id: "eyes", kanji: "目", name: "Me", text: "The eyes. Head low, eyes high.", src: "stills/weapon-eyes.jpg", alt: "Close-up of a karateka's eyes under a lowered brow", at: [-0.27, -0.2] },
-    { id: "fist", kanji: "正拳", name: "Seiken", text: "The fist. The first two knuckles, bare.", src: "stills/weapon-fist.jpg", alt: "A karate fist striking toward the camera", at: [0.27, -0.2] },
-    { id: "shin", kanji: "脛", name: "Sune", text: "The shin. Conditioned to kick and to block.", src: "stills/weapon-shin.jpg", alt: "A shin meeting a raised forearm in a kumite exchange", at: [-0.27, 0.22] },
-    { id: "obi", kanji: "帯", name: "Obi", text: "The belt. Earned one grading at a time.", src: "stills/weapon-knot.jpg", alt: "The square knot of a worn black belt", at: [0.27, 0.22] },
+    { id: "eyes", kanji: "目", name: "Me", text: "The eyes. Head low, eyes high.", src: "stills/weapon-eyes.jpg", alt: "Close-up of a karateka's eyes under a lowered brow", at: [-0.31, -0.2] },
+    { id: "fist", kanji: "正拳", name: "Seiken", text: "The fist. The first two knuckles, bare.", src: "stills/weapon-fist.jpg", alt: "A karate fist striking toward the camera", at: [0.31, -0.2] },
+    { id: "shin", kanji: "脛", name: "Sune", text: "The shin. Conditioned to kick and to block.", src: "stills/weapon-shin.jpg", alt: "A shin meeting a raised forearm in a kumite exchange", at: [-0.31, 0.22] },
+    { id: "obi", kanji: "帯", name: "Obi", text: "The belt. Earned one grading at a time.", src: "stills/weapon-knot.jpg", alt: "The square knot of a worn black belt", at: [0.31, 0.22] },
 ] as const;
 
 const DESKTOP = "(min-width: 768px)";
@@ -130,9 +134,7 @@ function RuleLabel({ rule, i }: { rule: (typeof RULES)[number]; i: number }) {
             <span className="font-gothic text-[0.8rem] tabular-nums text-dan-gold">0{i + 1}</span>
             <span lang="ja" aria-hidden="true" className="font-mincho text-lg leading-none text-canvas [writing-mode:vertical-rl]">{rule.kanji}</span>
             <span className="block max-w-[24ch] font-gothic">
-                <span className="block font-bold text-canvas">
-                    {rule.name} <span className={rule.legal ? "text-dan-gold" : "text-kyokushin-red"}>{rule.legal ? "✓" : "✕"}</span>
-                </span>
+                <span className="block font-bold text-canvas">{rule.name}</span>
                 <span className="mt-1 block text-sm leading-snug text-ash">{rule.text}</span>
             </span>
         </div>
@@ -142,16 +144,16 @@ function RuleLabel({ rule, i }: { rule: (typeof RULES)[number]; i: number }) {
 /** Phones and reduced motion: the same four acts as a plain page. */
 function StaticExhibit() {
     return (
-        <section aria-label="The karateka" data-bleed className="bg-night pb-20 font-gothic text-canvas">
-            <div className="relative">
+        <section aria-label="Sosai Masutatsu Oyama" data-bleed className="bg-night pb-20 font-gothic text-canvas">
+            <div className="pt-16">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={mediaUrl("stills/statue.jpg")} alt="A karateka in a white gi and black belt, standing on a dark stage" fetchPriority="high" className="mx-auto h-[86svh] w-auto object-contain" />
-                <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.92),rgba(0,0,0,0.5)_60%,transparent)] px-4 pb-24 pt-24 sm:px-6">
+                <img src={PORTRAIT} alt={PORTRAIT_ALT} fetchPriority="high" className="mx-auto aspect-square w-full max-w-[40rem] object-cover grayscale [mask-image:radial-gradient(ellipse_50%_55%_at_50%_45%,#000_55%,transparent_100%)]" />
+                <div className="-mt-12 px-4 sm:px-6">
                     <HeroCopy />
                 </div>
             </div>
             <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
-                <h2 className="mt-16 font-mincho text-[clamp(2rem,6vw,3.052rem)] font-extrabold leading-[1.1] text-canvas">Where Kyokushin hits.</h2>
+                <h2 className="mt-16 font-mincho text-[clamp(2rem,6vw,3.052rem)] font-extrabold leading-[1.1] text-canvas">The founder.</h2>
                 <ol className="mt-8 grid gap-8 sm:grid-cols-2">
                     {RULES.map((r, i) => (
                         <li key={r.id}><RuleLabel rule={r} i={i} /></li>
@@ -209,7 +211,7 @@ export default function Exhibit() {
             const { w: vw, h: vh } = size.current;
             // The statue: 86% of the stage tall, centred, then stepping aside in act IV.
             const glide = ease(range(p, 0.78, 0.9));
-            const sh = vh * 0.86;
+            const sh = vh * 0.8;
             const sw = (sh * SRC.w) / SRC.h;
             const intro = ease(range(p, 0, 0.18));
             const scale = 1.08 - 0.08 * intro - 0.08 * glide;
@@ -298,7 +300,7 @@ export default function Exhibit() {
     if (reduced || !wide) return <StaticExhibit />;
 
     return (
-        <section ref={section} aria-label="The karateka" data-bleed className="relative bg-night font-gothic text-canvas" style={{ height: `${STAGE_VH}vh` }}>
+        <section ref={section} aria-label="Sosai Masutatsu Oyama" data-bleed className="relative bg-night font-gothic text-canvas" style={{ height: `${STAGE_VH}vh` }}>
             <div ref={stage} className="sticky top-0 h-[100svh] overflow-hidden">
                 {/* Act I: the title behind him. */}
                 <span
@@ -315,10 +317,10 @@ export default function Exhibit() {
                 <div ref={statue} className="absolute left-0 top-0 z-10 origin-center will-change-transform">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                        src={mediaUrl("stills/statue.jpg")}
-                        alt="A karateka in a white gi and black belt, standing on a dark stage"
+                        src={PORTRAIT}
+                        alt={PORTRAIT_ALT}
                         fetchPriority="high"
-                        className="h-full w-full object-contain"
+                        className="h-full w-full object-cover grayscale [mask-image:radial-gradient(ellipse_50%_55%_at_50%_45%,#000_55%,transparent_100%)]"
                     />
                 </div>
 
@@ -341,7 +343,7 @@ export default function Exhibit() {
                             strokeDashoffset="1"
                             fill="none"
                             strokeWidth={1}
-                            className={`invisible ${r.legal ? "stroke-dan-gold" : "stroke-kyokushin-red"}`}
+                            className={`invisible stroke-dan-gold`}
                         />
                     ))}
                 </svg>
@@ -352,10 +354,10 @@ export default function Exhibit() {
                             ruleDots.current[i] = el;
                         }}
                         aria-hidden="true"
-                        className={`invisible absolute left-0 top-0 z-20 -ml-[4px] -mt-[4px] h-2 w-2 rounded-full ${r.legal ? "bg-dan-gold" : "bg-kyokushin-red"}`}
+                        className={`invisible absolute left-0 top-0 z-20 -ml-[4px] -mt-[4px] h-2 w-2 rounded-full bg-dan-gold`}
                     />
                 ))}
-                <h2 className="sr-only">Where Kyokushin hits</h2>
+                <h2 className="sr-only">The founder</h2>
                 <ol>
                     {RULES.map((r, i) => (
                         <li key={r.id}>

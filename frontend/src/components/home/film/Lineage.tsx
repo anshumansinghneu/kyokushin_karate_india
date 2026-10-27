@@ -10,24 +10,24 @@ import { body, h2, section, wrap } from "./ui";
 const people: { src: StaticImageData; alt: string; name: string; role: string; rank: string; text: string }[] = [
     {
         src: ryukoTake,
-        alt: "Daihyo Ryuko Take, President of IKO World Kyokushin Kaikan",
+        alt: "Daihyo Ryuko Take, head of World Kyokushin Kaikan",
         name: "Daihyo Ryuko Take",
-        role: "President, IKO World Kyokushin Kaikan",
+        role: "Head of World Kyokushin Kaikan",
         rank: "8th Dan",
-        text: "Trained directly under Sosai Masutatsu Oyama from the age of 18. Founded the Kagoshima branch in 1981, now 59 dojos, and today leads IKO World Kyokushin Kaikan.",
+        text: "Based in Kagoshima, Japan, Daihyo Take founded and leads World Kyokushin Kaikan, the international Kyokushin organisation KKFI belongs to.",
     },
     {
         src: shihanVasant,
         alt: "Shihan Vasant Kumar Singh, Country Director for India",
         name: "Shihan Vasant K. Singh",
-        role: "Country Director, India",
+        role: "Country Director, World Kyokushin Kaikan India",
         rank: "founder of KKFI in 2013",
-        text: "Training since 1987, he founded the Kyokushin Karate Foundation of India in 2013 and has grown it to more than 100 dojos across the country.",
+        text: "He founded the Kyokushin Karate Foundation of India in 2013. From its headquarters in Shuklaganj, Uttar Pradesh, KKFI runs its dojos, gradings, tournaments and national team.",
     },
 ];
 
 /**
- * The line of authority, from the Honbu dojo to India: two real portraits
+ * The line of authority, from Sosai Oyama to India: two real portraits
  * joined by a dan-gold hairline that draws as you scroll down it.
  */
 export default function Lineage() {
@@ -46,7 +46,7 @@ export default function Lineage() {
     return (
         <section aria-labelledby="lineage-heading" className={section}>
             <div className={wrap}>
-                <h2 id="lineage-heading" className={`${h2} max-w-[20ch]`}>One lineage, from the Honbu dojo to India.</h2>
+                <h2 id="lineage-heading" className={`${h2} max-w-[20ch]`}>One lineage, from Sosai Oyama to India.</h2>
 
                 <ol ref={list} className="relative mt-14 space-y-20 pl-8 md:mt-20 md:space-y-28 md:pl-16">
                     <span aria-hidden="true" className="absolute bottom-0 left-0 top-0 w-px bg-worn-belt" />

@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Kyokushin Belt System & Ranking Order | White to Black Belt Guide',
   description:
-    'Complete guide to the Kyokushin Karate belt ranking system — from White Belt (10th Kyu) to Black Belt (Shodan). Learn the meaning of each belt color, time requirements, and what it takes to progress.',
+    'Complete guide to the Kyokushin Karate belt ranking system — from white belt (mukyu) to black belt (Shodan). Learn the meaning of each belt color, time requirements, and what it takes to progress.',
   keywords: [
     'Kyokushin belt system',
     'karate belt order',
