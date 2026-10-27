@@ -143,8 +143,8 @@ function ResultsHero() {
           Belt test results<span className="text-primary">.</span>
         </h1>
         <p className="mt-6 max-w-[44ch] text-pretty text-lg leading-relaxed text-white/80">
-          Official grading results. Find your name, confirm your rank, and open the certified result
-          sheet, straight from the dojo.
+          Official grading results, published as the certified sheet from each grading. Open the
+          sheet for your grading to find your name and confirm your rank.
         </p>
       </div>
     </header>
