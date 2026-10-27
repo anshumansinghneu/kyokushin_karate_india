@@ -126,7 +126,7 @@ export const generateCertificate = (data: CertificateData) => {
     // Footer
     pdf.setFontSize(8);
     pdf.setTextColor(100, 100, 100);
-    pdf.text('Kyokushin Karate Federation of India', pageWidth / 2, pageHeight - 15, { align: 'center' });
+    pdf.text('Kyokushin Karate Foundation of India', pageWidth / 2, pageHeight - 15, { align: 'center' });
 
     return pdf;
 };

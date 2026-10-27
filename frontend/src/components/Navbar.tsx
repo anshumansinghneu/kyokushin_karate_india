@@ -58,12 +58,15 @@ function AnimatedBrand() {
     );
 }
 
-/* The homepage's brand mark: the logo, still. */
+/* The public site's brand mark: the emblem and the tricolour KKFI, side by side and still. */
 function StillBrand() {
     return (
-        <div className="relative w-12 h-10 flex items-center justify-center">
+        <div className="relative flex h-10 items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/kkfi-logo.png" alt="KKFI" className="w-9 h-9 rounded-full object-contain" />
+            <img src="/kkfi-logo.png" alt="" className="w-9 h-9 rounded-full object-contain" />
+            <span className="text-xl font-black tracking-tighter italic leading-none whitespace-nowrap bg-gradient-to-r from-[#FF9933] via-white to-[#4ade80] bg-clip-text pr-0.5 text-transparent">
+                KKFI
+            </span>
         </div>
     );
 }
