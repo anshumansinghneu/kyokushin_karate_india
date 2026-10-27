@@ -18,6 +18,7 @@ import api from '@/lib/api';
 import { CITY_INDEX, normalizeCity } from '@/lib/cityCoords';
 import SceneSlot from '@/components/three/SceneSlot';
 import BrandLink from '@/components/brand/BrandLink';
+import CityRun from '@/components/dojo/CityRun';
 import 'leaflet/dist/leaflet.css';
 
 import KarateLoader from '@/components/KarateLoader';
@@ -696,7 +697,7 @@ function DojoDetailPanel({
           <div className="space-y-1.5 mb-4">
             <div className="px-2.5 py-2 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center justify-between">
               <span className="text-[10px] text-zinc-400">Status</span>
-              <span className="text-[10px] font-semibold text-emerald-400">Verified & Active</span>
+              <span className="text-[10px] font-semibold text-white">Official KKFI dojo</span>
             </div>
             {dojo.address && (
               <div className="px-2.5 py-2 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center gap-2">
@@ -1305,6 +1306,13 @@ export default function FindADojoPage() {
       loadError={loadError}
       focus={focusCity}
       onChooseCity={chooseCity}
+    />
+    <CityRun
+      cities={cityGroups}
+      onChoose={(key) => {
+        chooseCity(cityGroups.find((c) => c.key === key) ?? null);
+        document.getElementById('finder')?.scrollIntoView({ behavior: 'smooth' });
+      }}
     />
     {/* The working finder: a full-viewport street map below the opener.
         data-lenis-prevent keeps wheel and trackpad gestures on the map. */}
