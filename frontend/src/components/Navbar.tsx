@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
     Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle, Receipt,
     ShoppingBag, Calendar, MapPin, Users, Image as ImageIcon, Heart, HandHeart, ShieldCheck, Radio, Swords, Shield, BookOpen, Award, FileText, Plane,
@@ -16,57 +16,62 @@ import api from "@/lib/api";
 import NotificationCenter from "@/components/NotificationCenter";
 import { isMemberApp } from "@/lib/routes";
 
-/* Animated KKFI Brand — cycles: logo spin → KKFI text */
+/** The KKFI wordmark as drawn: Montserrat Black Italic, saffron through pure white to green. */
+const WORDMARK =
+    "font-[family-name:var(--font-montserrat)] text-2xl font-black italic leading-none tracking-tighter whitespace-nowrap bg-gradient-to-r from-[#FF9933] via-[#ffffff] to-[#4ade80] bg-clip-text pr-0.5 text-transparent";
+
+/* KKFI brand: the emblem and the wordmark take turns, flipping every few seconds. */
 function AnimatedBrand() {
+    const reduced = useReducedMotion();
     const [showLogo, setShowLogo] = useState(true);
 
     useEffect(() => {
+        if (reduced) return;
         const interval = setInterval(() => {
             setShowLogo(prev => !prev);
         }, 4000);
         return () => clearInterval(interval);
-    }, []);
+    }, [reduced]);
+
+    // Reduced motion: no flipping; the emblem and wordmark sit side by side.
+    if (reduced) {
+        return (
+            <div className="relative flex h-10 items-center gap-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/kkfi-logo.png" alt="" className="w-9 h-9 rounded-full object-contain" />
+                <span className={WORDMARK}>KKFI</span>
+            </div>
+        );
+    }
 
     return (
-        <div className="relative w-12 h-10 flex items-center justify-center overflow-hidden">
-            <AnimatePresence mode="wait">
+        <div className="relative w-[4.5rem] h-10 flex items-center justify-center overflow-hidden">
+            <AnimatePresence mode="wait" initial={false}>
                 {showLogo ? (
                     <motion.img
                         key="logo"
                         src="/kkfi-logo.png"
-                        alt="KKFI"
+                        alt=""
                         className="w-9 h-9 rounded-full object-contain"
-                        initial={{ opacity: 0, rotate: -180, scale: 0.5 }}
-                        animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                        exit={{ opacity: 0, rotate: 180, scale: 0.5 }}
-                        transition={{ duration: 0.5, ease: 'easeInOut' }}
+                        initial={{ opacity: 0, rotateY: -90 }}
+                        animate={{ opacity: 1, rotateY: 0 }}
+                        exit={{ opacity: 0, rotateY: 90 }}
+                        transition={{ duration: 0.35, ease: 'easeInOut' }}
                     />
                 ) : (
                     <motion.span
                         key="text"
-                        className="text-xl font-black tracking-tighter italic leading-none whitespace-nowrap bg-gradient-to-r from-[#FF9933] via-white to-[#4ade80] bg-clip-text text-transparent"
-                        initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
-                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                        exit={{ opacity: 0, scale: 0.5, rotate: 180 }}
-                        transition={{ duration: 0.5, ease: 'easeInOut' }}
+                        aria-hidden="true"
+                        className={WORDMARK}
+                        initial={{ opacity: 0, rotateY: -90 }}
+                        animate={{ opacity: 1, rotateY: 0 }}
+                        exit={{ opacity: 0, rotateY: 90 }}
+                        transition={{ duration: 0.35, ease: 'easeInOut' }}
                     >
                         KKFI
                     </motion.span>
                 )}
             </AnimatePresence>
-        </div>
-    );
-}
-
-/* The public site's brand mark: the emblem and the tricolour KKFI, side by side and still. */
-function StillBrand() {
-    return (
-        <div className="relative flex h-10 items-center gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/kkfi-logo.png" alt="" className="w-9 h-9 rounded-full object-contain" />
-            <span className="text-xl font-black tracking-tighter italic leading-none whitespace-nowrap bg-gradient-to-r from-[#FF9933] via-white to-[#4ade80] bg-clip-text pr-0.5 text-transparent">
-                KKFI
-            </span>
         </div>
     );
 }
@@ -346,8 +351,8 @@ export default function Navbar() {
                     <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-24 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.65),transparent)]" />
                 )}
                 <div className="flex items-center justify-between px-5 h-16">
-                    <Link href="/" className="flex items-center">
-                        {film ? <StillBrand /> : <AnimatedBrand />}
+                    <Link href="/" className="flex items-center" aria-label="KKFI home">
+                        <AnimatedBrand />
                     </Link>
                     <div className="flex items-center gap-2">
                         {isAuthenticated && <NotificationCenter />}
@@ -382,8 +387,8 @@ export default function Navbar() {
                     scrolled ? "bg-black/60 rounded-full px-5 py-2.5 max-w-[1000px] w-full" : "bg-black/30 rounded-3xl px-8 py-4 max-w-[1200px] w-full"
                 }`}>
                     {/* Brand */}
-                    <Link href="/" className="flex flex-shrink-0 items-center justify-center">
-                        {film ? <StillBrand /> : <AnimatedBrand />}
+                    <Link href="/" className="flex flex-shrink-0 items-center justify-center" aria-label="KKFI home">
+                        <AnimatedBrand />
                     </Link>
 
                     {/* Links */}

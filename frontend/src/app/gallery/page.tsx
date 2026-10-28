@@ -264,6 +264,9 @@ export default function GalleryPage() {
     const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [photosLoading, setPhotosLoading] = useState(true);
+    // A failed load is not an empty gallery: each list says which it is.
+    const [albumsFailed, setAlbumsFailed] = useState(false);
+    const [photosFailed, setPhotosFailed] = useState(false);
     const [filter, setFilter] = useState<AlbumFilter>("ALL");
     const [search, setSearch] = useState("");
     const [searchInput, setSearchInput] = useState("");
@@ -295,6 +298,7 @@ export default function GalleryPage() {
 
     const fetchAlbums = useCallback(async () => {
         setIsLoading(true);
+        setAlbumsFailed(false);
         try {
             const params = new URLSearchParams({ page: page.toString(), limit: "24" });
             if (filter !== "ALL") params.set("type", filter);
@@ -302,12 +306,13 @@ export default function GalleryPage() {
             const res = await api.get(`/albums?${params.toString()}`);
             setAlbums(res.data.data.albums);
             setTotalPages(res.data.data.pagination.totalPages);
-        } catch (error) { console.error("Failed to fetch albums", error); } 
+        } catch (error) { console.error("Failed to fetch albums", error); setAlbumsFailed(true); }
         finally { setIsLoading(false); }
     }, [page, filter, search]);
 
     const fetchPhotos = useCallback(async () => {
         setPhotosLoading(true);
+        setPhotosFailed(false);
         try {
             const res = await api.get(`/gallery?page=${photoPage}&limit=24`);
             if (photoPage === 1) setPhotos(res.data.data.items);
@@ -320,7 +325,7 @@ export default function GalleryPage() {
             }
             setPhotoTotalPages(res.data.data.pagination.totalPages);
             setPhotoTotal(res.data.data.pagination.total ?? res.data.data.items.length);
-        } catch (error) { console.error("Failed to fetch photos", error); } 
+        } catch (error) { console.error("Failed to fetch photos", error); setPhotosFailed(true); }
         finally { setPhotosLoading(false); }
     }, [photoPage]);
 
@@ -378,6 +383,8 @@ export default function GalleryPage() {
                 <div className="mt-10">
                     <DojoWall
                         pool={photos}
+                        state={photos.length > 0 ? "ready" : photosLoading ? "loading" : photosFailed ? "failed" : "ready"}
+                        onRetry={fetchPhotos}
                         onTileClick={openLightboxById}
                         onTileIdsChange={handleHeroTileIdsChange}
                     />
@@ -487,10 +494,31 @@ export default function GalleryPage() {
                         </>
                     ) : (
                         <div className="border-y border-white/10 py-16">
-                            <h3 className="text-2xl font-extrabold text-white">No albums match</h3>
-                            <p className="mt-2 max-w-md text-white/70">
-                                Nothing found for &ldquo;{filter === "ALL" ? searchInput : filters.find((f) => f.key === filter)?.label}&rdquo;. Try a different search or album type.
-                            </p>
+                            {albumsFailed ? (
+                                <>
+                                    <h3 className="text-2xl font-extrabold text-white">Couldn&apos;t load the albums</h3>
+                                    <p className="mt-2 max-w-md text-white/70">The server didn&apos;t respond. It may be waking up; this usually takes a few seconds.</p>
+                                    <button
+                                        type="button"
+                                        onClick={fetchAlbums}
+                                        className="mt-6 min-h-12 border border-white/25 px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-white/10"
+                                    >
+                                        Try again
+                                    </button>
+                                </>
+                            ) : filter === "ALL" && !search ? (
+                                <>
+                                    <h3 className="text-2xl font-extrabold text-white">No albums published yet</h3>
+                                    <p className="mt-2 max-w-md text-white/70">Albums from camps, gradings and tournaments appear here once they are published.</p>
+                                </>
+                            ) : (
+                                <>
+                                    <h3 className="text-2xl font-extrabold text-white">No albums match</h3>
+                                    <p className="mt-2 max-w-md text-white/70">
+                                        Nothing found for &ldquo;{search || filters.find((f) => f.key === filter)?.label}&rdquo;. Try a different search or album type.
+                                    </p>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>

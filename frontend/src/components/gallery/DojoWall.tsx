@@ -11,9 +11,12 @@ interface DojoWallProps {
   onTileClick: (photoId: string) => void;
   /** Report visible IDs so the marquee can de-duplicate. */
   onTileIdsChange?: (ids: string[]) => void;
+  /** Still loading, or the load failed: either way there is nothing to show yet, for a different reason. */
+  state?: "loading" | "failed" | "ready";
+  onRetry?: () => void;
 }
 
-export default function DojoWall({ pool, onTileClick, onTileIdsChange }: DojoWallProps) {
+export default function DojoWall({ pool, onTileClick, onTileIdsChange, state = "ready", onRetry }: DojoWallProps) {
   const { featured, tiles } = useDojoWallOrder(pool);
 
   useEffect(() => {
@@ -22,9 +25,23 @@ export default function DojoWall({ pool, onTileClick, onTileIdsChange }: DojoWal
   }, [featured, tiles, onTileIdsChange]);
 
   if (!featured) {
+    if (state === "loading") {
+      return <div aria-hidden="true" className="w-full h-[40vh] animate-pulse rounded-lg bg-white/5 motion-reduce:animate-none" />;
+    }
     return (
-      <div className="w-full h-[40vh] flex items-center justify-center border-y border-white/10">
-        <p className="text-white/60 text-sm">No photographs yet. Be the first to upload.</p>
+      <div className="w-full h-[40vh] flex flex-col items-center justify-center gap-5 border-y border-white/10 text-center">
+        <p className="text-white/70">
+          {state === "failed" ? "Couldn\u2019t load the photographs. The server may be waking up." : "No photographs published yet."}
+        </p>
+        {state === "failed" && onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="min-h-12 border border-white/25 px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-white/10"
+          >
+            Try again
+          </button>
+        )}
       </div>
     );
   }
