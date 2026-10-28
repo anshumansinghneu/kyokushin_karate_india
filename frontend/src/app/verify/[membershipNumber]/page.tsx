@@ -68,6 +68,9 @@ const PRINT_CSS = `@media print {
   [data-print-record] { position: absolute; left: 0; top: 0; width: 100%; padding: 24px; background: #fff !important; }
   [data-print-record] * { color: #000 !important; border-color: rgba(0,0,0,0.25) !important; background: transparent !important; }
   [data-print-hide] { display: none !important; }
+  html, body { background: #fff !important; }
+  /* Belt swatches are the one colour on the record: keep them, outlined for white belts. */
+  [data-print-record] [data-swatch] { background: var(--swatch) !important; border: 1px solid rgba(0,0,0,0.4) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }`;
 
 export default function VerifyPage() {
@@ -268,7 +271,7 @@ export default function VerifyPage() {
                                 <div className="border-b border-white/10 px-6 py-6 sm:px-10">
                                     <dt className="text-sm font-semibold text-white/60">Rank</dt>
                                     <dd className="mt-2 flex items-center gap-3 text-xl font-extrabold text-white">
-                                        <span className="h-3 w-8 rounded-sm ring-1 ring-white/30" style={{ backgroundColor: beltSwatch(member.currentBeltRank) }} aria-hidden="true" />
+                                        <span data-swatch className="h-3 w-8 rounded-sm ring-1 ring-white/30" style={{ backgroundColor: beltSwatch(member.currentBeltRank), "--swatch": beltSwatch(member.currentBeltRank) } as React.CSSProperties} aria-hidden="true" />
                                         {member.currentBeltRank}
                                     </dd>
                                 </div>
@@ -320,7 +323,7 @@ export default function VerifyPage() {
                                             {history.map((p, i) => (
                                                 <li key={`${p.newBelt}-${p.promotionDate}-${i}`} className="flex items-center justify-between gap-4 py-4">
                                                     <span className="flex items-center gap-3 font-bold text-white">
-                                                        <span className="h-3 w-8 rounded-sm ring-1 ring-white/30" style={{ backgroundColor: beltSwatch(p.newBelt) }} aria-hidden="true" />
+                                                        <span data-swatch className="h-3 w-8 rounded-sm ring-1 ring-white/30" style={{ backgroundColor: beltSwatch(p.newBelt), "--swatch": beltSwatch(p.newBelt) } as React.CSSProperties} aria-hidden="true" />
                                                         {p.newBelt}
                                                     </span>
                                                     <span className="tabular-nums text-white/65">
