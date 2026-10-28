@@ -74,7 +74,7 @@ function TicketPoster({ ticket, imageUrl }: { ticket: Ticket; imageUrl?: string 
                 <img
                     src={imageUrl}
                     alt=""
-                    className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-md grayscale-[0.4]"
+ className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-md "
                     onError={(e) => { e.currentTarget.style.display = "none"; }}
                 />
             ) : (

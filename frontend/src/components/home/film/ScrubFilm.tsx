@@ -112,7 +112,7 @@ export default function ScrubFilm({
 
         const draw = (src: CanvasImageSource, l: Layout) => {
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            ctx.fillStyle = "#000";
+            ctx.fillStyle = "rgb(10, 9, 8)"; // the page's ink black (--c-black)
             ctx.fillRect(0, 0, w, h);
             ctx.drawImage(src, l.ox, l.oy, l.srcW * l.s, l.srcH * l.s);
             if (!drew && posterRef.current) posterRef.current.style.opacity = "0";

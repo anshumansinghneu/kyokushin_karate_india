@@ -322,7 +322,7 @@ function Portrait({ member, eager = false }: { member: SquadMember; eager?: bool
                     src={photo}
                     alt={`${member.name}, ${member.rankLabel}`}
                     loading={eager ? "eager" : "lazy"}
-                    className="h-full w-full object-cover object-top grayscale-[0.35] transition-[filter,transform] duration-700 ease-out group-hover:scale-[1.03] group-hover:grayscale-0"
+ className="h-full w-full object-cover object-top transition-[filter,transform] duration-700 ease-out group-hover:scale-[1.03] "
                 />
             ) : (
                 // A photo is mandatory to be added, so this is only reachable

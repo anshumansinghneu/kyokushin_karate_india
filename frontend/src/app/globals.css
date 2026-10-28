@@ -75,8 +75,10 @@
 
 :root {
   --foreground-rgb: 232, 226, 212;
-  --background-start-rgb: 0, 0, 0;
-  --background-end-rgb: 0, 0, 0;
+  /* Ink black, warmed a touch off pure black so the page reads as paper-dark rather than void. */
+  --c-black: 10 9 8;
+  --background-start-rgb: 10, 9, 8;
+  --background-end-rgb: 10, 9, 8;
 
   /* Public site: the dojo before dawn. The legacy classes (text-white, bg-primary,
      text-red-500, text-secondary) resolve to this palette, so every page joins the
@@ -100,6 +102,9 @@
 
 /* The logged-in member app keeps its original look (set before paint by SKIN_SCRIPT). */
 :root.skin-app {
+  --c-black: 0 0 0;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 0;
   --foreground-rgb: 255, 255, 255;
   --font-body: var(--font-montserrat);
   --c-white: 255 255 255;

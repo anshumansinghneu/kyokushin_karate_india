@@ -268,7 +268,7 @@ export default function DojoDetailPage() {
                             }
                         />
                     ) : (
-                        <Image src="/history/solitude.jpg" alt="" fill priority sizes="100vw" className="object-cover opacity-55 grayscale" />
+ <Image src="/history/solitude.jpg" alt="" fill priority sizes="100vw" className="object-cover opacity-55 " />
                     )
                 }
                 actions={

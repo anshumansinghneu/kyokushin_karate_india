@@ -620,7 +620,7 @@ export default function FindADojoPage() {
 
   /* ---- Dark body background ---- */
   useEffect(() => {
-    document.documentElement.style.background = '#000';
+    document.documentElement.style.background = 'rgb(var(--c-black))';
     return () => {
       document.documentElement.style.background = '';
     };

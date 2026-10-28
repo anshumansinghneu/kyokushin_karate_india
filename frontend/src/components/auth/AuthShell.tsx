@@ -50,7 +50,7 @@ export default function AuthShell({
                     posterAlt={imageAlt}
                     fallback={
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={image} alt="" className="absolute inset-0 h-full w-full bg-black object-cover opacity-60 grayscale" />
+ <img src={image} alt="" className="absolute inset-0 h-full w-full bg-black object-cover opacity-60 " />
                     }
                 />
                 <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/80" />
@@ -77,7 +77,7 @@ export default function AuthShell({
                         className="absolute inset-0"
                         fallback={
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={image} alt="" className="absolute inset-0 h-full w-full bg-black object-cover opacity-50 grayscale" />
+ <img src={image} alt="" className="absolute inset-0 h-full w-full bg-black object-cover opacity-50 " />
                         }
                     />
                     <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />

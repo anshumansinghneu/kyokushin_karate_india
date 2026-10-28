@@ -12,7 +12,7 @@ export default function OyamaQuote({ src }: { src?: string }) {
                         alt="Sosai Masutatsu Oyama in his gi, seated, facing the camera"
                         loading="lazy"
                         decoding="async"
-                        className="aspect-[4/5] w-full object-cover object-top grayscale"
+ className="aspect-[4/5] w-full object-cover object-top "
                     />
                     <figcaption className="mt-4 font-gothic text-[0.8rem] text-ash">Sosai Masutatsu Oyama, 1923–1994</figcaption>
                 </figure>

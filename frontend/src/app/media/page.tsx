@@ -87,7 +87,7 @@ export default function MediaPage() {
                                         <span className="flex min-w-0 items-center gap-5">
                                             {post.imageUrl && (
                                                 // eslint-disable-next-line @next/next/no-img-element
-                                                <img src={post.imageUrl} alt="" loading="lazy" className="hidden h-16 w-24 shrink-0 rounded-md object-cover grayscale transition duration-500 group-hover:grayscale-0 md:block" />
+ <img src={post.imageUrl} alt="" loading="lazy" className="hidden h-16 w-24 shrink-0 rounded-md object-cover transition duration-500 md:block" />
                                             )}
                                             <span className="min-w-0">
                                                 <span className="block text-pretty text-lg font-bold leading-snug text-white transition-colors group-hover:text-primary-light md:text-xl">

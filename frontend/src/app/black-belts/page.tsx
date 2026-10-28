@@ -137,7 +137,7 @@ export default function BlackBeltsPage() {
                             maskComposite: "intersect",
                             WebkitMaskComposite: "source-in",
                         }}
-                        className="absolute inset-y-0 right-0 h-full w-full object-cover object-top opacity-50 grayscale md:w-[60%]"
+ className="absolute inset-y-0 right-0 h-full w-full object-cover object-top opacity-50 md:w-[60%]"
                     />
                 )}
                 <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent md:bg-gradient-to-r md:from-black md:via-black/80 md:to-transparent" />

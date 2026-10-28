@@ -67,7 +67,7 @@ export default function BlogList() {
                         onIndex={setFront}
                         poster={
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src="/gallery/DSC08858.JPG" alt="" className="h-full w-full object-cover opacity-70 grayscale-[0.4]" />
+ <img src="/gallery/DSC08858.JPG" alt="" className="h-full w-full object-cover opacity-70 " />
                         }
                     />
                 }
@@ -91,7 +91,7 @@ export default function BlogList() {
                         <Link href={`/blog/${lead.slug}`} className="group block">
                             <div className="aspect-[16/10] overflow-hidden rounded-xl bg-surface">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={lead.image} alt={lead.imageAlt} className="h-full w-full object-cover grayscale-[0.25] transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
+ <img src={lead.image} alt={lead.imageAlt} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
                             </div>
                             <p className="mt-6 text-sm font-semibold text-white/60">{lead.category} · {lead.date}</p>
                             <h3 className="mt-2 max-w-[24ch] text-balance text-[clamp(1.6rem,3vw,2.4rem)] font-extrabold leading-[1.08] tracking-[-0.015em] text-white transition-colors group-hover:text-primary-light">
@@ -109,7 +109,7 @@ export default function BlogList() {
                             <Reveal as="li" key={g.slug} delay={0.08 * (i + 1)}>
                                 <Link href={`/blog/${g.slug}`} className="group flex gap-5 py-6">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={g.image} alt="" className="h-24 w-24 shrink-0 rounded-lg object-cover grayscale transition duration-500 group-hover:grayscale-0 sm:h-28 sm:w-28" />
+ <img src={g.image} alt="" className="h-24 w-24 shrink-0 rounded-lg object-cover transition duration-500 sm:h-28 sm:w-28" />
                                     <div className="min-w-0">
                                         <p className="text-sm font-semibold text-white/55">{g.category}</p>
                                         <h3 className="mt-1 text-pretty text-lg font-bold leading-snug text-white transition-colors group-hover:text-primary-light">{g.title}</h3>
@@ -180,7 +180,7 @@ export default function BlogList() {
                                         <Link href={`/blog/${post.slug}`} className="group flex gap-5 py-6">
                                             {post.imageUrl && (
                                                 // eslint-disable-next-line @next/next/no-img-element
-                                                <img src={post.imageUrl} alt="" loading="lazy" className="h-24 w-24 shrink-0 rounded-lg object-cover grayscale transition duration-500 group-hover:grayscale-0" />
+ <img src={post.imageUrl} alt="" loading="lazy" className="h-24 w-24 shrink-0 rounded-lg object-cover transition duration-500 " />
                                             )}
                                             <div className="min-w-0">
                                                 <p className="text-sm text-white/55">{longDate(post.publishedAt)}</p>

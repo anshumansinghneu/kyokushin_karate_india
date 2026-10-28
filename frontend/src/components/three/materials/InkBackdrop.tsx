@@ -79,7 +79,7 @@ void main() {
   float filament = (1.0 - smoothstep(0.0, 0.015, abs(fbm(p * 3.2 + 4.0 * r) - 0.5))) * body;
   ink = body;
 
-  vec3 col = vec3(0.0);
+  vec3 col = vec3(0.039, 0.035, 0.031); // the page's ink black (--c-black: 10 9 8)
   // Output is display-referred (no colour-space conversion): these are the grey levels you see.
   col += vec3(0.93, 0.93, 0.94) * (ink * 0.26 + filament * 0.30) * uDensity;
 

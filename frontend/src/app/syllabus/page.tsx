@@ -187,7 +187,7 @@ export default function SyllabusPage() {
                             className="absolute inset-x-0 top-0 h-[44svh] md:inset-0 md:h-auto"
                             fallback={
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src="/history/belt-grip.jpg" alt="" className="h-full w-full object-cover object-center opacity-70 grayscale" />
+ <img src="/history/belt-grip.jpg" alt="" className="h-full w-full object-cover object-center opacity-70 " />
                             }
                         />
                     }

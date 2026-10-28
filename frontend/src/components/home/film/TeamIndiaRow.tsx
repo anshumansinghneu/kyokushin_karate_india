@@ -49,7 +49,7 @@ export default function TeamIndiaRow() {
                                 <div className="aspect-[4/5] overflow-hidden bg-worn-belt">
                                     {photo && (
                                         // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={photo} alt={`${m.name}, ${m.rankLabel}`} loading="lazy" className="h-full w-full object-cover object-top grayscale" />
+ <img src={photo} alt={`${m.name}, ${m.rankLabel}`} loading="lazy" className="h-full w-full object-cover object-top " />
                                     )}
                                 </div>
                                 <p className="mt-3 truncate font-gothic font-bold text-canvas">{m.name}</p>

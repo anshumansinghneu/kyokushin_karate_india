@@ -133,7 +133,7 @@ export default function HistoryScene({ progress, images, compact = false, offset
         <>
             <PerspectiveCamera ref={cam} makeDefault position={[0, 0.1, 5.2]} fov={portrait ? 55 : 38} />
             <InkBackdrop red={0} density={0.45} octaves={5} />
-            <fog attach="fog" args={["#000000", 4, GAP * 1.6]} />
+            <fog attach="fog" args={["#0a0908", 4, GAP * 1.6]} />
             {images.map((url, i) => (
                 <Print key={url} url={url} index={i} focus={focus} spread={compact ? 0.55 : offsetX && size.width < 768 ? 0.3 : 1.5} offsetX={size.width < 768 ? 0 : offsetX} />
             ))}

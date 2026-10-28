@@ -91,7 +91,7 @@ export default function CSRPage() {
                     <img
                         src="/csr/youth-kumite.jpg"
                         alt="Two young karateka in helmets and body guards exchanging techniques at a KKFI tournament"
-                        className="h-full w-full object-cover object-[60%_30%] opacity-60 grayscale"
+ className="h-full w-full object-cover object-[60%_30%] opacity-60 "
                     />
                 }
                 actions={
@@ -131,7 +131,7 @@ export default function CSRPage() {
                                 src="/csr/referee-and-child.jpg"
                                 alt="A referee guides a young fighter in a red helmet at a KKFI tournament"
                                 loading="lazy"
-                                className="aspect-[4/3] w-full object-cover grayscale"
+ className="aspect-[4/3] w-full object-cover "
                             />
                         </figure>
                     </Reveal>

@@ -41,7 +41,7 @@ export default function HistoryScroll({ chapters, label }: { chapters: Chapter[]
                     {chapters.map((c) => (
                         <li key={c.year} className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-14">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={c.image} alt={c.alt} loading="lazy" className="aspect-[4/3] w-full object-cover grayscale" />
+ <img src={c.image} alt={c.alt} loading="lazy" className="aspect-[4/3] w-full object-cover " />
                             <div>
                                 <p className="font-mincho text-[2.441rem] font-extrabold leading-none text-ash">{c.year}</p>
                                 <h2 className="mt-3 font-mincho text-[1.953rem] font-extrabold text-canvas">{c.title}</h2>
@@ -96,7 +96,7 @@ export default function HistoryScroll({ chapters, label }: { chapters: Chapter[]
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.6, ease: [0.2, 0.7, 0.1, 1] }}
-                                className="absolute inset-0 h-full w-full object-cover grayscale"
+ className="absolute inset-0 h-full w-full object-cover "
                             />
                         </AnimatePresence>
                     </div>

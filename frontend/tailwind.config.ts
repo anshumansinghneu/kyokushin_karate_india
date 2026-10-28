@@ -12,6 +12,8 @@ const config: Config = {
                 // Legacy palette, now CSS variables (globals.css): the member app keeps its red on
                 // black (.skin-app), the public site maps the same classes onto the dojo palette.
                 background: "#000000",
+                // Ink black on the public site (globals.css --c-black), pure black in the member app.
+                black: "rgb(var(--c-black) / <alpha-value>)",
                 foreground: "rgb(var(--c-white) / <alpha-value>)",
                 white: "rgb(var(--c-white) / <alpha-value>)",
                 primary: {

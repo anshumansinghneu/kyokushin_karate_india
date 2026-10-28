@@ -32,7 +32,7 @@ const paths = [
             <IndiaDojoMap
                 fallback={
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src="/gallery-thumbs/ring-08.jpg" alt="" loading="lazy" decoding="async" className={cn(image, "grayscale")} />
+ <img src="/gallery-thumbs/ring-08.jpg" alt="" loading="lazy" decoding="async" className={cn(image, "")} />
                 }
             />
         ),

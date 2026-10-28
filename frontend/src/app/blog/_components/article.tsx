@@ -64,7 +64,7 @@ export function ArticleHero({ title, subtitle, category, meta, image, imageAlt =
                 fallback={
                     image ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={image} alt={imageAlt} className="absolute inset-0 h-full w-full object-cover object-[50%_28%] grayscale-[0.3]" />
+ <img src={image} alt={imageAlt} className="absolute inset-0 h-full w-full object-cover object-[50%_28%] " />
                     ) : (
                         <div className="absolute inset-0 bg-black" />
                     )

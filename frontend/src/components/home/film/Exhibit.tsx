@@ -147,7 +147,7 @@ function StaticExhibit() {
         <section aria-label="Sosai Masutatsu Oyama" data-bleed className="bg-night pb-20 font-gothic text-canvas">
             <div className="pt-16">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={PORTRAIT} alt={PORTRAIT_ALT} fetchPriority="high" className="mx-auto aspect-square w-full max-w-[40rem] object-cover grayscale [mask-image:radial-gradient(ellipse_50%_55%_at_50%_45%,#000_55%,transparent_100%)]" />
+ <img src={PORTRAIT} alt={PORTRAIT_ALT} fetchPriority="high" className="mx-auto aspect-square w-full max-w-[40rem] object-cover [mask-image:radial-gradient(ellipse_50%_55%_at_50%_45%,#000_55%,transparent_100%)]" />
                 <div className="-mt-12 px-4 sm:px-6">
                     <HeroCopy />
                 </div>
@@ -320,7 +320,7 @@ export default function Exhibit() {
                         src={PORTRAIT}
                         alt={PORTRAIT_ALT}
                         fetchPriority="high"
-                        className="h-full w-full object-cover grayscale [mask-image:radial-gradient(ellipse_50%_55%_at_50%_45%,#000_55%,transparent_100%)]"
+ className="h-full w-full object-cover [mask-image:radial-gradient(ellipse_50%_55%_at_50%_45%,#000_55%,transparent_100%)]"
                     />
                 </div>
 

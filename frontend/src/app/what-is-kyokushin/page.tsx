@@ -109,7 +109,7 @@ export default function WhatIsKyokushinPage() {
         lede="Full-contact karate, founded by Sosai Masutatsu Oyama. Its name means the ultimate truth. Scroll to walk through its history."
         media={
           // eslint-disable-next-line @next/next/no-img-element
-          <img src="/history/kumite-today.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-45 grayscale" />
+ <img src="/history/kumite-today.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-45 " />
         }
       />
 

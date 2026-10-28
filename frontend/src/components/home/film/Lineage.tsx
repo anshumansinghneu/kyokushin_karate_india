@@ -55,7 +55,7 @@ export default function Lineage() {
                         <li key={person.name} className="relative grid gap-8 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:items-end md:gap-14">
                             <span aria-hidden="true" className="absolute -left-8 top-0 h-1.5 w-1.5 -translate-x-[2.5px] rounded-full bg-dan-gold md:-left-16" />
                             <div className="relative aspect-[4/5] w-full max-w-[22rem] overflow-hidden bg-worn-belt">
-                                <Image src={person.src} alt={person.alt} fill sizes="(max-width: 768px) 90vw, 22rem" placeholder="blur" className="object-cover object-top grayscale" />
+ <Image src={person.src} alt={person.alt} fill sizes="(max-width: 768px) 90vw, 22rem" placeholder="blur" className="object-cover object-top " />
                             </div>
                             <div>
                                 <h3 className="font-mincho text-[clamp(1.953rem,3vw,2.441rem)] font-extrabold leading-tight text-canvas">{person.name}</h3>

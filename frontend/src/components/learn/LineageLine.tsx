@@ -58,7 +58,7 @@ export default function LineageLine({ generations }: { generations: Generation[]
                                 fill
                                 sizes="(max-width: 768px) 10rem, 14rem"
                                 placeholder={typeof g.image === "string" ? "empty" : "blur"}
-                                className={`object-cover object-top grayscale transition-opacity duration-700 ${lit ? "opacity-100" : "opacity-40"}`}
+ className={`object-cover object-top transition-opacity duration-700 ${lit ? "opacity-100" : "opacity-40"}`}
                             />
                         </div>
                         <div className="md:pt-1">

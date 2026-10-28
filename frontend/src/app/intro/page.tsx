@@ -78,7 +78,7 @@ export default function IntroPage() {
                                 fill
                                 priority
                                 sizes="100vw"
-                                className="object-cover opacity-60 grayscale"
+ className="object-cover opacity-60 "
                             />
                         }
                     />

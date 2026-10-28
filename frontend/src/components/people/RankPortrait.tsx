@@ -97,7 +97,7 @@ function RankLine({ rank, dan }: { rank: string; dan: number }) {
 }
 
 /**
- * A flip card (Oddball): the front is a grayscale print with the name set vertically,
+ * A flip card (Oddball): the front is a photographic print with the name set vertically,
  * the back carries rank, dojo and the way to verify. A real button flips it, so it
  * works by keyboard and touch; the hidden face is inert. Reduced motion swaps faces
  * without the turn. With no photo, the initials are set large over a faint Kanku.
@@ -140,7 +140,7 @@ export default function RankPortrait({ name, rank, photoUrl, detail, location, h
                             src={photoUrl}
                             alt=""
                             loading="lazy"
-                            className="absolute inset-0 h-full w-full object-cover object-top grayscale transition-transform duration-700 group-hover:scale-[1.03]"
+ className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
                         />
                     ) : (
                         <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center bg-[#0b0b0b]">

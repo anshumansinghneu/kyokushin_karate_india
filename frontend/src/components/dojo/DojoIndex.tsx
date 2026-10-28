@@ -123,7 +123,7 @@ function Print({ sensei, city, compact = false, className = '' }: { sensei?: Sen
     <div className={`relative overflow-hidden bg-[#0b0b0b] ${className}`}>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-top grayscale" />
+ <img src={src} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-top " />
       ) : (
         <div aria-hidden="true" className="absolute inset-0 flex items-end overflow-hidden">
           <KankuMark className={compact ? 'absolute inset-[12%] text-white/[0.12]' : 'absolute -right-[18%] -top-[12%] h-[90%] w-[90%] text-white/[0.05]'} />
