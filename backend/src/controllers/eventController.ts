@@ -166,9 +166,31 @@ export const registerForEvent = catchAsync(async (req: Request, res: Response, n
     const event = await prisma.event.findUnique({ where: { id: eventId } });
     if (!event) return next(new AppError('Event not found', 404));
 
+    // This is the free-registration path. It used to accept any event, so a direct request
+    // could join a paid event without paying, join while pending or expired, or overfill
+    // it; the same rules as the voucher and enrolment paths now apply.
+    if (event.status === 'CANCELLED') return next(new AppError('This event has been cancelled', 400));
+    if (event.status === 'COMPLETED' || event.status === 'DRAFT') {
+        return next(new AppError('Registration is not open for this event', 400));
+    }
+    if (event.memberFee > 0) {
+        return next(new AppError('This event has a fee: register through the payment step', 400));
+    }
+    if (currentUser.role !== 'ADMIN' && currentUser.membershipStatus !== 'ACTIVE') {
+        return next(new AppError('An active KKFI membership is needed to register for events', 403));
+    }
+
     // Check deadline
     if (new Date() > event.registrationDeadline) {
         return next(new AppError('Registration deadline has passed', 400));
+    }
+
+    // Check max participants
+    if (event.maxParticipants) {
+        const regCount = await prisma.eventRegistration.count({ where: { eventId } });
+        if (regCount >= event.maxParticipants) {
+            return next(new AppError('This event has reached maximum capacity', 400));
+        }
     }
 
     // Check existing registration

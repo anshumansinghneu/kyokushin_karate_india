@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
+import { hasStaffPowers } from '../middleware/authMiddleware';
 import { parseDateField, parseOptionalDateField } from '../utils/parseDateField';
 import { parseRank, rankTitle } from '../utils/rank';
 import { resolveBio } from '../utils/delegationBio';
@@ -173,7 +174,7 @@ export const getDelegationById = catchAsync(async (req: Request, res: Response, 
     });
     if (!delegation) return next(new AppError('No delegation found with that ID', 404));
     // Drafts are visible only to staff.
-    const isStaff = req.user && ['ADMIN', 'INSTRUCTOR'].includes(req.user.role);
+    const isStaff = hasStaffPowers(req.user);
     if (!delegation.isPublished && !isStaff) {
         return next(new AppError('No delegation found with that ID', 404));
     }

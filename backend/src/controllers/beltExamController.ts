@@ -76,11 +76,95 @@ export const getBeltExamParticipants = catchAsync(async (req: Request, res: Resp
     });
 });
 
+// ─── Grading ────────────────────────────────────────────────────────
+//
+// One routine for single and bulk grading. Before, each call worked out the target
+// belt from the student's *current* belt and promoted on every PASS, so a retry or a
+// second grader promoted again (White → Orange → Blue), and any instructor could
+// grade any student. Now:
+//   • only the admin, the student's own instructor, or the exam's assigned instructor grades;
+//   • a promotion happens only when the result first becomes PASS, to the belt the exam
+//     was recorded for;
+//   • the belt change applies only if the student is still on the examined belt, so
+//     concurrent requests cannot both promote.
+
+type Grader = { id: string; role: string; name?: string | null };
+type GradeOutcome =
+    | { kind: 'promoted'; studentName: string; from: string; to: string; examResult: unknown; email: string }
+    | { kind: 'recorded'; studentName: string; from: string; to: string; examResult: unknown; result: 'PASS' | 'FAIL' };
+
+async function gradeOne(
+    event: { id: string; name: string; startDate: Date; assignedInstructorId: string | null },
+    studentId: string,
+    result: 'PASS' | 'FAIL',
+    notes: string | null,
+    grader: Grader,
+): Promise<GradeOutcome> {
+    const registration = await prisma.eventRegistration.findUnique({
+        where: { eventId_userId: { eventId: event.id, userId: studentId } },
+    });
+    if (!registration) throw new AppError('Student is not registered for this exam', 404);
+    if (registration.approvalStatus !== 'APPROVED') throw new AppError('Registration is not approved', 400);
+
+    const student = await prisma.user.findUnique({ where: { id: studentId } });
+    if (!student) throw new AppError('Student not found', 404);
+
+    if (grader.role !== 'ADMIN' && student.primaryInstructorId !== grader.id && event.assignedInstructorId !== grader.id) {
+        throw new AppError('You can only grade your own students, or an exam assigned to you', 403);
+    }
+
+    return prisma.$transaction(async (tx) => {
+        const existing = await tx.beltExamResult.findUnique({
+            where: { eventId_studentId: { eventId: event.id, studentId } },
+        });
+        const from = existing?.currentBelt ?? (student.currentBeltRank || 'White');
+        const to = existing?.targetBelt ?? getNextBelt(from);
+        if (!to) throw new AppError('Student is already at the highest belt rank', 400);
+
+        const examResult = existing
+            ? await tx.beltExamResult.update({
+                  where: { id: existing.id },
+                  data: { result, notes, gradedBy: grader.id, gradedAt: new Date() },
+              })
+            : await tx.beltExamResult.create({
+                  data: { eventId: event.id, studentId, currentBelt: from, targetBelt: to, result, notes, gradedBy: grader.id, gradedAt: new Date() },
+              });
+
+        const becamePass = result === 'PASS' && existing?.result !== 'PASS';
+        if (becamePass) {
+            // Promote only from the belt the student was examined at.
+            const moved = await tx.user.updateMany({
+                where: { id: studentId, currentBeltRank: from },
+                data: { currentBeltRank: to },
+            });
+            if (moved.count === 1) {
+                await tx.beltHistory.create({
+                    data: {
+                        studentId,
+                        oldBelt: from,
+                        newBelt: to,
+                        promotedBy: grader.id,
+                        promotionDate: event.startDate, // the exam date
+                        notes: `Belt exam: ${event.name}${notes ? ` — ${notes}` : ''}`,
+                    },
+                });
+                return { kind: 'promoted' as const, studentName: student.name, from, to, examResult, email: student.email };
+            }
+        }
+        return { kind: 'recorded' as const, studentName: student.name, from, to, examResult, result };
+    }, { timeout: 15000, maxWait: 10000 });
+}
+
+function notifyPromotion(outcome: GradeOutcome, grader: Grader) {
+    if (outcome.kind === 'promoted') {
+        sendBeltPromotionEmail(outcome.email, outcome.studentName, outcome.to, grader.name || 'Sensei').catch(() => {});
+    }
+}
+
 // ─── Grade a student: PASS or FAIL ──────────────────────────────────
 export const gradeStudent = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { eventId, studentId } = req.params;
     const { result, notes } = req.body; // result = "PASS" | "FAIL"
-    const currentUser = req.user;
 
     if (!['PASS', 'FAIL'].includes(result)) {
         return next(new AppError('Result must be PASS or FAIL', 400));
@@ -90,74 +174,18 @@ export const gradeStudent = catchAsync(async (req: Request, res: Response, next:
     if (!event) return next(new AppError('Event not found', 404));
     if (event.type !== 'BELT_EXAM') return next(new AppError('This is not a belt exam event', 400));
 
-    // Check student is registered
-    const registration = await prisma.eventRegistration.findUnique({
-        where: { eventId_userId: { eventId, userId: studentId } },
-    });
-    if (!registration) return next(new AppError('Student is not registered for this exam', 404));
-    if (registration.approvalStatus !== 'APPROVED') return next(new AppError('Registration is not approved', 400));
-
-    const student = await prisma.user.findUnique({ where: { id: studentId } });
-    if (!student) return next(new AppError('Student not found', 404));
-
-    const currentBelt = student.currentBeltRank || 'White';
-    const targetBelt = getNextBelt(currentBelt);
-
-    if (!targetBelt) return next(new AppError('Student is already at the highest belt rank', 400));
-
-    // Upsert exam result (allows re-grading)
-    const examResult = await prisma.beltExamResult.upsert({
-        where: { eventId_studentId: { eventId, studentId } },
-        update: {
-            result,
-            notes: notes || null,
-            gradedBy: currentUser.id,
-            gradedAt: new Date(),
-        },
-        create: {
-            eventId,
-            studentId,
-            currentBelt,
-            targetBelt,
-            result,
-            notes: notes || null,
-            gradedBy: currentUser.id,
-            gradedAt: new Date(),
-        },
-    });
-
-    // If PASS → auto-promote the student
-    if (result === 'PASS') {
-        await prisma.$transaction(async (tx: any) => {
-            // Update user belt
-            await tx.user.update({
-                where: { id: studentId },
-                data: { currentBeltRank: targetBelt },
-            });
-
-            // Create belt history record
-            await tx.beltHistory.create({
-                data: {
-                    studentId,
-                    oldBelt: currentBelt,
-                    newBelt: targetBelt,
-                    promotedBy: currentUser.id,
-                    promotionDate: event.startDate, // Use exam date
-                    notes: `Belt exam: ${event.name}${notes ? ` — ${notes}` : ''}`,
-                },
-            });
-        });
-
-        // Send promotion email (non-blocking)
-        sendBeltPromotionEmail(student.email, student.name, targetBelt, currentUser.name || 'Sensei').catch(() => {});
-    }
+    const outcome = await gradeOne(event, studentId, result, notes || null, req.user);
+    notifyPromotion(outcome, req.user);
 
     res.status(200).json({
         status: 'success',
-        message: result === 'PASS'
-            ? `${student.name} promoted from ${currentBelt} to ${targetBelt}`
-            : `${student.name} did not pass the belt exam`,
-        data: { examResult },
+        message:
+            outcome.kind === 'promoted'
+                ? `${outcome.studentName} promoted from ${outcome.from} to ${outcome.to}`
+                : result === 'PASS'
+                  ? `${outcome.studentName} has already passed this exam`
+                  : `${outcome.studentName} did not pass the belt exam`,
+        data: { examResult: outcome.examResult },
     });
 });
 
@@ -165,7 +193,6 @@ export const gradeStudent = catchAsync(async (req: Request, res: Response, next:
 export const bulkGradeStudents = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { eventId } = req.params;
     const { grades } = req.body; // [{studentId, result: "PASS"|"FAIL", notes?}]
-    const currentUser = req.user;
 
     if (!Array.isArray(grades) || grades.length === 0) {
         return next(new AppError('Please provide an array of grades', 400));
@@ -175,7 +202,7 @@ export const bulkGradeStudents = catchAsync(async (req: Request, res: Response, 
     if (!event) return next(new AppError('Event not found', 404));
     if (event.type !== 'BELT_EXAM') return next(new AppError('This is not a belt exam event', 400));
 
-    const results: any[] = [];
+    const results: { studentId: string; name: string; result: string; targetBelt: string }[] = [];
     const errors: string[] = [];
 
     for (const grade of grades) {
@@ -183,50 +210,12 @@ export const bulkGradeStudents = catchAsync(async (req: Request, res: Response, 
             errors.push(`Invalid result "${grade.result}" for student ${grade.studentId}`);
             continue;
         }
-
         try {
-            const student = await prisma.user.findUnique({ where: { id: grade.studentId } });
-            if (!student) { errors.push(`Student ${grade.studentId} not found`); continue; }
-
-            const registration = await prisma.eventRegistration.findUnique({
-                where: { eventId_userId: { eventId, userId: grade.studentId } },
-            });
-            if (!registration || registration.approvalStatus !== 'APPROVED') {
-                errors.push(`Student ${student.name} is not approved for this exam`);
-                continue;
-            }
-
-            const currentBelt = student.currentBeltRank || 'White';
-            const targetBelt = getNextBelt(currentBelt);
-            if (!targetBelt) { errors.push(`${student.name} is at max belt rank`); continue; }
-
-            const examResult = await prisma.beltExamResult.upsert({
-                where: { eventId_studentId: { eventId, studentId: grade.studentId } },
-                update: { result: grade.result, notes: grade.notes || null, gradedBy: currentUser.id, gradedAt: new Date() },
-                create: {
-                    eventId, studentId: grade.studentId, currentBelt, targetBelt,
-                    result: grade.result, notes: grade.notes || null,
-                    gradedBy: currentUser.id, gradedAt: new Date(),
-                },
-            });
-
-            if (grade.result === 'PASS') {
-                await prisma.$transaction(async (tx: any) => {
-                    await tx.user.update({ where: { id: grade.studentId }, data: { currentBeltRank: targetBelt } });
-                    await tx.beltHistory.create({
-                        data: {
-                            studentId: grade.studentId, oldBelt: currentBelt, newBelt: targetBelt,
-                            promotedBy: currentUser.id, promotionDate: event.startDate,
-                            notes: `Belt exam: ${event.name}${grade.notes ? ` — ${grade.notes}` : ''}`,
-                        },
-                    });
-                });
-                sendBeltPromotionEmail(student.email, student.name, targetBelt, currentUser.name || 'Sensei').catch(() => {});
-            }
-
-            results.push({ studentId: grade.studentId, name: student.name, result: grade.result, targetBelt });
-        } catch (err: any) {
-            errors.push(`Error grading ${grade.studentId}: ${err.message}`);
+            const outcome = await gradeOne(event, grade.studentId, grade.result, grade.notes || null, req.user);
+            notifyPromotion(outcome, req.user);
+            results.push({ studentId: grade.studentId, name: outcome.studentName, result: grade.result, targetBelt: outcome.to });
+        } catch (err: unknown) {
+            errors.push(`Error grading ${grade.studentId}: ${err instanceof Error ? err.message : String(err)}`);
         }
     }
 

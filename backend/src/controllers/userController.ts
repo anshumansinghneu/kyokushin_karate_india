@@ -286,6 +286,10 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
         if (userToApprove.primaryInstructorId !== currentUser.id) {
             return next(new AppError('You can only approve students assigned to you', 403));
         }
+        // Instructors approve students; new instructors are approved by the admin.
+        if (userToApprove.role !== 'STUDENT') {
+            return next(new AppError('Only the admin can approve instructors', 403));
+        }
 
         // Idempotency guard: already activated
         if (userToApprove.membershipStatus === 'ACTIVE' && userToApprove.membershipNumber) {
@@ -395,6 +399,20 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
 
 export const rejectUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.id;
+    const currentUser = req.user;
+
+    // Scoped like approveUser: an instructor can reject only their own students, and no
+    // one can reject an admin. (It used to reject anyone by id.)
+    const target = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, primaryInstructorId: true } });
+    if (!target) {
+        return next(new AppError('User not found', 404));
+    }
+    if (target.role === 'ADMIN') {
+        return next(new AppError('An admin account cannot be rejected', 403));
+    }
+    if (currentUser.role === 'INSTRUCTOR' && (target.role !== 'STUDENT' || target.primaryInstructorId !== currentUser.id)) {
+        return next(new AppError('You can only reject students assigned to you', 403));
+    }
 
     const updatedUser = await prisma.user.update({
         where: { id: userId },

@@ -4,6 +4,19 @@ import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 
+/**
+ * Whether a user really holds staff powers. Anyone can sign up choosing the instructor
+ * role, so the role alone proves nothing: an instructor whose application is still
+ * PENDING, or was REJECTED, is treated as a member without staff rights. (Approval sets
+ * ACTIVE; `isInstructorApproved` is not set on every approval path, so it is not used.)
+ */
+export const hasStaffPowers = (user: { role: string; membershipStatus?: string | null } | undefined | null): boolean => {
+    if (!user) return false;
+    if (user.role === 'ADMIN') return true;
+    if (user.role !== 'INSTRUCTOR') return false;
+    return !!user.membershipStatus && user.membershipStatus !== 'PENDING' && user.membershipStatus !== 'REJECTED';
+};
+
 export const protect = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -14,7 +27,14 @@ export const protect = catchAsync(async (req: Request, res: Response, next: Next
         return next(new AppError('You are not logged in! Please log in to get access.', 401));
     }
 
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    // An expired or malformed token is "not logged in" (401), which lets the client use its
+    // refresh token; uncaught, jsonwebtoken's errors became a 500 and logged members out.
+    let decoded: any;
+    try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    } catch {
+        return next(new AppError('Your session has expired. Please log in again.', 401));
+    }
 
     const currentUser = await prisma.user.findUnique({
         where: { id: decoded.id },
@@ -81,6 +101,10 @@ export const restrictTo = (...roles: string[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
         if (!roles.includes(req.user.role)) {
             return next(new AppError('You do not have permission to perform this action', 403));
+        }
+        // The instructor role is self-chosen at sign-up: staff routes wait for approval.
+        if (req.user.role === 'INSTRUCTOR' && !hasStaffPowers(req.user)) {
+            return next(new AppError('Your instructor account is awaiting approval.', 403));
         }
         next();
     };

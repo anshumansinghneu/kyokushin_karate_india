@@ -77,9 +77,17 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
         const requestedBelt = currentBeltRank || 'White';
         const isClaimingHigherBelt = isStudent && requestedBelt !== 'White';
 
-        // If no instructor specified, default to the admin (Shihan)
-        let resolvedInstructorId = instructorId;
-        if (!resolvedInstructorId && isStudent) {
+        // Who approves this sign-up. A student may name an instructor, but only an approved
+        // one (or the admin); a new instructor never chooses their approver, since another
+        // unapproved sign-up could then approve them. Everything else goes to the admin.
+        let resolvedInstructorId: string | undefined;
+        if (isStudent && instructorId) {
+            const named = await tx.user.findUnique({ where: { id: instructorId }, select: { id: true, role: true, membershipStatus: true } });
+            if (named && (named.role === 'ADMIN' || (named.role === 'INSTRUCTOR' && named.membershipStatus === 'ACTIVE'))) {
+                resolvedInstructorId = named.id;
+            }
+        }
+        if (!resolvedInstructorId) {
             const admin = await tx.user.findFirst({ where: { role: 'ADMIN' }, select: { id: true } });
             if (admin) resolvedInstructorId = admin.id;
         }
@@ -154,7 +162,7 @@ export const register = catchAsync(async (req: Request, res: Response, next: Nex
                     studentId: user.id,
                     oldBelt: null,
                     newBelt: initialBelt,
-                    promotedBy: instructorId || user.id,
+                    promotedBy: resolvedInstructorId || user.id,
                     notes: isInstructor ? 'Initial registration - Instructor' : 'Initial registration - White Belt',
                     promotionDate: new Date(),
                 },

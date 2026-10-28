@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../prisma';
+import { hasStaffPowers } from '../middleware/authMiddleware';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/errorHandler';
 import { fetchVideoMetadata } from '../utils/videoEmbed';
@@ -65,7 +66,8 @@ export const uploadGalleryItem = catchAsync(async (req: Request, res: Response) 
     }
 
     // Auto-approve for ADMIN and INSTRUCTOR
-    const autoApprove = userRole === 'ADMIN' || userRole === 'INSTRUCTOR';
+    // Only approved staff publish straight to the public gallery.
+    const autoApprove = hasStaffPowers(req.user);
 
     const item = await prisma.gallery.create({
         data: {
@@ -209,7 +211,8 @@ export const uploadGalleryVideo = catchAsync(async (req: Request, res: Response)
         throw new AppError(err.message || 'Failed to fetch video metadata', 400);
     }
 
-    const autoApprove = userRole === 'ADMIN' || userRole === 'INSTRUCTOR';
+    // Only approved staff publish straight to the public gallery.
+    const autoApprove = hasStaffPowers(req.user);
 
     const item = await prisma.gallery.create({
         data: {

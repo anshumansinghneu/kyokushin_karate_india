@@ -21,6 +21,11 @@ export const globalErrorHandler = (
     res: Response,
     next: NextFunction
 ) => {
+    // A bad or expired JWT anywhere is "not logged in", never a server error.
+    if (err?.name === 'JsonWebTokenError' || err?.name === 'TokenExpiredError' || err?.name === 'NotBeforeError') {
+        err = new AppError('Your session has expired. Please log in again.', 401);
+    }
+
     err.statusCode = err.statusCode || 500;
     err.status = err.status || 'error';
 
