@@ -10,8 +10,8 @@ import { useLoadedTexture, useReadySignal } from "./sceneUtils";
 
 interface GalleryRingSceneProps {
     images: string[];
-    /** Target rotation in radians, written by the page's drag and arrow controls. */
-    spin?: { current: number };
+    /** Target rotation in radians, written by the page's drag and arrow controls, plus a scroll offset. */
+    spin?: { current: number; scroll?: number };
     /** Called with the index of the print facing the viewer when it changes. */
     onFront?: (index: number) => void;
     onReady?: () => void;
@@ -25,8 +25,9 @@ void main() {
 }
 `;
 
-// Same archive-print treatment as the history corridor: grey until it faces
-// you, colour returns at the front; the back of the ring is a dark silhouette.
+// The prints are seen from inside the wall, so the photo is mirrored back the right way
+// round. Colour is fullest at the centre and only softens toward the edges: the wall
+// should read as photographs, not as a dark room.
 const fragment = /* glsl */ `
 precision highp float;
 varying vec2 vUv;
@@ -40,12 +41,11 @@ void main() {
   // Cover-fit the photo into the panel.
   float rt = uTexRes.x / uTexRes.y;
   vec2 scale = uAspect > rt ? vec2(1.0, rt / uAspect) : vec2(uAspect / rt, 1.0);
-  vec2 uv = (vUv - 0.5) * scale + 0.5;
+  vec2 uv = (vec2(1.0 - vUv.x, vUv.y) - 0.5) * scale + 0.5;
   vec3 c = uHasTex > 0.5 ? texture2D(uTex, uv).rgb : vec3(0.06);
   float g = dot(c, vec3(0.299, 0.587, 0.114));
-  vec3 col = mix(vec3(g), c, uFocus);
-  col *= 0.34 + 0.66 * uFocus;
-  if (!gl_FrontFacing) col = vec3(g) * 0.07;
+  vec3 col = mix(vec3(g), c, 0.45 + 0.55 * uFocus);
+  col *= 0.62 + 0.38 * uFocus;
   // Soft vignette at the panel edge.
   vec2 d = min(vUv, 1.0 - vUv);
   col *= smoothstep(0.0, 0.05, min(d.x, d.y * 1.6));
@@ -111,9 +111,10 @@ function Panel({
 }
 
 /**
- * A ring of real dojo photographs, turning slowly. The visitor drags it (the
- * page writes the target angle into `spin`); the print facing them comes into
- * colour while the rest stay grey archive prints.
+ * A concave wall of real dojo photographs (Vivant): the camera stands inside the curve,
+ * so every print in view faces the visitor and the wall wraps toward them at the edges.
+ * It turns slowly on its own; dragging and scrolling the page turn it further (the page
+ * writes both into `spin`). The print at the centre is in full colour.
  */
 export default function GalleryRingScene({ images, spin, onFront, onReady }: GalleryRingSceneProps) {
     const ring = useRef<THREE.Group>(null);
@@ -132,14 +133,14 @@ export default function GalleryRingScene({ images, spin, onFront, onReady }: Gal
     useReadySignal(onReady);
 
     const count = Math.max(images.length, 1);
-    const radius = 5;
+    const radius = 6;
     const height = (radius * ((Math.PI * 2) / count) * 0.9) / (16 / 10);
 
     useFrame((_, delta) => {
         const dt = Math.min(delta, 0.1);
         // A slow idle turn that the visitor's drag adds to, never fights.
         drift.current -= dt * 0.06;
-        const target = (spin?.current ?? 0) + drift.current;
+        const target = (spin?.current ?? 0) + (spin?.scroll ?? 0) + drift.current;
         angle.current += (target - angle.current) * (1 - Math.exp(-dt * 5));
         const a = angle.current;
 
@@ -149,17 +150,18 @@ export default function GalleryRingScene({ images, spin, onFront, onReady }: Gal
             g.rotation.x += (pointer.y * 0.05 - g.rotation.x) * (1 - Math.exp(-dt * 3));
         }
 
-        // Which panel faces the camera (+Z): panel i sits at angle i*step + a.
+        // Which panel is straight ahead (-Z, across the wall from the camera): panel i sits
+        // at angle i*step + a, measured from +Z.
         const step = (Math.PI * 2) / count;
         let best = 0;
         let bestCos = -2;
         focus.current = images.map((_, i) => {
-            const c = Math.cos(i * step + a);
+            const c = -Math.cos(i * step + a);
             if (c > bestCos) {
                 bestCos = c;
                 best = i;
             }
-            return THREE.MathUtils.smoothstep(c, 0.82, 0.99);
+            return THREE.MathUtils.smoothstep(c, 0.7, 0.99);
         });
         if (best !== front.current) {
             front.current = best;
@@ -169,10 +171,11 @@ export default function GalleryRingScene({ images, spin, onFront, onReady }: Gal
 
     return (
         <>
-            <PerspectiveCamera makeDefault position={portrait ? [0, 3.4, 16] : [0, 2.9, 12.5]} fov={portrait ? 40 : 34} onUpdate={(c) => c.lookAt(0, portrait ? 1.2 : 0.45, 0)} />
+            {/* Inside the curve, set back from its centre, so the far wall is straight ahead and the sides wrap in. */}
+            <PerspectiveCamera makeDefault position={[0, 0, radius * 0.3]} fov={portrait ? 54 : 44} onUpdate={(c) => c.lookAt(0, portrait ? -0.2 : -0.35, -radius)} />
             <InkBackdrop red={0} density={0.4} octaves={5} />
-            {/* Desktop: the ring sits up and to the right, so the print facing you is clear of the copy. */}
-            <group ref={ring} position={portrait ? [0, 2.9, 0] : [1.9, 1.75, 0]}>
+            {/* The wall sits in the upper part of the frame, clear of the copy at the bottom. */}
+            <group ref={ring} position={[0, portrait ? 0.9 : 0.55, 0]}>
                 {images.map((url, i) => (
                     <Panel key={url} url={url} index={i} count={count} radius={radius} height={height} focus={focus} />
                 ))}

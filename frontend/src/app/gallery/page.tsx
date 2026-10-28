@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion";
 import {
     Search, ChevronRight, ChevronLeft, X, Download, Share2, ExternalLink, ArrowRight,
 } from "lucide-react";
@@ -68,10 +68,10 @@ const formatAlbumDate = (date: string | null) =>
     date ? new Date(date).toLocaleDateString("en-IN", { month: "long", year: "numeric" }) : null;
 
 // ----------------------------------------------------------------------
-// Hero: a ring of photographs the visitor turns by dragging
+// Hero: a concave wall of photographs the visitor turns by dragging or scrolling
 // ----------------------------------------------------------------------
 
-/** Static-tier and pre-load composition: five prints fanned in perspective. */
+/** Static-tier and pre-load composition: five prints curving toward the viewer, like the wall. */
 function RingPoster() {
     const fan = [RING_IMAGES[3], RING_IMAGES[6], RING_IMAGES[0], RING_IMAGES[9], RING_IMAGES[12]];
     return (
@@ -85,10 +85,10 @@ function RingPoster() {
                             key={src}
                             src={src}
                             alt=""
-                            className={`aspect-[16/10] w-[36vw] max-w-[360px] rounded-sm object-cover md:w-[22vw] ${offset === 0 ? "" : "grayscale"}`}
+                            className={`aspect-[16/10] w-[36vw] max-w-[360px] rounded-sm object-cover md:w-[22vw] ${offset === 0 ? "" : "saturate-50"}`}
                             style={{
                                 transform: `rotateY(${-offset * 24}deg) translateZ(${-Math.abs(offset) * 90}px)`,
-                                opacity: offset === 0 ? 1 : 0.45 - Math.abs(offset) * 0.08,
+                                opacity: offset === 0 ? 1 : 0.85 - Math.abs(offset) * 0.12,
                             }}
                         />
                     );
@@ -98,11 +98,16 @@ function RingPoster() {
     );
 }
 
-/** Target ring angle. The scene reads `current` every frame; changing it never re-renders. */
+/** Target wall angle. The scene reads these every frame; changing them never re-renders. */
 class SpinTarget {
     current = 0;
+    /** Extra turn from scrolling the page past the hero. */
+    scroll = 0;
     add(radians: number) {
         this.current += radians;
+    }
+    setScroll(radians: number) {
+        this.scroll = radians;
     }
 }
 
@@ -114,6 +119,12 @@ function GalleryHero({ photoCount }: { photoCount: number }) {
     const [spin] = useState(() => new SpinTarget());
     const drag = useRef<{ x: number; t: number; v: number } | null>(null);
     const sceneProps = useMemo(() => ({ images: RING_IMAGES, spin }), [spin]);
+    // Scrolling past the hero turns the wall on by three prints.
+    const hero = useRef<HTMLElement>(null);
+    const { scrollYProgress } = useScroll({ target: hero, offset: ["start start", "end start"] });
+    useMotionValueEvent(scrollYProgress, "change", (p) => {
+        spin.setScroll(-p * RING_STEP * 3);
+    });
 
     const onPointerDown = (e: React.PointerEvent) => {
         drag.current = { x: e.clientX, t: performance.now(), v: 0 };
@@ -137,7 +148,7 @@ function GalleryHero({ photoCount }: { photoCount: number }) {
     };
 
     return (
-        <header data-bleed className="relative flex min-h-[100svh] overflow-hidden">
+        <header ref={hero} data-bleed className="relative flex min-h-[100svh] overflow-hidden">
             <SceneSlot scene="gallery-ring" sceneProps={sceneProps} className="absolute inset-0" fallback={<RingPoster />} />
             {/* Drag surface. pan-y keeps vertical page scrolling on touch screens. */}
             {interactive && <div
@@ -158,13 +169,13 @@ function GalleryHero({ photoCount }: { photoCount: number }) {
                 <div className="mt-6 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
                     <p className="max-w-[44ch] text-pretty text-lg leading-relaxed text-white/80 md:text-xl">
                         {photoCount > 0 ? `${photoCount} photographs` : "Photographs"} from camps, gradings and
-                        tournaments across India.{interactive && " Drag the ring to turn it."}
+                        tournaments across India.{interactive && " Drag the wall to turn it."}
                     </p>
                     <div className="pointer-events-auto flex flex-wrap items-center gap-3">
                         {interactive && (<>
                         <button
                             type="button"
-                            aria-label="Turn the ring left"
+                            aria-label="Turn the wall left"
                             onClick={() => spin.add(RING_STEP)}
                             className="flex h-12 w-12 items-center justify-center border border-white/25 text-white transition-colors hover:bg-white/10"
                         >
@@ -172,7 +183,7 @@ function GalleryHero({ photoCount }: { photoCount: number }) {
                         </button>
                         <button
                             type="button"
-                            aria-label="Turn the ring right"
+                            aria-label="Turn the wall right"
                             onClick={() => spin.add(-RING_STEP)}
                             className="flex h-12 w-12 items-center justify-center border border-white/25 text-white transition-colors hover:bg-white/10"
                         >
