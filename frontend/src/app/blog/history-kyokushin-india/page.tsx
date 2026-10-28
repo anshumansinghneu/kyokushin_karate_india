@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Reveal from '@/components/brand/Reveal';
-import { ArticleBody, ArticleCta, ArticleHero, AUTHOR, GUIDES, KeepReading, Lede, PullQuote } from '../_components/article';
+import { ArticleBody, ArticleCta, ArticleHero, AUTHOR, GUIDES, KeepReading, Lede } from '../_components/article';
 
 const guide = GUIDES[2];
 
@@ -31,41 +31,38 @@ export const metadata: Metadata = {
 };
 
 export default function HistoryKyokushinIndia() {
+  // Sourced facts only (the redesign spec's authenticity ledger). India's own early history
+  // and membership numbers stay out until KKFI confirms them.
   const timeline = [
+    {
+      year: '1957',
+      title: 'The Name Kyokushin',
+      description: 'Masutatsu Oyama names his karate Kyokushin, "the ultimate truth".',
+    },
     {
       year: '1964',
       title: 'Sosai Oyama Founds the IKO',
-      description: 'After years of isolated mountain training and defeating bulls with his bare hands, Masutatsu Oyama establishes the International Karate Organization (IKO) in Tokyo, Japan. He codifies Kyokushin — "the ultimate truth" — as the world\'s first organized full-contact karate style.',
+      description: 'Oyama establishes the International Karate Organization Kyokushinkaikan, with its Honbu dojo in Ikebukuro, Tokyo: full-contact karate, hard training and the Osu spirit.',
     },
     {
-      year: '1970s',
-      title: 'The First World Tournaments',
-      description: 'Kyokushin holds its First World Open Tournament in 1975. Fighters from across the globe compete in bare-knuckle, full-contact bouts. The world takes notice of this brutal, honest fighting art. Kyokushin grows to 12 million practitioners globally.',
-    },
-    {
-      year: '1980s',
-      title: 'Kyokushin Reaches India',
-      description: 'Japanese instructors and Indian martial artists who trained in Japan bring Kyokushin to Indian shores. The first dojos open in metropolitan cities. India\'s martial arts community, previously dominated by Shotokan and Goju-Ryu, encounters the power of full-contact for the first time.',
+      year: '1975',
+      title: 'The First World Open',
+      description: 'Kyokushin holds its First World Open Tournament: knockdown fighting, with full-contact strikes to the body and legs, kicks to the head allowed, and no hand strikes to the head or face.',
     },
     {
       year: '1994',
       title: 'Sosai Oyama Passes Away',
-      description: 'The founder of Kyokushin dies in April 1994, leaving behind a martial art practiced by millions. His passing leads to organizational splits, but the spirit of Kyokushin — Osu! — remains unbreakable worldwide.',
-    },
-    {
-      year: '2000s',
-      title: 'Growth Across India',
-      description: 'Multiple Kyokushin organizations establish roots in India. Dojos open in Uttar Pradesh, Maharashtra, Delhi, West Bengal, and southern states. Indian fighters begin competing in Asian and World Kyokushin tournaments, earning respect on the international stage.',
+      description: 'The founder of Kyokushin dies in April 1994.',
     },
     {
       year: '2013',
       title: 'KKFI Is Established',
-      description: 'The Kyokushin Karate Foundation of India (KKFI) is founded under the leadership of Shihan Vasant Kumar Singh to unify and elevate Kyokushin training across India. KKFI focuses on standardized grading, certified instructors, youth development, and making world-class full-contact karate accessible to every Indian.',
+      description: 'Shihan Vasant Kumar Singh founds the Kyokushin Karate Foundation of India, with its headquarters in Shuklaganj (Unnao), Uttar Pradesh. KKFI is affiliated to World Kyokushin Kaikan, led by Daihyo Ryuko Take.',
     },
     {
-      year: '2026',
+      year: 'Today',
       title: 'KKFI Today',
-      description: 'KKFI operates dojos across multiple cities with hundreds of registered students. The foundation hosts national tournaments, conducts belt gradings aligned with international Kyokushin standards, and runs CSR programs to make martial arts accessible to underprivileged youth.',
+      description: 'KKFI runs dojos in cities across India, national tournaments and belt gradings, all on one register. The live list of dojos is on Find a dojo.',
     },
   ];
 
@@ -89,19 +86,17 @@ export default function HistoryKyokushinIndia() {
 
       <ArticleBody>
         <Lede>
-          The story of Kyokushin Karate in India is a story of warrior spirit traveling across borders.
-          From the mountains of Japan where one man forged the &quot;ultimate truth&quot; style through
-          superhuman training, to the dojos of Uttar Pradesh, Maharashtra, and beyond — Kyokushin&apos;s
-          journey to India is one of perseverance, authenticity, and an unbreakable commitment to
-          full-contact martial arts.
+          Kyokushin began with one man&apos;s training in the mountains of Japan and became a full-contact
+          karate practised around the world. In India it is taught by the Kyokushin Karate Foundation of
+          India, founded in 2013 and part of World Kyokushin Kaikan.
         </Lede>
 
         <h2>Who Was Sosai Masutatsu Oyama?</h2>
         <p>
           Born Choi Yeong-eui in Korea in 1923, Masutatsu Oyama moved to Japan and trained in multiple
-          martial arts before retreating to <strong>Mount Minobu</strong> for 18 months of solitary training.
-          He meditated under waterfalls, broke stones with his hands, and fought bulls — killing three
-          with single strikes. In 1964, he established the International Karate Organization (IKO) and
+          martial arts before retreating to <strong>Mount Minobu</strong> for solitary training. The
+          stories of his fights with bulls come from his own account and have become legend. In 1964, he
+          established the International Karate Organization (IKO) and
           named his style <strong>&quot;Kyokushin&quot;</strong> — meaning &quot;the ultimate truth.&quot;
           His philosophy was simple: <em>&quot;The heart of our karate is real fighting. There can be no
           proof without real fighting. Without proof, there is no trust. Without trust, there is no
@@ -129,27 +124,17 @@ export default function HistoryKyokushinIndia() {
         <p>
           Under the leadership of <strong>Shihan Vasant Kumar Singh</strong>, the Kyokushin Karate Foundation
           of India carries forward Sosai Oyama&apos;s vision with a distinctly Indian mission: to make
-          world-class, authentic Kyokushin training accessible to practitioners across the country —
-          regardless of economic background.
+          authentic Kyokushin training available to practitioners across the country.
         </p>
-        <p>KKFI&apos;s key initiatives include:</p>
-        <ul>
-          <li><strong>Standardized grading and certification</strong> aligned with international Kyokushin standards</li>
-          <li><strong>National tournaments</strong> providing Indian fighters a platform to compete at the highest level</li>
-          <li><strong>CSR programs</strong> offering free or subsidized training to underprivileged youth</li>
-          <li><strong>Instructor development</strong> ensuring every KKFI dojo maintains the highest teaching standards</li>
-          <li><strong>Digital infrastructure</strong> for membership management, belt tracking, and tournament organization</li>
-        </ul>
-
-        <PullQuote cite="Shihan Vasant Kumar Singh, KKFI">
-          &quot;Kyokushin is not just a fighting style. It is a way of life. Our mission is to bring this
-          path of strength and character to every corner of India.&quot;
-        </PullQuote>
+        <p>
+          In practice that means one syllabus and one standard of grading in every KKFI dojo, national
+          tournaments, and a single register of members, instructors and results that anyone can verify.
+        </p>
       </ArticleBody>
 
       <ArticleCta
         title="Be Part of the Legacy"
-        body="Join thousands of practitioners continuing Sosai Oyama's legacy in India. Train under certified KKFI instructors and earn internationally recognized belt grades."
+        body="Train in Sosai Oyama's karate under KKFI instructors, with gradings recorded on one register."
         actions={[
           { href: '/register', label: 'Register Now', primary: true },
           { href: '/intro', label: 'About KKFI' },

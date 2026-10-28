@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useInView } from "framer-motion";
+import { useMemo } from "react";
 import { ArrowRight, Mail, Phone } from "lucide-react";
 import PageHero from "@/components/brand/PageHero";
 import Reveal from "@/components/brand/Reveal";
@@ -9,79 +8,35 @@ import Section, { Heading } from "@/components/brand/Section";
 import BrandLink from "@/components/brand/BrandLink";
 import SceneSlot from "@/components/three/SceneSlot";
 
-/* Counts up once, the first time it scrolls into view. Shows the real number without JS. */
-function Count({ target, suffix = "" }: { target: number; suffix?: string }) {
-    const ref = useRef<HTMLSpanElement>(null);
-    const inView = useInView(ref, { once: true, amount: 0.6 });
-    const [value, setValue] = useState(target);
-
-    useEffect(() => {
-        if (!inView || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        let raf = 0;
-        const start = performance.now();
-        const step = (now: number) => {
-            const t = Math.min(1, (now - start) / 1600);
-            setValue(Math.round(target * (1 - Math.pow(2, -10 * t))));
-            if (t < 1) raf = requestAnimationFrame(step);
-        };
-        raf = requestAnimationFrame(step);
-        return () => cancelAnimationFrame(raf);
-    }, [inView, target]);
-
-    return (
-        <span ref={ref} className="tabular-nums">
-            {value.toLocaleString("en-IN")}
-            {suffix}
-        </span>
-    );
-}
-
 /* ── Data ─────────────────────────────────────────────────────────── */
 const csrPrograms = [
     {
         title: "School Outreach Program",
         description: "Free self-defense & discipline workshops in government schools, teaching confidence and resilience to every child across India.",
-        impact: "500+ Students Reached",
     },
     {
         title: "Free Training for Underprivileged",
         description: "Full scholarships — training, gi, and gear — for underprivileged youth who show the fire of a true karateka.",
-        impact: "50+ Scholarships Given",
     },
     {
         title: "Women's Self-Defense Initiative",
         description: "Dedicated camps for women and girls in rural and semi-urban areas — building unshakable confidence one punch at a time.",
-        impact: "30+ Camps Conducted",
     },
     {
         title: "Community Health & Fitness",
         description: "Free fitness sessions and health awareness camps promoting physical and mental well-being through martial arts discipline.",
-        impact: "1000+ Participants",
     },
     {
         title: "Youth Empowerment Program",
         description: "Anti-bullying workshops and character development through Kyokushin philosophy — respect, perseverance, integrity.",
-        impact: "20+ Schools Covered",
     },
     {
         title: "Rural Karate Development",
         description: "Building karate training centers where none exist — nurturing champions from India's grassroots.",
-        impact: "10+ Rural Centers",
     },
 ];
 
-const impactStats = {
-    lives: 1500,
-    programs: 30,
-    scholarships: 50,
-    partners: 15,
-};
-
-const missionPoints = [
-    { text: "Empower youth through martial arts", stat: "500+" },
-    { text: "Build healthier communities", stat: "30+" },
-    { text: "Nurture future champions", stat: "50+" },
-];
+const missionPoints = ["Empower youth through martial arts", "Build healthier communities", "Nurture future champions"];
 
 const partners = [
     {
@@ -110,37 +65,6 @@ const partners = [
         mono: "/sponsors/shrigang-mono.png",
         website: "https://www.shrigangindustries.com/",
         location: "Sikandrabad, UP",
-    },
-];
-
-const assurances = ["Section 135 Compliant", "Tax Benefits Available", "Impact Reports Provided"];
-
-const timeline = [
-    { year: "2019", title: "The Seed", description: "First free training session for 10 underprivileged children in a small Delhi dojo." },
-    { year: "2020", title: "The Storm", description: "Free online classes during COVID lockdowns — 200+ students stayed active when gyms closed." },
-    { year: "2022", title: "The Expansion", description: "School outreach launched across UP, Delhi NCR, and MP. First corporate CSR partnership formed." },
-    { year: "2024", title: "The Movement", description: "Women's self-defense camps go rural. 10 new training centers established in underserved areas." },
-    { year: "2026", title: "The Vision", description: "1500+ lives changed and counting. The goal: a karate dojo within reach of every Indian child." },
-];
-
-const testimonials = [
-    {
-        quote: "Karate gave me something nobody could take away — belief in myself. I was nobody, now I'm a green belt.",
-        name: "Priya Kumari",
-        role: "Scholarship Student, Age 14",
-        location: "Lucknow",
-    },
-    {
-        quote: "After the self-defense camp, our girls walk with their heads held high. That's the real black belt.",
-        name: "Meera Devi",
-        role: "School Principal",
-        location: "Rural Kanpur",
-    },
-    {
-        quote: "The discipline my son learned here changed our family. He teaches his younger siblings what he learns every day.",
-        name: "Rajesh Patel",
-        role: "Parent",
-        location: "Sikandrabad",
     },
 ];
 
@@ -178,18 +102,6 @@ export default function CSRPage() {
                 }
             />
 
-            {/* ── Impact, as one sentence ── */}
-            <Section rhythm="base" width="wide" className="bg-black">
-                <Reveal kind="focus">
-                    <p className="max-w-[26ch] text-balance text-[clamp(1.75rem,4.5vw,3.75rem)] font-extrabold leading-[1.1] tracking-[-0.02em] text-white/45">
-                        <span className="text-white"><Count target={impactStats.lives} suffix="+" /> lives</span> changed through{" "}
-                        <span className="text-white"><Count target={impactStats.programs} suffix="+" /> programs</span>,{" "}
-                        <span className="text-white"><Count target={impactStats.scholarships} suffix="+" /> scholarships</span> and{" "}
-                        <span className="text-white"><Count target={impactStats.partners} suffix="+" /> partner organisations</span>.
-                    </p>
-                </Reveal>
-            </Section>
-
             {/* ── Mission ── */}
             <Section rhythm="open" width="wide" className="bg-black">
                 <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-20">
@@ -204,16 +116,13 @@ export default function CSRPage() {
                                 builds character, and every belt earned proves that <span className="font-semibold text-white">anyone can rise</span>.
                             </p>
                         </Reveal>
-                        <dl className="mt-10 divide-y divide-white/10 border-y border-white/10">
+                        <ul className="mt-10 divide-y divide-white/10 border-y border-white/10">
                             {missionPoints.map((m, i) => (
-                                <Reveal key={m.text} delay={0.1 + i * 0.06} className="flex items-baseline justify-between gap-6 py-5">
-                                    <dt className="text-lg font-semibold text-white">{m.text}</dt>
-                                    <dd className="shrink-0 text-white/60">
-                                        <span className="text-xl font-black text-white">{m.stat}</span> impacted
-                                    </dd>
+                                <Reveal as="li" key={m} delay={0.1 + i * 0.06} className="py-5 text-lg font-semibold text-white">
+                                    {m}
                                 </Reveal>
                             ))}
-                        </dl>
+                        </ul>
                     </div>
                     <Reveal kind="depth">
                         <figure className="overflow-hidden rounded-xl bg-surface">
@@ -242,48 +151,9 @@ export default function CSRPage() {
                         <Reveal as="li" key={program.title} delay={(i % 2) * 0.06} className="border-b border-white/10 py-8">
                             <h3 className="text-xl font-extrabold text-white md:text-2xl">{program.title}</h3>
                             <p className="mt-3 max-w-[52ch] leading-relaxed text-white/70">{program.description}</p>
-                            <p className="mt-4 font-bold text-white">{program.impact}</p>
                         </Reveal>
                     ))}
                 </ul>
-            </Section>
-
-            {/* ── Timeline: a real sequence, so the years carry the order ── */}
-            <Section rhythm="base" width="base" className="bg-black">
-                <Reveal>
-                    <Heading>Our journey</Heading>
-                </Reveal>
-                <ol className="mt-12">
-                    {timeline.map((item, i) => (
-                        <Reveal as="li" key={item.year} kind="rise" delay={i * 0.04} className="grid gap-2 border-t border-white/10 py-8 md:grid-cols-[10rem_1fr] md:gap-10">
-                            <span className="text-[clamp(2.5rem,5vw,3.5rem)] font-black leading-none tracking-[-0.03em] text-white/25">{item.year}</span>
-                            <div>
-                                <h3 className="text-xl font-extrabold text-white md:text-2xl">{item.title}</h3>
-                                <p className="mt-2 max-w-[56ch] leading-relaxed text-white/70">{item.description}</p>
-                            </div>
-                        </Reveal>
-                    ))}
-                </ol>
-            </Section>
-
-            {/* ── Voices ── */}
-            <Section rhythm="base" width="wide" className="bg-black">
-                <Reveal>
-                    <Heading>In their words</Heading>
-                </Reveal>
-                <div className="mt-12 grid gap-12 md:grid-cols-3 md:gap-10">
-                    {testimonials.map((t, i) => (
-                        <Reveal key={t.name} kind="focus" delay={i * 0.08}>
-                            <figure>
-                                <blockquote className="text-pretty text-xl font-bold leading-snug text-white md:text-2xl">&ldquo;{t.quote}&rdquo;</blockquote>
-                                <figcaption className="mt-6 text-white/70">
-                                    <span className="font-semibold text-white">{t.name}</span>
-                                    <span className="block text-sm">{t.role} · {t.location}</span>
-                                </figcaption>
-                            </figure>
-                        </Reveal>
-                    ))}
-                </div>
             </Section>
 
             {/* ── Partners: the same lacquer ring as the sponsors page, then the real list ── */}
@@ -369,17 +239,9 @@ export default function CSRPage() {
                 </Reveal>
                 <Reveal delay={0.1}>
                     <p className="mt-6 max-w-[56ch] text-pretty text-lg leading-relaxed text-white/75">
-                        Your CSR contributions can expand our reach, change more lives, and create lasting social impact.
-                        We&apos;re registered and compliant under the Companies Act.
+                        Your CSR contributions can expand our reach and the programs above. Write to us and we will
+                        set out what a partnership involves.
                     </p>
-                    <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-white/80">
-                        {assurances.map((a) => (
-                            <li key={a} className="flex items-center gap-2.5 font-semibold">
-                                <span aria-hidden="true" className="h-1.5 w-1.5 bg-primary" />
-                                {a}
-                            </li>
-                        ))}
-                    </ul>
                     <div className="mt-10 flex flex-col gap-3 sm:flex-row">
                         <a
                             href="mailto:kyokushinkarateindia@gmail.com?subject=CSR%20Partnership%20Inquiry"
@@ -395,10 +257,6 @@ export default function CSRPage() {
                         </a>
                     </div>
                 </Reveal>
-                <p className="mt-20 max-w-[62ch] text-sm leading-relaxed text-white/60">
-                    Kyokushin Karate Foundation of India is committed to full transparency. All CSR contributions are
-                    documented and detailed impact reports are shared with contributing organizations.
-                </p>
             </Section>
         </div>
     );
