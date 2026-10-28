@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     'martial arts history India',
   ],
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/blog/history-kyokushin-india',
+    canonical: 'https://www.kyokushinfoundation.com/blog/history-kyokushin-india',
   },
   openGraph: {
     title: 'History of Kyokushin in India: From Sosai Oyama to Today',

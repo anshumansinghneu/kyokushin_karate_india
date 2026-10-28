@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, MapPin, Navigation } from 'lucide-react';
 import api from '@/lib/api';
 import { normalizeCity } from '@/lib/cityCoords';
+import { citySlug } from '@/lib/dojoSeo';
 import { sizedImageUrl } from '@/lib/imageUtils';
 import KankuMark from '@/components/KankuMark';
 import { DanBars, danName, ordinal, parseDan, rankWeight } from '@/components/people/RankPortrait';
@@ -302,9 +303,14 @@ export default function DojoIndex({
               <h3 id={`city-${key}`} className="font-mincho text-[clamp(3rem,7vw,6rem)] font-extrabold leading-[0.9] tracking-[-0.035em] text-white">
                 {g.label}
               </h3>
-              <p className="text-sm font-semibold text-white/55">
-                <span className="tabular-nums text-white">{g.dojos.length}</span> {g.dojos.length === 1 ? 'dojo' : 'dojos'}
-                {g.state ? ` · ${g.state}` : ''}
+              <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm font-semibold text-white/55">
+                <span>
+                  <span className="tabular-nums text-white">{g.dojos.length}</span> {g.dojos.length === 1 ? 'dojo' : 'dojos'}
+                  {g.state ? ` · ${g.state}` : ''}
+                </span>
+                <Link href={`/karate/${citySlug(g.label)}`} className="text-white/75 underline decoration-white/25 underline-offset-4 transition-colors hover:text-white hover:decoration-white">
+                  Karate in {g.label}
+                </Link>
               </p>
             </div>
             <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-16">

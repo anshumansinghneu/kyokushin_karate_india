@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: 'Browse upcoming Kyokushin Karate tournaments, belt grading events, training camps, and seminars across India. Register for KKFI full-contact karate competitions 2026.',
   keywords: ['karate tournament India 2026', 'Kyokushin tournament', 'full contact karate competition', 'karate grading event', 'martial arts events India'],
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/events',
+    canonical: 'https://www.kyokushinfoundation.com/events',
   },
   openGraph: {
     title: 'Karate Tournaments & Events 2026 | KKFI',

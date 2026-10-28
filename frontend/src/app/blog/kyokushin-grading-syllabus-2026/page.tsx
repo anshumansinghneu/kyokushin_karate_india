@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     'KKFI belt promotion',
   ],
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/blog/kyokushin-grading-syllabus-2026',
+    canonical: 'https://www.kyokushinfoundation.com/blog/kyokushin-grading-syllabus-2026',
   },
   openGraph: {
     title: 'Kyokushin Grading Syllabus 2026: Belt Guide',

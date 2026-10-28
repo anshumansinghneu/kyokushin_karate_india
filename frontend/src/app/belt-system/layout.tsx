@@ -16,13 +16,13 @@ export const metadata: Metadata = {
     'Kyokushin dan ranking',
   ],
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/belt-system',
+    canonical: 'https://www.kyokushinfoundation.com/belt-system',
   },
   openGraph: {
     title: 'Kyokushin Belt System | White to Black Belt Progression',
     description: 'Visual guide to every Kyokushin Karate belt level — colors, ranks, time requirements, and meaning.',
-    url: 'https://kyokushinfoundation.com/belt-system',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Kyokushin Belt System — KKFI' }],
+    url: 'https://www.kyokushinfoundation.com/belt-system',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Kyokushin Belt System — KKFI' }],
   },
 };
 

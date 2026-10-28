@@ -17,7 +17,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://kyokushinfoundation.com'),
+  metadataBase: new URL('https://www.kyokushinfoundation.com'),
   icons: {
     icon: '/kkfi-logo.avif',
     apple: '/kkfi-logo.avif',
@@ -54,18 +54,18 @@ export const metadata: Metadata = {
     telephone: false,
   },
   alternates: {
-    canonical: 'https://kyokushinfoundation.com',
+    canonical: 'https://www.kyokushinfoundation.com',
   },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://kyokushinfoundation.com",
+    url: "https://www.kyokushinfoundation.com",
     title: "Kyokushin Karate Foundation of India | Best Full Contact Karate Training",
     description: "Join the Kyokushin Karate Foundation of India. Led by Shihan Vasant Kumar Singh, we offer authentic full-contact karate training for kids and adults across India. Start your journey today!",
     siteName: "Kyokushin Karate Foundation of India",
     images: [
       {
-        url: "/og-image.png",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
         alt: "Kyokushin Karate Foundation of India – Full Contact Karate Training"
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Kyokushin Karate Foundation of India | Best Full Contact Karate Training",
     description: "Join the Kyokushin Karate Foundation of India. Authentic full-contact karate training for kids & adults. Dojos, tournaments & belt gradings across India.",
-    images: ["/og-image.png"],
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,

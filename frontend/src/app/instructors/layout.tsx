@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: "Meet the certified Kyokushin Karate instructors of KKFI — experienced black belt holders and qualified senseis offering full-contact karate training for kids and adults across India.",
   keywords: ["Kyokushin karate instructor", "karate sensei India", "certified karate teacher", "martial arts instructor near me"],
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/instructors',
+    canonical: 'https://www.kyokushinfoundation.com/instructors',
   },
   openGraph: {
     title: "Certified Kyokushin Instructors | KKFI",

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     'karate for kids articles',
   ],
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/blog',
+    canonical: 'https://www.kyokushinfoundation.com/blog',
   },
   openGraph: {
     title: 'Blog | Kyokushin Karate Foundation of India',

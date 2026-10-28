@@ -1,7 +1,24 @@
 import { MetadataRoute } from 'next'
+import { SITE, getDojos, groupByCity } from '@/lib/dojoSeo'
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://kyokushinfoundation.com'
+// Refreshed hourly so new dojos and cities reach search engines without a redeploy.
+export const revalidate = 3600
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = SITE
+
+  // Every dojo page and one landing page per city, from the live register.
+  const dojos = await getDojos()
+  const dojoEntries: MetadataRoute.Sitemap = dojos.map((d) => ({
+    url: `${baseUrl}/dojos/${d.id}`,
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }))
+  const cityEntries: MetadataRoute.Sitemap = groupByCity(dojos).map((g) => ({
+    url: `${baseUrl}/karate/${g.slug}`,
+    changeFrequency: 'weekly' as const,
+    priority: 0.9,
+  }))
 
   // Static pillar blog posts (server-rendered, high SEO value)
   const pillarBlogSlugs = [
@@ -169,5 +186,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    ...cityEntries,
+    ...dojoEntries,
   ]
 }

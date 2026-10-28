@@ -15,14 +15,14 @@ export const metadata: Metadata = {
     'Kyokushin Karate locations',
   ],
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/find-a-dojo',
+    canonical: 'https://www.kyokushinfoundation.com/find-a-dojo',
   },
   openGraph: {
     title: 'Find a Kyokushin Karate Dojo Near You | KKFI',
     description:
       'Interactive map of all Kyokushin Karate dojos across India. Find classes for kids & adults near you.',
-    url: 'https://kyokushinfoundation.com/find-a-dojo',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'KKFI Dojo Locations Across India' }],
+    url: 'https://www.kyokushinfoundation.com/find-a-dojo',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'KKFI Dojo Locations Across India' }],
   },
 };
 

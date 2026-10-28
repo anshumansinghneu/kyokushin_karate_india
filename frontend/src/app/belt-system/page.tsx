@@ -293,11 +293,11 @@ export default function BeltSystemPage() {
     publisher: {
       '@type': 'Organization',
       name: 'Kyokushin Karate Foundation of India',
-      logo: { '@type': 'ImageObject', url: 'https://kyokushinfoundation.com/kkfi-logo.avif' },
+      logo: { '@type': 'ImageObject', url: 'https://www.kyokushinfoundation.com/kkfi-logo.avif' },
     },
     datePublished: '2025-01-01',
     dateModified: '2026-10-19',
-    mainEntityOfPage: 'https://kyokushinfoundation.com/belt-system',
+    mainEntityOfPage: 'https://www.kyokushinfoundation.com/belt-system',
   };
 
   return (

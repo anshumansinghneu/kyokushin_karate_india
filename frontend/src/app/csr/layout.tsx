@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   title: 'Corporate Social Responsibility | KKFI Community Impact',
   description: 'Learn about KKFI\'s CSR initiatives — making full-contact Kyokushin karate training accessible to underprivileged youth across India. Community impact, partnerships & social programs.',
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/csr',
+    canonical: 'https://www.kyokushinfoundation.com/csr',
   },
   openGraph: {
     title: 'CSR | Kyokushin Karate Foundation of India',

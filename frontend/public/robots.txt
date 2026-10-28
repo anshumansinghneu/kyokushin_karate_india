@@ -35,4 +35,4 @@ Allow: /calendar
 Allow: /tournaments
 
 # Sitemap location
-Sitemap: https://kyokushinfoundation.com/sitemap.xml
+Sitemap: https://www.kyokushinfoundation.com/sitemap.xml

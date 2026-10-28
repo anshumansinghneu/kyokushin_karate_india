@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     'karate styles comparison',
   ],
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/blog/kyokushin-vs-shotokan',
+    canonical: 'https://www.kyokushinfoundation.com/blog/kyokushin-vs-shotokan',
   },
   openGraph: {
     title: 'What Makes Kyokushin Different from Shotokan?',

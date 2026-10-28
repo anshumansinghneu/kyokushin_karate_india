@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   title: 'Event Calendar | KKFI Tournaments, Gradings & Seminars',
   description: 'View the complete KKFI event calendar — upcoming karate tournaments, belt grading dates, seminars, and training camps across India.',
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/calendar',
+    canonical: 'https://www.kyokushinfoundation.com/calendar',
   },
   openGraph: {
     title: 'Event Calendar | Kyokushin Karate Foundation of India',

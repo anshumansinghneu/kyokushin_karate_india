@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     'kids karate classes India',
   ],
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/blog/full-contact-training-youth-benefits',
+    canonical: 'https://www.kyokushinfoundation.com/blog/full-contact-training-youth-benefits',
   },
   openGraph: {
     title: 'The Benefits of Full-Contact Karate Training for Youth',

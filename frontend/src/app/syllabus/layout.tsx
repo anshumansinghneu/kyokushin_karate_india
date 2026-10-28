@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: "Complete Kyokushin Karate grading syllabus — kihon, kata, kumite requirements for every belt from White to Black. Official KKFI training curriculum 2026.",
   keywords: ["Kyokushin grading syllabus 2026", "karate belt requirements", "Kyokushin kata list", "karate training curriculum", "belt promotion requirements"],
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/syllabus',
+    canonical: 'https://www.kyokushinfoundation.com/syllabus',
   },
   openGraph: {
     title: "Kyokushin Belt Syllabus | KKFI Training Curriculum",

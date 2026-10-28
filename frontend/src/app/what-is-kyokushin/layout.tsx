@@ -16,14 +16,14 @@ export const metadata: Metadata = {
     'full contact karate training',
   ],
   alternates: {
-    canonical: 'https://kyokushinfoundation.com/what-is-kyokushin',
+    canonical: 'https://www.kyokushinfoundation.com/what-is-kyokushin',
   },
   openGraph: {
     title: 'What is Kyokushin Karate? | Full-Contact Karate Explained',
     description:
       'Everything you need to know about Kyokushin Karate — history, training, philosophy, and how to start in India.',
-    url: 'https://kyokushinfoundation.com/what-is-kyokushin',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'What is Kyokushin Karate — KKFI' }],
+    url: 'https://www.kyokushinfoundation.com/what-is-kyokushin',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'What is Kyokushin Karate — KKFI' }],
   },
 };
 
