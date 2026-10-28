@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useReduced } from "@/components/home/film/hooks";
 import {
     Menu, X, User, LogOut, ChevronDown, LayoutDashboard, Settings, UserCircle, Receipt,
     ShoppingBag, Calendar, MapPin, Users, Image as ImageIcon, Heart, HandHeart, ShieldCheck, Radio, Swords, Shield, BookOpen, Award, FileText, Plane,
@@ -22,7 +23,8 @@ const WORDMARK =
 
 /* KKFI brand: the emblem and the wordmark take turns, flipping every few seconds. */
 function AnimatedBrand() {
-    const reduced = useReducedMotion();
+    // Hydration-safe: false on the server and first paint, then the real preference.
+    const reduced = useReduced();
     const [showLogo, setShowLogo] = useState(true);
 
     useEffect(() => {

@@ -87,7 +87,7 @@ function RingPoster() {
                             alt=""
                             className={`aspect-[16/10] w-[36vw] max-w-[360px] rounded-sm object-cover md:w-[22vw] ${offset === 0 ? "" : "saturate-50"}`}
                             style={{
-                                transform: `rotateY(${-offset * 24}deg) translateZ(${-Math.abs(offset) * 90}px)`,
+                                transform: `rotateY(${-offset * 24}deg) translateZ(${Math.abs(offset) * 60}px)`,
                                 opacity: offset === 0 ? 1 : 0.85 - Math.abs(offset) * 0.12,
                             }}
                         />
