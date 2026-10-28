@@ -1,5 +1,6 @@
-import Script from 'next/script'
 
+// Inline <script> tags, not next/script: JSON-LD must be in the server HTML that
+// crawlers read first, and next/script only injects after the page loads.
 export default function StructuredData() {
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -69,18 +70,16 @@ export default function StructuredData() {
 
   return (
     <>
-      <Script
-        id="organization-schema"
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(organizationSchema)
+          __html: JSON.stringify(organizationSchema).replace(/</g, '\\u003c')
         }}
       />
-      <Script
-        id="website-schema"
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(websiteSchema)
+          __html: JSON.stringify(websiteSchema).replace(/</g, '\\u003c')
         }}
       />
     </>
