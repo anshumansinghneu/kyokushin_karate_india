@@ -145,7 +145,7 @@ export default function HistoryKyokushinIndia() {
         links={[
           { href: '/blog/kyokushin-vs-shotokan', title: 'What Makes Kyokushin Different from Shotokan?', note: 'Karate Knowledge' },
           { href: '/blog/full-contact-training-youth-benefits', title: 'The Benefits of Full-Contact Training for Youth', note: 'Youth Development' },
-          { href: '/blog/kyokushin-grading-syllabus-2026', title: 'Kyokushin Grading Syllabus 2026: Complete Belt Guide', note: 'Official Syllabus' },
+          { href: '/blog/kyokushin-grading-syllabus-2026', title: 'Kyokushin Grading Syllabus 2026: Belt Guide', note: 'KKFI Syllabus' },
           { href: '/instructors', title: 'Meet Our Certified Instructors', note: 'Instructors' },
         ]}
       />

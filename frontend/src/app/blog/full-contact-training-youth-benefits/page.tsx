@@ -6,13 +6,13 @@ const guide = GUIDES[1];
 
 export const metadata: Metadata = {
   title: 'Benefits of Full-Contact Karate Training for Youth | Martial Arts for Kids',
-  description: 'Discover why full-contact Kyokushin karate is the best martial art for children and teens. Build confidence, discipline, anti-bullying resilience & physical fitness. Expert insights by KKFI.',
+  description: 'What full-contact Kyokushin karate can offer children and teens: confidence, discipline, self-defence awareness and fitness. A guide for parents from KKFI.',
   keywords: [
     'martial arts for kids near me',
     'karate for children India',
     'full contact karate youth benefits',
     'self-defense classes for kids',
-    'best martial arts for children',
+    'martial arts for children',
     'Kyokushin karate kids',
     'karate anti-bullying',
     'kids karate classes India',
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'The Benefits of Full-Contact Karate Training for Youth',
-    description: 'Why Kyokushin full-contact karate is the best martial art for kids — confidence, discipline, fitness & anti-bullying resilience.',
+    description: 'What Kyokushin full-contact karate can offer children: confidence, discipline, fitness and self-defence awareness.',
     type: 'article',
     publishedTime: '2026-02-13T00:00:00.000Z',
     authors: ['Kyokushin Karate Foundation of India'],
@@ -33,34 +33,28 @@ export const metadata: Metadata = {
 export default function YouthBenefits() {
   const benefits = [
     {
-      title: 'Unshakeable Confidence',
-      description: 'When a child knows they can handle real physical challenges, their confidence is not theoretical — it\'s earned. Full-contact training teaches kids that they can take a hit, get back up, and keep going. This transfers directly to academic pressure, social situations, and life challenges.',
-      icon: '🛡️',
+      title: 'Confidence That Is Earned',
+      description: 'When a child meets a real physical challenge and comes through it, the confidence that follows is earned rather than told. Training teaches children that they can take a knock, get back up and keep going, a habit that is just as useful at school and with friends.',
     },
     {
-      title: 'Real Anti-Bullying Skills',
-      description: 'Point-sparring teaches children to stop short. Full-contact training gives them genuine self-defense ability — the knowledge of what real strikes feel like and how to respond. More importantly, the confidence from training means most kids never need to use it. Bullies target those who seem vulnerable.',
-      icon: '💪',
+      title: 'Self-Defence Awareness',
+      description: 'Kyokushin sparring involves real contact to the body and legs, so children learn what a committed strike feels like and how to stay calm and respond to it. Good instruction also teaches them that walking away from trouble comes first.',
     },
     {
-      title: 'Extreme Physical Fitness',
-      description: 'A single Kyokushin class burns more calories than an hour of running. Kids develop cardiovascular endurance, flexibility, core strength, and coordination. In an age of screens and sedentary lifestyles, this is invaluable.',
-      icon: '🏃',
+      title: 'Physical Fitness',
+      description: 'A Kyokushin class asks a lot of the body: basics, kicks, pad work and conditioning. Along the way children build stamina, flexibility, strength and coordination, which is welcome at an age when much of the day is spent sitting.',
     },
     {
       title: 'Discipline & Focus',
-      description: 'The dojo is a structured environment with clear rules: bow when entering, address instructors with "Osu!", no talking out of turn. This discipline — practiced 3-4 times a week — rewires a child\'s approach to schoolwork, chores, and responsibilities.',
-      icon: '🎯',
+      description: 'The dojo has clear rules: bow when you enter, answer instructors with "Osu!", do not talk out of turn. Regular training gives children a routine with clear expectations, and that habit can carry over to homework and responsibilities at home.',
     },
     {
       title: 'Emotional Regulation',
-      description: 'Full-contact sparring is controlled chaos. Children learn to manage fear, frustration, and adrenaline in real-time. They learn that anger makes you sloppy, panic makes you freeze, and calm focus wins fights — and life situations.',
-      icon: '🧠',
+      description: 'Sparring asks children to manage fear, frustration and adrenaline while it is happening. They learn that anger makes you sloppy, panic makes you freeze, and calm focus serves you better, in the dojo and outside it.',
     },
     {
       title: 'Respect & Humility',
-      description: 'In Kyokushin, even the strongest fighter bows to their opponent. Winning doesn\'t mean disrespecting. Losing doesn\'t mean quitting. Children learn to respect teachers, parents, peers, and most importantly — themselves.',
-      icon: '🙏',
+      description: 'In Kyokushin, fighters bow to their opponent before and after they spar. Winning is no reason to disrespect anyone, and losing is no reason to quit. Children learn to respect their teachers, parents, training partners and themselves.',
     },
   ];
 
@@ -83,11 +77,10 @@ export default function YouthBenefits() {
 
       <ArticleBody>
         <Lede>
-          Every parent wants their child to be confident, disciplined, and physically fit. Many consider
-          martial arts — but with dozens of styles available, how do you choose? If your goal is
-          <strong> real-world results</strong> rather than just trophies, full-contact Kyokushin karate training
-          offers benefits that no other sport or martial art can match. Here&apos;s why parents across India
-          are choosing Kyokushin for their children.
+          Every parent wants their child to be confident, disciplined and fit. Many look at martial arts,
+          but with so many styles to choose from, where do you start? Kyokushin is a full-contact style:
+          children learn to take and deliver real strikes, under supervision, as their skill grows. Here is
+          what that kind of training can offer a child, and what to ask about before you enrol.
         </Lede>
       </ArticleBody>
 
@@ -106,61 +99,43 @@ export default function YouthBenefits() {
       <ArticleBody>
         <h2>What Age Can Kids Start Kyokushin?</h2>
         <p>
-          Children as young as <strong>5-6 years old</strong> can begin training. At this age, classes focus on
-          basic movements, coordination, and the foundational principles of discipline and respect. Full-contact
-          sparring is introduced gradually — typically from ages 8-10 — with appropriate protective gear and
-          close instructor supervision. By their teenage years, students are confident, skilled fighters with
-          years of conditioning behind them.
+          Young children can begin with classes built around basic movement, coordination, and the habits of
+          discipline and respect. Contact sparring is brought in gradually, as a child&apos;s skill and control
+          develop, with protective gear and close supervision. Starting ages and class groups vary from dojo
+          to dojo, so ask your nearest KKFI dojo what it offers for your child&apos;s age.
         </p>
 
         <h2>&quot;But Isn&apos;t Full-Contact Dangerous?&quot;</h2>
         <p>
-          This is the #1 concern parents have — and it&apos;s a valid question. The answer: <strong>Kyokushin
-          is safer than most team sports</strong>. Studies show that football, rugby, and even basketball cause
-          more youth injuries than martial arts. In a Kyokushin dojo:
+          It is the question most parents ask first, and a fair one. Kyokushin involves real contact, and no
+          contact sport is free of risk. What matters is how training is run. Under Kyokushin&apos;s knockdown
+          rules, hand strikes to the head or face are not allowed. In a well-run dojo:
         </p>
         <ul>
-          <li>Training is supervised by certified, experienced instructors</li>
-          <li>Sparring is matched by age, weight, and skill level</li>
-          <li>Proper technique is taught before contact is introduced</li>
-          <li>The culture emphasizes <strong>control</strong> — hurting your training partner is dishonorable</li>
-          <li>Children are taught to distinguish between training and real confrontation</li>
+          <li>Training is supervised by experienced instructors</li>
+          <li>Sparring partners are matched by age, size and skill</li>
+          <li>Technique is taught before contact is introduced</li>
+          <li>The culture values <strong>control</strong>: hurting your training partner is not respected</li>
+          <li>Children learn the difference between training and a real confrontation</li>
         </ul>
 
-        <h2>The Academic Connection</h2>
+        <h2>Focus at School and at Home</h2>
         <p>
-          Multiple studies have shown that children who practice martial arts regularly perform better academically.
-          The discipline of bowing, listening, repeating techniques hundreds of times, and persevering through
-          difficult training directly translates to improved focus in classrooms. KKFI instructors routinely
-          report that parents notice improvements in school performance within the first 3 months.
+          Bowing in, listening, repeating a technique many times and sticking with hard training all ask
+          for focus and patience. Those are the same habits a child needs in the classroom, and the dojo
+          gives them regular practice at them.
         </p>
 
-        <PullQuote cite="Sosai Masutatsu Oyama">
-          &quot;One thousand days of training to forge, ten thousand days of training to polish. The path of
-          true martial arts is one that requires patience.&quot;
+        <PullQuote cite="Miyamoto Musashi, as quoted by Sosai Oyama">
+          &quot;One thousand days to forge, ten thousand to polish.&quot;
         </PullQuote>
-
-        {/* The figures as one quiet ruled row, not a wall of big numbers. */}
-        <dl className="!my-12 grid grid-cols-2 gap-x-8 gap-y-6 border-y border-white/15 py-8 sm:grid-cols-4">
-          {[
-            { stat: '250+', label: 'Youth Students' },
-            { stat: '15+', label: 'Cities Across India' },
-            { stat: '93%', label: 'Parent Satisfaction' },
-            { stat: '5+', label: 'Age to Start' },
-          ].map((item) => (
-            <div key={item.label}>
-              <dt className="text-sm text-white/60">{item.label}</dt>
-              <dd className="mt-1 text-2xl font-extrabold text-white tabular-nums">{item.stat}</dd>
-            </div>
-          ))}
-        </dl>
       </ArticleBody>
 
       <ArticleCta
-        title="Enroll Your Child in Kyokushin Today"
-        body="Give your child the gift of discipline, confidence, and real self-defense skills. KKFI dojos across India welcome students from age 5 and up."
+        title="Enrol Your Child in Kyokushin"
+        body="Give your child a place to build discipline, confidence and real self-defence skills. Find a KKFI dojo near you and ask about its classes for children."
         actions={[
-          { href: '/register', label: 'Register Now — ₹295 Only', primary: true },
+          { href: '/register', label: 'Register Now', primary: true },
           { href: '/find-a-dojo', label: 'Find a Dojo Near You' },
         ]}
       />
@@ -169,7 +144,7 @@ export default function YouthBenefits() {
         links={[
           { href: '/blog/kyokushin-vs-shotokan', title: 'What Makes Kyokushin Different from Shotokan?', note: 'Karate Knowledge' },
           { href: '/blog/history-kyokushin-india', title: 'History of Kyokushin in India: From Sosai Oyama to Today', note: 'Our Heritage' },
-          { href: '/blog/kyokushin-grading-syllabus-2026', title: 'Kyokushin Grading Syllabus 2026: Complete Belt Guide', note: 'Official Syllabus' },
+          { href: '/blog/kyokushin-grading-syllabus-2026', title: 'Kyokushin Grading Syllabus 2026: Belt Guide', note: 'KKFI Syllabus' },
           { href: '/find-a-dojo', title: 'Find a KKFI Dojo Near You', note: 'Dojos' },
         ]}
       />

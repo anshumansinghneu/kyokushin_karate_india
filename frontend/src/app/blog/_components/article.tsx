@@ -180,7 +180,7 @@ export const GUIDES = [
     {
         slug: "full-contact-training-youth-benefits",
         title: "The Benefits of Full-Contact Training for Youth",
-        excerpt: "Why parents across India are choosing Kyokushin for their children — confidence, discipline, anti-bullying resilience & fitness.",
+        excerpt: "What full-contact Kyokushin training can give children and teens: confidence, discipline and fitness, and how a good dojo keeps it safe.",
         category: "Youth Development",
         date: "February 13, 2026",
         image: "/gallery/DSC08784.JPG",
@@ -189,7 +189,7 @@ export const GUIDES = [
     {
         slug: "history-kyokushin-india",
         title: "History of Kyokushin in India: From Sosai Oyama to Today",
-        excerpt: "The complete journey of Kyokushin Karate from Japan to India — from Sosai Oyama to KKFI under Shihan Vasant Kumar Singh.",
+        excerpt: "From Sosai Oyama in Japan to the Kyokushin Karate Foundation of India under Shihan Vasant Kumar Singh.",
         category: "Our Heritage",
         date: "February 13, 2026",
         image: "/history/oyama.jpg",
@@ -197,9 +197,9 @@ export const GUIDES = [
     },
     {
         slug: "kyokushin-grading-syllabus-2026",
-        title: "Kyokushin Grading Syllabus 2026: Complete Belt Guide",
-        excerpt: "Complete belt rank guide from white to black belt — kata requirements, kumite expectations & promotion criteria.",
-        category: "Official Syllabus",
+        title: "Kyokushin Grading Syllabus 2026: Belt Guide",
+        excerpt: "The KKFI belt ranks from white to black belt, and the kata at each one.",
+        category: "KKFI Syllabus",
         date: "February 13, 2026",
         image: "/history/belt-grip.jpg",
         imageAlt: "Hands gripping a black belt tied over a dark gi",
