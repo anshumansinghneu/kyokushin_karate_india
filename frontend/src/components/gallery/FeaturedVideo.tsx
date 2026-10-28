@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
-import { getImageUrl } from "@/lib/imageUtils";
+import { sizedImageUrl } from "@/lib/imageUtils";
 import type { GalleryPhoto } from "@/app/gallery/page";
 
 interface FeaturedVideoProps {
@@ -44,7 +44,7 @@ function postToPlayer(iframe: HTMLIFrameElement | null, provider: string, action
 
 export default function FeaturedVideo({ photo, onClick }: FeaturedVideoProps) {
   const isVideo = photo.mediaType === "VIDEO" && !!photo.videoProvider && !!photo.videoId;
-  const thumb = getImageUrl(photo.imageUrl) || "";
+  const thumb = sizedImageUrl(photo.imageUrl, 900) || "";
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [muted, setMuted] = useState(true);

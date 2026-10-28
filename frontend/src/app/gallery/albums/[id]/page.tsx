@@ -11,7 +11,7 @@ import {
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/contexts/ToastContext";
-import { getImageUrl } from "@/lib/imageUtils";
+import { getImageUrl, sizedImageUrl } from "@/lib/imageUtils";
 import VideoPlayer from "@/components/gallery/VideoPlayer";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -68,7 +68,7 @@ function FloatingPhotoCard({ photo, index, onClick, onDelete }: { photo: Photo; 
     const [rowSpan, setRowSpan] = useState(20);
     const cardRef = useRef<HTMLDivElement>(null);
     const [inView, setInView] = useState(false);
-    const imgUrl = getImageUrl(photo.imageUrl);
+    const imgUrl = sizedImageUrl(photo.imageUrl, 420);
     const isVideo = photo.mediaType === 'VIDEO';
     const durationLabel = formatDuration(photo.duration);
 
@@ -328,7 +328,7 @@ export default function AlbumDetailPage() {
     const currentPhoto = lightboxIndex !== null ? photos[lightboxIndex] : null;
     const currentPhotoUrl = currentPhoto ? getImageUrl(currentPhoto.imageUrl) : null;
     const config = album ? (TYPE_CONFIG[album.type] || TYPE_CONFIG.GENERAL) : TYPE_CONFIG.GENERAL;
-    const coverUrl = album?.coverImageUrl ? getImageUrl(album.coverImageUrl) : null;
+    const coverUrl = album?.coverImageUrl ? sizedImageUrl(album.coverImageUrl, 1000) : null;
 
     if (isLoading && !album) {
         return (

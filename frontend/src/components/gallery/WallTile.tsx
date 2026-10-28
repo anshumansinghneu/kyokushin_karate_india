@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Play, Maximize2 } from "lucide-react";
-import { getImageUrl } from "@/lib/imageUtils";
+import { sizedImageUrl } from "@/lib/imageUtils";
 import type { GalleryPhoto } from "@/app/gallery/page";
 
 interface WallTileProps {
@@ -22,7 +22,7 @@ export default function WallTile({ photo, onClick }: WallTileProps) {
   const [inView, setInView] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const isVideo = photo.mediaType === "VIDEO";
-  const imgUrl = getImageUrl(photo.imageUrl) || "";
+  const imgUrl = sizedImageUrl(photo.imageUrl, 320) || "";
   const durationLabel = formatDuration(photo.duration);
 
   useEffect(() => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { sizedImageUrl } from "@/lib/imageUtils";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Upload, Star, Loader2, ImageIcon, Download, Share2, ZoomIn, ZoomOut, Info, Trophy, MapPin, Eye, Grid3X3, LayoutGrid, Trash2 } from "lucide-react";
@@ -74,7 +75,7 @@ function GalleryImage({ item, index, onClick, onDelete }: { item: GalleryItem; i
             )}
             {inView && (
                 <img
-                    src={item.imageUrl}
+                    src={sizedImageUrl(item.imageUrl, 420) ?? item.imageUrl}
                     alt={item.caption || "Gallery photo"}
                     className={`w-full transition-transform duration-700 ease-out group-hover:scale-[1.03] ${loaded ? 'opacity-100' : 'opacity-0 absolute'}`}
                     loading="lazy"
@@ -1091,7 +1092,7 @@ export default function GalleryPage() {
                                                 : 'border-transparent opacity-30 hover:opacity-60 hover:border-white/20'
                                         }`}
                                     >
-                                        <img src={item.imageUrl} alt="" className="w-full h-full object-cover" />
+                                        <img src={sizedImageUrl(item.imageUrl, 80) ?? item.imageUrl} alt="" className="w-full h-full object-cover" />
                                     </button>
                                 );
                             })}

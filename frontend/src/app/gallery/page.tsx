@@ -8,7 +8,7 @@ import {
     Search, ChevronRight, ChevronLeft, X, Download, Share2, ExternalLink, ArrowRight,
 } from "lucide-react";
 import api from "@/lib/api";
-import { getImageUrl } from "@/lib/imageUtils";
+import { getImageUrl, sizedImageUrl } from "@/lib/imageUtils";
 import VideoPlayer from "@/components/gallery/VideoPlayer";
 import DojoWall from "@/components/gallery/DojoWall";
 import MarqueeStrip from "@/components/gallery/MarqueeStrip";
@@ -217,7 +217,7 @@ function useAlbumOpen() {
 
 function AlbumEntry({ album, feature, onOpen }: { album: Album; feature: boolean; onOpen: (e: React.MouseEvent, album: Album, cover: HTMLElement | null) => void }) {
     const cover = useRef<HTMLDivElement>(null);
-    const coverUrl = album.coverImageUrl ? getImageUrl(album.coverImageUrl) : null;
+    const coverUrl = album.coverImageUrl ? sizedImageUrl(album.coverImageUrl, 900) : null;
     const date = formatAlbumDate(album.date);
     const meta = [ALBUM_TYPE_LABEL[album.type] ?? "Album", date, `${album.photoCount} photo${album.photoCount !== 1 ? "s" : ""}`].filter(Boolean).join(" · ");
 

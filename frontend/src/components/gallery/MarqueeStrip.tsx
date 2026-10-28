@@ -1,7 +1,7 @@
 "use client";
 
 import { Play } from "lucide-react";
-import { getImageUrl } from "@/lib/imageUtils";
+import { sizedImageUrl } from "@/lib/imageUtils";
 import type { GalleryPhoto } from "@/app/gallery/page";
 
 interface MarqueeStripProps {
@@ -26,7 +26,7 @@ export default function MarqueeStrip({ items, onTileClick }: MarqueeStripProps) 
                 >
                     {doubled.map((photo, i) => {
                         const isVideo = photo.mediaType === 'VIDEO';
-                        const thumb = getImageUrl(photo.imageUrl) || "";
+                        const thumb = sizedImageUrl(photo.imageUrl, 320) || "";
                         return (
                             <div
                                 key={`${photo.id}-${i}`}
