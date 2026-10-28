@@ -10,7 +10,8 @@ import api from "@/lib/api";
 import { getEventStatus } from "@/lib/eventStatus";
 import { CITY_INDEX, normalizeCity } from "@/lib/cityCoords";
 import KarateLoader from "@/components/KarateLoader";
-import KankuMark from "@/components/KankuMark";
+import RankPortrait from "@/components/people/RankPortrait";
+import { getImageUrl, sizedImageUrl } from "@/lib/imageUtils";
 import PageHero from "@/components/brand/PageHero";
 import BrandLink from "@/components/brand/BrandLink";
 import SceneSlot from "@/components/three/SceneSlot";
@@ -25,9 +26,9 @@ interface Instructor {
     id: string;
     name: string;
     role: string;
-    email?: string;
     currentBeltRank: string;
     profilePhotoUrl: string | null;
+    membershipNumber?: string | null;
 }
 
 interface Event {
@@ -40,8 +41,10 @@ interface Event {
 }
 
 interface GalleryPhoto {
+    id?: string;
     url?: string;
     imageUrl?: string;
+    caption?: string | null;
 }
 
 interface Dojo {
@@ -58,24 +61,15 @@ interface Dojo {
     instructors: Instructor[];
     gallery: GalleryPhoto[];
     events: Event[];
+    /** Active members registered at this dojo (absent from older API builds). */
+    memberCount?: number;
 }
 
-/* Belt ranks arrive as text ("Black 2nd Dan", "BROWN", "1ST_DAN"); read the colour and any dan degree out of it. */
-const KYU_SWATCH: [RegExp, string][] = [
-    [/white/i, "#ffffff"],
-    [/orange/i, "#f97316"],
-    [/blue/i, "#3b82f6"],
-    [/yellow/i, "#eab308"],
-    [/green/i, "#22c55e"],
-    [/brown/i, "#92400e"],
-];
-
-function beltOf(rank?: string) {
-    const text = (rank ?? "").replace(/_/g, " ");
-    const dan = /(\d+)\s*(st|nd|rd|th)?\s*dan/i.exec(text);
-    if (dan || /black/i.test(text)) return { color: "#161616", dan: dan ? Number(dan[1]) : 0, label: text };
-    const kyu = KYU_SWATCH.find(([re]) => re.test(text));
-    return { color: kyu ? kyu[1] : null, dan: 0, label: text };
+interface DojoSummary {
+    id: string;
+    name: string;
+    city: string;
+    state?: string;
 }
 
 const typeLabel = (type: string) =>
@@ -93,57 +87,13 @@ function directionsUrl(dojo: Dojo) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 }
 
-function InstructorRow({ inst }: { inst: Instructor }) {
-    const belt = beltOf(inst.currentBeltRank);
-    return (
-        <li className="flex items-center gap-5 py-5">
-            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-surface">
-                {inst.profilePhotoUrl ? (
-                    <Image src={inst.profilePhotoUrl} alt={inst.name} width={80} height={80} className="h-full w-full object-cover grayscale" />
-                ) : (
-                    <>
-                        <KankuMark className="absolute inset-1 h-auto w-auto text-white/[0.06]" />
-                        <span className="absolute inset-0 flex items-center justify-center text-2xl font-black uppercase text-white/40">
-                            {inst.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("")}
-                        </span>
-                    </>
-                )}
-            </div>
-            <div className="min-w-0">
-                <p className="text-lg font-extrabold leading-tight text-white">{inst.name}</p>
-                <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/65">
-                    <span className="capitalize">{inst.role?.toLowerCase()}</span>
-                    {inst.currentBeltRank && (
-                        <span className="flex items-center gap-2">
-                            {belt.color && (
-                                <span
-                                    aria-hidden="true"
-                                    className={`h-2.5 w-6 rounded-sm ring-1 ${belt.dan ? "ring-secondary/70" : "ring-white/30"}`}
-                                    style={{ backgroundColor: belt.color }}
-                                />
-                            )}
-                            {belt.dan > 0 && (
-                                <span aria-hidden="true" className="flex gap-0.5">
-                                    {Array.from({ length: Math.min(6, belt.dan) }).map((_, i) => (
-                                        <span key={i} className="h-2.5 w-0.5 bg-secondary" />
-                                    ))}
-                                </span>
-                            )}
-                            <span className={belt.dan ? "font-semibold text-secondary" : ""}>{belt.label}</span>
-                        </span>
-                    )}
-                </p>
-            </div>
-        </li>
-    );
-}
-
 export default function DojoDetailPage() {
     const params = useParams();
     const [dojo, setDojo] = useState<Dojo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
     const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+    const [allDojos, setAllDojos] = useState<DojoSummary[]>([]);
 
     // Mini-map map reference
     const mapRef = useRef<HTMLDivElement>(null);
@@ -164,6 +114,11 @@ export default function DojoDetailPage() {
         };
         if (params.id) fetchDojo();
     }, [params.id]);
+
+    // The register, for "other dojos in this city".
+    useEffect(() => {
+        api.get('/dojos').then((res) => setAllDojos(res.data.data.dojos ?? [])).catch(() => {});
+    }, []);
 
     // The hero map holds on this dojo's city, its beam red.
     const mapScene = useMemo(() => {
@@ -201,7 +156,7 @@ export default function DojoDetailPage() {
             ).addTo(map);
 
             const icon = L.divIcon({
-                html: `<div style="width:18px;height:18px;border-radius:50%;background:#ff0000;border:2.5px solid #fff;"></div>`,
+                html: `<div style="width:18px;height:18px;border-radius:50%;background:#B3261E;border:2.5px solid #fff;"></div>`,
                 iconSize: [18, 18],
                 iconAnchor: [9, 9],
                 className: '',
@@ -256,8 +211,17 @@ export default function DojoDetailPage() {
         if (ca !== cb) return ca - cb;
         return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
     });
-    const photos = (dojo.gallery ?? []).slice(0, 6);
+    const photos = (dojo.gallery ?? []).slice(0, 12);
+    const photoSrc = (p: GalleryPhoto) => p.url || p.imageUrl || null;
     const place = [dojo.city, dojo.state].filter(Boolean).join(", ");
+    const upcoming = events.filter((e) => getEventStatus(e) !== 'COMPLETED').length;
+    const neighbours = allDojos.filter((d) => d.id !== dojo.id && normalizeCity(d.city) === normalizeCity(dojo.city));
+    // Live facts only: anything we do not have is left out rather than shown as zero.
+    const facts = [
+        dojo.memberCount ? { value: dojo.memberCount, label: dojo.memberCount === 1 ? "active member" : "active members" } : null,
+        dojo.instructors?.length ? { value: dojo.instructors.length, label: dojo.instructors.length === 1 ? "instructor" : "instructors" } : null,
+        upcoming ? { value: upcoming, label: upcoming === 1 ? "upcoming event" : "upcoming events" } : null,
+    ].filter(Boolean) as { value: number; label: string }[];
 
     return (
         <div className="min-h-screen w-full text-white selection:bg-primary selection:text-white">
@@ -327,6 +291,22 @@ export default function DojoDetailPage() {
                 </Link>
             </PageHero>
 
+            {facts.length > 0 && (
+                <Section rhythm="tight" width="wide" className="bg-black pb-0">
+                    <dl className="grid grid-cols-2 gap-y-8 border-y border-white/10 py-8 sm:flex sm:gap-x-16">
+                        {facts.map((f) => (
+                            <div key={f.label}>
+                                <dt className="sr-only">{f.label}</dt>
+                                <dd>
+                                    <span className="block font-mincho text-[clamp(2.25rem,4vw,3.25rem)] font-extrabold leading-none tabular-nums text-white">{f.value}</span>
+                                    <span className="mt-2 block text-sm font-semibold text-white/60">{f.label}</span>
+                                </dd>
+                            </div>
+                        ))}
+                    </dl>
+                </Section>
+            )}
+
             <Section rhythm="base" width="wide" className="bg-black">
                 <div className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-20">
                     <div className="space-y-20">
@@ -334,9 +314,18 @@ export default function DojoDetailPage() {
                         <Reveal>
                             <Heading size="title">Instructors</Heading>
                             {dojo.instructors && dojo.instructors.length > 0 ? (
-                                <ul className="mt-4 divide-y divide-white/10 border-y border-white/10">
+                                <ul className="mt-6 grid gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
                                     {dojo.instructors.map((inst) => (
-                                        <InstructorRow key={inst.id ?? inst.name} inst={inst} />
+                                        <li key={inst.id ?? inst.name}>
+                                            <RankPortrait
+                                                name={inst.name}
+                                                rank={inst.currentBeltRank}
+                                                photoUrl={getImageUrl(inst.profilePhotoUrl)}
+                                                detail={dojo.name}
+                                                location={place || undefined}
+                                                verifyHref={inst.membershipNumber ? `/verify/${encodeURIComponent(inst.membershipNumber)}` : undefined}
+                                            />
+                                        </li>
                                     ))}
                                 </ul>
                             ) : (
@@ -389,16 +378,17 @@ export default function DojoDetailPage() {
                                 <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
                                     {photos.map((photo, i) => (
                                         <button
-                                            key={i}
+                                            key={photo.id ?? i}
                                             type="button"
                                             onClick={() => setLightboxIdx(i)}
-                                            aria-label={`Open photo ${i + 1}`}
+                                            aria-label={photo.caption ? `Open photo: ${photo.caption}` : `Open photo ${i + 1}`}
                                             className={`group relative overflow-hidden rounded-lg bg-surface ${i === 0 ? "col-span-2 row-span-2 aspect-square md:col-span-2" : "aspect-square"}`}
                                         >
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
-                                                src={photo.url || photo.imageUrl}
+                                                src={sizedImageUrl(photoSrc(photo), i === 0 ? 700 : 340) ?? undefined}
                                                 alt=""
+                                                loading="lazy"
                                                 className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                                             />
                                         </button>
@@ -459,6 +449,53 @@ export default function DojoDetailPage() {
                 </div>
             </Section>
 
+            {/* Train here: straight into registration with this dojo already chosen. */}
+            <Section rhythm="open" width="wide" className="overflow-hidden bg-black">
+                <Reveal kind="mask" duration={1.1}>
+                    <p className="max-w-[18ch] text-balance font-mincho text-[clamp(2.5rem,6vw,5rem)] font-extrabold leading-[0.98] tracking-[-0.03em] text-white">
+                        Train here<span className="text-primary">.</span>
+                    </p>
+                </Reveal>
+                <Reveal delay={0.1} className="mt-6 max-w-[52ch] text-pretty text-lg leading-relaxed text-white/75">
+                    <p>
+                        Join KKFI with {dojo.name} as your dojo. Your instructor approves the membership, and your belt
+                        record starts on the national register.
+                    </p>
+                </Reveal>
+                <Reveal delay={0.15} className="mt-9 flex flex-col gap-3 sm:flex-row">
+                    <BrandLink href={`/register?dojo=${encodeURIComponent(dojo.id)}`}>
+                        Join at this dojo <ArrowUpRight className="h-4 w-4" />
+                    </BrandLink>
+                    <a
+                        href={directionsUrl(dojo)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/25 px-7 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:border-white/60 hover:bg-white/10"
+                    >
+                        <Navigation className="h-4 w-4" aria-hidden="true" /> Visit a class
+                    </a>
+                </Reveal>
+            </Section>
+
+            {neighbours.length > 0 && (
+                <Section rhythm="tight" width="wide" className="bg-black">
+                    <Heading size="title">Other dojos in {dojo.city}</Heading>
+                    <ul className="mt-4 divide-y divide-white/10 border-y border-white/10">
+                        {neighbours.map((d) => (
+                            <li key={d.id}>
+                                <Link href={`/dojos/${d.id}`} className="group flex items-center justify-between gap-6 py-5">
+                                    <span className="min-w-0">
+                                        <span className="block truncate text-lg font-extrabold text-white transition-colors group-hover:text-primary-light">{d.name}</span>
+                                        <span className="mt-0.5 block text-sm text-white/55">{[d.city, d.state].filter(Boolean).join(", ")}</span>
+                                    </span>
+                                    <ArrowUpRight className="h-5 w-5 shrink-0 text-white/40 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white" aria-hidden="true" />
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </Section>
+            )}
+
             {/* Lightbox Modal */}
             <AnimatePresence>
                 {lightboxIdx !== null && photos.length > 0 && (
@@ -485,7 +522,7 @@ export default function DojoDetailPage() {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.97, opacity: 0 }}
                             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                            src={photos[lightboxIdx]?.url || photos[lightboxIdx]?.imageUrl}
+                            src={getImageUrl(photoSrc(photos[lightboxIdx])) ?? undefined}
                             alt=""
                             className="max-h-[90vh] max-w-full rounded-lg object-contain"
                             onClick={(e) => e.stopPropagation()}

@@ -9,12 +9,14 @@ export const getAllDojos = catchAsync(async (req: Request, res: Response, next: 
     if (country) where.country = country;
     if (state) where.state = state;
 
-    const dojos = await prisma.dojo.findMany({
+    const rows = await prisma.dojo.findMany({
         where,
         include: {
             instructors: { select: { id: true, name: true, role: true } },
         },
     });
+    // Public endpoint: the fee-reminder template is internal (the fees page reads it from /fees).
+    const dojos = rows.map(({ feeReminderTemplate: _template, ...dojo }) => dojo);
 
     res.status(200).json({
         status: 'success',
@@ -75,13 +77,14 @@ export const getDojo = catchAsync(async (req: Request, res: Response, next: Next
     const dojo = await prisma.dojo.findUnique({
         where: { id: req.params.id },
         include: {
+            // Public page: no instructor emails; the membership number links to /verify.
             instructors: {
                 select: {
                     id: true,
                     name: true,
-                    email: true,
                     currentBeltRank: true,
                     profilePhotoUrl: true,
+                    membershipNumber: true,
                     role: true
                 }
             },
@@ -120,12 +123,26 @@ export const getDojo = catchAsync(async (req: Request, res: Response, next: Next
         // Continue without events if there's a schema issue
     }
 
+    // The dojo's own approved photos, newest first, and how many active members train here.
+    const [gallery, memberCount] = await Promise.all([
+        prisma.gallery.findMany({
+            where: { dojoId: req.params.id, isApproved: true },
+            select: { id: true, imageUrl: true, caption: true, mediaType: true, videoId: true, videoProvider: true, uploadedAt: true },
+            orderBy: { uploadedAt: 'desc' },
+            take: 12,
+        }),
+        prisma.user.count({ where: { dojoId: req.params.id, membershipStatus: 'ACTIVE' } }),
+    ]);
+
+    const { feeReminderTemplate: _template, ...publicDojo } = dojo;
+
     res.status(200).json({
         status: 'success',
         data: {
             dojo: {
-                ...dojo,
-                gallery: [], // Empty gallery for now until table is created
+                ...publicDojo,
+                gallery,
+                memberCount,
                 instructors,
                 events
             },

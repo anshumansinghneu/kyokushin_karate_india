@@ -82,6 +82,21 @@ export default function RegisterPage() {
         fetchLocations();
     }, []);
 
+    // Arriving from a dojo page ("Train here", /register?dojo=<id>): choose that dojo up
+    // front. Setting state, city and dojo together lets the effects below load the city's
+    // dojos and resolve its instructor exactly as if the visitor had picked them.
+    useEffect(() => {
+        const dojoId = new URLSearchParams(window.location.search).get("dojo");
+        if (!dojoId) return;
+        api.get(`/dojos/${encodeURIComponent(dojoId)}`)
+            .then((res) => {
+                const d = res.data.data.dojo;
+                if (!d?.state || !d?.city) return;
+                setFormData((prev) => ({ ...prev, country: d.country || prev.country, state: d.state, city: d.city, dojoId: d.id }));
+            })
+            .catch(() => {});
+    }, []);
+
     // Fetch Dojos when City changes
     useEffect(() => {
         const fetchDojos = async () => {
