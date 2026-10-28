@@ -15,9 +15,19 @@ const PORT = process.env.PORT || 10000;
 const server = http.createServer(app);
 
 // Socket.io setup
+// The site's own addresses. FRONTEND_URL alone was the old Vercel URL, so the live
+// scoreboard could not connect from kyokushinfoundation.com.
+const socketOrigins = [
+    process.env.FRONTEND_URL,
+    'https://kyokushinfoundation.com',
+    'https://www.kyokushinfoundation.com',
+    'https://kyokushin-karate-india.vercel.app',
+    'http://localhost:3000',
+].filter((o): o is string => !!o);
+
 export const io = new Server(server, {
     cors: {
-        origin: process.env.FRONTEND_URL || '*',
+        origin: socketOrigins,
         methods: ['GET', 'POST']
     }
 });
