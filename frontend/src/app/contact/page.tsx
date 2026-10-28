@@ -185,7 +185,7 @@ export default function ContactPage() {
                             Send a message
                         </h2>
                         <p className="mt-3 max-w-[48ch] text-white/70">
-                            Every field is needed. We usually reply within two working days.
+                            Every field is needed.
                         </p>
 
                         <form onSubmit={handleSubmit} className="mt-10 space-y-9">

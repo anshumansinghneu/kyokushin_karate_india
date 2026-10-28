@@ -60,7 +60,7 @@ export default function AuthShell({
                         <span lang="ja" className="text-2xl font-black text-primary-light">極真</span>
                         <span>Kyokushin Karate Foundation of India</span>
                     </p>
-                    <p className="max-w-[14ch] text-balance text-[clamp(2.75rem,5vw,4.5rem)] font-black uppercase leading-[0.92] tracking-[-0.035em] text-white">
+                    <p className="max-w-[14ch] text-balance font-mincho text-[clamp(2.75rem,5vw,4.5rem)] font-extrabold leading-[0.95] tracking-[-0.03em] text-white">
                         {title}
                     </p>
                     {lede && <p className="mt-6 max-w-[42ch] text-pretty text-lg leading-relaxed text-white/75">{lede}</p>}
@@ -81,7 +81,7 @@ export default function AuthShell({
                         }
                     />
                     <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                    <p className="absolute inset-x-4 bottom-5 text-[2rem] font-black uppercase leading-[0.95] tracking-[-0.03em] text-white sm:inset-x-8">
+                    <p className="absolute inset-x-4 bottom-5 font-mincho text-[2rem] font-extrabold leading-[1] tracking-[-0.02em] text-white sm:inset-x-8">
                         {title}
                     </p>
                 </div>
