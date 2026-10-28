@@ -20,7 +20,7 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { INDIAN_STATES, CITIES, BELT_RANKS, COUNTRY_CODES } from "@/lib/constants";
 
-const ADMIN_INSTRUCTOR_ID = "42b18481-85ee-49ed-8b3c-dc4f707fe29e"; // Sihan Vasant Kumar Singh
+const ADMIN_INSTRUCTOR_ID = "42b18481-85ee-49ed-8b3c-dc4f707fe29e"; // Shihan Vasant Kumar Singh
 
 export default function RegisterPage() {
     const [role, setRole] = useState<"STUDENT" | "INSTRUCTOR">("STUDENT");
@@ -110,7 +110,7 @@ export default function RegisterPage() {
     useEffect(() => {
         if (formData.dojoId) {
             if (formData.dojoId === "fallback") {
-                setSelectedDojo({ name: "Direct Student", instructors: [{ name: "Sihan Vasant Kumar Singh" }] });
+                setSelectedDojo({ name: "Direct Student", instructors: [{ name: "Shihan Vasant Kumar Singh" }] });
                 setFormData(prev => ({ ...prev, instructorId: ADMIN_INSTRUCTOR_ID }));
             } else {
                 const dojo = dojos.find(d => d.id === formData.dojoId);

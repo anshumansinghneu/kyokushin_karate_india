@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Verify Membership",
-  description: "Verify the authenticity of a KKFI membership. Scan QR codes or enter membership numbers to validate.",
+  description: "Verify a KKFI membership: enter the membership number, or scan the QR code on a KKFI card or certificate with your phone camera.",
   openGraph: {
     title: "Verify Membership | KKFI",
-    description: "Verify KKFI membership authenticity. Scan QR or enter membership number.",
+    description: "Verify a KKFI membership by its number, or from the QR code on a KKFI card or certificate.",
   },
 };
 
