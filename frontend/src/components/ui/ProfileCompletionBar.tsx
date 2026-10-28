@@ -17,7 +17,7 @@ interface ProfileCompletionBarProps {
         weight?: number | string;
         profilePhotoUrl?: string;
         fatherName?: string;
-        dojo?: any;
+        dojo?: unknown;
         currentBeltRank?: string;
     };
 }

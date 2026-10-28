@@ -42,9 +42,9 @@ export default function BlogSubmission() {
             setStatus('success');
             setMessage("Blog submitted successfully! It will be visible after admin approval.");
             setFormData({ title: "", excerpt: "", content: "", imageUrl: "", type: "BLOG" });
-        } catch (error: any) {
+        } catch (error: unknown) {
             setStatus('error');
-            setMessage(error.response?.data?.message || "Failed to submit blog. Please try again.");
+            setMessage((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Failed to submit blog. Please try again.");
         } finally {
             setLoading(false);
         }

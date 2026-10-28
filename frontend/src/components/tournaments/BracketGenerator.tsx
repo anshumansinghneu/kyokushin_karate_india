@@ -116,9 +116,10 @@ const BracketGenerator: React.FC<BracketGeneratorProps> = ({ eventId, onBrackets
                     } catch { /* ignore malformed */ }
                 }
             }
-        } catch (err: any) {
-            setError(err.message || 'Failed to generate brackets.');
-            setProgress(prev => ({ ...prev, error: err.message, done: true }));
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : undefined;
+            setError(message || 'Failed to generate brackets.');
+            setProgress(prev => ({ ...prev, error: message ?? null, done: true }));
         } finally {
             setLoading(false);
         }

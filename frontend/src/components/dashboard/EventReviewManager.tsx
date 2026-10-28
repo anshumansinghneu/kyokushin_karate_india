@@ -6,9 +6,17 @@ import { Check, X, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 
+interface EventFeedback {
+    id: string;
+    feedback: string;
+    createdAt: string;
+    user?: { name?: string; currentBeltRank?: string | null } | null;
+    event?: { name?: string } | null;
+}
+
 export default function EventReviewManager() {
     const { showToast } = useToast();
-    const [feedbacks, setFeedbacks] = useState<any[]>([]);
+    const [feedbacks, setFeedbacks] = useState<EventFeedback[]>([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -78,7 +86,7 @@ export default function EventReviewManager() {
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {feedbacks.map((fb: any) => (
+                    {feedbacks.map((fb: EventFeedback) => (
                         <motion.div
                             key={fb.id}
                             initial={{ opacity: 0, y: 4 }}

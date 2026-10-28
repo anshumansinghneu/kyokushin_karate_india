@@ -27,9 +27,9 @@ api.interceptors.request.use(
 
 // ── 401 interceptor with silent token refresh ──────────────
 let _isRefreshing = false;
-let _refreshQueue: Array<{ resolve: (v: any) => void; reject: (e: any) => void }> = [];
+let _refreshQueue: Array<{ resolve: (v: string | null) => void; reject: (e: unknown) => void }> = [];
 
-function processQueue(error: any, token: string | null = null) {
+function processQueue(error: unknown, token: string | null = null) {
     _refreshQueue.forEach(({ resolve, reject }) => {
         if (error) reject(error);
         else resolve(token);

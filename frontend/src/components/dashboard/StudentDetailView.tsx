@@ -71,13 +71,28 @@ interface StudentProfile {
     }>;
 }
 
+/** A row from GET /users/:id/notes (author included via select). */
+interface StudentNote {
+    id: string;
+    noteText: string;
+    isPrivate: boolean;
+    createdBy: string;
+    createdAt: string;
+    author: {
+        id: string;
+        name: string;
+        role: string;
+        profilePhotoUrl?: string | null;
+    };
+}
+
 export default function StudentDetailView({ studentId, onClose }: StudentDetailViewProps) {
     const { showToast } = useToast();
     const { user } = useAuthStore();
     const [activeTab, setActiveTab] = useState<'overview' | 'belt-history' | 'training' | 'tournaments' | 'notes' | 'timeline'>('overview');
     const [student, setStudent] = useState<StudentProfile | null>(null);
     const [loading, setLoading] = useState(true);
-    const [notes, setNotes] = useState<any[]>([]);
+    const [notes, setNotes] = useState<StudentNote[]>([]);
     const [newNote, setNewNote] = useState('');
     const [isPrivate, setIsPrivate] = useState(false);
     const [loadingNotes, setLoadingNotes] = useState(false);

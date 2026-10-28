@@ -57,7 +57,7 @@ export default function PaymentManagement() {
     const fetchPayments = async () => {
         setIsLoading(true);
         try {
-            const params: any = { page, limit: 200 };
+            const params: { page: number; limit: number } = { page, limit: 200 };
             const res = await api.get('/payments/all', { params });
             const allPayments: Payment[] = res.data.data.payments;
             setPayments(allPayments);

@@ -83,7 +83,7 @@ const MediaManager = () => {
 
         setIsSaving(true);
         try {
-            const { id: postId, author, createdAt, updatedAt, ...rest } = currentPost as any;
+            const { id: postId, author, createdAt, updatedAt, ...rest } = currentPost as Partial<MediaPost> & { author?: unknown; createdAt?: string; updatedAt?: string };
             const payload = {
                 ...rest,
                 type: 'MEDIA_MENTION',

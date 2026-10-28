@@ -15,11 +15,61 @@ import StudentDetailView from "./StudentDetailView";
 type SortField = 'name' | 'role' | 'membershipStatus' | 'currentBeltRank' | 'createdAt';
 type SortOrder = 'asc' | 'desc';
 
+/** The fields of a GET /users row this table reads. */
+interface ManagedUser {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    membershipStatus: string;
+    dojoId?: string | null;
+    dojo?: { name: string } | null;
+    primaryInstructorId?: string | null;
+    currentBeltRank?: string | null;
+    phone?: string | null;
+    countryCode?: string | null;
+    dateOfBirth?: string | null;
+    city?: string | null;
+    state?: string | null;
+    country?: string | null;
+    height?: number | null;
+    weight?: number | null;
+    experienceYears?: number | null;
+    experienceMonths?: number | null;
+    membershipNumber?: string | null;
+    membershipStartDate?: string | null;
+    membershipEndDate?: string | null;
+    fatherName?: string | null;
+    fatherPhone?: string | null;
+    isInstructorApproved?: boolean;
+    createdAt?: string;
+}
+
+interface DojoOption {
+    id: string;
+    name: string;
+}
+
+/** The fields of a GET /payments/all row this table reads. */
+interface UserPayment {
+    /** Null for a payment with no linked account; those are skipped below. */
+    user: { id: string } | null;
+    status: string;
+    amount: number;
+    createdAt: string;
+}
+
+/** Shape of an axios-style error, narrowed from `unknown` in catch blocks. */
+interface ApiErrorLike {
+    message?: string;
+    response?: { data?: { message?: string } };
+}
+
 export default function UserManagementTable() {
     const { showToast } = useToast();
-    const [users, setUsers] = useState<any[]>([]);
-    const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
-    const [dojos, setDojos] = useState<any[]>([]);
+    const [users, setUsers] = useState<ManagedUser[]>([]);
+    const [filteredUsers, setFilteredUsers] = useState<ManagedUser[]>([]);
+    const [dojos, setDojos] = useState<DojoOption[]>([]);
     const [search, setSearch] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -27,7 +77,7 @@ export default function UserManagementTable() {
     const [totalUsers, setTotalUsers] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const pageSize = 20;
-    const [payments, setPayments] = useState<Record<string, any>>({});
+    const [payments, setPayments] = useState<Record<string, UserPayment>>({});
 
     // Filter state
     const [filterRole, setFilterRole] = useState<string>("all");
@@ -46,7 +96,7 @@ export default function UserManagementTable() {
 
     // Edit Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState<any | null>(null);
+    const [editingUser, setEditingUser] = useState<ManagedUser | null>(null);
     const [editSection, setEditSection] = useState<'personal' | 'martial' | 'membership'>('personal');
     const [isSaving, setIsSaving] = useState(false);
     const [editFormData, setEditFormData] = useState({
@@ -101,7 +151,7 @@ export default function UserManagementTable() {
     const fetchUsers = useCallback(async () => {
         setIsLoading(true);
         try {
-            const params: any = { page, limit: pageSize };
+            const params: { page: number; limit: number; role?: string; status?: string } = { page, limit: pageSize };
             if (filterRole !== 'all') params.role = filterRole;
             if (filterStatus !== 'all') params.status = filterStatus;
 
@@ -117,10 +167,14 @@ export default function UserManagementTable() {
             setDojos(dojosRes.data.data.dojos);
 
             // Build payment lookup by userId (latest payment)
-            const paymentMap: Record<string, any> = {};
-            (paymentsRes.data.data.payments || []).forEach((p: any) => {
-                if (!paymentMap[p.user?.id] || new Date(p.createdAt) > new Date(paymentMap[p.user.id].createdAt)) {
-                    paymentMap[p.user.id] = p;
+            const paymentMap: Record<string, UserPayment> = {};
+            // A payment with no linked user used to throw here, and the catch below then
+            // left the whole payment column empty; such payments are skipped instead.
+            (paymentsRes.data.data.payments || []).forEach((p: UserPayment) => {
+                const id = p.user?.id;
+                if (!id) return;
+                if (!paymentMap[id] || new Date(p.createdAt) > new Date(paymentMap[id].createdAt)) {
+                    paymentMap[id] = p;
                 }
             });
             setPayments(paymentMap);
@@ -275,15 +329,15 @@ export default function UserManagementTable() {
             showToast("User deleted successfully!", "success");
             fetchUsers();
             setDeleteId(null);
-        } catch (error: any) {
-            const message = error?.response?.data?.message || "Failed to delete user";
+        } catch (error: unknown) {
+            const message = (error as ApiErrorLike)?.response?.data?.message || "Failed to delete user";
             showToast(message, "error");
         } finally {
             setIsDeleting(false);
         }
     };
 
-    const openEditModal = (user: any) => {
+    const openEditModal = (user: ManagedUser) => {
         setEditingUser(user);
         setEditFormData({
             name: user.name,
@@ -330,7 +384,7 @@ export default function UserManagementTable() {
         if (!editingUser || isSaving) return;
         setIsSaving(true);
         try {
-            const updateData: any = {
+            const updateData: Record<string, string | null> = {
                 name: editFormData.name,
                 email: editFormData.email,
                 role: editFormData.role,
@@ -360,9 +414,10 @@ export default function UserManagementTable() {
             setEditingUser(null);
             fetchUsers();
             showToast("User updated successfully!", "success");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Failed to update user", error);
-            const errorMessage = error.response?.data?.message || error.message || "Failed to update user.";
+            const err = error as ApiErrorLike;
+            const errorMessage = err.response?.data?.message || err.message || "Failed to update user.";
             showToast(errorMessage, "error");
         } finally {
             setIsSaving(false);
@@ -412,9 +467,10 @@ export default function UserManagementTable() {
             fetchUsers();
             const successMsg = res.data?.message || "User created successfully!";
             showToast(successMsg, "success");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Failed to create user", error);
-            const message = error.response?.data?.message || error.message || "Failed to create user";
+            const err = error as ApiErrorLike;
+            const message = err.response?.data?.message || err.message || "Failed to create user";
             showToast(message, "error");
         } finally {
             setIsCreating(false);
@@ -545,7 +601,7 @@ export default function UserManagementTable() {
                                 className="bg-white/[0.03] border border-white/[0.06] rounded-xl h-9 px-3 text-white text-sm focus:outline-none focus:border-cyan-500/30"
                             >
                                 <option value="all">All Dojos</option>
-                                {dojos.map((dojo: any) => (
+                                {dojos.map((dojo: DojoOption) => (
                                     <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
                                 ))}
                             </select>
@@ -966,7 +1022,7 @@ export default function UserManagementTable() {
                                                                 className="w-full bg-black/40 border border-white/10 rounded-md h-10 px-3 text-white text-sm focus:border-red-500/50 transition-colors"
                                                             >
                                                                 <option value="">Select City</option>
-                                                                {(editFormData.state && CITIES[editFormData.state] ? CITIES[editFormData.state] : []).map((c: any) => (
+                                                                {(editFormData.state && CITIES[editFormData.state] ? CITIES[editFormData.state] : []).map((c: string | { name: string }) => (
                                                                     <option key={typeof c === 'string' ? c : c.name} value={typeof c === 'string' ? c : c.name}>
                                                                         {typeof c === 'string' ? c : c.name}
                                                                     </option>
@@ -1121,7 +1177,7 @@ export default function UserManagementTable() {
                                                                 className="w-full bg-black/40 border border-white/10 rounded-md h-10 px-3 text-white text-sm focus:border-red-500/50 transition-colors"
                                                             >
                                                                 <option value="">No Dojo</option>
-                                                                {dojos.map((dojo: any) => (
+                                                                {dojos.map((dojo: DojoOption) => (
                                                                     <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
                                                                 ))}
                                                             </select>
@@ -1134,7 +1190,7 @@ export default function UserManagementTable() {
                                                                 className="w-full bg-black/40 border border-white/10 rounded-md h-10 px-3 text-white text-sm focus:border-red-500/50 transition-colors"
                                                             >
                                                                 <option value="">Direct under Shihan</option>
-                                                                {availableInstructors.map((inst: any) => (
+                                                                {availableInstructors.map((inst: ManagedUser) => (
                                                                     <option key={inst.id} value={inst.id}>
                                                                         {inst.name} {inst.role === 'ADMIN' ? '(Shihan)' : `(${inst.dojo?.name || 'No Dojo'})`}
                                                                     </option>
@@ -1446,7 +1502,7 @@ export default function UserManagementTable() {
                                             onChange={(e) => setCreateFormData({ ...createFormData, dojoId: e.target.value })}
                                             className="w-full bg-black/50 border border-white/10 rounded-md h-10 px-3 text-white">
                                             <option value="">No Dojo</option>
-                                            {dojos.map((dojo: any) => (
+                                            {dojos.map((dojo: DojoOption) => (
                                                 <option key={dojo.id} value={dojo.id}>{dojo.name}</option>
                                             ))}
                                         </select>

@@ -9,6 +9,13 @@ import { renderFeePreview, DEFAULT_FEE_REMINDER_TEMPLATE } from "@/lib/feePrevie
 
 type FeeStatus = "UNPAID" | "PARTIAL" | "PAID" | "WAIVED";
 
+interface FeeRosterEntry {
+  student: { id: string; name: string; membershipNumber?: string | null; currentBeltRank?: string | null };
+  fee?: { status?: FeeStatus; amountPaid?: number; method?: string | null; notes?: string | null } | null;
+}
+
+type ApiError = { response?: { data?: { message?: string } } };
+
 interface RosterRow {
   userId: string;
   name: string;
@@ -70,7 +77,7 @@ export default function InstructorFeesPage() {
       setFeeInput(d.monthlyFee != null ? String(d.monthlyFee) : "");
       setDueDayInput(d.feeDueDay != null ? String(d.feeDueDay) : "10");
       setTemplateInput(d.feeReminderTemplate || DEFAULT_FEE_REMINDER_TEMPLATE);
-      const merged: RosterRow[] = d.roster.map((r: any) => ({
+      const merged: RosterRow[] = d.roster.map((r: FeeRosterEntry) => ({
         userId: r.student.id,
         name: r.student.name,
         membershipNumber: r.student.membershipNumber,
@@ -85,8 +92,8 @@ export default function InstructorFeesPage() {
         const summaryRes = await api.get(`/fees/summary/dojo/${dojoId}`, { params: { year } });
         setSummary(summaryRes.data.data);
       } catch { /* non-critical; the totals banner just won't render */ }
-    } catch (e: any) {
-      setMessage(e?.response?.data?.message || "Failed to load roster");
+    } catch (e: unknown) {
+      setMessage((e as ApiError)?.response?.data?.message || "Failed to load roster");
     } finally {
       setLoading(false);
     }
@@ -110,8 +117,8 @@ export default function InstructorFeesPage() {
         notes: row.notes || undefined,
       });
       setMessage(`Saved ${row.name}`);
-    } catch (e: any) {
-      setMessage(e?.response?.data?.message || `Failed to save ${row.name}`);
+    } catch (e: unknown) {
+      setMessage((e as ApiError)?.response?.data?.message || `Failed to save ${row.name}`);
     } finally {
       setSavingId(null);
     }
@@ -136,8 +143,8 @@ export default function InstructorFeesPage() {
       const res = await api.post("/fees/remind", { dojoId, month, year });
       const { sent, skipped, errors } = res.data.data;
       setMessage(`Reminders: ${sent} sent, ${skipped} skipped, ${errors} errors`);
-    } catch (e: any) {
-      setMessage(e?.response?.data?.message || "Failed to send reminders");
+    } catch (e: unknown) {
+      setMessage((e as ApiError)?.response?.data?.message || "Failed to send reminders");
     } finally {
       setReminding(false);
     }
@@ -156,8 +163,8 @@ export default function InstructorFeesPage() {
       });
       setMessage("Dojo fee settings saved");
       await load();
-    } catch (e: any) {
-      setMessage(e?.response?.data?.message || "Failed to save settings");
+    } catch (e: unknown) {
+      setMessage((e as ApiError)?.response?.data?.message || "Failed to save settings");
     } finally {
       setSavingSettings(false);
     }

@@ -5,12 +5,23 @@ import { getImageUrl } from '@/lib/imageUtils';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/contexts/ToastContext';
 
+/** The fields of a GET /users row the hierarchy reads. */
+export interface OrgUser {
+    id: string;
+    name: string;
+    role: string;
+    dojoId?: string | null;
+    primaryInstructorId?: string | null;
+    profilePhotoUrl?: string | null;
+    dojo?: { name: string } | null;
+}
+
 interface OrganizationGraphProps {
-    users: any[];
+    users: OrgUser[];
 }
 
 interface TreeNode {
-    user: any;
+    user: OrgUser;
     children: TreeNode[];
 }
 
@@ -155,8 +166,8 @@ const OrganizationGraph: React.FC<OrganizationGraphProps> = ({ users }) => {
             });
         });
 
-        const buildNode = (currentUser: any): TreeNode => {
-            let directReports: any[] = [];
+        const buildNode = (currentUser: OrgUser): TreeNode => {
+            let directReports: OrgUser[] = [];
 
             if (currentUser.role === 'ADMIN') {
                 // Admin sees all instructors + any unassigned students

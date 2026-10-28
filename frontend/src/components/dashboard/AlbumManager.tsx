@@ -100,7 +100,7 @@ export default function AlbumManager() {
         if (!form.name.trim()) { showToast("Name is required", "error"); return; }
         setSaving(true);
         try {
-            const payload: any = {
+            const payload: { name: string; description: string | null; type: string; date: string | null; coverImageUrl: string | null } = {
                 name: form.name.trim(),
                 description: form.description.trim() || null,
                 type: form.type,
@@ -119,9 +119,10 @@ export default function AlbumManager() {
                 showToast("Album created", "success");
             }
             setShowForm(false);
-        } catch (err: any) {
-            console.error("Album save error:", err.response?.data || err.message || err);
-            showToast(err.response?.data?.message || "Save failed", "error");
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } }; message?: string };
+            console.error("Album save error:", e.response?.data || e.message || err);
+            showToast(e.response?.data?.message || "Save failed", "error");
         } finally {
             setSaving(false);
         }
@@ -243,7 +244,7 @@ export default function AlbumManager() {
                 <div className="text-center py-12 bg-zinc-900/50 rounded-xl border border-white/5">
                     <FolderOpen className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
                     <p className="text-zinc-500">No albums yet</p>
-                    <p className="text-zinc-600 text-sm mt-1">Create your first album or they'll be auto-created with new events</p>
+                    <p className="text-zinc-600 text-sm mt-1">Create your first album or they&apos;ll be auto-created with new events</p>
                 </div>
             ) : (
                 <div className="grid gap-4">

@@ -19,6 +19,56 @@ import { getImageUrl } from "@/lib/imageUtils";
 import { getToken } from "@/lib/tokenStorage";
 
 import { formatDateOnly } from '@/lib/dateOnly';
+
+const apiErrorMessage = (err: unknown): string | undefined =>
+    (err as { response?: { data?: { message?: string } } } | null)?.response?.data?.message;
+
+// GET /events/:id/registrations (eventController.getEventRegistrations)
+interface Registration {
+    id: string;
+    approvalStatus: string;
+    paymentStatus: string;
+    categoryAge: string | null;
+    categoryWeight: string | null;
+    user: {
+        name: string;
+        email: string | null;
+        phone: string | null;
+        dateOfBirth: string | null;
+        weight: number | null;
+        city: string | null;
+        currentBeltRank: string | null;
+        membershipNumber: string | null;
+        dojo: { name: string } | null;
+    };
+}
+
+// GET /tournaments/:eventId/categories (tournamentController)
+interface CategoryParticipant {
+    registrationId: string;
+    name: string;
+    belt: string | null;
+    weight: number | null;
+    dojo: string | null;
+}
+
+interface CategoryGroup {
+    categoryAge: string;
+    categoryWeight: string;
+    categoryBelt: string;
+    categoryName: string;
+    participants: CategoryParticipant[];
+}
+
+// GET /results/:eventId (resultController.getResults)
+interface TournamentResultRow {
+    id: string;
+    categoryName: string;
+    finalRank: number;
+    medal: string | null;
+    user: { name: string | null; dojo: { name: string } | null } | null;
+}
+
 interface Tournament {
     id: string;
     name: string;
@@ -29,7 +79,7 @@ interface Tournament {
     location: string;
     type: string;
     status: string;
-    categories: any;
+    categories: unknown; // Prisma Json; the form treats an array as string[]
     registrationDeadline: string;
     maxParticipants: number | null;
     memberFee: number;
@@ -80,7 +130,7 @@ export default function TournamentManager() {
     const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
 
     // Participants state
-    const [participants, setParticipants] = useState<any[]>([]);
+    const [participants, setParticipants] = useState<Registration[]>([]);
     const [loadingParticipants, setLoadingParticipants] = useState(false);
     const [participantSearch, setParticipantSearch] = useState("");
     const [approvalFilter, setApprovalFilter] = useState<string>("ALL");
@@ -116,7 +166,7 @@ export default function TournamentManager() {
     });
 
     // Category management state
-    const [categoryData, setCategoryData] = useState<any[]>([]);
+    const [categoryData, setCategoryData] = useState<CategoryGroup[]>([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [movingParticipant, setMovingParticipant] = useState<{
         registrationId: string; participantName: string;
@@ -125,7 +175,7 @@ export default function TournamentManager() {
     const [moveTarget, setMoveTarget] = useState({ categoryAge: '', categoryWeight: '', categoryBelt: '' });
 
     // Certificate state
-    const [tournamentResults, setTournamentResults] = useState<any[]>([]);
+    const [tournamentResults, setTournamentResults] = useState<TournamentResultRow[]>([]);
     const [loadingResults, setLoadingResults] = useState(false);
 
     // Tab: 'participants' | 'brackets' | 'categories' | 'certificates'
@@ -169,8 +219,8 @@ export default function TournamentManager() {
             setShowCreateModal(false);
             resetForm();
             fetchTournaments();
-        } catch (error: any) {
-            showToast(error.response?.data?.message || "Failed to create tournament", "error");
+        } catch (error: unknown) {
+            showToast(apiErrorMessage(error) || "Failed to create tournament", "error");
         }
     };
 
@@ -192,8 +242,8 @@ export default function TournamentManager() {
             setEditingTournament(null);
             resetForm();
             fetchTournaments();
-        } catch (error: any) {
-            showToast(error.response?.data?.message || "Failed to update tournament", "error");
+        } catch (error: unknown) {
+            showToast(apiErrorMessage(error) || "Failed to update tournament", "error");
         }
     };
 
@@ -315,7 +365,7 @@ export default function TournamentManager() {
         }
     };
 
-    const handleDownloadCertificate = async (result: any) => {
+    const handleDownloadCertificate = async (result: TournamentResultRow) => {
         try {
             const { downloadCertificate } = await import('@/lib/certificateGenerator');
             downloadCertificate({
@@ -338,8 +388,8 @@ export default function TournamentManager() {
         try {
             const { downloadAllCertificates } = await import('@/lib/certificateGenerator');
             const certs = tournamentResults
-                .filter((r: any) => r.finalRank <= 3)
-                .map((r: any) => ({
+                .filter((r) => r.finalRank <= 3)
+                .map((r) => ({
                     participantName: r.user?.name || 'Unknown',
                     categoryName: r.categoryName,
                     position: r.finalRank,
@@ -431,12 +481,13 @@ export default function TournamentManager() {
                     } catch { /* ignore malformed */ }
                 }
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Failed to generate brackets:", error);
+            const message = error instanceof Error ? error.message : undefined;
             setBracketProgress(prev => ({
-                ...prev, error: error.message || 'Failed to generate brackets', done: true
+                ...prev, error: message || 'Failed to generate brackets', done: true
             }));
-            showToast(error.message || "Failed to generate brackets", "error");
+            showToast(message || "Failed to generate brackets", "error");
         } finally {
             setGeneratingBrackets(false);
         }
@@ -711,7 +762,7 @@ export default function TournamentManager() {
         let list = [...participants];
         if (participantSearch) {
             const q = participantSearch.toLowerCase();
-            list = list.filter((r: any) =>
+            list = list.filter((r) =>
                 r.user.name.toLowerCase().includes(q) ||
                 r.user.email?.toLowerCase().includes(q) ||
                 r.user.membershipNumber?.toLowerCase().includes(q) ||
@@ -722,10 +773,10 @@ export default function TournamentManager() {
             );
         }
         if (approvalFilter !== "ALL") {
-            list = list.filter((r: any) => r.approvalStatus === approvalFilter);
+            list = list.filter((r) => r.approvalStatus === approvalFilter);
         }
-        list.sort((a: any, b: any) => {
-            let va: any, vb: any;
+        list.sort((a, b) => {
+            let va: string | number, vb: string | number;
             switch (sortField) {
                 case 'name': va = a.user.name; vb = b.user.name; break;
                 case 'belt': va = a.user.currentBeltRank || ''; vb = b.user.currentBeltRank || ''; break;
@@ -736,17 +787,18 @@ export default function TournamentManager() {
                 case 'status': va = a.approvalStatus; vb = b.approvalStatus; break;
                 default: va = a.user.name; vb = b.user.name;
             }
-            if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
-            return sortAsc ? va - vb : vb - va;
+            // va and vb always come from the same case, so they share a type.
+            if (typeof va === 'string') return sortAsc ? va.localeCompare(vb as string) : (vb as string).localeCompare(va);
+            return sortAsc ? va - (vb as number) : (vb as number) - va;
         });
         return list;
     }, [participants, participantSearch, approvalFilter, sortField, sortAsc]);
 
     const approvalCounts = useMemo(() => ({
         total: participants.length,
-        approved: participants.filter((r: any) => r.approvalStatus === 'APPROVED').length,
-        pending: participants.filter((r: any) => r.approvalStatus === 'PENDING').length,
-        rejected: participants.filter((r: any) => r.approvalStatus === 'REJECTED').length,
+        approved: participants.filter((r) => r.approvalStatus === 'APPROVED').length,
+        pending: participants.filter((r) => r.approvalStatus === 'PENDING').length,
+        rejected: participants.filter((r) => r.approvalStatus === 'REJECTED').length,
     }), [participants]);
 
     const handleSort = (field: string) => {
@@ -771,7 +823,7 @@ export default function TournamentManager() {
         if (selectedRegistrations.size === filteredParticipants.length) {
             setSelectedRegistrations(new Set());
         } else {
-            setSelectedRegistrations(new Set(filteredParticipants.map((r: any) => r.id)));
+            setSelectedRegistrations(new Set(filteredParticipants.map((r) => r.id)));
         }
     };
 
@@ -815,7 +867,7 @@ export default function TournamentManager() {
     };
 
     const handleExportCSV = () => {
-        const rows = filteredParticipants.map((r: any) => ({
+        const rows = filteredParticipants.map((r) => ({
             Name: r.user.name, Email: r.user.email || '', Phone: r.user.phone || '',
             Age: getAge(r.user.dateOfBirth) || '', 'Weight (kg)': r.user.weight || '',
             Belt: r.user.currentBeltRank || '', 'Membership #': r.user.membershipNumber || '',
@@ -824,7 +876,7 @@ export default function TournamentManager() {
             'Approval Status': r.approvalStatus, 'Payment Status': r.paymentStatus,
         }));
         const headers = Object.keys(rows[0] || {});
-        const csv = [headers.join(','), ...rows.map(row => headers.map(h => `"${(row as any)[h]}"`).join(','))].join('\n');
+        const csv = [headers.join(','), ...rows.map(row => headers.map(h => `"${(row as Record<string, unknown>)[h]}"`).join(','))].join('\n');
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1149,7 +1201,7 @@ export default function TournamentManager() {
                                                 <label className="text-sm text-gray-300 mb-1.5 block">Start Date <span className="text-red-400">*</span></label>
                                                 <input type="date" value={formData.startDate} onChange={(e) => {
                                                     const val = e.target.value;
-                                                    const updates: any = { startDate: val };
+                                                    const updates: Partial<typeof formData> = { startDate: val };
                                                     if (val && (!formData.endDate || new Date(formData.endDate) < new Date(val))) {
                                                         const end = new Date(val); end.setDate(end.getDate() + 1);
                                                         updates.endDate = end.toISOString().split('T')[0];
@@ -1342,9 +1394,9 @@ export default function TournamentManager() {
                                             }`}>
                                             <FileCheck className="w-4 h-4" />
                                             Certificates
-                                            {tournamentResults.filter((r: any) => r.finalRank <= 3).length > 0 && (
+                                            {tournamentResults.filter((r) => r.finalRank <= 3).length > 0 && (
                                                 <span className="bg-yellow-500/20 text-yellow-400 text-xs px-2 py-0.5 rounded-full">
-                                                    {tournamentResults.filter((r: any) => r.finalRank <= 3).length}
+                                                    {tournamentResults.filter((r) => r.finalRank <= 3).length}
                                                 </span>
                                             )}
                                         </button>
@@ -1461,7 +1513,7 @@ export default function TournamentManager() {
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-white/5">
-                                                            {filteredParticipants.map((reg: any) => {
+                                                            {filteredParticipants.map((reg) => {
                                                                 const age = getAge(reg.user.dateOfBirth);
                                                                 return (
                                                                     <tr key={reg.id}
@@ -1781,7 +1833,7 @@ export default function TournamentManager() {
                                             </div>
                                         ) : (
                                             <div className="grid gap-4">
-                                                {categoryData.map((cat: any, catIndex: number) => (
+                                                {categoryData.map((cat, catIndex: number) => (
                                                     <div key={catIndex} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
                                                         <div className="px-4 py-3 bg-white/5 border-b border-white/10 flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
@@ -1793,7 +1845,7 @@ export default function TournamentManager() {
                                                             </div>
                                                         </div>
                                                         <div className="divide-y divide-white/5">
-                                                            {cat.participants.map((p: any) => (
+                                                            {cat.participants.map((p) => (
                                                                 <div key={p.registrationId} className="px-4 py-2.5 flex items-center justify-between hover:bg-white/5 transition-colors">
                                                                     <div className="flex items-center gap-3">
                                                                         <div className="w-7 h-7 rounded-full bg-gradient-to-br from-yellow-600 to-red-600 flex items-center justify-center flex-shrink-0">
@@ -1849,10 +1901,10 @@ export default function TournamentManager() {
                                                 <Award className="w-5 h-5 text-yellow-500" />
                                                 Tournament Certificates
                                             </h3>
-                                            {tournamentResults.filter((r: any) => r.finalRank <= 3).length > 0 && (
+                                            {tournamentResults.filter((r) => r.finalRank <= 3).length > 0 && (
                                                 <Button size="sm" onClick={handleDownloadAllCertificates}
                                                     className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs">
-                                                    <Download className="w-3 h-3 mr-1" /> Download All ({tournamentResults.filter((r: any) => r.finalRank <= 3).length})
+                                                    <Download className="w-3 h-3 mr-1" /> Download All ({tournamentResults.filter((r) => r.finalRank <= 3).length})
                                                 </Button>
                                             )}
                                         </div>
@@ -1874,20 +1926,20 @@ export default function TournamentManager() {
                                             <div className="space-y-3">
                                                 {/* Group by category */}
                                                 {Object.entries(
-                                                    tournamentResults.reduce((acc: any, r: any) => {
+                                                    tournamentResults.reduce((acc, r) => {
                                                         if (!acc[r.categoryName]) acc[r.categoryName] = [];
                                                         acc[r.categoryName].push(r);
                                                         return acc;
-                                                    }, {} as Record<string, any[]>)
-                                                ).map(([categoryName, results]: [string, any]) => (
+                                                    }, {} as Record<string, TournamentResultRow[]>)
+                                                ).map(([categoryName, results]) => (
                                                     <div key={categoryName} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
                                                         <div className="px-4 py-3 bg-white/5 border-b border-white/10">
                                                             <span className="font-bold text-white text-sm">{categoryName}</span>
                                                         </div>
                                                         <div className="divide-y divide-white/5">
-                                                            {(results as any[])
-                                                                .sort((a: any, b: any) => a.finalRank - b.finalRank)
-                                                                .map((result: any) => {
+                                                            {results
+                                                                .sort((a, b) => a.finalRank - b.finalRank)
+                                                                .map((result) => {
                                                                     const medalColor = result.medal === 'GOLD' ? 'text-yellow-400 bg-yellow-500/20' :
                                                                         result.medal === 'SILVER' ? 'text-gray-300 bg-gray-500/20' :
                                                                         result.medal === 'BRONZE' ? 'text-orange-400 bg-orange-500/20' : 'text-gray-500 bg-white/5';
@@ -1977,7 +2029,7 @@ export default function TournamentManager() {
                                     <div>
                                         <p className="text-xs text-gray-500 mb-2">Or pick an existing category:</p>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {categoryData.map((cat: any, i: number) => (
+                                            {categoryData.map((cat, i: number) => (
                                                 <button key={i}
                                                     onClick={() => setMoveTarget({
                                                         categoryAge: cat.categoryAge,

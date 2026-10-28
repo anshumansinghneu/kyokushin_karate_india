@@ -74,7 +74,7 @@ export default function VoucherManager() {
     const handleCreate = async () => {
         setCreating(true);
         try {
-            const payload: any = {
+            const payload: { applicableTo: string; expiryDays: number; specificEventId?: string; amount?: number } = {
                 applicableTo,
                 expiryDays,
             };
@@ -95,8 +95,8 @@ export default function VoucherManager() {
             setExpiryDays(30);
             setCustomAmount("");
             fetchVouchers();
-        } catch (err: any) {
-            showToast(err.response?.data?.message || "Failed to create voucher", "error");
+        } catch (err: unknown) {
+            showToast((err as { response?: { data?: { message?: string } } }).response?.data?.message || "Failed to create voucher", "error");
         } finally {
             setCreating(false);
         }
@@ -107,8 +107,8 @@ export default function VoucherManager() {
             await api.patch(`/vouchers/${id}/deactivate`);
             showToast("Voucher deactivated", "success");
             fetchVouchers();
-        } catch (err: any) {
-            showToast(err.response?.data?.message || "Failed to deactivate", "error");
+        } catch (err: unknown) {
+            showToast((err as { response?: { data?: { message?: string } } }).response?.data?.message || "Failed to deactivate", "error");
         }
     };
 

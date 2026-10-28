@@ -6,9 +6,17 @@ import { Mail, MailOpen, Archive, ChevronLeft, ChevronRight, Eye } from "lucide-
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 
+interface AnonymousMessage {
+    id: string;
+    message: string;
+    isRead: boolean;
+    isArchived: boolean;
+    createdAt: string;
+}
+
 export default function AnonymousMessageManager() {
     const { showToast } = useToast();
-    const [messages, setMessages] = useState<any[]>([]);
+    const [messages, setMessages] = useState<AnonymousMessage[]>([]);
     const [total, setTotal] = useState(0);
     const [unreadCount, setUnreadCount] = useState(0);
     const [page, setPage] = useState(1);
@@ -94,7 +102,7 @@ export default function AnonymousMessageManager() {
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {messages.map((msg: any) => (
+                    {messages.map((msg: AnonymousMessage) => (
                         <motion.div
                             key={msg.id}
                             initial={{ opacity: 0, y: 4 }}

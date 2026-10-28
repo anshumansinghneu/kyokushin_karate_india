@@ -22,12 +22,21 @@ interface EnhancedStudent {
     trainingSessionCount?: number;
 }
 
+/** The fields of a GET /users row (with includeBeltHistory) this roster reads. */
+interface RosterUser extends Omit<EnhancedStudent, 'daysSincePromotion' | 'isEligible' | 'trainingSessionCount'> {
+    role: string;
+    beltHistory?: Array<{ promotionDate: string }>;
+    trainingSessions?: unknown[];
+}
+
+type SortKey = 'name' | 'eligibility' | 'belt';
+
 export default function StudentRoster() {
     const [students, setStudents] = useState<EnhancedStudent[]>([]);
     const [search, setSearch] = useState("");
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
     const [showEligibleOnly, setShowEligibleOnly] = useState(false);
-    const [sortBy, setSortBy] = useState<'name' | 'eligibility' | 'belt'>('name');
+    const [sortBy, setSortBy] = useState<SortKey>('name');
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -42,8 +51,8 @@ export default function StudentRoster() {
                 // Enhance student data with eligibility info (no extra API calls)
                 const now = new Date();
                 const enhancedStudents = allUsers
-                    .filter((student: any) => student.role === 'STUDENT')
-                    .map((student: any) => {
+                    .filter((student: RosterUser) => student.role === 'STUDENT')
+                    .map((student: RosterUser) => {
                         const beltHistory = student.beltHistory || [];
                         let daysSincePromotion = 0;
 
@@ -198,7 +207,7 @@ export default function StudentRoster() {
                     </button>
                     <select
                         value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as any)}
+                        onChange={(e) => setSortBy(e.target.value as SortKey)}
                         className="px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white text-sm hover:bg-white/[0.05] transition-colors focus:outline-none focus:border-violet-500/30"
                     >
                         <option value="name">Sort by Name</option>

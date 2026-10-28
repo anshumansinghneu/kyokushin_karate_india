@@ -16,6 +16,17 @@ import { searchCities, CityData } from "@/lib/india-locations";
 import BeltCertificate from "@/components/BeltCertificate";
 import { useToast } from "@/contexts/ToastContext";
 
+/** A row from GET /belts/history/:userId, as read by this page. */
+interface BeltHistoryRecord {
+    id: string;
+    newBelt: string;
+    oldBelt?: string;
+    promotionDate: string;
+    /** The promoter's user id; their name comes under `promoter` (GET /belts/history/:userId). */
+    promotedBy?: string;
+    promoter?: { name?: string } | null;
+}
+
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
 const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } } };
 
@@ -129,7 +140,7 @@ export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [beltHistory, setBeltHistory] = useState<any[]>([]);
+    const [beltHistory, setBeltHistory] = useState<BeltHistoryRecord[]>([]);
     const [international, setInternational] = useState<InternationalRecord>(EMPTY_INTERNATIONAL);
     const [cityQuery, setCityQuery] = useState("");
     const [showCityDropdown, setShowCityDropdown] = useState(false);
@@ -267,7 +278,7 @@ export default function ProfilePage() {
             const fd = new FormData();
             fd.append("image", file);
             const res = await api.post("/upload?folder=profiles", fd, {
-                headers: { "Content-Type": undefined as any },
+                headers: { "Content-Type": undefined },
             });
             const imageUrl = res.data.url || res.data.data?.url;
             if (imageUrl) {
@@ -276,9 +287,9 @@ export default function ProfilePage() {
             } else {
                 showToast("Upload succeeded but no URL returned", "error");
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Photo upload failed", err);
-            const msg = err.response?.data?.message || "Failed to upload photo. Please try again.";
+            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to upload photo. Please try again.";
             showToast(msg, "error");
         } finally {
             setIsUploading(false);
@@ -678,7 +689,7 @@ export default function ProfilePage() {
                                                             <p className="text-xs text-white/30 mt-0.5">
                                                                 {record.oldBelt && <span className="text-white/20">{record.oldBelt} → {record.newBelt}</span>}
                                                                 {record.oldBelt && ' · '}
-                                                                Promoted by {record.promotedBy?.name || 'Sensei'}
+                                                                Promoted by {record.promoter?.name || 'Sensei'}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -688,7 +699,7 @@ export default function ProfilePage() {
                                                             studentName={user?.name || ''}
                                                             beltRank={record.newBelt}
                                                             promotionDate={record.promotionDate}
-                                                            promoterName={record.promotedBy?.name || 'Sensei'}
+                                                            promoterName={record.promoter?.name || 'Sensei'}
                                                             membershipNumber={user?.membershipNumber}
                                                             dojoName={user?.dojo?.name}
                                                             oldBelt={record.oldBelt}

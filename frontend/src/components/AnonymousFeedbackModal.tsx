@@ -27,8 +27,8 @@ export default function AnonymousFeedbackModal({ isOpen, onClose }: Props) {
             showToast('Message sent anonymously', 'success');
             setMessage('');
             onClose();
-        } catch (err: any) {
-            showToast(err?.response?.data?.message || 'Failed to send message', 'error');
+        } catch (err: unknown) {
+            showToast((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to send message', 'error');
         } finally {
             setSending(false);
         }

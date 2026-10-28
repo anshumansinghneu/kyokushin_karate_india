@@ -2,7 +2,28 @@ import { create } from 'zustand';
 import api from '@/lib/api';
 import { getToken, getRefreshToken, setTokens, clearTokens, setRememberedEmail } from '@/lib/tokenStorage';
 
-interface User {
+/** An event registration as included by GET /auth/me (`include: { event: true }`). */
+export interface UserRegistration {
+    id: string;
+    eventId?: string;
+    status?: string;
+    registeredAt?: string;
+    event?: { id: string; name: string; [key: string]: unknown };
+    [key: string]: unknown;
+}
+
+/** A tournament result as included by GET /auth/me (`include: { event: true }`). */
+export interface UserTournamentResult {
+    id: string;
+    eventId?: string;
+    categoryName?: string;
+    finalRank?: number;
+    medal?: string | null;
+    event: { id: string; name: string; [key: string]: unknown };
+    [key: string]: unknown;
+}
+
+export interface User {
     id: string;
     name: string;
     email: string;
@@ -32,9 +53,35 @@ interface User {
     fatherPhone?: string;
     verificationStatus?: 'VERIFIED' | 'PENDING_VERIFICATION' | 'REJECTED';
     dob?: string;
-    registrations?: any[];
-    tournamentResults?: any[];
+    createdAt?: string;
+    membershipStartDate?: string;
+    membershipEndDate?: string;
+    beltHistory?: Array<{ id?: string; newBelt?: string; oldBelt?: string | null; promotionDate?: string }>;
+    registrations?: UserRegistration[];
+    tournamentResults?: UserTournamentResult[];
 }
+
+/**
+ * Request body for /auth/register and /users/updateMe. Callers build these
+ * from form state of varying shapes, so any object is accepted (an interface
+ * without an index signature would not satisfy Record<string, unknown>).
+ */
+export type AuthPayload = object;
+
+export interface LoginCredentials {
+    email: string;
+    password: string;
+}
+
+/** Shape of an axios-style error, narrowed from `unknown` in catch blocks. */
+interface ApiErrorLike {
+    name?: string;
+    code?: string;
+    response?: { status?: number; data?: { message?: string } };
+}
+
+const asApiError = (error: unknown): ApiErrorLike | undefined =>
+    (typeof error === 'object' && error !== null ? (error as ApiErrorLike) : undefined);
 
 interface AuthState {
     user: User | null;
@@ -44,13 +91,13 @@ interface AuthState {
     error: string | null;
     _hasCheckedAuth: boolean; // prevents duplicate checkAuth calls
 
-    login: (credentials: any, rememberMe?: boolean) => Promise<void>;
-    register: (data: any) => Promise<void>;
+    login: (credentials: LoginCredentials, rememberMe?: boolean) => Promise<void>;
+    register: (data: AuthPayload) => Promise<void>;
     logout: () => void;
     checkAuth: () => Promise<void>;
     fetchUser: () => Promise<void>;
     refreshSession: () => Promise<boolean>;
-    updateProfile: (data: any) => Promise<void>;
+    updateProfile: (data: AuthPayload) => Promise<void>;
 }
 
 // Read token synchronously so first render already knows auth state
@@ -74,9 +121,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             setTokens(token, refreshToken, rememberMe);
             setRememberedEmail(rememberMe ? credentials.email : null);
             set({ token, user, isAuthenticated: true, isLoading: false, _hasCheckedAuth: true });
-        } catch (error: any) {
+        } catch (error: unknown) {
             set({
-                error: error.response?.data?.message || 'Login failed',
+                error: asApiError(error)?.response?.data?.message || 'Login failed',
                 isLoading: false
             });
             throw error;
@@ -92,9 +139,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
             setTokens(token, refreshToken, true);
             set({ token, user, isAuthenticated: true, isLoading: false, _hasCheckedAuth: true });
-        } catch (error: any) {
+        } catch (error: unknown) {
             set({
-                error: error.response?.data?.message || 'Registration failed',
+                error: asApiError(error)?.response?.data?.message || 'Registration failed',
                 isLoading: false
             });
             throw error;
@@ -128,16 +175,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const response = await api.get('/auth/me', { signal: controller.signal });
             clearTimeout(timeoutId);
             set({ user: response.data.data.user, isAuthenticated: true, isLoading: false });
-        } catch (error: any) {
+        } catch (error: unknown) {
             clearTimeout(timeoutId);
             // If aborted (timeout) or network error, let user retry
-            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            const apiError = asApiError(error);
+            if (apiError?.name === 'CanceledError' || apiError?.code === 'ERR_CANCELED') {
                 console.error('checkAuth timed out');
                 set({ isLoading: false, isAuthenticated: false, _hasCheckedAuth: false });
                 return;
             }
             // If 401, try refresh before giving up
-            if (error.response?.status === 401) {
+            if (apiError?.response?.status === 401) {
                 const refreshed = await get().refreshSession();
                 if (refreshed) {
                     try {
@@ -183,14 +231,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
     },
 
-    updateProfile: async (data: any) => {
+    updateProfile: async (data: AuthPayload) => {
         set({ isLoading: true, error: null });
         try {
             const response = await api.patch('/users/updateMe', data);
             set({ user: response.data.data.user, isLoading: false });
-        } catch (error: any) {
+        } catch (error: unknown) {
             set({
-                error: error.response?.data?.message || 'Profile update failed',
+                error: asApiError(error)?.response?.data?.message || 'Profile update failed',
                 isLoading: false
             });
             throw error;

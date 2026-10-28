@@ -85,9 +85,9 @@ export default function RecognitionManager() {
             fetchRecognitions(); // Refresh list
             setSearchResults([]); // Clear search
             setSearchQuery("");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Failed to assign recognition", error);
-            showToast(error.response?.data?.message || "Failed to assign recognition", "error");
+            showToast((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Failed to assign recognition", "error");
         }
     };
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Square, Save, AlertCircle } from 'lucide-react';
 import api from '@/lib/api';
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 
 interface Match {
     id: string;
@@ -23,7 +23,7 @@ const LiveMatchControl: React.FC<LiveMatchControlProps> = ({ matchId, onMatchUpd
     const [scoreA, setScoreA] = useState(0);
     const [scoreB, setScoreB] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [socket, setSocket] = useState<any>(null);
+    const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
         fetchMatch();

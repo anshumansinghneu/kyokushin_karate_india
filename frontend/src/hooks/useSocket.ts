@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '@/store/authStore';
 
@@ -9,6 +9,8 @@ const SOCKET_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000
 
 export const useSocket = (namespace?: string) => {
     const socketRef = useRef<Socket | null>(null);
+    // Mirrors socketRef for render: refs must not be read during render.
+    const [socket, setSocket] = useState<Socket | null>(null);
     const { token } = useAuthStore();
 
     useEffect(() => {
@@ -23,6 +25,7 @@ export const useSocket = (namespace?: string) => {
             transports: ['websocket'],
             autoConnect: true
         });
+        setSocket(socketRef.current);
 
         socketRef.current.on('connect', () => {
             console.log('Socket connected:', socketRef.current?.id);
@@ -39,13 +42,13 @@ export const useSocket = (namespace?: string) => {
         };
     }, [token, namespace]);
 
-    const emit = (eventName: string, data: any) => {
+    const emit = (eventName: string, data: unknown) => {
         if (socketRef.current) {
             socketRef.current.emit(eventName, data);
         }
     };
 
-    const on = (eventName: string, callback: (data: any) => void) => {
+    const on = <T = unknown>(eventName: string, callback: (data: T) => void) => {
         if (socketRef.current) {
             socketRef.current.on(eventName, callback);
         }
@@ -57,5 +60,5 @@ export const useSocket = (namespace?: string) => {
         }
     };
 
-    return { socket: socketRef.current, emit, on, off };
+    return { socket, emit, on, off };
 };

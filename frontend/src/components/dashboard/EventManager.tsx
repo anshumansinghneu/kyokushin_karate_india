@@ -123,7 +123,7 @@ export default function EventManager() {
             ]);
             setEvents(eventsRes.data.data.events);
             setDojos(dojosRes.data.data.dojos);
-            setInstructors((instructorsRes.data.data.users || []).map((u: any) => ({ id: u.id, name: u.name })));
+            setInstructors((instructorsRes.data.data.users || []).map((u: Instructor) => ({ id: u.id, name: u.name })));
         } catch (error) {
             console.error("Failed to fetch data", error);
         } finally {

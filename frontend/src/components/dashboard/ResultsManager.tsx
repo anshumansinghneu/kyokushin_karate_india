@@ -75,7 +75,8 @@ export default function ResultsManager() {
       const up = await api.post("/upload?folder=results", fd, { headers: { "Content-Type": "multipart/form-data" } });
       const pdfUrl = up.data.data.url;
 
-      let suggestions: any = {};
+      // Dates arrive as ISO strings (parseResultHeader's Dates, JSON-serialised).
+      let suggestions: { title?: string; location?: string; testDate?: string; awardedDate?: string } = {};
       try {
         const parsed = await api.post("/exam-results/parse", { pdfUrl });
         suggestions = parsed.data.data.suggestions || {};
@@ -164,7 +165,7 @@ export default function ResultsManager() {
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-red-500" /></div>
       ) : results.length === 0 ? (
-        <p className="py-16 text-center text-gray-500">No results yet. Click "New Result" to upload one.</p>
+        <p className="py-16 text-center text-gray-500">No results yet. Click &quot;New Result&quot; to upload one.</p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-white/10">
           <table className="w-full text-sm">

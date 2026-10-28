@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Globe, MapPin, Eye, Users, TrendingUp, RefreshCw, Clock, ExternalLink, BarChart3, Activity } from 'lucide-react';
+import { Globe, MapPin, Eye, Users, TrendingUp, RefreshCw, Clock, ExternalLink, BarChart3, Activity, type LucideIcon } from 'lucide-react';
 import api from '@/lib/api';
 
 interface AnalyticsData {
@@ -55,7 +55,7 @@ function MiniBarChart({ data, maxBars = 30 }: { data: { label: string; value: nu
     );
 }
 
-function StatCard({ icon: Icon, label, value, sub }: { icon: any; label: string; value: string | number; sub?: string }) {
+function StatCard({ icon: Icon, label, value, sub }: { icon: LucideIcon; label: string; value: string | number; sub?: string }) {
     return (
         <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-3">
@@ -70,14 +70,15 @@ function StatCard({ icon: Icon, label, value, sub }: { icon: any; label: string;
     );
 }
 
-function RankList({ items, labelKey, valueKey, valueLabel, icon: Icon }: {
-    items: any[];
-    labelKey: string;
-    valueKey: string;
+function RankList<L extends string, V extends string>({ items, labelKey, valueKey, valueLabel, icon: Icon }: {
+    items: Array<Record<L, string> & Record<V, number>>;
+    labelKey: L;
+    valueKey: V;
     valueLabel: string;
-    icon: any;
+    icon: LucideIcon;
 }) {
-    const max = items.length > 0 ? items[0][valueKey] : 1;
+    const valueOf = (item: Record<V, number>): number => item[valueKey];
+    const max = items.length > 0 ? valueOf(items[0]) : 1;
     return (
         <div className="space-y-2">
             {items.length === 0 && (
@@ -88,7 +89,7 @@ function RankList({ items, labelKey, valueKey, valueLabel, icon: Icon }: {
                     {/* Background bar */}
                     <div
                         className="absolute inset-y-0 left-0 bg-red-500/[0.06] rounded-lg transition-all"
-                        style={{ width: `${(item[valueKey] / max) * 100}%` }}
+                        style={{ width: `${(valueOf(item) / max) * 100}%` }}
                     />
                     <div className="relative flex items-center justify-between px-3 py-2.5">
                         <div className="flex items-center gap-2.5 min-w-0">
@@ -97,7 +98,7 @@ function RankList({ items, labelKey, valueKey, valueLabel, icon: Icon }: {
                             <span className="text-sm text-white/80 truncate">{item[labelKey]}</span>
                         </div>
                         <span className="text-xs font-mono text-white/50 flex-shrink-0 ml-2">
-                            {item[valueKey].toLocaleString()} {valueLabel}
+                            {valueOf(item).toLocaleString()} {valueLabel}
                         </span>
                     </div>
                 </div>
@@ -118,8 +119,8 @@ export default function SiteAnalytics() {
         try {
             const res = await api.get(`/analytics/stats?days=${days}`);
             setData(res.data.data);
-        } catch (err: any) {
-            setError(err?.response?.data?.message || 'Failed to load analytics');
+        } catch (err: unknown) {
+            setError((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to load analytics');
         } finally {
             setLoading(false);
         }

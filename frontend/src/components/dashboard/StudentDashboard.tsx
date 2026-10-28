@@ -9,6 +9,7 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { getEventStatus, type EventLike } from "@/lib/eventStatus";
 import { useToast } from "@/contexts/ToastContext";
+import type { User as AuthUser, UserTournamentResult } from "@/store/authStore";
 
 import MembershipCard from "./MembershipCard";
 import BlogManager from "./BlogManager";
@@ -30,9 +31,17 @@ const TABS = [
 
 type TabKey = typeof TABS[number]['key'];
 
-export default function StudentDashboard({ user }: { user: any }) {
-    const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-    const [nextEvent, setNextEvent] = useState<any>(null);
+/** The fields of a GET /events row this dashboard reads. */
+interface DashboardEvent extends EventLike {
+    id: string;
+    name: string;
+    startDate: string;
+    location?: string | null;
+}
+
+export default function StudentDashboard({ user }: { user: AuthUser }) {
+    const [upcomingEvents, setUpcomingEvents] = useState<DashboardEvent[]>([]);
+    const [nextEvent, setNextEvent] = useState<DashboardEvent | null>(null);
     const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     const [activeTab, setActiveTab] = useState<TabKey>('overview');
     const [showAnonFeedback, setShowAnonFeedback] = useState(false);
@@ -361,7 +370,7 @@ export default function StudentDashboard({ user }: { user: any }) {
                                         </h3>
                                     </div>
                                     <div className="p-2">
-                                        {tournamentResults.slice(0, 3).map((result: any, i: number) => (
+                                        {tournamentResults.slice(0, 3).map((result: UserTournamentResult, i: number) => (
                                             <div key={i} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.03] transition-colors">
                                                 <div className="flex items-center gap-2.5">
                                                     <div className={`w-[3px] h-8 rounded-full ${

@@ -77,8 +77,8 @@ export default function AnnouncementManager() {
             setResult(res.data.data);
             setSubject("");
             setBody("");
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to send announcement.");
+        } catch (err: unknown) {
+            setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || "Failed to send announcement.");
         } finally {
             setIsLoading(false);
         }
@@ -278,11 +278,11 @@ export default function AnnouncementManager() {
                         <ul className="space-y-2 text-xs text-gray-400">
                             <li className="flex items-start gap-2">
                                 <div className="w-1 h-1 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
-                                Emails are sent individually — recipients can't see other addresses.
+                                Emails are sent individually — recipients can&apos;t see other addresses.
                             </li>
                             <li className="flex items-start gap-2">
                                 <div className="w-1 h-1 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
-                                Each email is personalized with the member's name.
+                                Each email is personalized with the member&apos;s name.
                             </li>
                             <li className="flex items-start gap-2">
                                 <div className="w-1 h-1 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />

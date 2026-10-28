@@ -5,14 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Package, ShoppingBag, Plus, Edit2, Trash2, Loader2, Search,
     CheckCircle, Clock, Truck, MapPin, XCircle, ChevronDown, ChevronUp,
-    Save, X, ImagePlus, Tag, Ruler, IndianRupee, Info, Star
+    Save, X, ImagePlus, Tag, Ruler, IndianRupee, Info, Star, type LucideIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 
 // ============ STATUS CONFIG ============
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: LucideIcon }> = {
     PENDING: { label: "Pending", color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/20", icon: Clock },
     CONFIRMED: { label: "Confirmed", color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", icon: CheckCircle },
     PROCESSING: { label: "Processing", color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20", icon: Package },
@@ -22,6 +22,42 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
     COMPLETED: { label: "Completed", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", icon: CheckCircle },
     CANCELLED: { label: "Cancelled", color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", icon: XCircle },
 };
+
+interface Product {
+    id: string;
+    name: string;
+    description?: string | null;
+    price: number;
+    comparePrice?: number | null;
+    category: string;
+    images?: string[];
+    sizes?: string[];
+    stockCount: number;
+    featured: boolean;
+}
+
+interface OrderItem {
+    id: string;
+    size?: string | null;
+    quantity: number;
+    price: number;
+    product?: { name: string } | null;
+}
+
+interface Order {
+    id: string;
+    status: string;
+    totalAmount: number;
+    user?: { name?: string; email?: string } | null;
+    shippingName?: string | null;
+    shippingPhone?: string | null;
+    shippingAddress?: string | null;
+    shippingCity?: string | null;
+    shippingState?: string | null;
+    shippingPincode?: string | null;
+    createdAt: string;
+    items: OrderItem[];
+}
 
 const STATUS_FLOW: Record<string, string[]> = {
     PENDING: ["CONFIRMED", "CANCELLED"],
@@ -83,7 +119,7 @@ export default function StoreManagement() {
 
 // ============ ORDER MANAGEMENT ============
 function OrderManagement() {
-    const [orders, setOrders] = useState<any[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -110,9 +146,10 @@ function OrderManagement() {
             await api.patch(`/merch/orders/${orderId}/status`, { status });
             showToast(`Order updated to ${STATUS_CONFIG[status]?.label || status}`, "success");
             fetchOrders();
-        } catch (err: any) {
-            console.error("Status update failed:", err.response?.data || err);
-            showToast(err.response?.data?.message || "Failed to update order", "error");
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            console.error("Status update failed:", e.response?.data || err);
+            showToast(e.response?.data?.message || "Failed to update order", "error");
         } finally {
             setUpdating(null);
         }
@@ -216,7 +253,7 @@ function OrderManagement() {
                                         {/* Items */}
                                         <div className="space-y-2">
                                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Items</p>
-                                            {order.items.map((item: any) => (
+                                            {order.items.map((item: OrderItem) => (
                                                 <div key={item.id} className="flex items-center justify-between bg-white/5 rounded-xl p-3">
                                                     <div>
                                                         <p className="text-sm font-bold text-white">{item.product?.name}</p>
@@ -271,9 +308,9 @@ function OrderManagement() {
 
 // ============ PRODUCT MANAGEMENT ============
 function ProductManagement() {
-    const [products, setProducts] = useState<any[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editing, setEditing] = useState<any>(null); // null = list view, {} = new, {id:...} = editing
+    const [editing, setEditing] = useState<Partial<Product> | null>(null); // null = list view, {} = new, {id:...} = editing
     const [saving, setSaving] = useState(false);
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState<string | null>(null);
@@ -303,7 +340,7 @@ function ProductManagement() {
         }
     };
 
-    const openEditor = (product?: any) => {
+    const openEditor = (product?: Product) => {
         if (product) {
             setForm({
                 name: product.name,

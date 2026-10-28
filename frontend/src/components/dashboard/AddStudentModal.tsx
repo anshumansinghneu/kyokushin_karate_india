@@ -54,7 +54,7 @@ export default function AddStudentModal({ isOpen, onClose }: AddStudentModalProp
                     </button>
 
                     <h2 className="text-2xl font-black text-white mb-2">Add New Student</h2>
-                    <p className="text-gray-400 mb-6">Enter the student's details to send them an invitation.</p>
+                    <p className="text-gray-400 mb-6">Enter the student&apos;s details to send them an invitation.</p>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">

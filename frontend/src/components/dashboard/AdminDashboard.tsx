@@ -7,12 +7,12 @@ import {
     LogOut, Menu, X, Trophy, Award, Megaphone, IndianRupee, Radio, ShoppingBag,
     Ticket, RefreshCw, ChevronDown, Search, ChevronRight, Loader2, BookOpen,
     PanelLeftClose, PanelLeftOpen, UserCheck, AlertCircle, Home, Activity,
-    MessageSquare, Mail, Plane
+    MessageSquare, Mail, Plane, type LucideIcon
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore, type User as AuthUser } from "@/store/authStore";
 import { useRouter, useSearchParams } from "next/navigation";
 
 // Lazy-loaded tab components for code splitting
@@ -40,7 +40,7 @@ const TeamIndiaManager = lazy(() => import('./TeamIndiaManager'));
 const AnonymousMessageManager = lazy(() => import('./AnonymousMessageManager'));
 const ResultsManager = lazy(() => import('./ResultsManager'));
 
-import OrganizationGraph from "./OrganizationGraph";
+import OrganizationGraph, { type OrgUser } from "./OrganizationGraph";
 import GlobalSearch from "./GlobalSearch";
 import StudentDetailView from "./StudentDetailView";
 import { useToast } from '@/contexts/ToastContext';
@@ -60,7 +60,26 @@ type TabId = 'overview' | 'dojos' | 'events' | 'seminars' | 'users' | 'blogs' | 
 
 const VALID_TABS: TabId[] = ['overview', 'dojos', 'events', 'seminars', 'users', 'blogs', 'media', 'recognition', 'belt-verifications', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'announcements', 'payments', 'live-management', 'store', 'vouchers', 'analytics', 'certificates', 'albums', 'event-reviews', 'anonymous-messages', 'results', 'team-india'];
 
-export default function AdminDashboard({ user, initialTab }: { user: any; initialTab?: string }) {
+interface MenuItem {
+    id: string;
+    label: string;
+    icon: LucideIcon;
+    badge?: number;
+}
+
+interface MenuSection {
+    id?: string;
+    header?: string;
+    items: MenuItem[];
+}
+
+/** The fields of a GET /users row the overview reads. */
+interface AdminUserRow extends OrgUser {
+    email: string;
+    membershipStatus: string;
+}
+
+export default function AdminDashboard({ user, initialTab }: { user: AuthUser; initialTab?: string }) {
     const { showToast } = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -74,7 +93,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
     const { logout } = useAuthStore();
     const [isStatsLoading, setIsStatsLoading] = useState(true);
     const [stats, setStats] = useState({
-        users: [] as any[],
+        users: [] as AdminUserRow[],
         usersCount: 0,
         dojos: 0,
         events: 0,
@@ -103,7 +122,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                 usersCount: usersRes.data.results,
                 dojos: dojosRes.data.results,
                 events: eventsRes.data.results,
-                pending: usersRes.data.data.users.filter((u: any) => u.membershipStatus === 'PENDING').length
+                pending: usersRes.data.data.users.filter((u: AdminUserRow) => u.membershipStatus === 'PENDING').length
             });
         } catch (error) {
             console.error("Failed to fetch admin stats", error);
@@ -125,7 +144,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
         });
     };
 
-    const menuSections = [
+    const menuSections: MenuSection[] = [
         {
             items: [{ id: 'overview', label: 'Overview', icon: BarChart }]
         },
@@ -298,14 +317,14 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                                 {!isSidebarCollapsed && (
                                                     <>
                                                         <span className="truncate">{item.label}</span>
-                                                        {'badge' in item && (item as any).badge ? (
+                                                        {item.badge ? (
                                                             <span className="ml-auto text-[10px] font-bold bg-red-500/80 text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                                                                {(item as any).badge}
+                                                                {item.badge}
                                                             </span>
                                                         ) : null}
                                                     </>
                                                 )}
-                                                {isSidebarCollapsed && 'badge' in item && (item as any).badge ? (
+                                                {isSidebarCollapsed && item.badge ? (
                                                     <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
                                                 ) : null}
                                             </button>
@@ -449,7 +468,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                             className="border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] text-gray-300 text-xs h-9"
                                             onClick={() => {
                                                 const headers = "Name,Email,Role,Status\n";
-                                                const rows = stats.users.map((u: any) => `${u.name},${u.email},${u.role},${u.membershipStatus}`).join("\n");
+                                                const rows = stats.users.map((u) => `${u.name},${u.email},${u.role},${u.membershipStatus}`).join("\n");
                                                 const blob = new Blob([headers + rows], { type: "text/csv" });
                                                 const url = window.URL.createObjectURL(blob);
                                                 const a = document.createElement("a");
@@ -599,7 +618,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                             {(() => {
                                                 const roles = { ADMIN: 0, INSTRUCTOR: 0, STUDENT: 0, OTHER: 0 };
-                                                stats.users.forEach((u: any) => {
+                                                stats.users.forEach((u) => {
                                                     if (u.role === 'ADMIN') roles.ADMIN++;
                                                     else if (u.role === 'INSTRUCTOR') roles.INSTRUCTOR++;
                                                     else if (u.role === 'STUDENT') roles.STUDENT++;
@@ -609,7 +628,7 @@ export default function AdminDashboard({ user, initialTab }: { user: any; initia
                                                     { label: 'Admins', count: roles.ADMIN, color: 'text-red-400', dot: 'bg-red-500' },
                                                     { label: 'Instructors', count: roles.INSTRUCTOR, color: 'text-orange-400', dot: 'bg-orange-500' },
                                                     { label: 'Students', count: roles.STUDENT, color: 'text-blue-400', dot: 'bg-blue-500' },
-                                                    { label: 'Active', count: stats.users.filter((u: any) => u.membershipStatus === 'APPROVED').length, color: 'text-emerald-400', dot: 'bg-emerald-500' },
+                                                    { label: 'Active', count: stats.users.filter((u) => u.membershipStatus === 'APPROVED').length, color: 'text-emerald-400', dot: 'bg-emerald-500' },
                                                 ].map((item, i) => (
                                                     <div key={i} className="p-4 rounded-xl border border-white/[0.04] bg-white/[0.01]">
                                                         <div className="flex items-center gap-2 mb-2">

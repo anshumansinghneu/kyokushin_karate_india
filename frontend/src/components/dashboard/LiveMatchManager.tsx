@@ -12,6 +12,10 @@ import { useToast } from "@/contexts/ToastContext";
 import { io, Socket } from "socket.io-client";
 
 import { formatDateOnly } from '@/lib/dateOnly';
+
+const apiErrorMessage = (err: unknown): string | undefined =>
+    (err as { response?: { data?: { message?: string } } } | null)?.response?.data?.message;
+
 interface Match {
     id: string;
     matchNumber: number;
@@ -144,8 +148,8 @@ export default function LiveMatchManager() {
             showToast("Match started! Now LIVE.", "success");
             await fetchLiveMatches();
             if (selectedTournament) await fetchBrackets(selectedTournament);
-        } catch (err: any) {
-            showToast(err.response?.data?.message || "Failed to start match", "error");
+        } catch (err: unknown) {
+            showToast(apiErrorMessage(err) || "Failed to start match", "error");
         } finally {
             setUpdatingMatch(null);
         }
@@ -160,7 +164,7 @@ export default function LiveMatchManager() {
         setAllMatches(prev => prev.map(m => m.id === matchId ? { ...m, [field]: newScore } : m));
         try {
             await api.patch(`/matches/${matchId}`, { [field]: newScore });
-        } catch (err: any) {
+        } catch {
             // Revert on failure
             const oldScore = Math.max(0, newScore - delta);
             setLiveMatches(prev => prev.map(m => m.id === matchId ? { ...m, [field]: oldScore } : m));
@@ -176,8 +180,8 @@ export default function LiveMatchManager() {
             showToast("Match ended! Result recorded.", "success");
             await fetchLiveMatches();
             if (selectedTournament) await fetchBrackets(selectedTournament);
-        } catch (err: any) {
-            showToast(err.response?.data?.message || "Failed to end match", "error");
+        } catch (err: unknown) {
+            showToast(apiErrorMessage(err) || "Failed to end match", "error");
         } finally {
             setUpdatingMatch(null);
         }

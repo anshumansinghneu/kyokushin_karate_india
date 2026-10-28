@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Package, Clock, CheckCircle, Truck, MapPin, XCircle, ChevronDown, ChevronUp, ShoppingBag, Loader2 } from "lucide-react";
+import { Package, Clock, CheckCircle, Truck, MapPin, XCircle, ChevronDown, ChevronUp, ShoppingBag, Loader2, type LucideIcon } from "lucide-react";
 import api from "@/lib/api";
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: LucideIcon }> = {
     PENDING: { label: "Payment Pending", color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/20", icon: Clock },
     CONFIRMED: { label: "Confirmed", color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", icon: CheckCircle },
     PROCESSING: { label: "Processing", color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20", icon: Package },
@@ -15,10 +15,32 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
     CANCELLED: { label: "Cancelled", color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", icon: XCircle },
 };
 
+interface OrderItem {
+    id: string;
+    size?: string | null;
+    quantity: number;
+    price: number;
+    product?: { name: string; images?: string[] } | null;
+}
+
+interface Order {
+    id: string;
+    status: string;
+    totalAmount: number;
+    shippingName?: string | null;
+    shippingPhone?: string | null;
+    shippingAddress?: string | null;
+    shippingCity?: string | null;
+    shippingState?: string | null;
+    shippingPincode?: string | null;
+    createdAt: string;
+    items: OrderItem[];
+}
+
 const STEPS = ["CONFIRMED", "PROCESSING", "READY_FOR_PICKUP", "SHIPPED", "DELIVERED"];
 
 export default function MyOrders() {
-    const [orders, setOrders] = useState<any[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -142,7 +164,7 @@ export default function MyOrders() {
                                 {/* Items */}
                                 <div className="space-y-3">
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Items</p>
-                                    {order.items.map((item: any) => (
+                                    {order.items.map((item: OrderItem) => (
                                         <div key={item.id} className="flex items-center justify-between bg-white/5 rounded-xl p-3">
                                             <div className="flex items-center gap-3">
                                                 {item.product?.images?.[0] ? (

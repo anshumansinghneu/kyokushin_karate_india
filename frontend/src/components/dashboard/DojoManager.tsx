@@ -17,6 +17,14 @@ interface Dojo {
     city: string;
     state: string;
     address: string;
+    instructors?: Array<{ id: string }>;
+}
+
+/** The fields of a GET /users row this manager's instructor picker reads. */
+interface InstructorOption {
+    id: string;
+    name: string;
+    role: string;
 }
 
 
@@ -36,7 +44,7 @@ export default function DojoManager() {
         instructorId: ""
     });
 
-    const [instructors, setInstructors] = useState<any[]>([]);
+    const [instructors, setInstructors] = useState<InstructorOption[]>([]);
 
     const fetchDojos = async () => {
         setIsLoading(true);
@@ -65,7 +73,7 @@ export default function DojoManager() {
         fetchInstructors();
     }, []);
 
-    const handleOpenModal = (dojo?: any) => {
+    const handleOpenModal = (dojo?: Dojo) => {
         if (dojo) {
             setEditingDojo(dojo);
             setFormData({

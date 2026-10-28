@@ -13,7 +13,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore, type User as AuthUser } from "@/store/authStore";
 
 import StudentRoster from "./StudentRoster";
 import RegisterStudentModal from "./RegisterStudentModal";
@@ -32,13 +32,21 @@ type TabId = 'overview' | 'students' | 'belt-approvals' | 'belt-promotions' | 'b
 
 const VALID_TABS: TabId[] = ['overview', 'students', 'belt-approvals', 'belt-promotions', 'belt-exam-grading', 'tournaments', 'register-student', 'enroll-event', 'blogs', 'submit'];
 
-export default function InstructorDashboard({ user, initialTab }: { user: any; initialTab?: string }) {
+/** The fields of a GET /users row this dashboard reads. */
+interface InstructorStudentRow {
+    id: string;
+    name: string;
+    createdAt: string;
+    currentBeltRank?: string | null;
+}
+
+export default function InstructorDashboard({ user, initialTab }: { user: AuthUser; initialTab?: string }) {
     const { showToast } = useToast();
     const { logout } = useAuthStore();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [students, setStudents] = useState<any[]>([]);
-    const [pendingStudents, setPendingStudents] = useState<any[]>([]);
+    const [students, setStudents] = useState<InstructorStudentRow[]>([]);
+    const [pendingStudents, setPendingStudents] = useState<InstructorStudentRow[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // mobile overlay
@@ -235,7 +243,7 @@ export default function InstructorDashboard({ user, initialTab }: { user: any; i
                                     return (
                                         <button
                                             key={item.id}
-                                            onClick={() => { if (item.id === 'anonymous-feedback') { setShowAnonFeedback(true); setIsSidebarOpen(false); } else { setActiveTab(item.id as any); setIsSidebarOpen(false); } }}
+                                            onClick={() => { if (item.id === 'anonymous-feedback') { setShowAnonFeedback(true); setIsSidebarOpen(false); } else { setActiveTab(item.id as TabId); setIsSidebarOpen(false); } }}
                                             title={isSidebarCollapsed ? item.label : undefined}
                                             className={`
                                                 w-full flex items-center gap-2.5 rounded-lg text-[13px] font-medium transition-all relative group

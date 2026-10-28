@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
-export default function Portal({ children }: { children: React.ReactNode }) {
-    const [mounted, setMounted] = useState(false);
+const subscribe = () => () => {};
 
-    useEffect(() => {
-        setMounted(true);
-        return () => setMounted(false);
-    }, []);
+export default function Portal({ children }: { children: React.ReactNode }) {
+    // false during SSR and hydration, true once on the client (replaces a
+    // mounted flag set in an effect).
+    const mounted = useSyncExternalStore(subscribe, () => true, () => false);
 
     if (!mounted) return null;
 

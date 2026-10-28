@@ -21,6 +21,8 @@ interface Post {
     author: { name: string };
 }
 
+type ApiError = { response?: { data?: { message?: string } } };
+
 const BlogManager = () => {
     const [posts, setPosts] = useState<Post[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -122,9 +124,9 @@ const BlogManager = () => {
             await api.patch(`/posts/${id}`, { status: 'PUBLISHED' });
             fetchPosts();
             showToast("Post approved successfully!", "success");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Approval failed", error);
-            showToast(error.response?.data?.message || "Failed to approve post", "error");
+            showToast((error as ApiError).response?.data?.message || "Failed to approve post", "error");
         } finally {
             setApprovingId(null);
         }
@@ -140,7 +142,7 @@ const BlogManager = () => {
             });
             handleUpdateBlock(id, res.data.data.url);
             showToast("Block image uploaded successfully!", "success");
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Image upload failed", err);
             showToast("Image upload failed", "error");
         }
@@ -160,9 +162,9 @@ const BlogManager = () => {
             });
             setCurrentPost({ ...currentPost, imageUrl: res.data.data.url });
             showToast("Cover image uploaded successfully!", "success");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Upload failed", error);
-            showToast(error.response?.data?.message || "Image upload failed", "error");
+            showToast((error as ApiError).response?.data?.message || "Image upload failed", "error");
         } finally {
             setUploading(false);
         }
@@ -182,7 +184,7 @@ const BlogManager = () => {
             }).join('');
 
             // Sanitize payload
-            const { author, id, slug, publishedAt, createdAt, updatedAt, ...rest } = currentPost as any;
+            const { author, id, slug, publishedAt, createdAt, updatedAt, ...rest } = currentPost as Partial<Post> & { createdAt?: string; updatedAt?: string };
 
             const payload = {
                 ...rest,
@@ -202,8 +204,8 @@ const BlogManager = () => {
             setCurrentPost({});
             setBlocks([]);
             fetchPosts();
-        } catch (err: any) {
-            const errMsg = err.response?.data?.message || "Failed to save post";
+        } catch (err: unknown) {
+            const errMsg = (err as ApiError).response?.data?.message || "Failed to save post";
             console.error(errMsg, err);
             showToast(errMsg, "error");
         } finally {
@@ -416,9 +418,9 @@ const BlogManager = () => {
             fetchPosts();
             setDeleteId(null);
             showToast("Post deleted successfully!", "success");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Failed to delete post", error);
-            showToast(error.response?.data?.message || "Failed to delete post", "error");
+            showToast((error as ApiError).response?.data?.message || "Failed to delete post", "error");
         } finally {
             setIsDeleting(false);
         }

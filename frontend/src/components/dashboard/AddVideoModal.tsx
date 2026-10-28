@@ -37,8 +37,8 @@ export default function AddVideoModal({ open, onClose, onSaved, albumId }: AddVi
             setCaption("");
             onSaved?.();
             onClose();
-        } catch (err: any) {
-            showToast(err.response?.data?.message || "Failed to add video", "error");
+        } catch (err: unknown) {
+            showToast((err as { response?: { data?: { message?: string } } }).response?.data?.message || "Failed to add video", "error");
         } finally {
             setSaving(false);
         }

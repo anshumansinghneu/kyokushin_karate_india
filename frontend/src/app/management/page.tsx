@@ -116,14 +116,16 @@ function ManagementContent() {
         }
     }, []);
 
-    // Timeout: if still loading after 12s, show retry option
+    // Timeout: if still loading after 12s, show retry option. The flag is
+    // reset when loading ends (true -> false), in the cleanup of the effect
+    // run that started the timer.
     useEffect(() => {
-        if (!isLoading) {
-            setLoadingTooLong(false);
-            return;
-        }
+        if (!isLoading) return;
         const timer = setTimeout(() => setLoadingTooLong(true), 12000);
-        return () => clearTimeout(timer);
+        return () => {
+            clearTimeout(timer);
+            setLoadingTooLong(false);
+        };
     }, [isLoading]);
 
     useEffect(() => {

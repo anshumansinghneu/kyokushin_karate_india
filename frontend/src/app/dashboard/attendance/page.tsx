@@ -9,6 +9,13 @@ import { nextStatus, daysInMonth, countPresent, AttendanceStatus } from "@/lib/a
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
+interface AttendanceRosterEntry {
+  student: { id: string; name: string; membershipNumber?: string | null };
+  days?: Record<string, AttendanceStatus> | null;
+}
+
+type ApiError = { response?: { data?: { message?: string } } };
+
 interface Row {
   userId: string;
   name: string;
@@ -42,15 +49,15 @@ export default function AttendancePage() {
     setMessage("");
     try {
       const res = await api.get(`/attendance/dojo/${dojoId}`, { params: { month, year } });
-      const next: Row[] = res.data.data.roster.map((r: any) => ({
+      const next: Row[] = res.data.data.roster.map((r: AttendanceRosterEntry) => ({
         userId: r.student.id,
         name: r.student.name,
         membershipNumber: r.student.membershipNumber,
         days: r.days ?? {},
       }));
       setRows(next);
-    } catch (e: any) {
-      setMessage(e?.response?.data?.message || "Failed to load attendance");
+    } catch (e: unknown) {
+      setMessage((e as ApiError)?.response?.data?.message || "Failed to load attendance");
     } finally {
       setLoading(false);
     }
@@ -76,10 +83,10 @@ export default function AttendancePage() {
 
     try {
       await api.post("/attendance/mark", { userId: row.userId, dojoId, year, month, day, status: next });
-    } catch (e: any) {
+    } catch (e: unknown) {
       // revert on failure
       setRows((rs) => rs.map((r) => (r.userId === row.userId ? { ...r, days: prevDays } : r)));
-      setMessage(e?.response?.data?.message || `Failed to save ${row.name}`);
+      setMessage((e as ApiError)?.response?.data?.message || `Failed to save ${row.name}`);
     }
   };
 
