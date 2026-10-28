@@ -10,6 +10,7 @@ import SceneSlot from '@/components/three/SceneSlot';
 import BrandLink from '@/components/brand/BrandLink';
 import { Heading } from '@/components/brand/Section';
 import CityRun from '@/components/dojo/CityRun';
+import DojoIndex from '@/components/dojo/DojoIndex';
 import 'leaflet/dist/leaflet.css';
 
 import KarateLoader from '@/components/KarateLoader';
@@ -464,6 +465,8 @@ export default function FindADojoPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredDojoId, setHoveredDojoId] = useState<string | null>(null);
   const [selectedDojo, setSelectedDojo] = useState<Dojo | null>(null);
+  /** The index (every dojo, under its city, with its sensei) or the working map. */
+  const [view, setView] = useState<'index' | 'map'>('index');
   const filteredDojos = useMemo(
     () =>
       dojos.filter((dojo) => {
@@ -968,6 +971,37 @@ export default function FindADojoPage() {
     }
   };
 
+  // From an index entry: switch to the map and select that dojo there.
+  const showOnMap = (dojo: Dojo) => {
+    setView('map');
+    setSelectedDojo(dojo);
+    requestAnimationFrame(() => {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      mapFrameRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    });
+  };
+
+  // The map stays mounted while hidden, so it was framed at zero size: when it is shown,
+  // measure again and re-frame, on the chosen dojo if there is one, else on every pin.
+  useEffect(() => {
+    if (view !== 'map') return;
+    const id = requestAnimationFrame(() => {
+      const map = mapInstanceRef.current;
+      const L = leafletRef.current;
+      if (!map || !L) return;
+      map.invalidateSize();
+      const chosen = selectedIdRef.current ? markerByDojoRef.current[selectedIdRef.current] : null;
+      if (chosen) {
+        map.setView(chosen.getLatLng(), 12, { animate: false });
+        return;
+      }
+      const pins = Object.values(markersRef.current) as { getLatLng: () => unknown }[];
+      if (pins.length > 1) map.fitBounds(L.latLngBounds(pins.map((m) => m.getLatLng())), { padding: [36, 36], maxZoom: 9, animate: false });
+      else if (pins.length === 1) map.setView(pins[0].getLatLng(), 11, { animate: false });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [view]);
+
   const isFiltered = searchQuery.trim() !== '';
   const nearMode = locateState === 'done' && !!userPos;
   const showListBar = !isLoading && !loadError && (isFiltered || nearMode || unmappedCount > 0);
@@ -1045,6 +1079,19 @@ export default function FindADojoPage() {
                   ? 'Location unavailable'
                   : 'Near me'}
             </button>
+            <div role="group" aria-label="View" className="flex h-12 shrink-0 border border-white/20 sm:ml-auto">
+              {(['index', 'map'] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setView(v)}
+                  aria-pressed={view === v}
+                  className={`px-5 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70 ${view === v ? 'bg-white text-black' : 'text-white/75 hover:text-white'}`}
+                >
+                  {v === 'index' ? 'Dojos' : 'Map'}
+                </button>
+              ))}
+            </div>
           </div>
 
           {cityGroups.length > 0 && (
@@ -1080,7 +1127,23 @@ export default function FindADojoPage() {
           )}
         </header>
 
-        <div className="mt-8 grid gap-6 lg:mt-10 lg:grid-cols-12 lg:gap-8">
+        {view === 'index' && !isLoading && !loadError && listedDojos.length > 0 && (
+          <div className="mt-16 lg:mt-24">
+            <DojoIndex
+              dojos={listedDojos}
+              labelOf={(d) => stripAcademyPrefix(d.name)}
+              distances={Object.fromEntries(Object.entries(distances).map(([id, km]) => [id, formatKm(km)]))}
+              nearMode={nearMode}
+              onShowOnMap={(d) => {
+                const full = listedDojos.find((x) => x.id === d.id);
+                if (full) showOnMap(full);
+              }}
+            />
+          </div>
+        )}
+
+        {/* The map view. Loading, error and empty states live here too, so they show in either view. */}
+        <div className={`mt-8 grid gap-6 lg:mt-10 lg:grid-cols-12 lg:gap-8 ${view === 'index' && !isLoading && !loadError && listedDojos.length > 0 ? 'hidden' : ''}`}>
           {/* Map: first on phones, right-hand column on desktop.
               data-lenis-prevent keeps wheel and trackpad gestures on the map. */}
           <div

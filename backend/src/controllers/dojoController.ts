@@ -12,7 +12,8 @@ export const getAllDojos = catchAsync(async (req: Request, res: Response, next: 
     const rows = await prisma.dojo.findMany({
         where,
         include: {
-            instructors: { select: { id: true, name: true, role: true } },
+            // Photo and rank let the public dojo index show each dojo's sensei in one request.
+            instructors: { select: { id: true, name: true, role: true, currentBeltRank: true, profilePhotoUrl: true } },
         },
     });
     // Public endpoint: the fee-reminder template is internal (the fees page reads it from /fees).

@@ -394,3 +394,9 @@ body {
     }
     .kanku-loader .kl-core { animation: none; }
 }
+
+/* The dojo index's sensei print: wiped in from the top as the pointed-at dojo changes. */
+@keyframes kkfi-print {
+  from { clip-path: inset(0 0 100% 0); opacity: 0.4; }
+  to { clip-path: inset(0 0 0 0); opacity: 1; }
+}
