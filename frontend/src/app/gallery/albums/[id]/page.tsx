@@ -47,11 +47,11 @@ interface AlbumDetail {
 }
 
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Camera; color: string }> = {
-    CAMP: { label: "Camp", icon: Tent, color: "text-emerald-400" },
-    SEMINAR: { label: "Seminar", icon: GraduationCap, color: "text-white" },
-    TOURNAMENT: { label: "Tournament", icon: Trophy, color: "text-amber-400" },
-    BELT_EXAM: { label: "Grading", icon: Swords, color: "text-primary-light" },
-    TRAINING: { label: "Training", icon: Dumbbell, color: "text-purple-400" },
+    CAMP: { label: "Camp", icon: Tent, color: "text-white/70" },
+    SEMINAR: { label: "Seminar", icon: GraduationCap, color: "text-white/70" },
+    TOURNAMENT: { label: "Tournament", icon: Trophy, color: "text-white/70" },
+    BELT_EXAM: { label: "Grading", icon: Swords, color: "text-white/70" },
+    TRAINING: { label: "Training", icon: Dumbbell, color: "text-white/70" },
     GENERAL: { label: "General", icon: Camera, color: "text-white/70" },
 };
 

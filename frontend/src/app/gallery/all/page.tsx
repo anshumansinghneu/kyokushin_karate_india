@@ -565,9 +565,10 @@ export default function GalleryPage() {
                                 <button
                                     key={cat.id}
                                     onClick={() => setFilter(cat.id)}
+                                    aria-pressed={filter === cat.id}
                                     className={`px-5 py-2.5 rounded-none text-sm font-bold uppercase tracking-wider transition-colors duration-200 min-h-[44px] flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
                                         filter === cat.id
-                                            ? "bg-primary hover:bg-primary-dark text-white"
+                                            ? "border border-white bg-white text-black"
                                             : "bg-transparent text-white/80 hover:bg-white/10 hover:text-white border border-white/20"
                                     }`}
                                 >

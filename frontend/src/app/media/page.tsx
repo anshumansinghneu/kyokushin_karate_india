@@ -46,7 +46,7 @@ export default function MediaPage() {
                 height="tall"
                 media={<SceneSlot scene="ink" sceneProps={INK} className="absolute inset-0" fallback={<div className="absolute inset-0 bg-black" />} />}
                 title={<>In the press<span className="text-primary">.</span></>}
-                lede="Kyokushin making headlines across the globe."
+                lede="Press coverage of KKFI, its tournaments and its karateka."
             />
 
             <Section rhythm="base" width="wide">
