@@ -80,6 +80,15 @@ function useSenseiByDojo(ids: string[]) {
           ),
         );
       }
+      // An instructor registered at a dojo (their home dojo) teaches there too, even when
+      // nobody has linked them as its teacher yet: fill the dojos still without a sensei.
+      const instructors = await api.get('/users/public-instructors').then((r) => r.data?.data?.instructors ?? []).catch(() => []);
+      const idByName = new Map<string, string>(list.map((d: { id: string; name: string }) => [d.name.trim().toLowerCase(), d.id]));
+      for (const inst of instructors as (DojoInstructor & { dojo?: { name: string } | null })[]) {
+        const id = inst.dojo ? idByName.get(inst.dojo.name.trim().toLowerCase()) : undefined;
+        const s = pick([inst]);
+        if (id && s && (!out[id] || rankWeight(inst.currentBeltRank) > rankWeight(out[id].rank))) out[id] = s;
+      }
       if (alive) {
         done.current = true;
         setByDojo(out);

@@ -120,6 +120,22 @@ export default function DojoDetailPage() {
         api.get('/dojos').then((res) => setAllDojos(res.data.data.dojos ?? [])).catch(() => {});
     }, []);
 
+    // Instructors registered at this dojo as their home dojo teach here too, even before
+    // anyone links them as its teacher; add any the dojo record does not already list.
+    const [homeInstructors, setHomeInstructors] = useState<Instructor[]>([]);
+    useEffect(() => {
+        if (!dojo) return;
+        api.get('/users/public-instructors')
+            .then((res) => {
+                const name = dojo.name.trim().toLowerCase();
+                const listed = new Set((dojo.instructors ?? []).map((i) => i.id));
+                const extra = ((res.data?.data?.instructors ?? []) as (Instructor & { dojo?: { name: string } | null })[])
+                    .filter((i) => i.dojo?.name.trim().toLowerCase() === name && !listed.has(i.id));
+                setHomeInstructors(extra);
+            })
+            .catch(() => {});
+    }, [dojo]);
+
     // The hero map holds on this dojo's city, its beam red.
     const mapScene = useMemo(() => {
         const coords = dojo ? coordsOf(dojo) : null;
@@ -214,12 +230,13 @@ export default function DojoDetailPage() {
     const photos = (dojo.gallery ?? []).slice(0, 12);
     const photoSrc = (p: GalleryPhoto) => p.url || p.imageUrl || null;
     const place = [dojo.city, dojo.state].filter(Boolean).join(", ");
+    const instructors = [...(dojo.instructors ?? []), ...homeInstructors];
     const upcoming = events.filter((e) => getEventStatus(e) !== 'COMPLETED').length;
     const neighbours = allDojos.filter((d) => d.id !== dojo.id && normalizeCity(d.city) === normalizeCity(dojo.city));
     // Live facts only: anything we do not have is left out rather than shown as zero.
     const facts = [
         dojo.memberCount ? { value: dojo.memberCount, label: dojo.memberCount === 1 ? "active member" : "active members" } : null,
-        dojo.instructors?.length ? { value: dojo.instructors.length, label: dojo.instructors.length === 1 ? "instructor" : "instructors" } : null,
+        instructors.length ? { value: instructors.length, label: instructors.length === 1 ? "instructor" : "instructors" } : null,
         upcoming ? { value: upcoming, label: upcoming === 1 ? "upcoming event" : "upcoming events" } : null,
     ].filter(Boolean) as { value: number; label: string }[];
 
@@ -313,9 +330,9 @@ export default function DojoDetailPage() {
                         {/* Instructors */}
                         <Reveal>
                             <Heading size="title">Instructors</Heading>
-                            {dojo.instructors && dojo.instructors.length > 0 ? (
+                            {instructors.length > 0 ? (
                                 <ul className="mt-6 grid gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
-                                    {dojo.instructors.map((inst) => (
+                                    {instructors.map((inst) => (
                                         <li key={inst.id ?? inst.name}>
                                             <RankPortrait
                                                 name={inst.name}
