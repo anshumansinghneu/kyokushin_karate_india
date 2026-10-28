@@ -1,0 +1,37 @@
+name: Deploy Backend to Render
+
+# Render's own auto-deploy stopped picking up pushes in October 2026, so the
+# backend sat on an old build while main moved on. This triggers a Render deploy
+# directly whenever backend code changes on main, through the service's deploy
+# hook. It does nothing until the RENDER_DEPLOY_HOOK_URL repository secret exists
+# (Render: kyokushin-api → Settings → Deploy Hook).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/render-deploy.yml'
+  workflow_dispatch: # Deploy by hand from the Actions tab
+
+concurrency:
+  group: render-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::notice::RENDER_DEPLOY_HOOK_URL is not set; skipping. Add it under Settings → Secrets → Actions."
+            exit 0
+          fi
+          STATUS=$(curl -s -o /tmp/render.json -w "%{http_code}" -X POST "$HOOK")
+          echo "Render answered $STATUS"
+          cat /tmp/render.json; echo
+          # 200/201 means the deploy was queued; anything else is worth a red X.
+          [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ]
