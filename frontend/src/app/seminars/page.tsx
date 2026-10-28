@@ -588,7 +588,7 @@ export default function SeminarsPage() {
     const dbStories = completedSeminars.filter((s) => (s.galleryImages?.length ?? 0) > 0);
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen overflow-x-clip bg-black text-white">
             {/* ─── Hero: the work itself ─── */}
             <Section rhythm="tight" width="wide" className="pt-6 md:pt-10">
                 <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-16">
