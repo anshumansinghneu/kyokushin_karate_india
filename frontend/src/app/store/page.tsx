@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   ShoppingBag,
   Search,
@@ -188,16 +188,15 @@ export default function StorePage() {
     return () => cancelAnimationFrame(id);
   }, [user]);
 
+  // Everything is fetched once and filtered here, so a category change keeps the same cards
+  // and the grid can re-flow between them instead of being replaced.
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const params = category !== "ALL" ? `?category=${category}` : "";
-        const res = await api.get(`/merch/products${params}`);
-        setProducts(res.data.data.products);
-        if (category === "ALL") {
-          const firsts = (res.data.data.products as Product[]).map((p) => p.images[0]).filter(Boolean);
-          setHeroImages((prev) => (prev.length ? prev : firsts));
-        }
+        const res = await api.get(`/merch/products`);
+        const all = res.data.data.products as Product[];
+        setProducts(all);
+        setHeroImages(all.map((p) => p.images[0]).filter(Boolean));
       } catch (err) {
         console.error("Failed to fetch products", err);
       } finally {
@@ -205,13 +204,14 @@ export default function StorePage() {
       }
     };
     fetchProducts();
-  }, [category]);
+  }, []);
 
   const showroomProps = useMemo(() => ({ images: heroImages }), [heroImages]);
 
   const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+    (category === "ALL" || p.category === category) && p.name.toLowerCase().includes(search.toLowerCase())
   );
+  const reduced = useReducedMotion();
 
   const addToCart = (product: Product, size: string) => {
     setCart((prev) => {
@@ -405,15 +405,19 @@ export default function StorePage() {
           </div>
         ) : (
           <ul className={`mt-10 grid grid-cols-1 gap-x-6 gap-y-14 sm:grid-cols-2 ${filtered.length >= 3 ? "lg:grid-cols-3" : "lg:max-w-5xl"}`}>
+            <AnimatePresence mode="popLayout" initial={false}>
             {filtered.map((product, index) => {
               // The first featured product leads, set wider; the rest follow in the grid.
               const lead = index === 0 && product.featured && filtered.length > 2;
               return (
                 <motion.li
                   key={product.id}
+                  // Animated filters (Vivant): cards that stay glide to their new place, the rest fade.
+                  layout={!reduced}
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(index, 8) * 0.04, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.2 } }}
+                  transition={{ delay: Math.min(index, 8) * 0.04, duration: 0.45, ease: [0.16, 1, 0.3, 1], layout: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }}
                   className={lead ? "sm:col-span-2" : ""}
                 >
                   <button type="button" onClick={() => openProduct(product)} className="group block w-full text-left focus-visible:outline-none">
@@ -439,6 +443,7 @@ export default function StorePage() {
                 </motion.li>
               );
             })}
+            </AnimatePresence>
           </ul>
         )}
       </div>
