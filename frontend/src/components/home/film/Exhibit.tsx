@@ -41,7 +41,7 @@ const RULES = [
 const WEAPONS = [
     { id: "eyes", kanji: "目", name: "Me", text: "The eyes. Head low, eyes high.", src: "stills/weapon-eyes.jpg", alt: "Close-up of a karateka's eyes under a lowered brow", at: [-0.31, -0.2] },
     { id: "fist", kanji: "正拳", name: "Seiken", text: "The fist. The first two knuckles, bare.", src: "stills/weapon-fist.jpg", alt: "A karate fist striking toward the camera", at: [0.31, -0.2] },
-    { id: "shin", kanji: "脛", name: "Sune", text: "The shin. Conditioned to kick and to block.", src: "stills/weapon-shin.jpg", alt: "A shin meeting a raised forearm in a kumite exchange", at: [-0.31, 0.22] },
+    { id: "shin", kanji: "脛", name: "Sune", text: "The shin. Conditioned to kick and to block.", src: "stills/weapon-shin.jpg", alt: "A shin kick checked by a raised shin in a kumite exchange", at: [-0.31, 0.22] },
     { id: "obi", kanji: "帯", name: "Obi", text: "The belt. Earned one grading at a time.", src: "stills/weapon-knot.jpg", alt: "The square knot of a worn black belt", at: [0.31, 0.22] },
 ] as const;
 

@@ -9,9 +9,9 @@ import { eyes, overlay } from "./films";
 
 // Where his eyes sit in the frame (source px), so the line can frame them at any crop.
 const EYE_LINE = [
-    { p: 0, y: 330 },
-    { p: 0.6, y: 330 },
-    { p: 1, y: 360 },
+    { p: 0, y: 451 },
+    { p: 0.6, y: 447 },
+    { p: 1, y: 444 },
 ];
 
 /** Positions the two halves of the line just above and just below the eyes. */
