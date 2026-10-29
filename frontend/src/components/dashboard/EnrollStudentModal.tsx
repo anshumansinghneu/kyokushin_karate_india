@@ -7,7 +7,7 @@ import {
     Search, ChevronRight, ChevronLeft, MapPin, Trophy, Shield, Tent, GraduationCap
 } from "lucide-react";
 import api from "@/lib/api";
-import { getEventStatus } from "@/lib/eventStatus";
+import { getEventStatus, isRegistrationClosed } from "@/lib/eventStatus";
 import { useToast } from "@/contexts/ToastContext";
 
 import { formatDateOnly } from '@/lib/dateOnly';
@@ -109,7 +109,7 @@ export default function EnrollStudentModal({ isOpen, onClose, onSuccess }: Enrol
             const now = new Date();
             const available = (res.data.data.events || []).filter((e: EventItem) =>
                 getEventStatus(e, now) !== "COMPLETED" &&
-                new Date(e.registrationDeadline) > now
+                !isRegistrationClosed(e.registrationDeadline, now)
             );
             setEvents(available);
         } catch {

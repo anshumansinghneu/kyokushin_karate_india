@@ -5,6 +5,8 @@ import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { PAYMENT_CONFIG, calculateTotal } from '../services/paymentService';
 import { signAccessToken, createRefreshToken } from '../utils/jwt';
+import { claimVoucher } from '../utils/claimVoucher';
+import { isRegistrationClosed } from '../utils/eventStatus';
 
 // Generate a unique 8-character alphanumeric voucher code
 const generateVoucherCode = (): string => {
@@ -325,14 +327,7 @@ export const redeemVoucherForRegistration = catchAsync(async (req: Request, res:
         });
 
         // Mark voucher as redeemed
-        await tx.cashVoucher.update({
-            where: { id: voucher.id },
-            data: {
-                isRedeemed: true,
-                redeemedBy: user.id,
-                redeemedAt: new Date(),
-            },
-        });
+        await claimVoucher(tx, voucher.id, user.id);
 
         return user.id;
     });
@@ -504,14 +499,7 @@ export const registerStudentOnBehalf = catchAsync(async (req: Request, res: Resp
         });
 
         // Mark voucher as redeemed
-        await tx.cashVoucher.update({
-            where: { id: voucher.id },
-            data: {
-                isRedeemed: true,
-                redeemedBy: user.id,
-                redeemedAt: new Date(),
-            },
-        });
+        await claimVoucher(tx, voucher.id, user.id);
 
         return user.id;
     });
@@ -603,7 +591,7 @@ export const redeemVoucherForEvent = catchAsync(async (req: Request, res: Respon
 
     // Redemption must not become a way around the registration deadline that
     // the normal registerForEvent path enforces.
-    if (event.registrationDeadline && new Date() > event.registrationDeadline) {
+    if (isRegistrationClosed(event.registrationDeadline)) {
         return next(new AppError('The registration deadline for this event has passed', 400));
     }
 
@@ -649,14 +637,7 @@ export const redeemVoucherForEvent = catchAsync(async (req: Request, res: Respon
         });
 
         // Mark voucher as redeemed
-        await tx.cashVoucher.update({
-            where: { id: voucher.id },
-            data: {
-                isRedeemed: true,
-                redeemedBy: currentUser.id,
-                redeemedAt: new Date(),
-            },
-        });
+        await claimVoucher(tx, voucher.id, currentUser.id);
 
         return registration;
     });
@@ -697,22 +678,19 @@ export const redeemVoucherForRenewal = catchAsync(async (req: Request, res: Resp
         return next(new AppError(`Voucher covers ₹${voucher.amount} but renewal costs ₹${totalAmount}`, 400));
     }
 
-    // Extend membership by 1 year from today
+    // Extend by one year from the current end date if the membership is still running,
+    // else from today. Renewing early (reminders start 30 days before expiry) used to
+    // restart the year from today and throw away the days already paid for.
     const now = new Date();
+    const currentEnd = currentUser.membershipEndDate ? new Date(currentUser.membershipEndDate) : null;
+    const extendFrom = currentEnd && currentEnd > now ? currentEnd : now;
     const newStartDate = now;
-    const newEndDate = new Date(now);
+    const newEndDate = new Date(extendFrom);
     newEndDate.setDate(newEndDate.getDate() + PAYMENT_CONFIG.MEMBERSHIP_DURATION_DAYS);
 
     await prisma.$transaction(async (tx) => {
         // Mark voucher as redeemed
-        await tx.cashVoucher.update({
-            where: { id: voucher.id },
-            data: {
-                isRedeemed: true,
-                redeemedBy: currentUser.id,
-                redeemedAt: new Date(),
-            },
-        });
+        await claimVoucher(tx, voucher.id, currentUser.id);
 
         // Create payment record
         await tx.payment.create({

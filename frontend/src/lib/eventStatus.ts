@@ -37,3 +37,14 @@ export function getEventStatus(event: EventLike, now: Date = new Date()): EventS
 // Convenience: an event is "past" only once it is fully COMPLETED.
 export const isPastEvent = (event: EventLike, now: Date = new Date()): boolean =>
     getEventStatus(event, now) === 'COMPLETED';
+
+/**
+ * Whether registration has closed: the whole deadline day counts (deadlines are
+ * date-only values stored as UTC midnight). Mirrors backend/src/utils/eventStatus.ts.
+ */
+export function isRegistrationClosed(deadline: Date | string | null | undefined, now: Date = new Date()): boolean {
+    if (!deadline) return false;
+    const endOfDeadlineDay = new Date(deadline);
+    endOfDeadlineDay.setUTCHours(23, 59, 59, 999);
+    return now > endOfDeadlineDay;
+}

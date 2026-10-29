@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getEventStatus, isEventFinished, resolveEventStatus } from './eventStatus';
+import { getEventStatus, isEventFinished, resolveEventStatus, isRegistrationClosed } from './eventStatus';
 
 const now = new Date('2026-07-03T12:00:00Z'); // 3 July 2026, midday UTC
 
@@ -50,5 +50,23 @@ describe('resolveEventStatus', () => {
 
     it('reports a genuinely future event as UPCOMING', () => {
         expect(resolveEventStatus({ status: 'UPCOMING', startDate: '2026-08-01' }, now)).toBe('UPCOMING');
+    });
+});
+
+describe('isRegistrationClosed', () => {
+    const deadline = new Date('2026-04-26T00:00:00.000Z'); // stored date-only
+
+    it('stays open all of the deadline day in India', () => {
+        // 05:31 and 23:00 IST on 26 April
+        expect(isRegistrationClosed(deadline, new Date('2026-04-26T00:01:00+05:30'))).toBe(false);
+        expect(isRegistrationClosed(deadline, new Date('2026-04-26T23:00:00+05:30'))).toBe(false);
+    });
+
+    it('closes after the deadline day', () => {
+        expect(isRegistrationClosed(deadline, new Date('2026-04-27T12:00:00+05:30'))).toBe(true);
+    });
+
+    it('treats a missing deadline as open', () => {
+        expect(isRegistrationClosed(null)).toBe(false);
     });
 });

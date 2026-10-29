@@ -35,6 +35,8 @@ export interface User {
         city: string;
         state: string;
     };
+    /** Dojos an instructor teaches at besides (or instead of) their home dojo. */
+    teachingDojos?: { id: string; name: string; city?: string }[];
     phone?: string;
     countryCode?: string;
     city?: string;

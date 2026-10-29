@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { nextStatus, daysInMonth, countPresent, AttendanceStatus } from "@/lib/attendanceGrid";
+import { DojoPicker, useManagedDojo } from "@/hooks/useManagedDojo";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -34,7 +35,7 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const dojoId = user?.dojoId;
+  const { dojoId, options: dojoOptions, choose: chooseDojo } = useManagedDojo();
   const dayList = Array.from({ length: daysInMonth(year, month) }, (_, i) => i + 1);
 
   useEffect(() => { if (!user) checkAuth(); /* eslint-disable-next-line */ }, []);
@@ -105,6 +106,7 @@ export default function AttendancePage() {
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-full">
         <h1 className="text-2xl font-bold tracking-tight mb-2">Attendance</h1>
+        <DojoPicker options={dojoOptions} value={dojoId} onChange={chooseDojo} />
         <p className="text-gray-400 mb-4">Click a cell to cycle Present → Absent → clear. Changes save automatically.</p>
 
         <div className="flex flex-wrap items-center gap-3 mb-4">

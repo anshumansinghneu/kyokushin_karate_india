@@ -272,6 +272,25 @@ const generateMembershipNumber = async (role: string) => {
     return `${prefix}${nextSeq.toString().padStart(pad, '0')}`;
 };
 
+/**
+ * Write a new membership number, retrying when another approval took the same one first.
+ * Each approval reads the highest number and adds one, so approving several members at
+ * once computed the same number and all but one failed on the unique index. The index
+ * stays the referee: on a clash, generate the next number and try again.
+ */
+async function withNewMembershipNumber<T>(role: string, write: (membershipNumber: string) => Promise<T>): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+        const membershipNumber = await generateMembershipNumber(role);
+        try {
+            return await write(membershipNumber);
+        } catch (err: any) {
+            const target = err?.meta?.target;
+            const isNumberClash = err?.code === 'P2002' && (!target || String(target).includes('membershipNumber'));
+            if (!isNumberClash || attempt >= 4) throw err;
+        }
+    }
+}
+
 export const approveUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.id;
     const currentUser = req.user;
@@ -301,24 +320,25 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
             });
         }
 
-        const membershipNumber = await generateMembershipNumber(userToApprove.role);
         const startDate = new Date();
         const endDate = new Date();
         endDate.setFullYear(endDate.getFullYear() + 1);
 
-        const updatedUser = await prisma.user.update({
-            where: { id: userId },
-            data: {
-                membershipStatus: 'ACTIVE',
-                membershipNumber,
-                membershipStartDate: startDate,
-                membershipEndDate: endDate,
-                isInstructorApproved: true,
-                instructorApprovedAt: new Date(),
-                approvedBy: currentUser.id,
-                approvedAt: new Date(),
-            },
-        });
+        const updatedUser = await withNewMembershipNumber(userToApprove.role, (membershipNumber) =>
+            prisma.user.update({
+                where: { id: userId },
+                data: {
+                    membershipStatus: 'ACTIVE',
+                    membershipNumber,
+                    membershipStartDate: startDate,
+                    membershipEndDate: endDate,
+                    isInstructorApproved: true,
+                    instructorApprovedAt: new Date(),
+                    approvedBy: currentUser.id,
+                    approvedAt: new Date(),
+                },
+            }),
+        );
 
         // Notify the student their membership is active (non-blocking)
         sendMembershipActiveEmail(updatedUser.email, updatedUser.name, updatedUser.membershipNumber!)
@@ -345,29 +365,13 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
             });
         }
 
-        // Use serializable transaction to prevent race conditions on membership number
-        const updatedUser = await prisma.$transaction(async (tx) => {
-            const membershipNumber = await (async () => {
-                const { prefix, pad } = getRolePrefix(userToApprove.role);
-                const lastUser = await tx.user.findFirst({
-                    where: { membershipNumber: { startsWith: prefix } },
-                    orderBy: { membershipNumber: 'desc' },
-                    select: { membershipNumber: true },
-                });
-                let nextSeq = 1;
-                if (lastUser?.membershipNumber) {
-                    const seqStr = lastUser.membershipNumber.replace(prefix, '');
-                    const parsed = parseInt(seqStr, 10);
-                    if (!isNaN(parsed)) nextSeq = parsed + 1;
-                }
-                return `${prefix}${nextSeq.toString().padStart(pad, '0')}`;
-            })();
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + 1);
+        const approvingInstructor = userToApprove.role === 'INSTRUCTOR';
 
-            const startDate = new Date();
-            const endDate = new Date();
-            endDate.setFullYear(endDate.getFullYear() + 1);
-
-            return tx.user.update({
+        const updatedUser = await withNewMembershipNumber(userToApprove.role, (membershipNumber) =>
+            prisma.user.update({
                 where: { id: userId },
                 data: {
                     membershipStatus: 'ACTIVE',
@@ -376,9 +380,12 @@ export const approveUser = catchAsync(async (req: Request, res: Response, next: 
                     membershipEndDate: endDate,
                     approvedBy: currentUser.id,
                     approvedAt: new Date(),
+                    // An instructor the admin approves is an approved instructor: without this
+                    // flag they stayed off the public instructors page.
+                    ...(approvingInstructor ? { isInstructorApproved: true, instructorApprovedAt: new Date() } : {}),
                 },
-            });
-        });
+            }),
+        );
 
         // Send Email Notification (non-blocking)
         sendMembershipActiveEmail(updatedUser.email, updatedUser.name, updatedUser.membershipNumber!)

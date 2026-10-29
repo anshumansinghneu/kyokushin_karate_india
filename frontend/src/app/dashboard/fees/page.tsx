@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { renderFeePreview, DEFAULT_FEE_REMINDER_TEMPLATE } from "@/lib/feePreview";
+import { DojoPicker, useManagedDojo } from "@/hooks/useManagedDojo";
 
 type FeeStatus = "UNPAID" | "PARTIAL" | "PAID" | "WAIVED";
 
@@ -56,7 +57,7 @@ export default function InstructorFeesPage() {
   const [templateInput, setTemplateInput] = useState<string>(DEFAULT_FEE_REMINDER_TEMPLATE);
   const [savingSettings, setSavingSettings] = useState(false);
 
-  const dojoId = user?.dojoId;
+  const { dojo: managedDojo, dojoId, options: dojoOptions, choose: chooseDojo } = useManagedDojo();
 
   useEffect(() => { if (!user) checkAuth(); /* eslint-disable-next-line */ }, []);
   useEffect(() => {
@@ -176,6 +177,7 @@ export default function InstructorFeesPage() {
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-2xl font-bold mb-2">Monthly Fees</h1>
+        <DojoPicker options={dojoOptions} value={dojoId} onChange={chooseDojo} />
         <p className="text-gray-300 mb-4">
           {monthlyFee != null ? `Monthly fee: ₹${monthlyFee}` : "No monthly fee set for this dojo yet."}
         </p>
@@ -201,7 +203,7 @@ export default function InstructorFeesPage() {
             <div className="text-xs text-gray-400 mb-1 uppercase tracking-wider">Preview</div>
             {renderFeePreview(templateInput, {
               name: "Riku", amount: feeInput || "800", month: MONTHS[month - 1], year,
-              dojoName: user?.dojo?.name || "your dojo", dueDate: `${dueDayInput} ${MONTHS[month - 1]} ${year}`,
+              dojoName: managedDojo?.name || "your dojo", dueDate: `${dueDayInput} ${MONTHS[month - 1]} ${year}`,
             })}
           </div>
           <button onClick={saveSettings} disabled={savingSettings}

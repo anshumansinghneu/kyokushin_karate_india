@@ -21,6 +21,16 @@ export const globalErrorHandler = (
     res: Response,
     next: NextFunction
 ) => {
+    // Upload limits (multer): the visitor's file was refused, not a server fault.
+    if (err?.name === 'MulterError') {
+        const messages: Record<string, string> = {
+            LIMIT_FILE_SIZE: 'That file is too large.',
+            LIMIT_FILE_COUNT: 'Too many files in one upload (20 at most).',
+            LIMIT_UNEXPECTED_FILE: 'Unexpected file field, or too many files in one upload.',
+        };
+        err = new AppError(messages[err.code] ?? 'The upload was not accepted.', 400);
+    }
+
     // A bad or expired JWT anywhere is "not logged in", never a server error.
     if (err?.name === 'JsonWebTokenError' || err?.name === 'TokenExpiredError' || err?.name === 'NotBeforeError') {
         err = new AppError('Your session has expired. Please log in again.', 401);

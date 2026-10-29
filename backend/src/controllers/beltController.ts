@@ -4,6 +4,7 @@ import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { sendBeltPromotionEmail } from '../services/emailService';
 import { buildInternationalRecord } from '../utils/appearances';
+import { teachesAt } from '../utils/teachesAt';
 
 // ─── Public Belt / Membership Verification ────────────────────────────
 export const publicVerify = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -217,7 +218,13 @@ export const getBeltHistory = catchAsync(async (req: Request, res: Response, nex
     if (currentUser.role === 'STUDENT' && currentUser.id !== userId) {
         return next(new AppError('Not authorized to view this history', 403));
     }
-    if (currentUser.role === 'INSTRUCTOR' && student.dojoId !== currentUser.dojoId) {
+    // An instructor sees the history of their own students, or of students at a dojo they
+    // teach at (not only their home dojo).
+    if (
+        currentUser.role === 'INSTRUCTOR' &&
+        student.primaryInstructorId !== currentUser.id &&
+        !(await teachesAt(currentUser, student.dojoId))
+    ) {
         return next(new AppError('Not authorized to view this history', 403));
     }
 

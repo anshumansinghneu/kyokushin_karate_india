@@ -48,3 +48,15 @@ export function resolveEventStatus(
     if (event.status === 'CANCELLED') return 'CANCELLED';
     return getEventStatus(event, now);
 }
+
+/**
+ * Whether registration has closed. The deadline is a date-only value stored as UTC
+ * midnight; compared with the raw current time it closed at 05:30 IST on the
+ * advertised last day. The whole deadline day counts, as for event status above.
+ */
+export function isRegistrationClosed(deadline: Date | string | null | undefined, now: Date = new Date()): boolean {
+    if (!deadline) return false;
+    const endOfDeadlineDay = new Date(deadline);
+    endOfDeadlineDay.setUTCHours(23, 59, 59, 999);
+    return now > endOfDeadlineDay;
+}

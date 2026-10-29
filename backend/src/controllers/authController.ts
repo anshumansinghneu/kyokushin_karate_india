@@ -246,6 +246,8 @@ export const getMe = catchAsync(async (req: Request, res: Response, next: NextFu
         where: { id: userId },
         include: {
             dojo: true,
+            // The dojos an instructor teaches at, for the fees and attendance dojo picker.
+            teachingDojos: { select: { id: true, name: true, city: true } },
             beltHistory: {
                 orderBy: { promotionDate: 'desc' }
             },

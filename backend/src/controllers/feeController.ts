@@ -8,6 +8,7 @@ import { renderFeeReceiptTemplate, DEFAULT_FEE_RECEIPT_TEMPLATE } from '../utils
 import { monthName } from '../utils/feeReminder';
 import { sendFeeReceiptEmail } from '../services/emailService';
 import { computeYearLedger, LedgerFeeRecord } from '../utils/feeLedger';
+import { teachesAt } from '../utils/teachesAt';
 
 // GET /api/fees/dojo/:dojoId?month=&year=
 export const getDojoFees = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -173,8 +174,8 @@ export const updateDojoFeeSettings = catchAsync(async (req: Request, res: Respon
   const { dojoId, monthlyFee, feeDueDay, feeReminderTemplate } = req.body;
   if (!dojoId) return next(new AppError('dojoId is required', 400));
 
-  if (currentUser.role !== 'ADMIN' && currentUser.dojoId !== dojoId) {
-    return next(new AppError('You can only update fee settings for your own dojo', 403));
+  if (currentUser.role !== 'ADMIN' && !(await teachesAt(currentUser, dojoId))) {
+    return next(new AppError('You can only update fee settings for a dojo you teach at', 403));
   }
 
   const data: any = {};

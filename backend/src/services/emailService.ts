@@ -112,12 +112,20 @@ function getSiteUrl() {
 }
 
 // ── HTML Email Wrapper ──────────────────────────────────────
+/**
+ * Escape a value for an email's HTML. Names, event names, instructors' fee messages and
+ * announcements are typed by people; unescaped, a sign-up could put a link in its name
+ * and have it arrive inside an official KKFI email.
+ */
+const escapeHtml = (v: unknown) =>
+    String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+
 function wrapHtml(title: string, body: string): string {
     const SITE_URL = getSiteUrl();
     return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title}</title></head>
+<title>${escapeHtml(title)}</title></head>
 <body style="margin:0;padding:0;background:#111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#111;padding:32px 16px;">
 <tr><td align="center">
@@ -282,7 +290,7 @@ export async function sendTestEmail(to: string): Promise<{ success: boolean; mes
 export const sendRegistrationEmail = async (email: string, name: string) => {
     const subject = 'Welcome to the Kyokushin Karate Foundation of India – Osu! 🥋';
     const html = wrapHtml(subject, `
-<h2 style="color:#fff;margin:0 0 8px;font-size:22px;font-weight:800;">Osu, ${name}!</h2>
+<h2 style="color:#fff;margin:0 0 8px;font-size:22px;font-weight:800;">Osu, ${escapeHtml(name)}!</h2>
 <p style="color:#fbbf24;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:2px;margin:0 0 20px;">Welcome to the KKFI Family</p>
 
 <p>Thank you for registering with the <strong style="color:#fff;">Kyokushin Karate Foundation of India (KKFI)</strong>. We are honoured that you have chosen to walk the path of the strongest karate.</p>
@@ -296,8 +304,8 @@ export const sendRegistrationEmail = async (email: string, name: string) => {
   <td style="vertical-align:top;width:100%;">
     <p style="margin:0 0 4px;color:#dc2626;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:3px;">Meet Our Founder</p>
     <h3 style="margin:0 0 4px;color:#fff;font-size:18px;font-weight:800;">Shihan Vasant Kumar Singh</h3>
-    <p style="margin:0 0 12px;color:#888;font-size:12px;font-style:italic;">Country Director — IKO World Kyokushin Kaikan</p>
-    <p style="margin:0;color:#ccc;font-size:13px;line-height:1.7;">Shihan Vasant Kumar Singh began his Kyokushin Karate journey in <strong style="color:#fff;">1987</strong>. Driven by an unwavering passion for the art, he founded the <strong style="color:#fff;">Kyokushin Karate Foundation of India in 2013</strong> to bring world-class Kyokushin training to every corner of the country. Today, the foundation has grown to include <strong style="color:#dc2626;">100 + dojos</strong> across India, nurturing a new generation of disciplined and strong-spirited karateka.</p>
+    <p style="margin:0 0 12px;color:#888;font-size:12px;font-style:italic;">Country Director, World Kyokushin Kaikan India</p>
+    <p style="margin:0;color:#ccc;font-size:13px;line-height:1.7;">Shihan Vasant Kumar Singh founded the <strong style="color:#fff;">Kyokushin Karate Foundation of India in 2013</strong> and leads it as the national home of full-contact Kyokushin, with dojos across India.</p>
   </td>
   </tr>
   </table>
@@ -367,7 +375,7 @@ export const sendNewApplicantEmail = async (instructorEmail: string, studentName
     const subject = `New Student Application: ${studentName}`;
     const html = wrapHtml(subject, `
 <h2 style="color:#fff;margin:0 0 16px;font-size:20px;">New Student Application</h2>
-<p>A new student, <strong style="color:#dc2626;">${studentName}</strong>, has registered under your Dojo.</p>
+<p>A new student, <strong style="color:#dc2626;">${escapeHtml(studentName)}</strong>, has registered under your Dojo.</p>
 <p>Please review and approve their application in the management portal.</p>
 ${btn('Review Applications', SITE_URL + '/management')}
 <p style="color:#888;font-size:13px;">Osu!</p>
@@ -381,7 +389,7 @@ export const sendInstructorApprovalEmail = async (adminEmail: string, studentNam
     const subject = `Student Approved: ${studentName}`;
     const html = wrapHtml(subject, `
 <h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Instructor Approval</h2>
-<p>Student <strong style="color:#dc2626;">${studentName}</strong> has been approved by Instructor <strong>${instructorName}</strong>.</p>
+<p>Student <strong style="color:#dc2626;">${escapeHtml(studentName)}</strong> has been approved by Instructor <strong>${escapeHtml(instructorName)}</strong>.</p>
 <p>They are now waiting for your final Admin approval to become <span style="color:#22c55e;font-weight:700;">ACTIVE</span>.</p>
 ${btn('Review in Management', SITE_URL + '/management')}
 `);
@@ -395,7 +403,7 @@ export const sendMembershipActiveEmail = async (email: string, name: string, mem
     const html = wrapHtml(subject, `
 <div style="text-align:center;margin-bottom:24px;">
   <div style="display:inline-block;background:#14532d;border:2px solid #22c55e;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:28px;margin-bottom:8px;">✅</div>
-  <h2 style="color:#fff;margin:8px 0 4px;font-size:24px;font-weight:800;">Congratulations, ${name}!</h2>
+  <h2 style="color:#fff;margin:8px 0 4px;font-size:24px;font-weight:800;">Congratulations, ${escapeHtml(name)}!</h2>
   <p style="color:#22c55e;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:0;">Membership Approved</p>
 </div>
 
@@ -418,13 +426,13 @@ export const sendMembershipActiveEmail = async (email: string, name: string, mem
   <tr>
   <td>
     <p style="margin:0;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:2px;">Member Name</p>
-    <p style="margin:4px 0 16px;color:#fff;font-size:18px;font-weight:800;">${name}</p>
+    <p style="margin:4px 0 16px;color:#fff;font-size:18px;font-weight:800;">${escapeHtml(name)}</p>
   </td>
   </tr>
   <tr>
   <td>
     <p style="margin:0;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:2px;">Membership ID</p>
-    <p style="margin:4px 0 0;color:#dc2626;font-size:28px;font-weight:900;letter-spacing:3px;font-family:monospace;">${membershipNumber}</p>
+    <p style="margin:4px 0 0;color:#dc2626;font-size:28px;font-weight:900;letter-spacing:3px;font-family:monospace;">${escapeHtml(membershipNumber)}</p>
   </td>
   </tr>
   </table>
@@ -479,7 +487,7 @@ export const sendRejectionEmail = async (email: string, name: string) => {
     const subject = 'Registration Update – KKFI';
     const html = wrapHtml(subject, `
 <h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Registration Update</h2>
-<p>Osu ${name},</p>
+<p>Osu ${escapeHtml(name)},</p>
 <p>We regret to inform you that your registration application has been <span style="color:#ef4444;font-weight:700;">declined</span> at this time.</p>
 <p>Please contact your Dojo instructor for more details or reach out to us directly.</p>
 ${btn('Contact Us', SITE_URL + '/contact')}
@@ -493,12 +501,12 @@ export const sendBeltPromotionEmail = async (email: string, name: string, newBel
     const SITE_URL = getSiteUrl();
     const subject = `🥋 Belt Promotion: ${newBelt}!`;
     const html = wrapHtml(subject, `
-<h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Congratulations, ${name}! 🥋</h2>
+<h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Congratulations, ${escapeHtml(name)}! 🥋</h2>
 <p>You have been promoted to:</p>
 <table style="margin:20px 0;background:#222;border-radius:12px;padding:20px;width:100%;">
 <tr><td style="text-align:center;">
-  <p style="margin:0;color:#fbbf24;font-size:28px;font-weight:900;">${newBelt}</p>
-  <p style="margin:8px 0 0;color:#888;font-size:12px;">Promoted by ${promoterName}</p>
+  <p style="margin:0;color:#fbbf24;font-size:28px;font-weight:900;">${escapeHtml(newBelt)}</p>
+  <p style="margin:8px 0 0;color:#888;font-size:12px;">Promoted by ${escapeHtml(promoterName)}</p>
 </td></tr>
 </table>
 <p>This is a proud achievement. Keep pushing your limits!</p>
@@ -514,11 +522,11 @@ export const sendEventRegistrationEmail = async (email: string, name: string, ev
     const subject = `Event Registration Confirmed: ${eventName}`;
     const html = wrapHtml(subject, `
 <h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Registration Confirmed!</h2>
-<p>Osu ${name},</p>
+<p>Osu ${escapeHtml(name)},</p>
 <p>You have successfully registered for:</p>
 <table style="margin:20px 0;background:#222;border-radius:12px;padding:20px;width:100%;">
 <tr><td style="text-align:center;">
-  <p style="margin:0;color:#dc2626;font-size:20px;font-weight:800;">${eventName}</p>
+  <p style="margin:0;color:#dc2626;font-size:20px;font-weight:800;">${escapeHtml(eventName)}</p>
 </td></tr>
 </table>
 <p>Check the event page for schedules and additional details.</p>
@@ -534,12 +542,12 @@ export const sendEventReminderEmail = async (email: string, name: string, eventN
     const subject = `⏰ Reminder: ${eventName} on ${date}`;
     const html = wrapHtml(subject, `
 <h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Event Reminder</h2>
-<p>Osu ${name},</p>
+<p>Osu ${escapeHtml(name)},</p>
 <p>This is a friendly reminder about the upcoming event:</p>
 <table style="margin:20px 0;background:#222;border-radius:12px;padding:20px;width:100%;">
 <tr><td style="text-align:center;">
-  <p style="margin:0;color:#dc2626;font-size:20px;font-weight:800;">${eventName}</p>
-  <p style="margin:8px 0 0;color:#fbbf24;font-size:16px;font-weight:600;">${date}</p>
+  <p style="margin:0;color:#dc2626;font-size:20px;font-weight:800;">${escapeHtml(eventName)}</p>
+  <p style="margin:8px 0 0;color:#fbbf24;font-size:16px;font-weight:600;">${escapeHtml(date)}</p>
 </td></tr>
 </table>
 <p>Prepare well and arrive on time.</p>
@@ -562,8 +570,8 @@ export const sendBulkAnnouncementEmail = async (
     for (const r of recipients) {
         const subject = announcementSubject;
         const html = wrapHtml(subject, `
-<h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Osu, ${r.name}!</h2>
-<div style="white-space:pre-line;">${announcementBody}</div>
+<h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Osu, ${escapeHtml(r.name)}!</h2>
+<div style="white-space:pre-line;">${escapeHtml(announcementBody)}</div>
 ${btn('Visit KKFI', SITE_URL)}
 <p style="color:#888;font-size:13px;">Osu!</p>
 `);
@@ -595,7 +603,7 @@ export const sendAdminCreatedUserEmail = async (
     const html = wrapHtml(subject, `
 <div style="text-align:center;margin-bottom:24px;">
   <div style="display:inline-block;background:#14532d;border:2px solid #22c55e;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:28px;margin-bottom:8px;">✅</div>
-  <h2 style="color:#fff;margin:8px 0 4px;font-size:22px;font-weight:800;">Welcome, ${name}!</h2>
+  <h2 style="color:#fff;margin:8px 0 4px;font-size:22px;font-weight:800;">Welcome, ${escapeHtml(name)}!</h2>
   <p style="color:#22c55e;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:0;">Account Created Successfully</p>
 </div>
 
@@ -611,19 +619,19 @@ export const sendAdminCreatedUserEmail = async (
     <tr>
       <td style="padding:8px 0;">
         <p style="margin:0;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:2px;">Email</p>
-        <p style="margin:4px 0 0;color:#fff;font-size:16px;font-weight:700;font-family:monospace;">${email}</p>
+        <p style="margin:4px 0 0;color:#fff;font-size:16px;font-weight:700;font-family:monospace;">${escapeHtml(email)}</p>
       </td>
     </tr>
     <tr>
       <td style="padding:8px 0;">
         <p style="margin:0;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:2px;">Password</p>
-        <p style="margin:4px 0 0;color:#fbbf24;font-size:16px;font-weight:700;font-family:monospace;">${password}</p>
+        <p style="margin:4px 0 0;color:#fbbf24;font-size:16px;font-weight:700;font-family:monospace;">${escapeHtml(password)}</p>
       </td>
     </tr>
     <tr>
       <td style="padding:8px 0;">
         <p style="margin:0;color:#888;font-size:11px;text-transform:uppercase;letter-spacing:2px;">Membership ID</p>
-        <p style="margin:4px 0 0;color:#22c55e;font-size:16px;font-weight:700;font-family:monospace;">${membershipNumber}</p>
+        <p style="margin:4px 0 0;color:#22c55e;font-size:16px;font-weight:700;font-family:monospace;">${escapeHtml(membershipNumber)}</p>
       </td>
     </tr>
   </table>
@@ -654,7 +662,7 @@ export const sendPasswordResetEmail = async (email: string, name: string, resetT
     const subject = 'Password Reset – KKFI';
     const html = wrapHtml(subject, `
 <h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Password Reset</h2>
-<p>Osu ${name},</p>
+<p>Osu ${escapeHtml(name)},</p>
 <p>You requested a password reset for your KKFI account. Click below to set a new password:</p>
 ${btn('Reset Password', resetUrl)}
 <p style="color:#888;font-size:13px;">This link expires in <strong>1 hour</strong>. If you didn't request this, you can safely ignore this email.</p>
@@ -678,13 +686,13 @@ export const sendMembershipRenewalEmail = async (
     const subject = `${urgency}: Your KKFI Membership expires ${daysLeft === 0 ? 'today' : `in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`}!`;
     const html = wrapHtml(subject, `
 <h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Membership Renewal</h2>
-<p>Osu ${name},</p>
+<p>Osu ${escapeHtml(name)},</p>
 <p>Your KKFI membership is ${daysLeft === 0 ? '<strong style="color:#dc2626;">expiring today</strong>' : `expiring in <strong style="color:${urgencyColor};">${daysLeft} day${daysLeft > 1 ? 's' : ''}</strong>`}.</p>
 
 <table style="margin:20px 0;background:#222;border-radius:12px;padding:20px;width:100%;text-align:center;">
 <tr><td>
   <p style="margin:0;color:#888;font-size:12px;">EXPIRY DATE</p>
-  <p style="margin:8px 0 0;color:${urgencyColor};font-size:24px;font-weight:800;">${expiryDate}</p>
+  <p style="margin:8px 0 0;color:${urgencyColor};font-size:24px;font-weight:800;">${escapeHtml(expiryDate)}</p>
 </td></tr>
 </table>
 
@@ -704,7 +712,7 @@ export const sendFeeReminderEmail = async (email: string, name: string, message:
     const subject = '📬 KKFI Training Fee Reminder';
     const html = wrapHtml(subject, `
 <h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Training Fee Reminder</h2>
-<p style="white-space:pre-line;">${message}</p>
+<p style="white-space:pre-line;">${escapeHtml(message)}</p>
 ${btn('View My Fees', SITE_URL + '/dashboard/my-fees')}
 <p style="color:#888;font-size:13px;">If you have already paid, please ignore this message. Osu!</p>
 `);
@@ -717,7 +725,7 @@ export const sendFeeReceiptEmail = async (email: string, name: string, message: 
     const subject = '✅ KKFI Training Fee Receipt';
     const html = wrapHtml(subject, `
 <h2 style="color:#fff;margin:0 0 16px;font-size:20px;">Payment Received</h2>
-<p style="white-space:pre-line;">${message}</p>
+<p style="white-space:pre-line;">${escapeHtml(message)}</p>
 ${btn('View My Fees', SITE_URL + '/dashboard/my-fees')}
 <p style="color:#888;font-size:13px;">This is a confirmation of a fee payment recorded by your instructor. Osu!</p>
 `);
@@ -754,7 +762,7 @@ export const sendOrderConfirmationEmail = async (
   <p style="color:#22c55e;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:0;">Payment Successful</p>
 </div>
 
-<p>Hi <strong style="color:#fff;">${name}</strong>, your KKFI Store order has been confirmed and is being processed.</p>
+<p>Hi <strong style="color:#fff;">${escapeHtml(name)}</strong>, your KKFI Store order has been confirmed and is being processed.</p>
 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:#1f1f1f;border-radius:12px;border:1px solid #333;overflow:hidden;">
 <tr><td style="padding:16px 20px;border-bottom:1px solid #333;">
@@ -862,8 +870,6 @@ ${outcome.errors.length ? `
 };
 
 // ── Public contact form ─────────────────────────────────────
-const escapeHtml = (v: string) =>
-    v.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
 
 /**
  * Where contact-form messages land. The address printed on the site

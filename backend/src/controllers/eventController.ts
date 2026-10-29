@@ -3,8 +3,9 @@ import prisma from '../prisma';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
 import { sendEventRegistrationEmail } from '../services/emailService';
-import { resolveEventStatus, isEventFinished } from '../utils/eventStatus';
+import { resolveEventStatus, isEventFinished, isRegistrationClosed } from '../utils/eventStatus';
 import { parseEventDates, parseOptionalDateField } from '../utils/parseDateField';
+import { claimVoucher } from '../utils/claimVoucher';
 
 export const getAllEvents = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const page = parseInt(req.query.page as string) || 1;
@@ -181,7 +182,7 @@ export const registerForEvent = catchAsync(async (req: Request, res: Response, n
     }
 
     // Check deadline
-    if (new Date() > event.registrationDeadline) {
+    if (isRegistrationClosed(event.registrationDeadline)) {
         return next(new AppError('Registration deadline has passed', 400));
     }
 
@@ -409,7 +410,7 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
 
     if (event.status === 'CANCELLED') return next(new AppError('This event has been cancelled', 400));
     if (isEventFinished(event)) return next(new AppError('This event has already been completed', 400));
-    if (new Date() > event.registrationDeadline) {
+    if (isRegistrationClosed(event.registrationDeadline)) {
         return next(new AppError('Registration deadline has passed', 400));
     }
 
@@ -515,14 +516,7 @@ export const enrollStudentInEvent = catchAsync(async (req: Request, res: Respons
                 },
             });
 
-            await tx.cashVoucher.update({
-                where: { id: voucher.id },
-                data: {
-                    isRedeemed: true,
-                    redeemedBy: studentId,
-                    redeemedAt: new Date(),
-                },
-            });
+            await claimVoucher(tx, voucher.id, studentId);
 
             return { registration, payment };
         });
