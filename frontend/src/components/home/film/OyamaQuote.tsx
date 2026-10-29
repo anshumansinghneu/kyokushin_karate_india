@@ -1,6 +1,7 @@
 import { body, section, wrap } from "./ui";
+import OyamaFilm from "./OyamaFilm";
 
-/** The founder and his words. Static: a photograph and a sentence, nothing moves. */
+/** The founder and his words: a photograph and a sentence, then his archive footage on request. */
 export default function OyamaQuote({ src }: { src?: string }) {
     return (
         <section aria-label="Sosai Masutatsu Oyama" className={section}>
@@ -26,6 +27,9 @@ export default function OyamaQuote({ src }: { src?: string }) {
                     </p>
                     <footer className="mt-6 font-gothic font-bold text-canvas">Sosai Masutatsu Oyama, founder of Kyokushin</footer>
                 </blockquote>
+            </div>
+            <div className={wrap}>
+                <OyamaFilm />
             </div>
         </section>
     );
