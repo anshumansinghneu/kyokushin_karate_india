@@ -11,28 +11,19 @@ export const getAllPosts = catchAsync(async (req: Request, res: Response, next: 
     if (type) {
         where.type = type;
     }
-    if (status) {
-        if (status !== 'ALL') {
-            where.status = status;
-        }
-    } else {
-        // Default: only show published posts for public API
-        // Admin API should explicitly request status=ALL or specific status
-        where.status = 'PUBLISHED';
-    }
-
-    // Allow overriding default if explicitly requested (e.g. by Admin)
-    if (req.query.status === 'ALL') {
-        delete where.status;
-    }
-
     if (req.query.authorId) {
         where.authorId = req.query.authorId;
-        // If filtering by specific author, allow seeing all statuses (e.g. for that author's dashboard)
-        // unless status is explicitly specified
-        if (!status) {
-            delete where.status;
-        }
+    }
+
+    // Drafts and pending posts are for the admin, and for an author's own posts only.
+    // Everyone else sees published posts, whatever they ask for.
+    const isAdmin = req.user?.role === 'ADMIN';
+    const ownPosts = !!req.user && req.query.authorId === req.user.id;
+    if (isAdmin || ownPosts) {
+        if (status && status !== 'ALL') where.status = status;
+        else if (!status && !ownPosts) where.status = 'PUBLISHED';
+    } else {
+        where.status = 'PUBLISHED';
     }
 
     const posts = await prisma.post.findMany({
@@ -86,7 +77,8 @@ export const getPostBySlug = catchAsync(async (req: Request, res: Response, next
         }
     });
 
-    if (!post) {
+    const canSeeDraft = req.user?.role === 'ADMIN' || (!!req.user && req.user.id === post?.authorId);
+    if (!post || (post.status !== 'PUBLISHED' && !canSeeDraft)) {
         return next(new AppError('No post found with that slug', 404));
     }
 

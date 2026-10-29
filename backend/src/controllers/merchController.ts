@@ -117,8 +117,16 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
     const userId = (req as any).user.id;
     const { items, shippingName, shippingPhone, shippingAddress, shippingCity, shippingState, shippingPincode, notes } = req.body;
 
-    if (!items || items.length === 0) {
+    if (!Array.isArray(items) || items.length === 0) {
         return next(new AppError('Order must have at least one item', 400));
+    }
+    // A negative or fractional quantity would lower the total and add stock back.
+    for (const item of items) {
+        const q = item.quantity ?? 1;
+        if (!Number.isInteger(q) || q < 1 || q > 50) {
+            return next(new AppError('Each item quantity must be a whole number from 1 to 50', 400));
+        }
+        item.quantity = q;
     }
 
     // Validate products and calculate total
@@ -130,13 +138,13 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
         if (!product) return next(new AppError(`Product ${item.productId} not found`, 404));
         if (!product.inStock) return next(new AppError(`${product.name} is out of stock`, 400));
 
-        const itemTotal = product.price * (item.quantity || 1);
+        const itemTotal = product.price * item.quantity;
         totalAmount += itemTotal;
 
         orderItems.push({
             productId: item.productId,
             size: item.size,
-            quantity: item.quantity || 1,
+            quantity: item.quantity,
             price: product.price,
         });
     }

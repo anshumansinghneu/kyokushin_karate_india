@@ -4,6 +4,15 @@ import { sendMembershipRenewalEmail } from './emailService';
 // Days before expiry to send reminders
 const REMINDER_DAYS = [30, 15, 7, 3, 1, 0];
 
+// The check runs at boot as well as daily, and Render restarts often, so each reminder
+// is recorded as a notification and not sent again inside this window.
+const RESEND_GUARD_MS = 20 * 60 * 60 * 1000;
+
+export const renewalReminderTitle = (daysLeft: number) =>
+    daysLeft === 0
+        ? 'Your membership expires today'
+        : `Your membership expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
+
 /**
  * Check all active members and send renewal reminders
  * for memberships expiring within the configured windows.
@@ -44,6 +53,13 @@ export async function sendRenewalReminders(): Promise<{
 
         // Only send on exact reminder days
         if (REMINDER_DAYS.includes(daysLeft)) {
+            const title = renewalReminderTitle(daysLeft);
+            const alreadySent = await prisma.notification.findFirst({
+                where: { userId: member.id, type: 'GENERAL', title, createdAt: { gte: new Date(now.getTime() - RESEND_GUARD_MS) } },
+                select: { id: true },
+            });
+            if (alreadySent) continue;
+
             try {
                 const expiryDateStr = endDate.toLocaleDateString('en-IN', {
                     day: 'numeric',
@@ -57,6 +73,17 @@ export async function sendRenewalReminders(): Promise<{
                     daysLeft,
                     expiryDateStr
                 );
+
+                await prisma.notification.create({
+                    data: {
+                        userId: member.id,
+                        type: 'GENERAL',
+                        title,
+                        message: `Renew before ${expiryDateStr} to keep your membership active.`,
+                        emailSent: true,
+                        emailSentAt: new Date(),
+                    },
+                });
 
                 console.log(`[RENEWAL] Sent ${daysLeft}-day reminder to ${member.email}`);
                 result.reminders++;

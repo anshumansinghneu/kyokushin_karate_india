@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { AppError } from '../utils/errorHandler';
 import { catchAsync } from '../utils/catchAsync';
+import { revokeAllUserTokens } from '../utils/jwt';
 import { sendMembershipActiveEmail, sendRejectionEmail, sendRegistrationEmail, sendAdminCreatedUserEmail } from '../services/emailService';
 
 export const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -477,11 +478,12 @@ export const updateMe = catchAsync(async (req: Request, res: Response, next: Nex
         where: { id: currentUser.id },
         data: filteredBody,
     });
+    const { passwordHash: _ph, ...safeUser } = updatedUser;
 
     res.status(200).json({
         status: 'success',
         data: {
-            user: updatedUser,
+            user: safeUser,
         },
     });
 });
@@ -988,5 +990,7 @@ export const changePassword = catchAsync(async (req: Request, res: Response, nex
     }
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({ where: { id: user.id }, data: { passwordHash: hashedPassword } });
+    // Anyone holding an old session (a lost phone, a leaked password) is signed out.
+    await revokeAllUserTokens(user.id, typeof req.body.refreshToken === 'string' ? req.body.refreshToken : undefined);
     res.status(200).json({ status: 'success', message: 'Password updated successfully' });
 });

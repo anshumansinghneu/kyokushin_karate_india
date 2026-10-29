@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import { getRefreshToken } from "@/lib/tokenStorage";
 import InternationalHonours from "@/components/InternationalHonours";
 import { EMPTY_INTERNATIONAL, readInternational, type InternationalRecord } from "@/lib/international";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,7 @@ function ChangePasswordForm() {
             await api.post("/users/change-password", {
                 currentPassword,
                 newPassword,
+                refreshToken: getRefreshToken(), // keep this session; other devices are signed out
             });
             setSuccess("Password changed successfully.");
             setCurrentPassword("");

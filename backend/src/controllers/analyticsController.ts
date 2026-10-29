@@ -9,7 +9,7 @@ import { catchAsync } from '../utils/catchAsync';
 export const recordVisit = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
     const { fingerprint, path, referrer } = req.body;
 
-    if (!fingerprint) {
+    if (!fingerprint || typeof fingerprint !== 'string') {
         return res.status(400).json({ status: 'fail', message: 'fingerprint is required' });
     }
 
@@ -49,14 +49,14 @@ export const recordVisit = catchAsync(async (req: Request, res: Response, _next:
 
     await prisma.siteVisit.create({
         data: {
-            fingerprint,
+            fingerprint: fingerprint.slice(0, 128),
             ip: ip || null,
             country,
             city,
             region,
             userAgent: userAgent.slice(0, 500),
-            path: path || null,
-            referrer: referrer || null,
+            path: typeof path === 'string' ? path.slice(0, 500) : null,
+            referrer: typeof referrer === 'string' ? referrer.slice(0, 500) : null,
         },
     });
 

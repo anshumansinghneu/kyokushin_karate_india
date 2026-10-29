@@ -84,3 +84,19 @@ export const contactLimiter = rateLimit({
     legacyHeaders: false,
     handler: rejection('Too many messages from this network. Please try again later, or call us.'),
 });
+
+/**
+ * Page-visit beacons: one per page view, so a busy reader makes dozens. Past that
+ * from one network it is a script filling the visits table (and spending the free
+ * geo-lookup quota). Over the limit the beacon is dropped quietly: there is no
+ * one to show an error to.
+ */
+export const visitLimiter = rateLimit({
+    windowMs: minutes(15),
+    limit: 120,
+    standardHeaders: false,
+    legacyHeaders: false,
+    handler: (_req: Request, res: Response) => {
+        res.status(204).end();
+    },
+});

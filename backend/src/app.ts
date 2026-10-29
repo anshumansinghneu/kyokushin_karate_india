@@ -47,22 +47,29 @@ const app = express();
 // throttle all users collectively.
 app.set('trust proxy', 1);
 
-// CORS configuration
-const allowedOrigins = [
-    process.env.FRONTEND_URL || 'http://localhost:3000',
-    'http://localhost:3000',
-    'https://kyokushin-karate-india.vercel.app',
+// CORS: the site's own addresses, this project's Vercel previews, and local dev.
+// Sign-in uses a bearer token, not a cookie, but there is no reason for other
+// websites to call this API from a visitor's browser.
+const allowedOrigins = new Set(
+    [
+        process.env.FRONTEND_URL,
+        'https://kyokushinfoundation.com',
+        'https://www.kyokushinfoundation.com',
+        'https://kyokushin-karate-india.vercel.app',
+    ].filter((o): o is string => !!o),
+);
+const allowedOriginPatterns = [
+    /^https:\/\/kyokushin-karate[a-z0-9-]*\.vercel\.app$/,
+    /^http:\/\/localhost:\d+$/,
 ];
+export const isAllowedOrigin = (origin: string) =>
+    allowedOrigins.has(origin) || allowedOriginPatterns.some((re) => re.test(origin));
 
 // Security Middleware
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, etc.)
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(null, true); // Allow all in development, restrict in production if needed
-        }
+        // No Origin header: server-to-server calls, curl, the uptime check.
+        callback(null, !origin || isAllowedOrigin(origin));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

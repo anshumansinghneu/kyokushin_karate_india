@@ -79,11 +79,13 @@ export const revokeRefreshToken = async (rawToken: string): Promise<void> => {
 };
 
 /**
- * Revoke all refresh tokens for a user (e.g., on password change)
+ * Revoke all refresh tokens for a user (e.g., on password change). `keepRawToken`
+ * spares the session that made the change, so only the other devices are signed out.
  */
-export const revokeAllUserTokens = async (userId: string): Promise<void> => {
+export const revokeAllUserTokens = async (userId: string, keepRawToken?: string): Promise<void> => {
+    const keep = keepRawToken ? crypto.createHash('sha256').update(keepRawToken).digest('hex') : undefined;
     await prisma.refreshToken.updateMany({
-        where: { userId, revokedAt: null },
+        where: { userId, revokedAt: null, ...(keep && { token: { not: keep } }) },
         data: { revokedAt: new Date() },
     });
 };
