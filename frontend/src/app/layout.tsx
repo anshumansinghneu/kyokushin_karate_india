@@ -8,6 +8,7 @@ import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import LayoutShell from "@/components/LayoutShell";
 import { gothic, mincho } from "@/components/home/film/fonts";
 import { SKIN_SCRIPT } from "@/lib/routes";
+import { getDojos, groupByCity } from "@/lib/dojoSeo";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -95,11 +96,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Every city KKFI teaches in, for the footer's links to the city pages (cached hourly;
+  // empty, and the links left out, if the API is asleep).
+  const cities = groupByCity(await getDojos()).map((g) => ({ city: g.city, slug: g.slug }));
   return (
     <html lang="en" suppressHydrationWarning className={cn(montserrat.variable, mincho.variable, gothic.variable)}>
       <head>
@@ -114,7 +118,7 @@ export default function RootLayout({
         <StructuredData />
         <ServiceWorkerRegistrar />
         <ToastProvider>
-          <LayoutShell>{children}</LayoutShell>
+          <LayoutShell cities={cities}>{children}</LayoutShell>
         </ToastProvider>
       </body>
     </html>

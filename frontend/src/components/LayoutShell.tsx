@@ -19,7 +19,7 @@ import { isMemberApp } from "@/lib/routes";
 // The logged-in app keeps plain native scrolling and no route theatrics.
 const APP_PREFIXES = ['/dashboard', '/profile', '/payments', '/renew-membership', '/login', '/register', '/forgot-password', '/reset-password'];
 
-export default function LayoutShell({ children }: { children: React.ReactNode }) {
+export default function LayoutShell({ children, cities = [] }: { children: React.ReactNode; cities?: { city: string; slug: string }[] }) {
     const pathname = usePathname();
     const isFullscreen = pathname === '/management' || pathname.startsWith('/management/');
 
@@ -53,7 +53,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
             <main className="relative z-[1] min-h-screen pt-24 md:pt-32 pb-20 md:pb-0 [&:has([data-bleed])]:pt-0">
                 <PageTransition pathname={pathname}>{children}</PageTransition>
             </main>
-            {isPublic ? <FilmFooter /> : <Footer />}
+            {isPublic ? <FilmFooter cities={cities} /> : <Footer />}
             <MobileBottomNav />
             {!isPublic && <BackToTop />}
         </>
